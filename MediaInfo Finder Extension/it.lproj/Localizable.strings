@@ -1,0 +1,12 @@
+/* 
+  Localizable.strings
+  MediaInfo
+
+  Created by Simone Baldissini on 29/08/2020.
+  Copyright © 2020 sbarex. All rights reserved.
+*/
+" cm" = " cm";
+" mm" = " mm";
+" inch" = "\"";
+
+"Subtitle" = "Sottotiloli";

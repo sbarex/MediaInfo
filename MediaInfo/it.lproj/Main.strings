@@ -1,0 +1,139 @@
+/* Class = "NSMenuItem"; title = "MediaInfo"; ObjectID = "1Xt-HY-uBw"; */
+"1Xt-HY-uBw.title" = "MediaInfo";
+
+/* Class = "NSButtonCell"; title = "Save"; ObjectID = "3ol-h5-zyQ"; */
+"3ol-h5-zyQ.title" = "Salva";
+
+/* Class = "NSMenuItem"; title = "Quit MediaInfo"; ObjectID = "4sb-4s-VLi"; */
+"4sb-4s-VLi.title" = "Chiudi MediaInfo";
+
+/* Class = "NSMenuItem"; title = "Edit"; ObjectID = "5QF-Oa-p0T"; */
+"5QF-Oa-p0T.title" = "Modifica";
+
+/* Class = "NSMenuItem"; title = "cm"; ObjectID = "5gF-gq-dZa"; */
+"5gF-gq-dZa.title" = "cm";
+
+/* Class = "NSMenuItem"; title = "About MediaInfo"; ObjectID = "5kV-Vb-QxS"; */
+"5kV-Vb-QxS.title" = "Informazioni su MediaInfo";
+
+/* Class = "NSMenuItem"; title = "Redo"; ObjectID = "6dh-zS-Vam"; */
+"6dh-zS-Vam.title" = "Ripristina";
+
+/* Class = "NSMenu"; title = "Main Menu"; ObjectID = "AYu-sK-qS6"; */
+// "AYu-sK-qS6.title" = "Main Menu";
+
+/* Class = "NSMenuItem"; title = "Inch"; ObjectID = "AxK-sR-vpf"; */
+"AxK-sR-vpf.title" = "pollici";
+
+/* Class = "NSMenuItem"; title = "Preferences…"; ObjectID = "BOF-NM-1cW"; */
+"BOF-NM-1cW.title" = "Impostazioni…";
+
+/* Class = "NSMenu"; title = "Help"; ObjectID = "F2S-fz-NVQ"; */
+"F2S-fz-NVQ.title" = "Aiuto";
+
+/* Class = "NSMenuItem"; title = "MediaInfo Help"; ObjectID = "FKE-Sm-Kum"; */
+"FKE-Sm-Kum.title" = "Guida di MediaInfo";
+
+/* Class = "NSTextFieldCell"; title = "Printer unit:"; ObjectID = "Hrg-aP-5wg"; */
+"Hrg-aP-5wg.title" = "Unità di misura per la stampa:";
+
+/* Class = "NSWindow"; title = "MediaInfo Preferences"; ObjectID = "IQv-IB-iLA"; */
+"IQv-IB-iLA.title" = "Impostazioni di MediaInfo";
+
+/* Class = "NSMenuItem"; title = "Show All"; ObjectID = "Kd2-mp-pUS"; */
+"Kd2-mp-pUS.title" = "Mostra tutte";
+
+/* Class = "NSMenuItem"; title = "Services"; ObjectID = "NMo-om-nkz"; */
+"NMo-om-nkz.title" = "Servizi";
+
+/* Class = "NSMenuItem"; title = "Hide MediaInfo"; ObjectID = "Olw-nP-bQN"; */
+"Olw-nP-bQN.title" = "Nascondi MediaInfo";
+
+/* Class = "NSMenuItem"; title = "Select All"; ObjectID = "Ruw-6m-B2m"; */
+"Ruw-6m-B2m.title" = "Seleziona tutto";
+
+/* Class = "NSMenu"; title = "Window"; ObjectID = "Td7-aD-5lo"; */
+"Td7-aD-5lo.title" = "Finestra";
+
+/* Class = "NSTextFieldCell"; title = "300"; ObjectID = "UHd-2A-c6x"; */
+// "UHd-2A-c6x.title" = "300";
+
+/* Class = "NSMenuItem"; title = "Hide Others"; ObjectID = "Vdr-fp-XzO"; */
+"Vdr-fp-XzO.title" = "Nascondi altre";
+
+/* Class = "NSMenu"; title = "Edit"; ObjectID = "W48-6f-4Dl"; */
+"W48-6f-4Dl.title" = "Modifica";
+
+/* Class = "NSViewController"; title = "MediaInfo Preferences"; ObjectID = "XfG-lQ-9wD"; */
+"XfG-lQ-9wD.title" = "Impostazioni di MediaInfo";
+
+/* Class = "NSMenuItem"; title = "Window"; ObjectID = "aUF-d1-5bR"; */
+// "aUF-d1-5bR.title" = "Window";
+
+/* Class = "NSTextFieldCell"; title = "dpi"; ObjectID = "dMG-Ll-dAZ"; */
+"dMG-Ll-dAZ.title" = "dpi";
+
+/* Class = "NSMenuItem"; title = "Undo"; ObjectID = "dRJ-4n-Yzg"; */
+"dRJ-4n-Yzg.title" = "Annulla";
+
+/* Class = "NSButtonCell"; title = "Show extra printed size at"; ObjectID = "elg-XW-xDS"; */
+"elg-XW-xDS.title" = "Mostra dimensioni per la stampa a:";
+
+/* Class = "NSMenuItem"; title = "Paste"; ObjectID = "gVA-U4-sdL"; */
+"gVA-U4-sdL.title" = "Incolla";
+
+/* Class = "NSMenu"; title = "Services"; ObjectID = "hz9-B4-Xy5"; */
+"hz9-B4-Xy5.title" = "Servizi";
+
+/* Class = "NSButtonCell"; title = "Cancel"; ObjectID = "jsV-5y-gqO"; */
+"jsV-5y-gqO.title" = "Annulla";
+
+/* Class = "NSTextFieldCell"; title = "Monitored folders:"; ObjectID = "leZ-K3-ufv"; */
+"leZ-K3-ufv.title" = "Cartelle monitorate:";
+
+/* Class = "NSButtonCell"; title = "Show printed size"; ObjectID = "oeT-Cn-4E2"; */
+"oeT-Cn-4E2.title" = "Mostra dimensioni per la stampa";
+
+"ypt-Rq-LZA.title" = "Mostra modo colore";
+"KuH-xg-I2o.title" = "Mostra profondità colore"; 
+
+/* Class = "NSMenuItem"; title = "Delete"; ObjectID = "pa3-QI-u2k"; */
+"pa3-QI-u2k.title" = "Cancella";
+
+/* Class = "NSMenu"; title = "MediaInfo"; ObjectID = "uQy-DD-JDr"; */
+// "uQy-DD-JDr.title" = "MediaInfo";
+
+/* Class = "NSMenuItem"; title = "Cut"; ObjectID = "uRl-iY-unG"; */
+"uRl-iY-unG.title" = "Taglia";
+
+/* Class = "NSMenuItem"; title = "Paste Style"; ObjectID = "vKC-jM-MkH"; */
+// "vKC-jM-MkH.title" = "Paste Style";
+
+/* Class = "NSMenuItem"; title = "Help"; ObjectID = "wpr-3q-Mcd"; */
+// "wpr-3q-Mcd.title" = "Help";
+
+/* Class = "NSMenuItem"; title = "Copy"; ObjectID = "x3v-GG-iWU"; */
+"x3v-GG-iWU.title" = "Copia";
+
+/* Class = "NSMenuItem"; title = "mm"; ObjectID = "y82-I0-7Hm"; */
+"y82-I0-7Hm.title" = "mm";
+
+"kZH-lG-0GR.label" = "Cartelle";
+"hi3-b6-BGO.label" = "Immagini";
+"FmM-UB-BFQ.label" = "Audio e Video";
+
+"evg-H0-dfl.title" = "Gestisci immagini";
+"rIy-Nc-rEU.title" = "Gestisci file audio e video";
+
+"I5o-g2-qrM.title" = "Mostra il numero di frames";
+"uzn-Dx-qec.title" = "Mostra nome del codec";
+"b66-Sh-3X3.title" = "Mostra bit rate (se disponibile)";
+
+"i4R-xf-NHN.title" = "Abilita l'estensione del Finder";
+"mhg-O0-Th5.title" = "Raggruppa tracce per tipologia";
+
+"cYX-CY-lD3.title" = "Mostra le icone nelle voci di menu";
+"Qfc-fO-bha.title" = "Mostra le icone nelle voci di menu";
+
+"miM-mB-nHF.title" = "Mostra le informazioni in un sotto menu";
+"DTr-ug-NGx.title" = "Mostra le informazioni in un sotto menu";
