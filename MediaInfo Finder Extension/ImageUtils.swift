@@ -299,3 +299,37 @@ func getSVGImageInfo(forFile file: URL) -> ImageInfo? {
         return nil
     }
 }
+
+/// Get image info for format supported by system via the file metadata.
+func getMetadataImageInfo(forFile url: URL) -> ImageInfo? {
+    guard let metadata = MDItemCreateWithURL(nil, url as CFURL) else {
+        return nil
+    }
+    
+    if let mdnames = MDItemCopyAttributeNames(metadata), let mdattrs: [String:Any] = MDItemCopyAttributes(metadata, mdnames) as? [String:Any] {
+        print(mdattrs)
+    }
+    
+    var width: Int = 0
+    if let n = MDItemCopyAttribute(metadata, kMDItemPixelWidth) {
+        CFNumberGetValue((n as! CFNumber), CFNumberType.intType, &width)
+    }
+    var height: Int = 0
+    if let n = MDItemCopyAttribute(metadata, kMDItemPixelHeight) {
+        CFNumberGetValue((n as! CFNumber), CFNumberType.intType, &height)
+    }
+    var dpi: Int = 0
+    if let n = MDItemCopyAttribute(metadata, kMDItemResolutionHeightDPI) {
+        CFNumberGetValue((n as! CFNumber), CFNumberType.intType, &dpi)
+    }
+    var colorSpace: String = ""
+    if let n = MDItemCopyAttribute(metadata, kMDItemColorSpace) {
+        colorSpace = n as! String
+    }
+    var bit: Int = 0
+    if let n = MDItemCopyAttribute(metadata, kMDItemBitsPerSample) {
+        CFNumberGetValue((n as! CFNumber), CFNumberType.intType, &bit)
+    }
+    
+    return ImageInfo(width: width, height: height, dpi: dpi, colorMode: colorSpace, depth: bit)
+}

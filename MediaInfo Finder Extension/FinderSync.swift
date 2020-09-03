@@ -147,6 +147,8 @@ class FinderSync: FIFinderSync {
                 image_info = info
             } else if let info = getFFMpegImageInfo(forFile: item) {
                 image_info = info
+            } else if let info = getMetadataImageInfo(forFile: item) {
+                image_info = info
             } else {
                 return nil
             }
@@ -234,6 +236,9 @@ class FinderSync: FIFinderSync {
         var streams: [StreamType] = getCMVideoInfo(forFile: item)
         if streams.isEmpty {
             streams = getFFMpegInfo(forFile: item)
+        }
+        if streams.isEmpty {
+            streams = getMetadataVideoInfo(forFile: item)
         }
         guard !streams.isEmpty else {
             return nil
@@ -362,6 +367,9 @@ class FinderSync: FIFinderSync {
         var streams: [StreamType] = getCMVideoInfo(forFile: item)
         if streams.isEmpty {
             streams = getFFMpegInfo(forFile: item)
+        }
+        if streams.isEmpty {
+            streams = getMetadataVideoInfo(forFile: item)
         }
         guard !streams.isEmpty else {
             return nil

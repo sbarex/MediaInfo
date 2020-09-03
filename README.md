@@ -15,6 +15,7 @@ The application can customize the properties to show inside the contextual menu 
 
 ![Media settings](menu_video.png)
 
+After the download of the release App (or after the build from source), you must start the app and configure the monitored folder. Then on System Preferences / Extensions, you must enable the relative Finder Sync extension.
 
 ## Images
 Show these properties:
@@ -47,6 +48,8 @@ Not all properties are always available, depending on the type of file and the l
 Supported audio/video format:
 - audio and video handled by the system via CoreMedia
 - audio and video supported by ffmpeg library
+
+Ispired by [qlImageSize](https://github.com/Nyx0uf/qlImageSize)
 
 
 ## Note about compiling ffmpeg

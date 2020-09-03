@@ -44,7 +44,89 @@ extension FourCharCode {
     }
 }
 
-/// Get image info for image format supported by coregraphics.
+/// Get media info for video/audio format supported by system via the file metadata.
+func getMetadataVideoInfo(forFile url: URL) -> [StreamType] {
+    guard let metadata = MDItemCreateWithURL(nil, url as CFURL) else {
+        return []
+    }
+    
+    var r: [StreamType] = []
+    
+    
+    if let mdnames = MDItemCopyAttributeNames(metadata), let mdattrs: [String:Any] = MDItemCopyAttributes(metadata, mdnames) as? [String:Any] {
+        print(mdattrs)
+    }
+    
+    var types: [String] = []
+    if let v = MDItemCopyAttribute(metadata, kMDItemMediaTypes) {
+        // Unsupported media type do not have the kMDItemMediaTypes attribute.
+        if let a = v as? [CFString] {
+            types = a.map({ $0 as String})
+        }
+    }
+    
+    var codecs: [String] = []
+    if let n = MDItemCopyAttribute(metadata, kMDItemCodecs) {
+        if let a = n as? [CFString] {
+            codecs = a.map({ $0 as String})
+        }
+    }
+    
+    var langs: [String] = []
+    if let n = MDItemCopyAttribute(metadata, kMDItemLanguages) {
+        if let a = n as? [CFString] {
+            langs = a.map({ $0 as String})
+        }
+    }
+    
+    var duration: Double = 0
+    if let n = MDItemCopyAttribute(metadata, kMDItemDurationSeconds) {
+        CFNumberGetValue((n as! CFNumber), CFNumberType.doubleType, &duration)
+    }
+    
+    for (i, type) in types.enumerated() {
+        switch type {
+        case "Video":
+            var width: Int = 0
+            if let n = MDItemCopyAttribute(metadata, kMDItemPixelWidth) {
+                CFNumberGetValue((n as! CFNumber), CFNumberType.intType, &width)
+            }
+            var height: Int = 0
+            if let n = MDItemCopyAttribute(metadata, kMDItemPixelHeight) {
+                CFNumberGetValue((n as! CFNumber), CFNumberType.intType, &height)
+            }
+            
+            var videoBitRate: Int64 = 0
+            if let n = MDItemCopyAttribute(metadata, kMDItemVideoBitRate) {
+                CFNumberGetValue((n as! CFNumber), CFNumberType.sInt64Type, &videoBitRate)
+            }
+            
+            let codec = i < codecs.count ? codecs[i] : ""
+            let lang = i < langs.count ? langs[i] : nil
+            
+            let video = StreamType.video(width: width, height: height, duration: duration, codec: codec, ratio: nil, lang: lang, bit_rate: videoBitRate, frames: 0)
+            
+            r.append(video)
+        case "Sound":
+            let codec = i < codecs.count ? codecs[i] : ""
+            let lang = i < langs.count ? langs[i] : nil
+            
+            var audioBitRate: Int64 = 0
+            if let n = MDItemCopyAttribute(metadata, kMDItemAudioBitRate) {
+                CFNumberGetValue((n as! CFNumber), CFNumberType.sInt64Type, &audioBitRate)
+            }
+            
+            let audio = StreamType.audio(duration: duration, codec: codec, lang: lang, bit_rate: audioBitRate)
+            r.append(audio)
+        default:
+            break
+        }
+    }
+    
+    return r
+}
+
+/// Get media info for video/audio format supported by coregraphics.
 func getCMVideoInfo(forFile url: URL) -> [StreamType] {
     var streams: [StreamType] = []
     let asset = AVAsset(url: url)
@@ -80,6 +162,7 @@ func getCMVideoInfo(forFile url: URL) -> [StreamType] {
     return streams
 }
 
+/// Get media info for video/audio format supported by ffmpeg.
 func getFFMpegInfo(forFile file: URL) -> [StreamType] {
     var pFormatCtx: UnsafeMutablePointer<AVFormatContext>! = nil
     let pFmt: UnsafeMutablePointer<AVInputFormat>? = nil
@@ -175,6 +258,7 @@ func getFFMpegInfo(forFile file: URL) -> [StreamType] {
     return streams
 }
 
+/// Get image info if the format is supported by coregraphics.
 func getFFMpegImageInfo(forFile file: URL) -> ImageInfo? {
     let streams = getFFMpegInfo(forFile: file)
     for stream in streams {
