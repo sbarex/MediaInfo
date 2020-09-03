@@ -700,6 +700,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "MediaInfo\\ Finder\\ Extension/Assets.xcassets MediaInfo\\ Finder\\ Extension/MediaInfoMenu.pdf";
 				DEVELOPMENT_TEAM = D5VMCLD3ZK;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -745,6 +746,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "MediaInfo\\ Finder\\ Extension/Assets.xcassets MediaInfo\\ Finder\\ Extension/MediaInfoMenu.pdf";
 				DEVELOPMENT_TEAM = D5VMCLD3ZK;
 				ENABLE_HARDENED_RUNTIME = YES;

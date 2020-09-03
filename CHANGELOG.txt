@@ -1,3 +1,7 @@
+1.0.b3
+
+Typo in readme.
+
 1.0.b2
 
 Added the code to get the info from file metadata for system supported formats.
