@@ -236,7 +236,7 @@ func getBPGImageInfo(forFile file: URL) -> ImageInfo? {
     guard data.withUnsafeBytes({ (buffer: UnsafeRawBufferPointer) in
         return bpg_decoder_decode(bpg_ctx, buffer.bindMemory(to: UInt8.self).baseAddress!, size)
     }) >= 0 else {
-        return nil
+        return getBPGImageInfoFallback(forData: data)
     }
 
     // Get image infos
@@ -268,6 +268,79 @@ func getBPGImageInfo(forFile file: URL) -> ImageInfo? {
     }
 
     return ImageInfo(width: width, height: height, dpi: 0, colorMode: color, depth: Int(img_info_s.bit_depth))
+}
+
+/// Fallback code to parse the header of a BPG image.
+func getBPGImageInfoFallback(forData data: Data) -> ImageInfo? {
+    let info = data.withUnsafeBytes { ptr -> ImageInfo? in
+        guard let bytes = ptr.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+            return nil
+        }
+        let magic = [
+            bytes.pointee,
+            bytes.advanced(by: 1).pointee,
+            bytes.advanced(by: 2).pointee,
+            bytes.advanced(by: 3).pointee,
+        ]
+        
+        guard
+            magic[0] == ((BPG_HEADER_MAGIC >> 24) & 0xff),
+            magic[1] == ((BPG_HEADER_MAGIC >> 16) & 0xff),
+            magic[2] == ((BPG_HEADER_MAGIC >> 8) & 0xff),
+            magic[3] == ((BPG_HEADER_MAGIC >> 0) & 0xff) else {
+                // Invalid magic code
+                return nil
+        }
+        
+        let flags1 = bytes.advanced(by: 4).pointee
+        
+        // 111  1  1111
+        
+        let pixel_format = (flags1 >> 5) & 0x7
+        let alpha1_flag = (flags1 >> 4) & 0x1
+        let bit_depth = ((flags1 >> 0) & 0xf) + 8
+        
+        // 1111 1 1 1 1
+        let flags2 = bytes.advanced(by: 5).pointee
+        // let color_space = (flags2 >> 4) & 0xf
+        // let extension_present_flag = (flags2 >> 3) & 0x1
+        let alpha2_flag = (flags2 >> 2) & 0x1
+        // let limited_range_flag = (flags2 >> 1) & 0x1
+        // let animation_flag = (flags2 >> 0) & 0x1
+        
+        var width: UInt32 = 0
+        let r = get_ue(&width, bytes.advanced(by: 6), Int32(data.count - 6))
+        var height: UInt32 = 0
+        get_ue(&height, bytes.advanced(by: 6 + Int(r)), Int32(data.count - 6 - Int(r)))
+        
+        /*
+        let ptr2 = UnsafeRawPointer(bytes.advanced(by: 6)).bindMemory(to: UInt32.self, capacity: 2)
+        
+        let width = Int(ptr2.pointee)
+        let height = Int(ptr2.advanced(by: 1).pointee)
+        */
+        let color: String
+        let channels: Int
+        if pixel_format == 0 {
+            color = "GRAY"
+            channels = 1
+        } else {
+            if alpha1_flag == 0 && alpha2_flag == 0 {
+                color = "RGB"
+                channels = 3
+            } else if alpha1_flag == 0 && alpha2_flag == 1 {
+                color = "CMYK"
+                channels = 4
+            } else {
+                color = "ARGB"
+                channels = 4
+            }
+        }
+        let info = ImageInfo(width: Int(width), height: Int(height), dpi: 0, colorMode: color, depth: Int(bit_depth) * channels)
+        
+        return info
+    }
+    return info
 }
 
 /// Get image info for svg file format.

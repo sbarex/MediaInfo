@@ -1,3 +1,9 @@
+1.0.b4
+
+Integrated build of ffmpeg library.
+Integrated build of webp library.
+Fallback code to handle BPG image without decode the data but parsing only the header file.
+
 1.0.b3
 
 Typo in readme.

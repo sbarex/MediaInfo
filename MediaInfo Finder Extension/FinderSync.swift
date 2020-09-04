@@ -154,6 +154,10 @@ class FinderSync: FIFinderSync {
             }
         }
         
+        guard image_info.width > 0 || image_info.height > 0 else {
+            return nil
+        }
+        
         let menu = NSMenu(title: "")
         menu.autoenablesItems = false
         
