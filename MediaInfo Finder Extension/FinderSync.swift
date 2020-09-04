@@ -16,8 +16,8 @@ class FinderSync: FIFinderSync {
     override init() {
         super.init()
         
-        let defaults = UserDefaults(suiteName: SharedDomainName)
-
+        let settings = Settings.shared
+        
         numberFormatter.allowsFloats = true
         numberFormatter.numberStyle = .decimal
         numberFormatter.maximumFractionDigits = 2
@@ -26,10 +26,8 @@ class FinderSync: FIFinderSync {
         
         // Set up the directory we are syncing.
         
-        if let folders = defaults?.array(forKey: "folders") as? [String] {
-            NSLog("FinderSync() watching folders:\n %@", folders.joined(separator: "\n"))
-            FIFinderSyncController.default().directoryURLs = Set(folders.map({ URL(fileURLWithPath: $0)}))
-        }
+        NSLog("FinderSync() watching folders:\n %@", settings.folders.map({ $0.path }).joined(separator: "\n"))
+        FIFinderSyncController.default().directoryURLs = Set(settings.folders)
         
         // Set up images for our badge identifiers. For demonstration purposes, this uses off-the-shelf images.
         // FIFinderSyncController.default().setBadgeImage(NSImage(named: NSImage.colorPanelName)!, label: "Status One" , forBadgeIdentifier: "One")
@@ -39,12 +37,11 @@ class FinderSync: FIFinderSync {
     }
     
     @objc func handleFolderChanged(_ notification: Notification) {
-        let defaults = UserDefaults(suiteName: SharedDomainName)
+        let settings = Settings.shared
+        settings.refresh()
         
-        if let folders = defaults?.array(forKey: "folders") as? [String] {
-            NSLog("FinderSync() watching folders:\n %@", folders.joined(separator: "\n"))
-            FIFinderSyncController.default().directoryURLs = Set(folders.map({ URL(fileURLWithPath: $0)}))
-        }
+        NSLog("FinderSync() watching folders:\n %@", settings.folders.map({$0.path}).joined(separator: "\n"))
+        FIFinderSyncController.default().directoryURLs = Set(settings.folders)
     }
     
     // MARK: - Primary Finder Sync protocol methods
@@ -88,14 +85,6 @@ class FinderSync: FIFinderSync {
     }
     */
     
-    fileprivate func getBool(from defaults: UserDefaults?, key: String) -> Bool? {
-        if let _ = defaults?.object(forKey: key) {
-            return defaults?.bool(forKey: key)
-        } else {
-            return nil
-        }
-    }
-    
     func formatTime(_ time: TimeInterval) -> String {
         var m = Int(time / 60)
         let h = Int(TimeInterval(m) / 60)
@@ -107,15 +96,15 @@ class FinderSync: FIFinderSync {
     
     override func menu(for menuKind: FIMenuKind) -> NSMenu {
         if menuKind == .contextualMenuForItems {
+            let settings = Settings.shared
+            
             if let items = FIFinderSyncController.default().selectedItemURLs(), items.count == 1, let item = items.first, let uti = try? item.resourceValues(forKeys: [.typeIdentifierKey]).typeIdentifier {
-                
-                let defaults = UserDefaults(suiteName: SharedDomainName)
-                
-                if getBool(from: defaults, key: "image_handled") ?? true && UTTypeConformsTo(uti as CFString, kUTTypeImage), let menu = getMenuForImage(atURL: item) {
+                                
+                if settings.isImagesHandled && UTTypeConformsTo(uti as CFString, kUTTypeImage), let menu = getMenuForImage(atURL: item) {
                     return menu
-                } else if getBool(from: defaults, key: "video_handled") ?? true && UTTypeConformsTo(uti as CFString, kUTTypeMovie), let menu = getMenuForVideo(atURL: item) {
+                } else if settings.isMediaHandled && UTTypeConformsTo(uti as CFString, kUTTypeMovie), let menu = getMenuForVideo(atURL: item) {
                     return menu
-                } else if getBool(from: defaults, key: "video_handled") ?? true && UTTypeConformsTo(uti as CFString, kUTTypeAudio), let menu = getMenuForAudio(atURL: item) {
+                } else if settings.isMediaHandled && UTTypeConformsTo(uti as CFString, kUTTypeAudio), let menu = getMenuForAudio(atURL: item) {
                     return menu
                 }
             }
@@ -161,11 +150,12 @@ class FinderSync: FIFinderSync {
         let menu = NSMenu(title: "")
         menu.autoenablesItems = false
         
-        let defaults = UserDefaults(suiteName: SharedDomainName)
+        let settings = Settings.shared
+        settings.refresh()
         
-        let use_submenu  = getBool(from: defaults, key: "image_sub_menu") ?? true
-        let icon_hidden  = getBool(from: defaults, key: "image_icons_hidden") ?? false
-        let print_hidden = getBool(from: defaults, key: "print_hidden") ?? false
+        let use_submenu  = settings.isImageInfoOnSubMenu
+        let icon_hidden  = settings.isImageIconsHidden
+        let print_hidden = settings.isPrintHidden
         
         // FIXME: NSImage named with a pdf image don't respect dark theme!
         // FIXME: The image set for a NSMenuItem in the extension do not preserve the template rendering mode.
@@ -178,10 +168,10 @@ class FinderSync: FIFinderSync {
             menu.setSubmenu(info_sub_menu, for: info_mnu)
         }
         var colors: [String] = []
-        if (!(getBool(from: defaults, key: "color_hidden") ?? false)), !image_info.colorMode.isEmpty {
+        if !settings.isColorHidden && !image_info.colorMode.isEmpty {
             colors.append(image_info.colorMode)
         }
-        if (!(getBool(from: defaults, key: "depth_hidden") ?? false)), image_info.depth > 0 {
+        if !settings.isDepthHidden && image_info.depth > 0 {
             colors.append("\(image_info.depth) bit")
         }
         
@@ -204,17 +194,18 @@ class FinderSync: FIFinderSync {
             mnu.image = icon_hidden ? nil : NSImage(named: type == "Dark" ? "color_w" : "color")
         }
         
-        let unit = defaults?.integer(forKey: "unit") ?? 0
+        let unit = settings.unit
         
         let scale: Double
         let unit_label: String
-        if unit == 0 {
+        switch unit {
+        case .cm:
             scale = 2.54 // cm
             unit_label = NSLocalizedString(" cm", comment: "")
-        } else if unit == 1 {
+        case .mm:
             scale = 25.4 // mm
             unit_label = NSLocalizedString(" mm", comment: "")
-        } else {
+        case .inch:
             scale = 1 // inch
             unit_label = NSLocalizedString(" inch", comment: "")
         }
@@ -227,8 +218,8 @@ class FinderSync: FIFinderSync {
             (use_submenu ? info_sub_menu : menu).addItem(mnu)
         }
         
-        if !(getBool(from: defaults, key: "custom_dpi_hidden") ?? false), let custom_dpi = defaults?.integer(forKey: "custom_dpi"), custom_dpi > 0 && (image_info.dpi != custom_dpi || print_hidden), let w_cm = numberFormatter.string(from: NSNumber(value:Double(image_info.width) / Double(custom_dpi) * scale)), let h_cm = numberFormatter.string(from: NSNumber(value:Double(image_info.height) / Double(custom_dpi) * scale)) {
-            let mnu = NSMenuItem(title: "\(w_cm) × \(h_cm)\(unit_label) (\(custom_dpi) dpi)", action: nil, keyEquivalent: "")
+        if !settings.isCustomPrintHidden, settings.customDPI > 0 && (image_info.dpi != settings.customDPI || print_hidden), let w_cm = numberFormatter.string(from: NSNumber(value:Double(image_info.width) / Double(settings.customDPI) * scale)), let h_cm = numberFormatter.string(from: NSNumber(value:Double(image_info.height) / Double(settings.customDPI) * scale)) {
+            let mnu = NSMenuItem(title: "\(w_cm) × \(h_cm)\(unit_label) (\(settings.customDPI) dpi)", action: nil, keyEquivalent: "")
             mnu.image = icon_hidden ? nil : NSImage(named: type == "Dark" ? "print_w" : "print")
             mnu.isEnabled = false
             (use_submenu ? info_sub_menu : menu).addItem(mnu)
@@ -248,14 +239,15 @@ class FinderSync: FIFinderSync {
             return nil
         }
         
-        let defaults = UserDefaults(suiteName: SharedDomainName)
+        let settings = Settings.shared
+        settings.refresh()
         
-        let use_submenu   = getBool(from: defaults, key: "media_sub_menu") ?? true
-        let group_tracks  = getBool(from: defaults, key: "group_tracks") ?? false
-        let codec_hidden  = getBool(from: defaults, key: "codec_hidden") ?? false
-        let frames_hidden = getBool(from: defaults, key: "frames_hidden") ?? false
-        let bps_hidden    = getBool(from: defaults, key: "bps_hidden") ?? false
-        let icon_hidden   = getBool(from: defaults, key: "media_icons_hidden") ?? false
+        let use_submenu   = settings.isMediaInfoOnSubMenu
+        let group_tracks  = settings.isTracksGrouped
+        let codec_hidden  = settings.isCodecHidden
+        let frames_hidden = settings.isFramesHidden
+        let bps_hidden    = settings.isBPSHidden
+        let icon_hidden   = settings.isMediaIconsHidden
         
         // FIXME: NSImage named with a pdf image don't respect dark theme!
         // FIXME: The image set for a NSMenuItem in the extension do not preserve the template rendering mode.
@@ -379,11 +371,13 @@ class FinderSync: FIFinderSync {
             return nil
         }
         
-        let defaults = UserDefaults(suiteName: SharedDomainName)
-        let use_submenu   = getBool(from: defaults, key: "media_sub_menu") ?? true
-        let codec_hidden  = getBool(from: defaults, key: "codec_hidden") ?? false
-        let bps_hidden    = getBool(from: defaults, key: "bps_hidden") ?? false
-        let icon_hidden   = getBool(from: defaults, key: "media_icons_hidden") ?? false
+        let settings = Settings.shared
+        settings.refresh()
+        
+        let use_submenu   = settings.isMediaInfoOnSubMenu
+        let codec_hidden  = settings.isCodecHidden
+        let bps_hidden    = settings.isBPSHidden
+        let icon_hidden   = settings.isMediaIconsHidden
         
         // FIXME: NSImage named with a pdf image don't respect dark theme!
         // FIXME: The image set for a NSMenuItem in the extension do not preserve the template rendering mode.

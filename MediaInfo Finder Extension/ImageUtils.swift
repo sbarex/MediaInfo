@@ -292,16 +292,13 @@ func getBPGImageInfoFallback(forData data: Data) -> ImageInfo? {
                 return nil
         }
         
-        let flags1 = bytes.advanced(by: 4).pointee
-        
-        // 111  1  1111
+        let flags1 = bytes.advanced(by: 4).pointee // 111  1  1111
         
         let pixel_format = (flags1 >> 5) & 0x7
         let alpha1_flag = (flags1 >> 4) & 0x1
         let bit_depth = ((flags1 >> 0) & 0xf) + 8
         
-        // 1111 1 1 1 1
-        let flags2 = bytes.advanced(by: 5).pointee
+        let flags2 = bytes.advanced(by: 5).pointee // 1111 1 1 1 1
         // let color_space = (flags2 >> 4) & 0xf
         // let extension_present_flag = (flags2 >> 3) & 0x1
         let alpha2_flag = (flags2 >> 2) & 0x1
@@ -313,30 +310,24 @@ func getBPGImageInfoFallback(forData data: Data) -> ImageInfo? {
         var height: UInt32 = 0
         get_ue(&height, bytes.advanced(by: 6 + Int(r)), Int32(data.count - 6 - Int(r)))
         
-        /*
-        let ptr2 = UnsafeRawPointer(bytes.advanced(by: 6)).bindMemory(to: UInt32.self, capacity: 2)
-        
-        let width = Int(ptr2.pointee)
-        let height = Int(ptr2.advanced(by: 1).pointee)
-        */
         let color: String
-        let channels: Int
+        // let channels: Int
         if pixel_format == 0 {
             color = "GRAY"
-            channels = 1
+            // channels = 1
         } else {
             if alpha1_flag == 0 && alpha2_flag == 0 {
                 color = "RGB"
-                channels = 3
+                // channels = 3
             } else if alpha1_flag == 0 && alpha2_flag == 1 {
                 color = "CMYK"
-                channels = 4
+                // channels = 4
             } else {
                 color = "ARGB"
-                channels = 4
+                // channels = 4
             }
         }
-        let info = ImageInfo(width: Int(width), height: Int(height), dpi: 0, colorMode: color, depth: Int(bit_depth) * channels)
+        let info = ImageInfo(width: Int(width), height: Int(height), dpi: 0, colorMode: color, depth: Int(bit_depth))
         
         return info
     }

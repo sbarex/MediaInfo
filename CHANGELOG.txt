@@ -1,3 +1,8 @@
+1.0.b5
+
+New code to handle settings.
+WARNING: require to reset the settings.
+
 1.0.b4
 
 Integrated build of ffmpeg library.

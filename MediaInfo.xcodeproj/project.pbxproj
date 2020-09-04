@@ -17,8 +17,6 @@
 		83203D6224F0EF8800F8CBC0 /* ImageUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83203D6124F0EF8800F8CBC0 /* ImageUtils.swift */; };
 		832D3B7F2501793C00402441 /* CHANGELOG.txt in Resources */ = {isa = PBXBuildFile; fileRef = 832D3B7E2501793C00402441 /* CHANGELOG.txt */; };
 		832D4D422501986C00402441 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 832D4D412501986C00402441 /* libavcodec.a */; };
-		8367E23A24F6E2BF00F7A06D /* global.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8367E23924F6E2BF00F7A06D /* global.swift */; };
-		8367E23B24F6E2BF00F7A06D /* global.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8367E23924F6E2BF00F7A06D /* global.swift */; };
 		8373E77624FFE49C00793F70 /* settings_folder.png in Resources */ = {isa = PBXBuildFile; fileRef = 8373E77524FFE49C00793F70 /* settings_folder.png */; };
 		8373E77824FFE4B500793F70 /* settings_image.png in Resources */ = {isa = PBXBuildFile; fileRef = 8373E77724FFE4B500793F70 /* settings_image.png */; };
 		8373E77A24FFE4DD00793F70 /* settings_media.png in Resources */ = {isa = PBXBuildFile; fileRef = 8373E77924FFE4DD00793F70 /* settings_media.png */; };
@@ -41,6 +39,8 @@
 		8382895C24FA386400AD2BF4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8382895B24FA386400AD2BF4 /* Assets.xcassets */; };
 		8382896124FAB30900AD2BF4 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8382896324FAB30900AD2BF4 /* Localizable.strings */; };
 		8386E6752502AF2200FD8A46 /* libwebp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8386E6722502ACD000FD8A46 /* libwebp.a */; };
+		8386E6772502BC0F00FD8A46 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8386E6762502BC0F00FD8A46 /* Settings.swift */; };
+		8386E6782502BC0F00FD8A46 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8386E6762502BC0F00FD8A46 /* Settings.swift */; };
 		83C0CADE25019D8700F74B43 /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 83C0CADB2501993C00F74B43 /* libavfilter.a */; };
 		83C0CADF25019D8E00F74B43 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 832D4D3D250197A500402441 /* libavformat.a */; };
 		83C0CAE025019D9000F74B43 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 832D4D3E250197B200402441 /* libavutil.a */; };
@@ -114,7 +114,6 @@
 		832D4D412501986C00402441 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = libavcodec/libavcodec.a; sourceTree = "<group>"; };
 		8367E23724F6D8F200F7A06D /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		8367E23824F6DA7F00F7A06D /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Main.strings; sourceTree = "<group>"; };
-		8367E23924F6E2BF00F7A06D /* global.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = global.swift; sourceTree = "<group>"; };
 		8373E77524FFE49C00793F70 /* settings_folder.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings_folder.png; sourceTree = "<group>"; };
 		8373E77724FFE4B500793F70 /* settings_image.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings_image.png; sourceTree = "<group>"; };
 		8373E77924FFE4DD00793F70 /* settings_media.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings_media.png; sourceTree = "<group>"; };
@@ -141,6 +140,7 @@
 		8382895D24FAB14200AD2BF4 /* liblibbpgdec.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = liblibbpgdec.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8382896224FAB30900AD2BF4 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
 		8386E6722502ACD000FD8A46 /* libwebp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebp.a; path = lib/libwebp.a; sourceTree = "<group>"; };
+		8386E6762502BC0F00FD8A46 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		83C0CADB2501993C00F74B43 /* libavfilter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavfilter.a; path = libavfilter/libavfilter.a; sourceTree = "<group>"; };
 		83E5D2B124F6F07400E79C85 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		83E5D2B324F6F07500E79C85 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -199,8 +199,8 @@
 				8373E77B2500210100793F70 /* menu_video.png */,
 				83203D3C24F0556500F8CBC0 /* MediaInfo */,
 				83203D5224F0558200F8CBC0 /* MediaInfo Finder Extension */,
-				83203D3B24F0556500F8CBC0 /* Products */,
 				83203D5E24F0618B00F8CBC0 /* Frameworks */,
+				83203D3B24F0556500F8CBC0 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
@@ -216,14 +216,14 @@
 		83203D3C24F0556500F8CBC0 /* MediaInfo */ = {
 			isa = PBXGroup;
 			children = (
+				83203D4624F0556800F8CBC0 /* Info.plist */,
+				83203D4724F0556800F8CBC0 /* MediaInfo.entitlements */,
 				83203D3D24F0556500F8CBC0 /* AppDelegate.swift */,
 				83203D3F24F0556500F8CBC0 /* ViewController.swift */,
 				83203D4124F0556800F8CBC0 /* Assets.xcassets */,
 				83E5D2B224F6F07400E79C85 /* Localizable.strings */,
 				83203D4324F0556800F8CBC0 /* Main.storyboard */,
-				83203D4624F0556800F8CBC0 /* Info.plist */,
-				83203D4724F0556800F8CBC0 /* MediaInfo.entitlements */,
-				8367E23924F6E2BF00F7A06D /* global.swift */,
+				8386E6762502BC0F00FD8A46 /* Settings.swift */,
 			);
 			path = MediaInfo;
 			sourceTree = "<group>";
@@ -485,8 +485,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8367E23A24F6E2BF00F7A06D /* global.swift in Sources */,
 				83203D4024F0556500F8CBC0 /* ViewController.swift in Sources */,
+				8386E6772502BC0F00FD8A46 /* Settings.swift in Sources */,
 				83203D3E24F0556500F8CBC0 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -495,7 +495,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8367E23B24F6E2BF00F7A06D /* global.swift in Sources */,
+				8386E6782502BC0F00FD8A46 /* Settings.swift in Sources */,
 				83203D5424F0558200F8CBC0 /* FinderSync.swift in Sources */,
 				83203D6224F0EF8800F8CBC0 /* ImageUtils.swift in Sources */,
 				8382895924F9A03700AD2BF4 /* avlanguage.c in Sources */,
@@ -677,8 +677,8 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 4;
-				DEVELOPMENT_TEAM = D5VMCLD3ZK;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = URL4JB2333;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = MediaInfo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -701,8 +701,8 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 4;
-				DEVELOPMENT_TEAM = D5VMCLD3ZK;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = URL4JB2333;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = MediaInfo/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -725,7 +725,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "MediaInfo\\ Finder\\ Extension/Assets.xcassets";
-				DEVELOPMENT_TEAM = D5VMCLD3ZK;
+				DEVELOPMENT_TEAM = URL4JB2333;
 				ENABLE_HARDENED_RUNTIME = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg",
@@ -766,7 +766,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "MediaInfo\\ Finder\\ Extension/Assets.xcassets";
-				DEVELOPMENT_TEAM = D5VMCLD3ZK;
+				DEVELOPMENT_TEAM = URL4JB2333;
 				ENABLE_HARDENED_RUNTIME = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg",

@@ -56,54 +56,28 @@ class ViewController: NSViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        let defaults = UserDefaults(suiteName: SharedDomainName)
-
-        var defaultsDomain: [String: Any] = [:]
-        defaultsDomain["image_handled"] = true
-        defaultsDomain["print_hidden"] = false
-        defaultsDomain["custom_dpi_hidden"] = false
-        defaultsDomain["custom_dpi"] = 300
-        defaultsDomain["unit"] = 0
-        defaultsDomain["color_hidden"] = 0
-        defaultsDomain["depth_hidden"] = 0
-        defaultsDomain["image_icons_hidden"] = false
-        defaultsDomain["image_sub_menu"] = true
         
-        defaultsDomain["video_handled"] = true
-        defaultsDomain["frames_hidden"] = true
-        defaultsDomain["codec_hidden"] = true
-        defaultsDomain["bps_hidden"] = true
-        defaultsDomain["media_icons_hidden"] = false
-        defaultsDomain["media_sub_menu"] = true
-            
-        defaultsDomain["group_tracks"] = false
+        let settings = Settings.shared
         
-        defaultsDomain["folders"] = []
+        self.isImageHandled = settings.isImagesHandled
+        self.isPrintedSizeHidden = settings.isPrintHidden
+        self.isCustomDPIHidden = settings.isCustomPrintHidden
+        self.isColorHidden = settings.isColorHidden
+        self.isDepthHidden = settings.isDepthHidden
+        self.customDPI = settings.customDPI
+        self.unit = settings.unit.rawValue
+        self.isImageIconHidden = settings.isImageIconsHidden
+        self.isImageInfoOnSubmenu = settings.isImageInfoOnSubMenu
         
-        defaults?.register(defaults: defaultsDomain)
+        self.isVideoHandled = settings.isMediaHandled
+        self.isFramesHidden = settings.isFramesHidden
+        self.isCodecHidden = settings.isCodecHidden
+        self.isBPSHidden = settings.isBPSHidden
+        self.isTracksGrouped = settings.isTracksGrouped
+        self.isMediaIconHidden = settings.isMediaIconsHidden
+        self.isMediaInfoOnSubmenu = settings.isMediaInfoOnSubMenu
         
-        self.isImageHandled = defaults?.bool(forKey: "image_handled") ?? true
-        self.isPrintedSizeHidden = defaults?.bool(forKey: "print_hidden") ?? false
-        self.isCustomDPIHidden = defaults?.bool(forKey: "custom_dpi_hidden") ?? false
-        self.isColorHidden = defaults?.bool(forKey: "color_hidden") ?? false
-        self.isDepthHidden = defaults?.bool(forKey: "depth_hidden") ?? false
-        self.customDPI = defaults?.integer(forKey: "custom_dpi") ?? 300
-        self.unit = defaults?.integer(forKey: "unit") ?? 0
-        self.isImageIconHidden = defaults?.bool(forKey: "image_icons_hidden") ?? false
-        self.isImageInfoOnSubmenu = defaults?.bool(forKey: "image_sub_menu") ?? true
-        
-        self.isVideoHandled = defaults?.bool(forKey: "video_handled") ?? true
-        self.isFramesHidden = defaults?.bool(forKey: "frames_hidden") ?? false
-        self.isCodecHidden = defaults?.bool(forKey: "codec_hidden") ?? false
-        self.isBPSHidden = defaults?.bool(forKey: "bps_hidden") ?? false
-        self.isTracksGrouped = defaults?.bool(forKey: "group_tracks") ?? false
-        self.isMediaIconHidden = defaults?.bool(forKey: "media_icons_hidden") ?? false
-        self.isMediaInfoOnSubmenu = defaults?.bool(forKey: "media_sub_menu") ?? false
-        
-        if let d = defaults?.array(forKey: "folders") as? [String] {
-            self.folders = d.sorted().map({ URL(fileURLWithPath: $0 )})
-        }
+        self.folders = settings.folders.sorted(by: { $0.path < $1.path })
         
         DispatchQueue.main.async {
             if !FIFinderSyncController.isExtensionEnabled {
@@ -118,7 +92,6 @@ class ViewController: NSViewController {
                 }
             }
         }
-        // print(FIFinderSyncController.isExtensionEnabled ? "Extension enabled" : "Extension not enabled")
     }
 
     override var representedObject: Any? {
@@ -160,7 +133,7 @@ class ViewController: NSViewController {
     }
 
     @IBAction func doSave(_ sender: Any) {
-        let folders = Array(Set(self.folders.map({ $0.path })))
+        let folders = Array(Set(self.folders))
         if folders.isEmpty {
             let p = NSAlert()
             p.messageText = NSLocalizedString("No folders selected to be monitored", comment: "")
@@ -174,30 +147,30 @@ class ViewController: NSViewController {
             }
         }
         
-        let defaults = UserDefaults(suiteName: SharedDomainName)
-        let current_folders = defaults?.array(forKey: "folder") as? [String] ?? [""]
+        let settings = Settings.shared
         
-        defaults?.set(folders, forKey: "folders")
+        let current_folders = settings.folders
         
-        defaults?.set(self.isImageHandled, forKey: "image_handled")
-        defaults?.set(self.isPrintedSizeHidden, forKey: "print_hidden")
-        defaults?.set(self.isCustomDPIHidden, forKey: "custom_dpi_hidden")
-        defaults?.set(self.isColorHidden, forKey: "color_hidden")
-        defaults?.set(self.isDepthHidden, forKey: "depth_hidden")
-        defaults?.set(self.customDPI, forKey: "custom_dpi")
-        defaults?.set(self.unit, forKey: "unit")
-        defaults?.set(self.isImageIconHidden, forKey: "image_icons_hidden")
-        defaults?.set(self.isImageInfoOnSubmenu, forKey: "image_sub_menu")
+        settings.folders = folders
+        settings.isImagesHandled = self.isImageHandled
+        settings.isPrintHidden = self.isPrintedSizeHidden
+        settings.isCustomPrintHidden = self.isCustomDPIHidden
+        settings.isColorHidden = self.isColorHidden
+        settings.isDepthHidden = self.isDepthHidden
+        settings.customDPI = self.customDPI
+        settings.unit = PrintUnit(rawValue: self.unit) ?? .cm
+        settings.isImageIconsHidden = self.isImageIconHidden
+        settings.isImageInfoOnSubMenu = self.isImageInfoOnSubmenu
         
-        defaults?.set(self.isVideoHandled, forKey: "video_handled")
-        defaults?.set(self.isFramesHidden, forKey: "frames_hidden")
-        defaults?.set(self.isCodecHidden, forKey: "codec_hidden")
-        defaults?.set(self.isBPSHidden, forKey: "bps_hidden")
-        defaults?.set(self.isTracksGrouped, forKey: "group_tracks")
-        defaults?.set(self.isMediaIconHidden, forKey: "media_icons_hidden")
-        defaults?.set(self.isMediaInfoOnSubmenu, forKey: "media_sub_menu")
+        settings.isMediaHandled = self.isVideoHandled
+        settings.isFramesHidden = self.isFramesHidden
+        settings.isCodecHidden = self.isCodecHidden
+        settings.isBPSHidden = self.isBPSHidden
+        settings.isTracksGrouped = self.isTracksGrouped
+        settings.isMediaIconsHidden = self.isMediaIconHidden
+        settings.isMediaInfoOnSubMenu = self.isMediaInfoOnSubmenu
         
-        defaults?.synchronize()
+        settings.synchronize()
         
         if current_folders != folders && FIFinderSyncController.isExtensionEnabled {
             DistributedNotificationCenter.default().postNotificationName(NSNotification.Name(rawValue: "MediaInfoMonitoredFolderChanged"), object: Bundle.main.bundleIdentifier, userInfo: nil, options: [.deliverImmediately])
