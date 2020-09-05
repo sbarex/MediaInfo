@@ -1,6 +1,11 @@
 #!/bin/bash
 
-OUTDIR="${TARGET_BUILD_DIR}/${TARGET_NAME}"
+if [[ "${TARGET_BUILD_DIR: -1}" == "/" ]]; then
+	OUTDIR="${TARGET_BUILD_DIR}${TARGET_NAME}"
+else
+	OUTDIR="${TARGET_BUILD_DIR}/${TARGET_NAME}"
+fi
+
 if [ "${ACTION}" == "clean" ]; then
 	echo Remove "${OUTDIR}"
 	if [ -n "${OUTDIR}" ]; then
@@ -8,16 +13,18 @@ if [ "${ACTION}" == "clean" ]; then
 	fi
 else
 	if [ ! -f "${SRCROOT}/libwebp/configure.ac" ]; then
-		echo "Updating submodules..."
+		echo "-> Updating submodules..."
 		cd "${SRCROOT}"
 		git submodule update --init
 	fi
 	if [ ! -x "${SRCROOT}/libwebp/configure" ]; then
-		echo Autogen ${SRCROOT}/libwebp
+		echo "-> Autogen ${SRCROOT}/libwebp"
 		cd "${SRCROOT}/libwebp"
 		./autogen.sh
 	fi
-	echo Build in ${OUTDIR}
+	echo "-> Build for ${ACTION} in ${OUTDIR}"
+	# export
+
 	mkdir -p "${OUTDIR}"
 	cd "${OUTDIR}"
 	if [ -f config.status ]; then
@@ -28,6 +35,7 @@ else
 		else
 			FLAGS=
 		fi
+		echo "-> Do configure (${OUTDIR}/config.status)"
 		${SRCROOT}/libwebp/configure --prefix=${OUTDIR} --enable-shared=no ${FLAGS}
 	fi
 	make -j`sysctl -n hw.physicalcpu` ${ACTION}

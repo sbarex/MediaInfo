@@ -372,6 +372,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 83203D4A24F0556800F8CBC0 /* Build configuration list for PBXNativeTarget "MediaInfoEx" */;
 			buildPhases = (
+				839F907F25040536000ECD6B /* Log Build Settings */,
 				83203D3624F0556500F8CBC0 /* Sources */,
 				83203D3724F0556500F8CBC0 /* Frameworks */,
 				83203D3824F0556500F8CBC0 /* Resources */,
@@ -391,6 +392,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 83203D5A24F0558200F8CBC0 /* Build configuration list for PBXNativeTarget "MediaInfo Finder Extension" */;
 			buildPhases = (
+				839F9080250408BB000ECD6B /* Log Build Settings */,
 				83203D4D24F0558200F8CBC0 /* Sources */,
 				83203D4E24F0558200F8CBC0 /* Frameworks */,
 				83203D4F24F0558200F8CBC0 /* Resources */,
@@ -479,6 +481,45 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		839F907F25040536000ECD6B /* Log Build Settings */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Log Build Settings";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export\n";
+		};
+		839F9080250408BB000ECD6B /* Log Build Settings */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Log Build Settings";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		83203D3624F0556500F8CBC0 /* Sources */ = {
@@ -674,10 +715,10 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = MediaInfo/MediaInfo.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = URL4JB2333;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = MediaInfo/Info.plist;
@@ -685,9 +726,10 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = sbarex.MediaInfo;
+				OTHER_CODE_SIGN_FLAGS = "--timestamp";
+				PRODUCT_BUNDLE_IDENTIFIER = org.sbarex.MediaInfo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE_SPECIFIER = org.sbarex.MediaInfo;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -698,10 +740,10 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = MediaInfo/MediaInfo.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = URL4JB2333;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = MediaInfo/Info.plist;
@@ -709,9 +751,10 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = sbarex.MediaInfo;
+				OTHER_CODE_SIGN_FLAGS = "--timestamp";
+				PRODUCT_BUNDLE_IDENTIFIER = org.sbarex.MediaInfo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE_SPECIFIER = org.sbarex.MediaInfo;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -720,8 +763,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "MediaInfo Finder Extension/MediaInfo_Finder_Extension.entitlements";
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "MediaInfo\\ Finder\\ Extension/Assets.xcassets";
@@ -729,8 +772,9 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/ffmpeg\"",
 					"\"$(SRCROOT)/ffmpeg\"",
-					"\"$(BUILT_PRODUCTS_DIR)/libwebp/include\"",
+					"\"$(SRCROOT)/libwebp/src\"",
 				);
 				INFOPLIST_FILE = "MediaInfo Finder Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -739,7 +783,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
+					"$(PROJECT_DIR)/MediaInfo\\ Finder\\ Extension/bpg",
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libavcodec",
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libswscale",
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libavfilter",
@@ -747,10 +791,19 @@
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libavutil",
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libswresample",
 					"$(BUILT_PRODUCTS_DIR)/libwebp/lib",
-					"$(PROJECT_DIR)/MediaInfo\\ Finder\\ Extension/bpg",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/ffmpeg/libavcodec\"",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/ffmpeg/libswscale\"",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/ffmpeg/libavfilter\"",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/ffmpeg/libavformat\"",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/ffmpeg/libavutil\"",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/ffmpeg/libswresample\"",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/libwebp/lib\"",
+					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "sbarex.MediaInfo.Finder-Extension";
+				OTHER_CODE_SIGN_FLAGS = "--timestamp";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.sbarex.MediaInfo.Finder-Extension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "org.sbarex.MediaInfo.Finder-Extension";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "MediaInfo Finder Extension/BridgeHeader.h";
 				SWIFT_VERSION = 5.0;
@@ -761,8 +814,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "MediaInfo Finder Extension/MediaInfo_Finder_Extension.entitlements";
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "MediaInfo\\ Finder\\ Extension/Assets.xcassets";
@@ -770,8 +823,9 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/ffmpeg\"",
 					"\"$(SRCROOT)/ffmpeg\"",
-					"\"$(BUILT_PRODUCTS_DIR)/libwebp/include\"",
+					"\"$(SRCROOT)/libwebp/src\"",
 				);
 				INFOPLIST_FILE = "MediaInfo Finder Extension/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -780,7 +834,6 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
 					"$(PROJECT_DIR)/MediaInfo\\ Finder\\ Extension/bpg",
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libavcodec",
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libavfilter",
@@ -789,9 +842,19 @@
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libswresample",
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libswscale",
 					"$(BUILT_PRODUCTS_DIR)/libwebp/lib",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/ffmpeg/libavcodec\"",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/ffmpeg/libavfilter\"",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/ffmpeg/libavformat\"",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/ffmpeg/libavutil\"",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/ffmpeg/libswresample\"",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/ffmpeg/libswscale\"",
+					"\"${BUILD_DIR}/../InstallationBuildProductsLocation/libwebp/lib\"",
+					"$(inherited)",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "sbarex.MediaInfo.Finder-Extension";
+				OTHER_CODE_SIGN_FLAGS = "--timestamp";
+				PRODUCT_BUNDLE_IDENTIFIER = "org.sbarex.MediaInfo.Finder-Extension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "org.sbarex.MediaInfo.Finder-Extension";
 				SKIP_INSTALL = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "MediaInfo Finder Extension/BridgeHeader.h";
 				SWIFT_VERSION = 5.0;

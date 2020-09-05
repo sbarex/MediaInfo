@@ -1,3 +1,7 @@
+1.0.b6
+
+Fix compilation settings to handle Xcode archive build.
+
 1.0.b5
 
 New code to handle settings.

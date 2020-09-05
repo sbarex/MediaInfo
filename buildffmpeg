@@ -1,6 +1,11 @@
 #!/bin/bash
 
-OUTDIR="${TARGET_BUILD_DIR}/${TARGET_NAME}"
+if [[ "${TARGET_BUILD_DIR: -1}" == "/" ]]; then
+	OUTDIR="${TARGET_BUILD_DIR}${TARGET_NAME}"
+else
+	OUTDIR="${TARGET_BUILD_DIR}/${TARGET_NAME}"
+fi
+
 if [ "${ACTION}" == "clean" ]; then
 	echo Remove "${OUTDIR}"
 	if [ -n "${OUTDIR}" ]; then
@@ -11,21 +16,23 @@ else
 	PATH=$PATH:/usr/local/bin
 
 	if [ ! -x "${SRCROOT}/ffmpeg/configure" ]; then
-		echo Clone to ${SRCROOT}/ffmpeg
+		echo "-> Clone to ${SRCROOT}/ffmpeg"
 		cd "${SRCROOT}"
 		git submodule update --init
 	fi
-	echo Build in ${OUTDIR}
+	echo "-> Build for ${ACTION} in ${OUTDIR}"
+	
 	mkdir -p "${OUTDIR}"
 	cd "${OUTDIR}"
 	if [ -f config.h ]; then
-		echo Skipping configure
+		echo "-> Skipping configure"
 	else
 		if [ "${CONFIGURATION}" == "Debug" ]; then
 			FLAGS="--disable-optimizations"
 		else
 			FLAGS=
 		fi
+		echo "-> Do configure"
 		${SRCROOT}/ffmpeg/configure --cc=clang --cpu=core2 --disable-stripping --enable-gpl --enable-hardcoded-tables --disable-doc --disable-pthreads --disable-indevs --disable-outdevs --disable-network --disable-avdevice --disable-muxers --disable-encoders --disable-bsfs --disable-filters --disable-protocols --enable-muxer=image2 --enable-encoder=png --enable-protocol=file --disable-programs --disable-ffprobe --disable-doc --disable-htmlpages --disable-manpages --disable-podpages --disable-txtpages --enable-nonfree ${FLAGS}
 	fi
 	make -j`sysctl -n hw.physicalcpu` ${ACTION}
