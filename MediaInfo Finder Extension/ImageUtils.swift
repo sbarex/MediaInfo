@@ -15,6 +15,7 @@ struct ImageInfo {
     let dpi: Int
     let colorMode: String
     let depth: Int
+    let animated: Bool?
 }
 
 /// Get image info for image format supported by coregraphics.
@@ -63,7 +64,8 @@ func getCGImageInfo(forFile url: URL) -> ImageInfo? {
     // Get the filesize, because it's not always present in the image properties dictionary :/
     // file_size = get_file_size(url)
     
-    return ImageInfo(width: width, height: height, dpi: dpi, colorMode: color, depth: depth)
+    let images = CGImageSourceGetCount(img_src)
+    return ImageInfo(width: width, height: height, dpi: dpi, colorMode: color, depth: depth, animated: images > 1)
 }
 
 func get_file_size(_ url: URL) -> size_t {
@@ -174,7 +176,7 @@ func getNetPBMImageInfo(forFile url: URL) -> ImageInfo? {
         bytesRead = getline(&lineByteArrayPointer, &lineCap, filePointer)
     }
     
-    return ImageInfo(width: width, height: height, dpi: 0, colorMode: color, depth: depth)
+    return ImageInfo(width: width, height: height, dpi: 0, colorMode: color, depth: depth, animated: false)
 }
 
 /// Get image info for WebP image format.
@@ -216,10 +218,10 @@ func getWebPImageInfo(forFile file: URL) -> ImageInfo? {
     let width: size_t = size_t(webp_cfg.input.width)
     let height: size_t = size_t(webp_cfg.input.height)
 
-    return ImageInfo(width: width, height: height, dpi: 0, colorMode: webp_cfg.input.has_alpha != 0 ? "RGBA" : "RGB", depth: webp_cfg.input.has_alpha != 0 ? 32 : 24)
+    return ImageInfo(width: width, height: height, dpi: 0, colorMode: webp_cfg.input.has_alpha != 0 ? "RGBA" : "RGB", depth: webp_cfg.input.has_alpha != 0 ? 32 : 24, animated: webp_cfg.input.has_animation > 0)
 }
 
-
+/*
 /// Get image info for BPG image format.
 func getBPGImageInfo(forFile file: URL) -> ImageInfo? {
     // Decode image
@@ -267,7 +269,7 @@ func getBPGImageInfo(forFile file: URL) -> ImageInfo? {
             color = ""
     }
 
-    return ImageInfo(width: width, height: height, dpi: 0, colorMode: color, depth: Int(img_info_s.bit_depth))
+    return ImageInfo(width: width, height: height, dpi: 0, colorMode: color, depth: Int(img_info_s.bit_depth), animated: img_info_s.has_animation > 0)
 }
 
 /// Fallback code to parse the header of a BPG image.
@@ -303,7 +305,7 @@ func getBPGImageInfoFallback(forData data: Data) -> ImageInfo? {
         // let extension_present_flag = (flags2 >> 3) & 0x1
         let alpha2_flag = (flags2 >> 2) & 0x1
         // let limited_range_flag = (flags2 >> 1) & 0x1
-        // let animation_flag = (flags2 >> 0) & 0x1
+        let animation_flag = (flags2 >> 0) & 0x1
         
         var width: UInt32 = 0
         let r = get_ue(&width, bytes.advanced(by: 6), Int32(data.count - 6))
@@ -327,12 +329,13 @@ func getBPGImageInfoFallback(forData data: Data) -> ImageInfo? {
                 // channels = 4
             }
         }
-        let info = ImageInfo(width: Int(width), height: Int(height), dpi: 0, colorMode: color, depth: Int(bit_depth))
+        let info = ImageInfo(width: Int(width), height: Int(height), dpi: 0, colorMode: color, depth: Int(bit_depth), animated: animation_flag > 0)
         
         return info
     }
     return info
 }
+*/
 
 /// Get image info for svg file format.
 func getSVGImageInfo(forFile file: URL) -> ImageInfo? {
@@ -358,7 +361,7 @@ func getSVGImageInfo(forFile file: URL) -> ImageInfo? {
     parser.delegate = delegate
     parser.parse()
     if let w = delegate.width, let h = delegate.height {
-        return ImageInfo(width: w, height: h, dpi: 0, colorMode: "", depth: 24)
+        return ImageInfo(width: w, height: h, dpi: 0, colorMode: "", depth: 24, animated: false)
     } else {
         return nil
     }
@@ -395,5 +398,5 @@ func getMetadataImageInfo(forFile url: URL) -> ImageInfo? {
         CFNumberGetValue((n as! CFNumber), CFNumberType.intType, &bit)
     }
     
-    return ImageInfo(width: width, height: height, dpi: dpi, colorMode: colorSpace, depth: bit)
+    return ImageInfo(width: width, height: height, dpi: dpi, colorMode: colorSpace, depth: bit, animated: nil)
 }

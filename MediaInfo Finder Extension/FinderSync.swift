@@ -117,6 +117,70 @@ class FinderSync: FIFinderSync {
         return menu
     }
     
+    internal func image(for mode: String/*, isDark dark: Bool*/) -> NSImage? {
+        var img: NSImage?
+        switch mode {
+        case "image":
+            /*
+            if #available(macOSApplicationExtension 11.0, *) {
+                img = NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
+            } else {
+                img = NSImage(named: dark ? "image_w" : "image")
+            }
+ */
+            img = NSImage(named: "image")
+        case "color":
+            /*
+            /*if #available(macOSApplicationExtension 11.0, *) {
+                return NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
+            } else {*/
+                img = NSImage(named: dark ? "color_w" : "color")
+            //}
+            */
+            img = NSImage(named: "color")
+        case "print":
+            /*
+            if #available(macOSApplicationExtension 11.0, *) {
+                img = NSImage(systemSymbolName: "printer", accessibilityDescription: nil)
+            } else {
+                img = NSImage(named: dark ? "print_w" : "print")
+            }
+ */
+            img = NSImage(named: "print")
+        case "video":
+            /*
+            if #available(macOSApplicationExtension 11.0, *) {
+                img = NSImage(systemSymbolName: "video", accessibilityDescription: nil)
+            } else {
+                img = NSImage(named: dark ? "video_w" : "video")
+            }*/
+            img = NSImage(named: "video")
+        case "audio":
+            /*
+            if #available(macOSApplicationExtension 11.0, *) {
+                img = NSImage(systemSymbolName: "speaker.wave.1", accessibilityDescription: nil)
+            } else {
+                img = NSImage(named: dark ? "audio_w" : "audio")
+            }
+            */
+            img = NSImage(named: "audio")
+        case "text":
+            /*
+            if #available(macOSApplicationExtension 11.0, *) {
+                img = NSImage(systemSymbolName: "captions.bubble", accessibilityDescription: nil)
+            } else {
+                img = NSImage(named: dark ? "txt_w" : "txt")
+            }*/
+            img = NSImage(named: "txt")
+        default:
+            return nil
+        }
+        
+        img?.isTemplate = true
+        
+        return img?.image(withTintColor: NSColor.labelColor)
+    }
+    
     func getMenuForImage(atURL item: URL) -> NSMenu? {
         let image_info: ImageInfo
         if let info = getCGImageInfo(forFile: item) {
@@ -130,9 +194,9 @@ class FinderSync: FIFinderSync {
                 image_info = info
             } else if UTTypeConformsTo(uti as CFString, "public.webp" as CFString), let info = getWebPImageInfo(forFile: item) {
                 image_info = info
-            } else if UTTypeConformsTo(uti as CFString, "fr.whine.bpg" as CFString) || item.pathExtension == "bpg", let info = getBPGImageInfo(forFile: item) {
+            } /*else if UTTypeConformsTo(uti as CFString, "fr.whine.bpg" as CFString) || item.pathExtension == "bpg", let info = getBPGImageInfo(forFile: item) {
                 image_info = info
-            } else if UTTypeConformsTo(uti as CFString, "public.svg-image" as CFString), let info = getSVGImageInfo(forFile: item) {
+            } */else if UTTypeConformsTo(uti as CFString, "public.svg-image" as CFString), let info = getSVGImageInfo(forFile: item) {
                 image_info = info
             } else if let info = getFFMpegImageInfo(forFile: item) {
                 image_info = info
@@ -159,12 +223,13 @@ class FinderSync: FIFinderSync {
         
         // FIXME: NSImage named with a pdf image don't respect dark theme!
         // FIXME: The image set for a NSMenuItem in the extension do not preserve the template rendering mode.
-        let type = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") ?? "Light"
+        //let isDark = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
         
         let info_sub_menu = NSMenu(title: "MediaInfo")
         if use_submenu {
             let info_mnu = menu.addItem(withTitle: "Media info", action: #selector(sampleAction(_:)), keyEquivalent: "")
-            info_mnu.image = NSImage(named: type == "Dark" ? "image_w" : "image")
+            info_mnu.image = image(for: "image")
+            
             menu.setSubmenu(info_sub_menu, for: info_mnu)
         }
         var colors: [String] = []
@@ -176,6 +241,9 @@ class FinderSync: FIFinderSync {
         }
         
         var title = "\(image_info.width) × \(image_info.height) px"
+        if let animated = image_info.animated, animated {
+            title += " [" + NSLocalizedString("animated", comment: "") + "]"
+        }
         
         if !use_submenu && !colors.isEmpty {
             title += " " + colors.joined(separator: " ")
@@ -184,14 +252,22 @@ class FinderSync: FIFinderSync {
             title += " (\(image_info.dpi) dpi)"
         }
         let mnu = NSMenuItem(title: title, action: nil, keyEquivalent: "")
-        mnu.image = icon_hidden ? nil : NSImage(named: type == "Dark" ? "image_w" : "image")
+        mnu.image = icon_hidden ? nil : image(for: "image")
         mnu.isEnabled = false
         (use_submenu ? info_sub_menu : menu).addItem(mnu)
+        
+        if use_submenu && settings.isImageInfoOnMainItem {
+            menu.items.first!.title = title
+        }
         
         if use_submenu && !colors.isEmpty {
             let mnu = info_sub_menu.addItem(withTitle: colors.joined(separator: " "), action: nil, keyEquivalent: "")
             mnu.isEnabled = false
-            mnu.image = icon_hidden ? nil : NSImage(named: type == "Dark" ? "color_w" : "color")
+            mnu.image = icon_hidden ? nil : image(for: "color")
+            
+            if use_submenu && settings.isImageInfoOnMainItem {
+                menu.items.first!.title += ", " + colors.joined(separator: " ")
+            }
         }
         
         let unit = settings.unit
@@ -213,17 +289,24 @@ class FinderSync: FIFinderSync {
         if !print_hidden && image_info.dpi != 0, let w_cm = numberFormatter.string(from: NSNumber(value: Double(image_info.width) / Double(image_info.dpi) * scale)), let h_cm = numberFormatter.string(from: NSNumber(value: Double(image_info.height) / Double(image_info.dpi) * scale)) {
             
             let mnu = NSMenuItem(title: "\(w_cm) × \(h_cm)\(unit_label) (\(image_info.dpi) dpi)", action: nil, keyEquivalent: "")
-            mnu.image = icon_hidden ? nil : NSImage(named: type == "Dark" ? "print_w" : "print")
+            mnu.image = icon_hidden ? nil : image(for: "print")
             mnu.isEnabled = false
             (use_submenu ? info_sub_menu : menu).addItem(mnu)
         }
         
         if !settings.isCustomPrintHidden, settings.customDPI > 0 && (image_info.dpi != settings.customDPI || print_hidden), let w_cm = numberFormatter.string(from: NSNumber(value:Double(image_info.width) / Double(settings.customDPI) * scale)), let h_cm = numberFormatter.string(from: NSNumber(value:Double(image_info.height) / Double(settings.customDPI) * scale)) {
             let mnu = NSMenuItem(title: "\(w_cm) × \(h_cm)\(unit_label) (\(settings.customDPI) dpi)", action: nil, keyEquivalent: "")
-            mnu.image = icon_hidden ? nil : NSImage(named: type == "Dark" ? "print_w" : "print")
+            
+            mnu.image = icon_hidden ? nil : image(for: "print")
             mnu.isEnabled = false
             (use_submenu ? info_sub_menu : menu).addItem(mnu)
         }
+        /*
+        if use_submenu {
+            info_sub_menu.addItem(NSMenuItem.separator())
+            info_sub_menu.addItem(NSMenuItem(title: "Settings…", action: #selector(self.openSettings(_:)), keyEquivalent: ""))
+        }
+         */
         return menu
     }
     
@@ -290,7 +373,7 @@ class FinderSync: FIFinderSync {
                 }
                 let mnu = NSMenuItem(title: title, action: nil, keyEquivalent: "")
                 mnu.isEnabled = false
-                mnu.image = (group_tracks || icon_hidden) ? nil : NSImage(named: type == "Dark" ? "video_w" : "video")
+                mnu.image = (group_tracks || icon_hidden) ? nil : image(for: "video")
                 (group_tracks ? mnu_video : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
                 
             case .audio(let duration, let codec, let lang, let bit_rate):
@@ -313,7 +396,7 @@ class FinderSync: FIFinderSync {
                 let mnu = NSMenuItem(title:title, action: nil, keyEquivalent: "")
                 mnu.isEnabled = false
                 
-                mnu.image = (group_tracks || icon_hidden) ? nil : NSImage(named: type == "Dark" ? "audio_w" : "audio")
+                mnu.image = (group_tracks || icon_hidden) ? nil : image(for: "audio")
                 
                 (group_tracks ? mnu_audio : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
                 
@@ -328,7 +411,7 @@ class FinderSync: FIFinderSync {
                 if !title.isEmpty {
                     let mnu = NSMenuItem(title: title, action: nil, keyEquivalent: "")
                     mnu.isEnabled = false
-                    mnu.image = (group_tracks || icon_hidden) ? nil : NSImage(named: type == "Dark" ? "txt_w" : "txt")
+                    mnu.image = (group_tracks || icon_hidden) ? nil : image(for: "text")
                                            
                     (group_tracks ? mnu_text : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
                 }
@@ -339,23 +422,27 @@ class FinderSync: FIFinderSync {
         }
         if mnu_video.items.count > 0 {
             let m = NSMenuItem(title: NSLocalizedString("Video", comment: ""), action: nil, keyEquivalent: "")
-            m.image = NSImage(named: type == "Dark" ? "video_w" : "video")
+            m.image = image(for: "video")
             (use_submenu ? info_sub_menu : menu).addItem(m)
             (use_submenu ? info_sub_menu : menu).setSubmenu(mnu_video, for: m)
+            
+            if use_submenu && settings.isMediaInfoOnMainItem {
+                menu.items.first!.title = mnu_video.items.first!.title
+            }
         }
         if mnu_audio.items.count > 0 {
             let m = NSMenuItem(title: NSLocalizedString("Audio", comment: ""), action: nil, keyEquivalent: "")
-            m.image = NSImage(named: type == "Dark" ? "audio_w" : "audio")
+            m.image = image(for: "audio")
             (use_submenu ? info_sub_menu : menu).addItem(m)
             (use_submenu ? info_sub_menu : menu).setSubmenu(mnu_audio, for: m)
         }
         if mnu_text.items.count > 0 {
             let m = NSMenuItem(title: NSLocalizedString("Subtitle", comment: ""), action: nil, keyEquivalent: "")
-            m.image = NSImage(named: type == "Dark" ? "txt_w" : "txt")
+            m.image = image(for: "text")
             (use_submenu ? info_sub_menu : menu).addItem(m)
             (use_submenu ? info_sub_menu : menu).setSubmenu(mnu_text, for: m)
         }
-        
+
         return menu
     }
     
@@ -381,7 +468,7 @@ class FinderSync: FIFinderSync {
         
         // FIXME: NSImage named with a pdf image don't respect dark theme!
         // FIXME: The image set for a NSMenuItem in the extension do not preserve the template rendering mode.
-        let type = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") ?? "Light"
+        // let isDark = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
         
         let menu = NSMenu(title: "")
         menu.autoenablesItems = false
@@ -389,7 +476,7 @@ class FinderSync: FIFinderSync {
         let info_sub_menu = NSMenu(title: "MediaInfo")
         if use_submenu {
             let info_mnu = menu.addItem(withTitle: "Media info", action: nil, keyEquivalent: "")
-            info_mnu.image = NSImage(named: type == "Dark" ? "audio_w" : "audio")
+            info_mnu.image = image(for: "audio")
             menu.setSubmenu(info_sub_menu, for: info_mnu)
         }
         
@@ -414,14 +501,25 @@ class FinderSync: FIFinderSync {
                 
                 let mnu = NSMenuItem(title:title, action: nil, keyEquivalent: "")
                 mnu.isEnabled = false
-                mnu.image = icon_hidden ? nil : NSImage(named: type == "Dark" ? "audio_w" : "audio")
+                mnu.image = icon_hidden ? nil : image(for: "audio")
                 (use_submenu ? info_sub_menu : menu).addItem(mnu)
             default:
                 break
             }
         }
         
+        if use_submenu && settings.isMediaInfoOnMainItem, info_sub_menu.items.count > 0 {
+            menu.items.first!.title = info_sub_menu.items.first!.title
+            if info_sub_menu.items.count == 1 {
+                menu.setSubmenu(nil, for: menu.items.first!)
+            }
+        }
+        
         return menu
+    }
+    
+    @IBAction func openSettings(_ sender: AnyObject?) {
+        FIFinderSyncController.showExtensionManagementInterface()
     }
     
     @IBAction func sampleAction(_ sender: AnyObject?) {
@@ -443,4 +541,18 @@ extension Double {
         let divisor = pow(10.0, Double(places))
         return (self * divisor).rounded() / divisor
     }
+}
+
+extension NSImage {
+   func image(withTintColor tintColor: NSColor) -> NSImage {
+       guard isTemplate else { return self }
+       guard let copiedImage = self.copy() as? NSImage else { return self }
+       copiedImage.lockFocus()
+       tintColor.set()
+       let imageBounds = NSMakeRect(0, 0, copiedImage.size.width, copiedImage.size.height)
+       imageBounds.fill(using: .sourceAtop)
+       copiedImage.unlockFocus()
+       copiedImage.isTemplate = false
+       return copiedImage
+   }
 }

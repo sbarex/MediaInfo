@@ -33,6 +33,8 @@ class ViewController: NSViewController {
     @objc dynamic var isDepthHidden: Bool = false
     @objc dynamic var isImageIconHidden: Bool = false
     @objc dynamic var isImageInfoOnSubmenu: Bool = true
+    @objc dynamic var isImageInfoOnMainItem: Bool = false
+    @objc dynamic var isMediaInfoOnMainItem: Bool = false
     
     @objc dynamic var isDPIEnabled: Bool {
         return isImageHandled && !isCustomDPIHidden
@@ -68,6 +70,7 @@ class ViewController: NSViewController {
         self.unit = settings.unit.rawValue
         self.isImageIconHidden = settings.isImageIconsHidden
         self.isImageInfoOnSubmenu = settings.isImageInfoOnSubMenu
+        self.isImageInfoOnMainItem = settings.isImageInfoOnMainItem
         
         self.isVideoHandled = settings.isMediaHandled
         self.isFramesHidden = settings.isFramesHidden
@@ -76,6 +79,7 @@ class ViewController: NSViewController {
         self.isTracksGrouped = settings.isTracksGrouped
         self.isMediaIconHidden = settings.isMediaIconsHidden
         self.isMediaInfoOnSubmenu = settings.isMediaInfoOnSubMenu
+        self.isMediaInfoOnMainItem = settings.isMediaInfoOnMainItem
         
         self.folders = settings.folders.sorted(by: { $0.path < $1.path })
         
@@ -161,6 +165,7 @@ class ViewController: NSViewController {
         settings.unit = PrintUnit(rawValue: self.unit) ?? .cm
         settings.isImageIconsHidden = self.isImageIconHidden
         settings.isImageInfoOnSubMenu = self.isImageInfoOnSubmenu
+        settings.isImageInfoOnMainItem = self.isImageInfoOnMainItem
         
         settings.isMediaHandled = self.isVideoHandled
         settings.isFramesHidden = self.isFramesHidden
@@ -169,6 +174,7 @@ class ViewController: NSViewController {
         settings.isTracksGrouped = self.isTracksGrouped
         settings.isMediaIconsHidden = self.isMediaIconHidden
         settings.isMediaInfoOnSubMenu = self.isMediaInfoOnSubmenu
+        settings.isMediaInfoOnMainItem = self.isMediaInfoOnMainItem
         
         settings.synchronize()
         

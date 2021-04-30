@@ -26,6 +26,7 @@ class Settings {
     var isDepthHidden = false
     var isImageIconsHidden = false
     var isImageInfoOnSubMenu = true
+    var isImageInfoOnMainItem = false
     
     var isMediaHandled = true
     var isFramesHidden = true
@@ -34,6 +35,7 @@ class Settings {
     var isMediaIconsHidden = false
     var isMediaInfoOnSubMenu = true
     var isTracksGrouped = false
+    var isMediaInfoOnMainItem = false
     
     var folders: [URL] = []
     
@@ -85,6 +87,7 @@ class Settings {
         defaults?.set(self.unit.rawValue, forKey: "unit")
         defaults?.set(self.isImageIconsHidden, forKey: "image_icons_hidden")
         defaults?.set(self.isImageInfoOnSubMenu, forKey: "image_sub_menu")
+        defaults?.set(self.isImageInfoOnMainItem, forKey: "image_main_info")
         
         defaults?.set(self.isMediaHandled, forKey: "video_handled")
         defaults?.set(self.isFramesHidden, forKey: "frames_hidden")
@@ -93,6 +96,7 @@ class Settings {
         defaults?.set(self.isTracksGrouped, forKey: "group_tracks")
         defaults?.set(self.isMediaIconsHidden, forKey: "media_icons_hidden")
         defaults?.set(self.isMediaInfoOnSubMenu, forKey: "media_sub_menu")
+        defaults?.set(self.isMediaInfoOnMainItem, forKey: "media_main_info")
         
         return defaults?.synchronize() ?? false
     }
@@ -109,6 +113,7 @@ class Settings {
         self.unit = PrintUnit(rawValue: defaults?.integer(forKey: "unit") ?? 0) ?? .cm
         self.isImageIconsHidden = defaults?.bool(forKey: "image_icons_hidden") ?? false
         self.isImageInfoOnSubMenu = defaults?.bool(forKey: "image_sub_menu") ?? true
+        self.isImageInfoOnMainItem = defaults?.bool(forKey: "image_main_info") ?? false
         
         self.isMediaHandled = defaults?.bool(forKey: "video_handled") ?? true
         self.isFramesHidden = defaults?.bool(forKey: "frames_hidden") ?? false
@@ -117,6 +122,7 @@ class Settings {
         self.isTracksGrouped = defaults?.bool(forKey: "group_tracks") ?? false
         self.isMediaIconsHidden = defaults?.bool(forKey: "media_icons_hidden") ?? false
         self.isMediaInfoOnSubMenu = defaults?.bool(forKey: "media_sub_menu") ?? false
+        self.isMediaInfoOnMainItem = defaults?.bool(forKey: "media_main_info") ?? false
         
         if let d = defaults?.array(forKey: "folders") as? [String] {
             self.folders = d.sorted().map({ URL(fileURLWithPath: $0 )})

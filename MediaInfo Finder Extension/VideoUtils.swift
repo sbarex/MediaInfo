@@ -2,7 +2,7 @@
 //  VideoUtils.swift
 //  MediaInfo Finder Extension
 //
-//  Created by Simone Baldissini on 26/08/2020.
+//  Created by Sbarex on 26/08/2020.
 //  Copyright © 2020 sbarex. All rights reserved.
 //
 
@@ -263,8 +263,8 @@ func getFFMpegImageInfo(forFile file: URL) -> ImageInfo? {
     let streams = getFFMpegInfo(forFile: file)
     for stream in streams {
         switch stream {
-        case .video(let width, let height, _, _, _, _, _, _):
-            return ImageInfo(width: width, height: height, dpi: 0, colorMode: "", depth: 0)
+        case .video(let width, let height, _, _, _, _, _, let frames):
+            return ImageInfo(width: width, height: height, dpi: 0, colorMode: "", depth: 0, animated: frames > 1)
         default:
             break
         }

@@ -23,6 +23,7 @@ Show these properties:
 - resolution (dpi)
 - color mode (RGB, CMYK, GRAYSCALE)
 - number of bit
+- animation
 - print size (you can also set custom dpi resolution)
 
 

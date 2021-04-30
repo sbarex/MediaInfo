@@ -2,7 +2,7 @@
   Localizable.strings
   MediaInfo
 
-  Created by Simone Baldissini on 29/08/2020.
+  Created by Sbarex on 29/08/2020.
   Copyright © 2020 sbarex. All rights reserved.
 */
 " cm" = " cm";
@@ -10,3 +10,5 @@
 " inch" = "\"";
 
 "Subtitle" = "Sottotiloli";
+
+"animated" = "animato";
