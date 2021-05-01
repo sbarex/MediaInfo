@@ -334,7 +334,7 @@ class FinderSync: FIFinderSync {
         
         // FIXME: NSImage named with a pdf image don't respect dark theme!
         // FIXME: The image set for a NSMenuItem in the extension do not preserve the template rendering mode.
-        let type = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") ?? "Light"
+        // let isDark = (UserDefaults.standard.string(forKey: "AppleInterfaceStyle") ?? "Light") == "Dark"
         
         let menu = NSMenu(title: "")
         menu.autoenablesItems = false
@@ -342,7 +342,7 @@ class FinderSync: FIFinderSync {
         let info_sub_menu = NSMenu(title: "MediaInfo")
         if use_submenu {
             let info_mnu = menu.addItem(withTitle: "Media info", action: nil, keyEquivalent: "")
-            info_mnu.image = NSImage(named: type == "Dark" ? "video_w" : "video")
+            info_mnu.image = image(for: "video")
             menu.setSubmenu(info_sub_menu, for: info_mnu)
         }
         
@@ -420,15 +420,14 @@ class FinderSync: FIFinderSync {
                 break
             }
         }
+        if use_submenu && settings.isMediaInfoOnMainItem && info_sub_menu.items.count > 0{
+            menu.items.first!.title = info_sub_menu.items.first!.title
+        }
         if mnu_video.items.count > 0 {
             let m = NSMenuItem(title: NSLocalizedString("Video", comment: ""), action: nil, keyEquivalent: "")
             m.image = image(for: "video")
             (use_submenu ? info_sub_menu : menu).addItem(m)
             (use_submenu ? info_sub_menu : menu).setSubmenu(mnu_video, for: m)
-            
-            if use_submenu && settings.isMediaInfoOnMainItem {
-                menu.items.first!.title = mnu_video.items.first!.title
-            }
         }
         if mnu_audio.items.count > 0 {
             let m = NSMenuItem(title: NSLocalizedString("Audio", comment: ""), action: nil, keyEquivalent: "")
