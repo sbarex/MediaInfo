@@ -350,6 +350,8 @@ class FinderSync: FIFinderSync {
         let mnu_audio = NSMenu(title: "Audio")
         let mnu_text  = NSMenu(title: "Subtitle")
         
+        var mainTitle = ""
+        
         for stream in streams {
             switch stream {
             case .video(let width, let height, let duration, let codec, _, let lang, let bit_rate, let frames):
@@ -375,6 +377,9 @@ class FinderSync: FIFinderSync {
                 mnu.isEnabled = false
                 mnu.image = (group_tracks || icon_hidden) ? nil : image(for: "video")
                 (group_tracks ? mnu_video : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
+                if mainTitle.isEmpty {
+                    mainTitle = title
+                }
                 
             case .audio(let duration, let codec, let lang, let bit_rate):
                 var extra: [String] = []
@@ -420,8 +425,8 @@ class FinderSync: FIFinderSync {
                 break
             }
         }
-        if use_submenu && settings.isMediaInfoOnMainItem && info_sub_menu.items.count > 0{
-            menu.items.first!.title = info_sub_menu.items.first!.title
+        if use_submenu && settings.isMediaInfoOnMainItem && !mainTitle.isEmpty {
+            menu.items.first!.title = mainTitle
         }
         if mnu_video.items.count > 0 {
             let m = NSMenuItem(title: NSLocalizedString("Video", comment: ""), action: nil, keyEquivalent: "")
