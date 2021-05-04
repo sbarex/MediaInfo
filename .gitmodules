@@ -1,6 +1,3 @@
-[submodule "libbpg-xcode"]
-	path = libbpg-xcode
-	url = https://github.com/jasongorski/libbpg-xcode.git
 [submodule "ffmpeg"]
 	path = ffmpeg
 	url = git://source.ffmpeg.org/ffmpeg.git

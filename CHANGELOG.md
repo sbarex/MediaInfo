@@ -1,6 +1,13 @@
 Changelog
 =======
 
+### 1.0.b910
+
+- Support for _ratio_, _resolution name_ and _file size_ menu item.
+- Reorganized some settings UI.
+- FFMpeg updated to release 4.4.
+- Removed support of `libbpg`.
+
 ### 1.0.b9
 
 - Bugfix on video menu.

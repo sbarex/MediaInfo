@@ -1,8 +1,8 @@
 /* Class = "NSMenuItem"; title = "MediaInfo"; ObjectID = "1Xt-HY-uBw"; */
 "1Xt-HY-uBw.title" = "MediaInfo";
 
-/* Class = "NSButtonCell"; title = "Save"; ObjectID = "3ol-h5-zyQ"; */
-"3ol-h5-zyQ.title" = "Salva";
+/* Class = "NSButtonCell"; title = "Save and close"; ObjectID = "3ol-h5-zyQ"; */
+"3ol-h5-zyQ.title" = "Salva e chiudi";
 
 /* Class = "NSMenuItem"; title = "Quit MediaInfo"; ObjectID = "4sb-4s-VLi"; */
 "4sb-4s-VLi.title" = "Chiudi MediaInfo";
@@ -85,8 +85,9 @@
 /* Class = "NSMenu"; title = "Services"; ObjectID = "hz9-B4-Xy5"; */
 "hz9-B4-Xy5.title" = "Servizi";
 
-/* Class = "NSButtonCell"; title = "Cancel"; ObjectID = "jsV-5y-gqO"; */
-"jsV-5y-gqO.title" = "Annulla";
+/* Class = "NSButtonCell"; title = "Close"; ObjectID = "jsV-5y-gqO"; */
+"jsV-5y-gqO.title" = "Chiudi";
+"jMs-wz-9jt.title" = "Applica";
 
 /* Class = "NSTextFieldCell"; title = "Monitored folders:"; ObjectID = "leZ-K3-ufv"; */
 "leZ-K3-ufv.title" = "Cartelle monitorate:";
@@ -119,6 +120,7 @@
 "y82-I0-7Hm.title" = "mm";
 
 "kZH-lG-0GR.label" = "Cartelle";
+"X7x-1e-VQx.label" = "Generali";
 "hi3-b6-BGO.label" = "Immagini";
 "FmM-UB-BFQ.label" = "Audio e Video";
 
@@ -133,10 +135,8 @@
 "mhg-O0-Th5.title" = "Raggruppa tracce per tipologia";
 
 "cYX-CY-lD3.title" = "Mostra le icone nelle voci di menu";
-"Qfc-fO-bha.title" = "Mostra le icone nelle voci di menu";
-
 "miM-mB-nHF.title" = "Mostra le informazioni in un sotto menu";
-"DTr-ug-NGx.title" = "Mostra le informazioni in un sotto menu";
-
 "FzS-qT-KmD.title" = "Mostra informazioni principali sull'etichetta del menu";
-"HCy-tm-EUN.title" = "Mostra informazioni principali sull'etichetta del menu";
+"Fj1-F3-JW9.title" = "Mostra dimensioni del file";
+"2uO-lI-Axl.title" = "Mostra proporzioni di immagini e video";
+"TnM-f2-kTh.title" = "Mostra nome della risoluzione";

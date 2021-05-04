@@ -12,8 +12,7 @@
 #import "webp/decode.h"
 
 #include "libavformat/avformat.h"
-#include "avlanguage.h"
-#import "libbpg.h"
+#include "libavformat/avlanguage.h"
 
 #define MAX_DATA_SIZE ((1 << 30) - 1)
 

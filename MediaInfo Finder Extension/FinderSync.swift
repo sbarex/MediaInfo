@@ -33,7 +33,14 @@ class FinderSync: FIFinderSync {
         // FIFinderSyncController.default().setBadgeImage(NSImage(named: NSImage.colorPanelName)!, label: "Status One" , forBadgeIdentifier: "One")
         // FIFinderSyncController.default().setBadgeImage(NSImage(named: NSImage.cautionName)!, label: "Status Two", forBadgeIdentifier: "Two")
         
-        DistributedNotificationCenter.default().addObserver(self, selector: #selector(self.handleFolderChanged(_:)), name: NSNotification.Name(rawValue: "MediaInfoMonitoredFolderChanged"), object: nil)
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(self.handleFolderChanged(_:)), name: .MediaInfoMonitoredFolderChanged, object: nil)
+        
+        DistributedNotificationCenter.default().addObserver(self, selector: #selector(self.handleSettingsChanged(_:)), name: .MediaInfoSettingsChanged, object: nil)
+    }
+    
+    deinit {
+        DistributedNotificationCenter.default().removeObserver(self, name: .MediaInfoMonitoredFolderChanged, object: nil)
+        DistributedNotificationCenter.default().removeObserver(self, name: .MediaInfoSettingsChanged, object: nil)
     }
     
     @objc func handleFolderChanged(_ notification: Notification) {
@@ -42,6 +49,13 @@ class FinderSync: FIFinderSync {
         
         NSLog("FinderSync() watching folders:\n %@", settings.folders.map({$0.path}).joined(separator: "\n"))
         FIFinderSyncController.default().directoryURLs = Set(settings.folders)
+    }
+    
+    @objc func handleSettingsChanged(_ notification: Notification) {
+        let settings = Settings.shared
+        settings.refresh()
+        
+        NSLog("FinderSync() settings changes")
     }
     
     // MARK: - Primary Finder Sync protocol methods
@@ -172,6 +186,8 @@ class FinderSync: FIFinderSync {
                 img = NSImage(named: dark ? "txt_w" : "txt")
             }*/
             img = NSImage(named: "txt")
+        case "ratio":
+            img = NSImage(named: "aspectratio")
         default:
             return nil
         }
@@ -179,6 +195,114 @@ class FinderSync: FIFinderSync {
         img?.isTemplate = true
         
         return img?.image(withTintColor: NSColor.labelColor)
+    }
+
+    internal func createMenuItem(title: String, image: String?) -> NSMenuItem {
+        let mnu = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        mnu.isEnabled = true
+        mnu.image = image == nil || Settings.shared.isIconHidden ? nil : self.image(for: image!)
+        return mnu
+    }
+    
+    internal func getFileSizeMenuItem(for item: URL)->NSMenuItem? {
+        guard !Settings.shared.isFileSizeHidden, let attr = try? FileManager.default.attributesOfItem(atPath: item.path), let fileSize = attr[FileAttributeKey.size] as? Int64 else {
+            return nil
+        }
+            
+        let bcf = ByteCountFormatter()
+        bcf.allowedUnits = [.useMB]
+        bcf.countStyle = .file
+        let title = bcf.string(fromByteCount: fileSize)
+        return createMenuItem(title: title, image: nil)
+    }
+    
+    internal func getRatioMenuItem(width: Int, height: Int)->NSMenuItem? {
+        guard !Settings.shared.isRatioHidden else {
+            return nil
+        }
+        let gcd = self.gcd(width, height)
+        guard gcd != 1 else {
+            return nil
+        }
+        let w = width / gcd
+        let h = height / gcd
+            
+        return createMenuItem(title: "\(w) : \(h)", image: "ratio")
+    }
+    
+    internal func gcd(_ a: Int, _ b: Int) -> Int {
+        let remainder = abs(a) % abs(b)
+        if remainder != 0 {
+            return gcd(abs(b), remainder)
+        } else {
+            return abs(b)
+        }
+    }
+    
+    internal func getResolutioNameMenuItem(width: Int, height: Int)->NSMenuItem? {
+        guard !Settings.shared.isResolutionNameHidden, let res = getResolutioName(width: width, height: height) else {
+            return nil
+        }
+        
+        return createMenuItem(title: res, image: nil)
+    }
+        
+    internal func getResolutioName(width: Int, height: Int)->String? {
+        let resolutions = [
+            // Narrowscreen 4:3 computer display resolutions
+            "MCGA": [320, 200],
+            "QVGA" : [320, 240],
+            "VGA" : [640, 480],
+            "Super VGA" : [800, 600],
+            "XGA" : [1024, 768],
+            "SXGA" : [1280, 1024],
+            "UXGA" : [1600, 1200],
+            
+            // Analog
+            "CRT monitors": [320, 200],
+            "Video CD": [352, 240],
+            "VHS": [333, 480],
+            "Betamax": [350, 480],
+            "Super Betamax": [420, 480],
+            "Betacam SP": [460, 480],
+            "Super VHS": [580, 480],
+            "Enhanced Definition Betamax": [700, 480],
+            
+            // Digital
+            "Digital8": [500, 480],
+            "NTSC DV": [720, 480],
+            "NTSC D1": [720, 486],
+            "NTSC D1 Square pixel": [720, 543],
+            "NTSC D1 Widescreen Square Pixel": [782, 486],
+            
+            "EDTV (Enhanced Definition Television)": [854, 480],
+            "D-VHS, DVD, miniDV, Digital8, Digital Betacam (PAL/SECAM)": [720, 576],
+            "PAL D1/DV": [720, 576],
+            "PAL D1/DV Square pixel": [788, 576],
+            "PAL D1/DV Widescreen Square pixel": [1050, 576],
+            
+            
+            "HDV/HDTV 720": [1280, 720],
+            "HDTV 1080": [1440, 1080],
+            "DVCPRO HD 720": [960, 720],
+            "DVCPRO HD 1080": [1440, 1080],
+            
+            "HDTV 1080 (FullHD)": [1920, 1080],
+            
+            // "HDV (miniDV), AVCHD, HD DVD, Blu-ray, HDCAM SR": [1920, 1080],
+            "2K Flat (1.85:1)": [1998, 1080],
+            "UHD 4K": [3840, 2160],
+            "UHD 8K": [7680, 4320],
+            "Cineon Half": [1828, 1332],
+            "Cineon Full": [3656, 2664],
+            "Film (2K)": [2048, 1556],
+            "Film (4K)": [4096, 3112],
+            "Digital Cinema (2K)": [2048, 1080],
+            "Digital Cinema (4K)": [4096, 2160],
+            "Digital Cinema (16K)": [15360, 8640],
+            "Digital Cinema (64K)": [61440, 34560],
+        ]
+        return resolutions.first(where: { $1[0] == width && $1[1] == height })?.key
     }
     
     func getMenuForImage(atURL item: URL) -> NSMenu? {
@@ -215,15 +339,12 @@ class FinderSync: FIFinderSync {
         menu.autoenablesItems = false
         
         let settings = Settings.shared
-        settings.refresh()
         
-        let use_submenu  = settings.isImageInfoOnSubMenu
-        let icon_hidden  = settings.isImageIconsHidden
+        let use_submenu  = settings.isInfoOnSubMenu
         let print_hidden = settings.isPrintHidden
         
         // FIXME: NSImage named with a pdf image don't respect dark theme!
-        // FIXME: The image set for a NSMenuItem in the extension do not preserve the template rendering mode.
-        //let isDark = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
+        // FIXME: NSMenuItem in the extension do not preserve the image template rendering mode, delegate, attributedTitle (rendered as simple string), isAlternate, separator (render as a menu item with an empty title).
         
         let info_sub_menu = NSMenu(title: "MediaInfo")
         if use_submenu {
@@ -251,21 +372,25 @@ class FinderSync: FIFinderSync {
         if print_hidden && image_info.dpi > 0 {
             title += " (\(image_info.dpi) dpi)"
         }
-        let mnu = NSMenuItem(title: title, action: nil, keyEquivalent: "")
-        mnu.image = icon_hidden ? nil : image(for: "image")
-        mnu.isEnabled = false
+        let mnu = createMenuItem(title: title, image: "image")
         (use_submenu ? info_sub_menu : menu).addItem(mnu)
         
-        if use_submenu && settings.isImageInfoOnMainItem {
+        if use_submenu && settings.isInfoOnMainItem {
             menu.items.first!.title = title
         }
         
+        if let mnu = getRatioMenuItem(width: image_info.width, height: image_info.height) {
+            (use_submenu ? info_sub_menu : menu).addItem(mnu)
+        }
+        if let mnu = getResolutioNameMenuItem(width: image_info.width, height: image_info.height) {
+            (use_submenu ? info_sub_menu : menu).addItem(mnu)
+        }
+        
         if use_submenu && !colors.isEmpty {
-            let mnu = info_sub_menu.addItem(withTitle: colors.joined(separator: " "), action: nil, keyEquivalent: "")
-            mnu.isEnabled = false
-            mnu.image = icon_hidden ? nil : image(for: "color")
+            let mnu = createMenuItem(title: colors.joined(separator: " "), image: "color")
+            info_sub_menu.addItem(mnu)
             
-            if use_submenu && settings.isImageInfoOnMainItem {
+            if use_submenu && settings.isInfoOnMainItem {
                 menu.items.first!.title += ", " + colors.joined(separator: " ")
             }
         }
@@ -288,17 +413,15 @@ class FinderSync: FIFinderSync {
         
         if !print_hidden && image_info.dpi != 0, let w_cm = numberFormatter.string(from: NSNumber(value: Double(image_info.width) / Double(image_info.dpi) * scale)), let h_cm = numberFormatter.string(from: NSNumber(value: Double(image_info.height) / Double(image_info.dpi) * scale)) {
             
-            let mnu = NSMenuItem(title: "\(w_cm) × \(h_cm)\(unit_label) (\(image_info.dpi) dpi)", action: nil, keyEquivalent: "")
-            mnu.image = icon_hidden ? nil : image(for: "print")
-            mnu.isEnabled = false
+            let mnu = createMenuItem(title: "\(w_cm) × \(h_cm)\(unit_label) (\(image_info.dpi) dpi)", image: "print")
             (use_submenu ? info_sub_menu : menu).addItem(mnu)
         }
         
         if !settings.isCustomPrintHidden, settings.customDPI > 0 && (image_info.dpi != settings.customDPI || print_hidden), let w_cm = numberFormatter.string(from: NSNumber(value:Double(image_info.width) / Double(settings.customDPI) * scale)), let h_cm = numberFormatter.string(from: NSNumber(value:Double(image_info.height) / Double(settings.customDPI) * scale)) {
-            let mnu = NSMenuItem(title: "\(w_cm) × \(h_cm)\(unit_label) (\(settings.customDPI) dpi)", action: nil, keyEquivalent: "")
-            
-            mnu.image = icon_hidden ? nil : image(for: "print")
-            mnu.isEnabled = false
+            let mnu = createMenuItem(title: "\(w_cm) × \(h_cm)\(unit_label) (\(settings.customDPI) dpi)", image: "print")
+            (use_submenu ? info_sub_menu : menu).addItem(mnu)
+        }
+        if let mnu = getFileSizeMenuItem(for: item) {
             (use_submenu ? info_sub_menu : menu).addItem(mnu)
         }
         /*
@@ -321,20 +444,18 @@ class FinderSync: FIFinderSync {
         guard !streams.isEmpty else {
             return nil
         }
-        
+    
         let settings = Settings.shared
-        settings.refresh()
         
-        let use_submenu   = settings.isMediaInfoOnSubMenu
+        let use_submenu   = settings.isInfoOnSubMenu
         let group_tracks  = settings.isTracksGrouped
         let codec_hidden  = settings.isCodecHidden
         let frames_hidden = settings.isFramesHidden
         let bps_hidden    = settings.isBPSHidden
-        let icon_hidden   = settings.isMediaIconsHidden
         
-        // FIXME: NSImage named with a pdf image don't respect dark theme!
-        // FIXME: The image set for a NSMenuItem in the extension do not preserve the template rendering mode.
-        // let isDark = (UserDefaults.standard.string(forKey: "AppleInterfaceStyle") ?? "Light") == "Dark"
+        if !group_tracks {
+            streams.sort(by: {$0.index < $1.index})
+        }
         
         let menu = NSMenu(title: "")
         menu.autoenablesItems = false
@@ -373,12 +494,17 @@ class FinderSync: FIFinderSync {
                 if !extra.isEmpty {
                     title += " (" + extra.joined(separator: ", ") + ")"
                 }
-                let mnu = NSMenuItem(title: title, action: nil, keyEquivalent: "")
-                mnu.isEnabled = false
-                mnu.image = (group_tracks || icon_hidden) ? nil : image(for: "video")
+                let mnu = createMenuItem(title: title, image: "video")
                 (group_tracks ? mnu_video : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
                 if mainTitle.isEmpty {
                     mainTitle = title
+                }
+                
+                if let mnu = getRatioMenuItem(width: width, height: height) {
+                    (group_tracks ? mnu_video : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
+                }
+                if let mnu = getResolutioNameMenuItem(width: width, height: height) {
+                    (group_tracks ? mnu_video : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
                 }
                 
             case .audio(let duration, let codec, let lang, let bit_rate):
@@ -398,11 +524,7 @@ class FinderSync: FIFinderSync {
                     title += " (" + extra.joined(separator: ", ") + ")"
                 }
                 
-                let mnu = NSMenuItem(title:title, action: nil, keyEquivalent: "")
-                mnu.isEnabled = false
-                
-                mnu.image = (group_tracks || icon_hidden) ? nil : image(for: "audio")
-                
+                let mnu = createMenuItem(title:title, image: "audio")
                 (group_tracks ? mnu_audio : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
                 
             case .subtitle(let t, let lang):
@@ -414,10 +536,7 @@ class FinderSync: FIFinderSync {
                     title += title.isEmpty ? "(\(lang.uppercased()))" : " " + lang.uppercased()
                 }
                 if !title.isEmpty {
-                    let mnu = NSMenuItem(title: title, action: nil, keyEquivalent: "")
-                    mnu.isEnabled = false
-                    mnu.image = (group_tracks || icon_hidden) ? nil : image(for: "text")
-                                           
+                    let mnu = createMenuItem(title: title, image: "text")
                     (group_tracks ? mnu_text : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
                 }
                 break
@@ -425,7 +544,7 @@ class FinderSync: FIFinderSync {
                 break
             }
         }
-        if use_submenu && settings.isMediaInfoOnMainItem && !mainTitle.isEmpty {
+        if use_submenu && settings.isInfoOnMainItem && !mainTitle.isEmpty {
             menu.items.first!.title = mainTitle
         }
         if mnu_video.items.count > 0 {
@@ -446,7 +565,10 @@ class FinderSync: FIFinderSync {
             (use_submenu ? info_sub_menu : menu).addItem(m)
             (use_submenu ? info_sub_menu : menu).setSubmenu(mnu_text, for: m)
         }
-
+        
+        if let mnu = getFileSizeMenuItem(for: item) {
+            (use_submenu ? info_sub_menu : menu).addItem(mnu)
+        }
         return menu
     }
     
@@ -463,16 +585,10 @@ class FinderSync: FIFinderSync {
         }
         
         let settings = Settings.shared
-        settings.refresh()
         
-        let use_submenu   = settings.isMediaInfoOnSubMenu
+        let use_submenu   = settings.isInfoOnSubMenu
         let codec_hidden  = settings.isCodecHidden
         let bps_hidden    = settings.isBPSHidden
-        let icon_hidden   = settings.isMediaIconsHidden
-        
-        // FIXME: NSImage named with a pdf image don't respect dark theme!
-        // FIXME: The image set for a NSMenuItem in the extension do not preserve the template rendering mode.
-        // let isDark = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
         
         let menu = NSMenu(title: "")
         menu.autoenablesItems = false
@@ -503,20 +619,22 @@ class FinderSync: FIFinderSync {
                     title += " (" + extra.joined(separator: ", ") + ")"
                 }
                 
-                let mnu = NSMenuItem(title:title, action: nil, keyEquivalent: "")
-                mnu.isEnabled = false
-                mnu.image = icon_hidden ? nil : image(for: "audio")
+                let mnu = createMenuItem(title:title, image: "audio")
                 (use_submenu ? info_sub_menu : menu).addItem(mnu)
             default:
                 break
             }
         }
         
-        if use_submenu && settings.isMediaInfoOnMainItem, info_sub_menu.items.count > 0 {
+        if use_submenu && settings.isInfoOnMainItem, info_sub_menu.items.count > 0 {
             menu.items.first!.title = info_sub_menu.items.first!.title
             if info_sub_menu.items.count == 1 {
                 menu.setSubmenu(nil, for: menu.items.first!)
             }
+        }
+        
+        if let mnu = getFileSizeMenuItem(for: item) {
+            (use_submenu ? info_sub_menu : menu).addItem(mnu)
         }
         
         return menu

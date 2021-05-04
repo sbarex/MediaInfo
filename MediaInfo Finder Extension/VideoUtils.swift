@@ -17,6 +17,21 @@ enum StreamType {
     case audio(duration: Double, codec: String, lang: String?, bit_rate: Int64)
     case subtitle(title: String?, lang: String?)
     case attachment
+    
+    var index: Int {
+        switch self {
+        case .video(_, _, _, _, _, _, _, _):
+            return 1
+        case .image(_, _, _):
+            return 2
+        case .audio(_, _, _, _):
+            return 3
+        case .subtitle(_, _):
+            return 4
+        case .attachment:
+            return 5
+        }
+    }
 }
 struct StreamInfo {
     let type: StreamType

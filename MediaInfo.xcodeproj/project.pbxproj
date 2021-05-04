@@ -15,6 +15,10 @@
 		83203D5924F0558200F8CBC0 /* MediaInfo Finder Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 83203D5124F0558200F8CBC0 /* MediaInfo Finder Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		83203D6024F0618B00F8CBC0 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83203D5F24F0618B00F8CBC0 /* ImageIO.framework */; };
 		83203D6224F0EF8800F8CBC0 /* ImageUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83203D6124F0EF8800F8CBC0 /* ImageUtils.swift */; };
+		8329E57F264162E2006B4FB3 /* settings_general.png in Resources */ = {isa = PBXBuildFile; fileRef = 8329E57E264162E1006B4FB3 /* settings_general.png */; };
+		8329E584264195ED006B4FB3 /* extensions.png in Resources */ = {isa = PBXBuildFile; fileRef = 8329E583264195ED006B4FB3 /* extensions.png */; };
+		8329E58C2641D2CD006B4FB3 /* NSNotification_Name+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8329E58B2641D2CD006B4FB3 /* NSNotification_Name+Ext.swift */; };
+		8329E58D2641D302006B4FB3 /* NSNotification_Name+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8329E58B2641D2CD006B4FB3 /* NSNotification_Name+Ext.swift */; };
 		832D3B7F2501793C00402441 /* CHANGELOG.md in Resources */ = {isa = PBXBuildFile; fileRef = 832D3B7E2501793C00402441 /* CHANGELOG.md */; };
 		832D4D422501986C00402441 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 832D4D412501986C00402441 /* libavcodec.a */; };
 		8373E77624FFE49C00793F70 /* settings_folder.png in Resources */ = {isa = PBXBuildFile; fileRef = 8373E77524FFE49C00793F70 /* settings_folder.png */; };
@@ -35,7 +39,6 @@
 		8382893E24F954A000AD2BF4 /* libm.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8382893D24F9549B00AD2BF4 /* libm.tbd */; };
 		8382894024F954B000AD2BF4 /* liblzma.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8382893F24F954AB00AD2BF4 /* liblzma.tbd */; };
 		8382894224F954BD00AD2BF4 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8382894124F954B900AD2BF4 /* libiconv.tbd */; };
-		8382895924F9A03700AD2BF4 /* avlanguage.c in Sources */ = {isa = PBXBuildFile; fileRef = 8382895824F9A03200AD2BF4 /* avlanguage.c */; };
 		8382895C24FA386400AD2BF4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8382895B24FA386400AD2BF4 /* Assets.xcassets */; };
 		8382896124FAB30900AD2BF4 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8382896324FAB30900AD2BF4 /* Localizable.strings */; };
 		8386E6752502AF2200FD8A46 /* libwebp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8386E6722502ACD000FD8A46 /* libwebp.a */; };
@@ -103,8 +106,9 @@
 		83203D5F24F0618B00F8CBC0 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
 		83203D6124F0EF8800F8CBC0 /* ImageUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageUtils.swift; sourceTree = "<group>"; };
 		83203D6C24F0F13000F8CBC0 /* BridgeHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BridgeHeader.h; sourceTree = "<group>"; };
-		83203D6E24F0FE1900F8CBC0 /* libbpg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libbpg.a; sourceTree = "<group>"; };
-		83203D7024F0FE3B00F8CBC0 /* libbpg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libbpg.h; sourceTree = "<group>"; };
+		8329E57E264162E1006B4FB3 /* settings_general.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings_general.png; sourceTree = "<group>"; };
+		8329E583264195ED006B4FB3 /* extensions.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = extensions.png; sourceTree = "<group>"; };
+		8329E58B2641D2CD006B4FB3 /* NSNotification_Name+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSNotification_Name+Ext.swift"; sourceTree = "<group>"; };
 		832D3B7E2501793C00402441 /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
 		832D4D3D250197A500402441 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = libavformat/libavformat.a; sourceTree = "<group>"; };
 		832D4D3E250197B200402441 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = libavutil/libavutil.a; sourceTree = "<group>"; };
@@ -118,7 +122,6 @@
 		8373E77924FFE4DD00793F70 /* settings_media.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings_media.png; sourceTree = "<group>"; };
 		8373E77B2500210100793F70 /* menu_video.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = menu_video.png; sourceTree = "<group>"; };
 		8373E77C2500210200793F70 /* menu_image.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = menu_image.png; sourceTree = "<group>"; };
-		8373E77F2500218F00793F70 /* libx264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libx264.a; sourceTree = "<group>"; };
 		8382892724F9541C00AD2BF4 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		8382892924F9542400AD2BF4 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
 		8382892B24F9542B00AD2BF4 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
@@ -133,10 +136,7 @@
 		8382893D24F9549B00AD2BF4 /* libm.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libm.tbd; path = usr/lib/libm.tbd; sourceTree = SDKROOT; };
 		8382893F24F954AB00AD2BF4 /* liblzma.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = liblzma.tbd; path = usr/lib/liblzma.tbd; sourceTree = SDKROOT; };
 		8382894124F954B900AD2BF4 /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
-		8382895824F9A03200AD2BF4 /* avlanguage.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = avlanguage.c; sourceTree = "<group>"; };
-		8382895A24F9A04700AD2BF4 /* avlanguage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = avlanguage.h; sourceTree = "<group>"; };
 		8382895B24FA386400AD2BF4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		8382895D24FAB14200AD2BF4 /* liblibbpgdec.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = liblibbpgdec.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8382896224FAB30900AD2BF4 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
 		8386E6722502ACD000FD8A46 /* libwebp.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libwebp.a; path = lib/libwebp.a; sourceTree = "<group>"; };
 		8386E6762502BC0F00FD8A46 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
@@ -190,9 +190,11 @@
 			children = (
 				8367E23724F6D8F200F7A06D /* README.md */,
 				832D3B7E2501793C00402441 /* CHANGELOG.md */,
+				8329E583264195ED006B4FB3 /* extensions.png */,
 				8373E77724FFE4B500793F70 /* settings_image.png */,
 				8373E77524FFE49C00793F70 /* settings_folder.png */,
 				8373E77924FFE4DD00793F70 /* settings_media.png */,
+				8329E57E264162E1006B4FB3 /* settings_general.png */,
 				8373E77C2500210200793F70 /* menu_image.png */,
 				8373E77B2500210100793F70 /* menu_video.png */,
 				83203D3C24F0556500F8CBC0 /* MediaInfo */,
@@ -222,6 +224,7 @@
 				83E5D2B224F6F07400E79C85 /* Localizable.strings */,
 				83203D4324F0556800F8CBC0 /* Main.storyboard */,
 				8386E6762502BC0F00FD8A46 /* Settings.swift */,
+				8329E58B2641D2CD006B4FB3 /* NSNotification_Name+Ext.swift */,
 			);
 			path = MediaInfo;
 			sourceTree = "<group>";
@@ -233,8 +236,6 @@
 				83203D5624F0558200F8CBC0 /* MediaInfo_Finder_Extension.entitlements */,
 				8382895B24FA386400AD2BF4 /* Assets.xcassets */,
 				8382896324FAB30900AD2BF4 /* Localizable.strings */,
-				8382891624F8579300AD2BF4 /* ffmpeg */,
-				83203D6D24F0FE0F00F8CBC0 /* bpg */,
 				83203D5324F0558200F8CBC0 /* FinderSync.swift */,
 				83203D6124F0EF8800F8CBC0 /* ImageUtils.swift */,
 				83E5D2B424F7032400E79C85 /* VideoUtils.swift */,
@@ -263,18 +264,8 @@
 				8382892924F9542400AD2BF4 /* VideoToolbox.framework */,
 				8382892724F9541C00AD2BF4 /* AudioToolbox.framework */,
 				83203D5F24F0618B00F8CBC0 /* ImageIO.framework */,
-				8382895D24FAB14200AD2BF4 /* liblibbpgdec.a */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		83203D6D24F0FE0F00F8CBC0 /* bpg */ = {
-			isa = PBXGroup;
-			children = (
-				83203D7024F0FE3B00F8CBC0 /* libbpg.h */,
-				83203D6E24F0FE1900F8CBC0 /* libbpg.a */,
-			);
-			path = bpg;
 			sourceTree = "<group>";
 		};
 		832D4D3A2501976C00402441 /* ffmpeg */ = {
@@ -289,40 +280,6 @@
 			);
 			path = ffmpeg;
 			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		8382891624F8579300AD2BF4 /* ffmpeg */ = {
-			isa = PBXGroup;
-			children = (
-				8382895724F9A01A00AD2BF4 /* sources */,
-				8382894424F9550300AD2BF4 /* lib */,
-				8382894324F954F400AD2BF4 /* include */,
-			);
-			path = ffmpeg;
-			sourceTree = "<group>";
-		};
-		8382894324F954F400AD2BF4 /* include */ = {
-			isa = PBXGroup;
-			children = (
-				8382895A24F9A04700AD2BF4 /* avlanguage.h */,
-			);
-			path = include;
-			sourceTree = "<group>";
-		};
-		8382894424F9550300AD2BF4 /* lib */ = {
-			isa = PBXGroup;
-			children = (
-				8373E77F2500218F00793F70 /* libx264.a */,
-			);
-			path = lib;
-			sourceTree = "<group>";
-		};
-		8382895724F9A01A00AD2BF4 /* sources */ = {
-			isa = PBXGroup;
-			children = (
-				8382895824F9A03200AD2BF4 /* avlanguage.c */,
-			);
-			path = sources;
-			sourceTree = "<group>";
 		};
 		8386E6712502AC9500FD8A46 /* libwebp */ = {
 			isa = PBXGroup;
@@ -459,7 +416,9 @@
 			files = (
 				8373E77E2500210200793F70 /* menu_image.png in Resources */,
 				83203D4224F0556800F8CBC0 /* Assets.xcassets in Resources */,
+				8329E584264195ED006B4FB3 /* extensions.png in Resources */,
 				8373E77D2500210200793F70 /* menu_video.png in Resources */,
+				8329E57F264162E2006B4FB3 /* settings_general.png in Resources */,
 				8373E77A24FFE4DD00793F70 /* settings_media.png in Resources */,
 				832D3B7F2501793C00402441 /* CHANGELOG.md in Resources */,
 				83E5D2B024F6F07400E79C85 /* Localizable.strings in Resources */,
@@ -524,6 +483,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8329E58D2641D302006B4FB3 /* NSNotification_Name+Ext.swift in Sources */,
 				83203D4024F0556500F8CBC0 /* ViewController.swift in Sources */,
 				8386E6772502BC0F00FD8A46 /* Settings.swift in Sources */,
 				83203D3E24F0556500F8CBC0 /* AppDelegate.swift in Sources */,
@@ -537,8 +497,8 @@
 				8386E6782502BC0F00FD8A46 /* Settings.swift in Sources */,
 				83203D5424F0558200F8CBC0 /* FinderSync.swift in Sources */,
 				83203D6224F0EF8800F8CBC0 /* ImageUtils.swift in Sources */,
-				8382895924F9A03700AD2BF4 /* avlanguage.c in Sources */,
 				83E5D2B524F7032400E79C85 /* VideoUtils.swift in Sources */,
+				8329E58C2641D2CD006B4FB3 /* NSNotification_Name+Ext.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -718,7 +678,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = URL4JB2333;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = MediaInfo/Info.plist;
@@ -743,7 +703,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = URL4JB2333;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = MediaInfo/Info.plist;
@@ -766,7 +726,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_ASSET_PATHS = "MediaInfo\\ Finder\\ Extension/Assets.xcassets";
 				DEVELOPMENT_TEAM = URL4JB2333;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -783,7 +743,6 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/MediaInfo\\ Finder\\ Extension/bpg",
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libavcodec",
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libswscale",
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libavfilter",
@@ -792,8 +751,6 @@
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libswresample",
 					"$(BUILT_PRODUCTS_DIR)/libwebp/lib",
 					"$(inherited)",
-					"\"$(SRCROOT)/MediaInfo Finder Extension/bpg\"",
-					"$(PROJECT_DIR)/MediaInfo\\ Finder\\ Extension/bpg",
 				);
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.sbarex.MediaInfo.Finder-Extension";
@@ -812,7 +769,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_ASSET_PATHS = "MediaInfo\\ Finder\\ Extension/Assets.xcassets";
 				DEVELOPMENT_TEAM = URL4JB2333;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -829,7 +786,6 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/MediaInfo\\ Finder\\ Extension/bpg",
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libavcodec",
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libavfilter",
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libavformat",
@@ -838,8 +794,6 @@
 					"$(BUILT_PRODUCTS_DIR)/ffmpeg/libswscale",
 					"$(BUILT_PRODUCTS_DIR)/libwebp/lib",
 					"$(inherited)",
-					"$(PROJECT_DIR)/MediaInfo\\ Finder\\ Extension/bpg",
-					"$(PROJECT_DIR)/MediaInfo\\ Finder\\ Extension/bpg",
 				);
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.sbarex.MediaInfo.Finder-Extension";

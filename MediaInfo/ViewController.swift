@@ -27,14 +27,18 @@ class ViewController: NSViewController {
             self.didChangeValue(forKey: "isDPIEnabled")
         }
     }
+    
+    @objc dynamic var isIconHidden: Bool = false
+    @objc dynamic var isInfoOnSubmenu: Bool = true
+    @objc dynamic var isInfoOnMainItem: Bool = false
+    @objc dynamic var isFileSizeHidden: Bool = false
+    @objc dynamic var isRatioHidden: Bool = false
+    @objc dynamic var isResolutionNameHidden: Bool = false
+    
     @objc dynamic var customDPI: Int = 300
     @objc dynamic var unit: Int = 0
     @objc dynamic var isColorHidden: Bool = false
     @objc dynamic var isDepthHidden: Bool = false
-    @objc dynamic var isImageIconHidden: Bool = false
-    @objc dynamic var isImageInfoOnSubmenu: Bool = true
-    @objc dynamic var isImageInfoOnMainItem: Bool = false
-    @objc dynamic var isMediaInfoOnMainItem: Bool = false
     
     @objc dynamic var isDPIEnabled: Bool {
         return isImageHandled && !isCustomDPIHidden
@@ -61,6 +65,13 @@ class ViewController: NSViewController {
         
         let settings = Settings.shared
         
+        self.isIconHidden = settings.isIconHidden
+        self.isInfoOnSubmenu = settings.isInfoOnSubMenu
+        self.isInfoOnMainItem = settings.isInfoOnMainItem
+        self.isFileSizeHidden = settings.isFileSizeHidden
+        self.isRatioHidden = settings.isRatioHidden
+        self.isResolutionNameHidden = settings.isResolutionNameHidden
+        
         self.isImageHandled = settings.isImagesHandled
         self.isPrintedSizeHidden = settings.isPrintHidden
         self.isCustomDPIHidden = settings.isCustomPrintHidden
@@ -68,18 +79,12 @@ class ViewController: NSViewController {
         self.isDepthHidden = settings.isDepthHidden
         self.customDPI = settings.customDPI
         self.unit = settings.unit.rawValue
-        self.isImageIconHidden = settings.isImageIconsHidden
-        self.isImageInfoOnSubmenu = settings.isImageInfoOnSubMenu
-        self.isImageInfoOnMainItem = settings.isImageInfoOnMainItem
         
         self.isVideoHandled = settings.isMediaHandled
         self.isFramesHidden = settings.isFramesHidden
         self.isCodecHidden = settings.isCodecHidden
         self.isBPSHidden = settings.isBPSHidden
         self.isTracksGrouped = settings.isTracksGrouped
-        self.isMediaIconHidden = settings.isMediaIconsHidden
-        self.isMediaInfoOnSubmenu = settings.isMediaInfoOnSubMenu
-        self.isMediaInfoOnMainItem = settings.isMediaInfoOnMainItem
         
         self.folders = settings.folders.sorted(by: { $0.path < $1.path })
         
@@ -101,6 +106,14 @@ class ViewController: NSViewController {
     override var representedObject: Any? {
         didSet {
         // Update the view, if already loaded.
+        }
+    }
+    
+    @IBAction func doChangeFolder(_ sender: NSSegmentedControl) {
+        if sender.indexOfSelectedItem == 0 {
+            doAddFolder(sender)
+        } else if sender.indexOfSelectedItem == 1 {
+            doRemoveFolder(sender)
         }
     }
     
@@ -137,6 +150,11 @@ class ViewController: NSViewController {
     }
 
     @IBAction func doSave(_ sender: Any) {
+        self.doApplySettings(self)
+        self.view.window?.close()
+    }
+    
+    @IBAction func doApplySettings(_ sender: Any) {
         let folders = Array(Set(self.folders))
         if folders.isEmpty {
             let p = NSAlert()
@@ -156,6 +174,14 @@ class ViewController: NSViewController {
         let current_folders = settings.folders
         
         settings.folders = folders
+                
+        settings.isIconHidden = self.isIconHidden
+        settings.isInfoOnSubMenu = self.isInfoOnSubmenu
+        settings.isInfoOnMainItem = self.isInfoOnMainItem
+        settings.isFileSizeHidden = self.isFileSizeHidden
+        settings.isRatioHidden = self.isRatioHidden
+        settings.isResolutionNameHidden = self.isResolutionNameHidden
+        
         settings.isImagesHandled = self.isImageHandled
         settings.isPrintHidden = self.isPrintedSizeHidden
         settings.isCustomPrintHidden = self.isCustomDPIHidden
@@ -163,30 +189,23 @@ class ViewController: NSViewController {
         settings.isDepthHidden = self.isDepthHidden
         settings.customDPI = self.customDPI
         settings.unit = PrintUnit(rawValue: self.unit) ?? .cm
-        settings.isImageIconsHidden = self.isImageIconHidden
-        settings.isImageInfoOnSubMenu = self.isImageInfoOnSubmenu
-        settings.isImageInfoOnMainItem = self.isImageInfoOnMainItem
         
         settings.isMediaHandled = self.isVideoHandled
         settings.isFramesHidden = self.isFramesHidden
         settings.isCodecHidden = self.isCodecHidden
         settings.isBPSHidden = self.isBPSHidden
         settings.isTracksGrouped = self.isTracksGrouped
-        settings.isMediaIconsHidden = self.isMediaIconHidden
-        settings.isMediaInfoOnSubMenu = self.isMediaInfoOnSubmenu
-        settings.isMediaInfoOnMainItem = self.isMediaInfoOnMainItem
         
         settings.synchronize()
         
         if current_folders != folders && FIFinderSyncController.isExtensionEnabled {
-            DistributedNotificationCenter.default().postNotificationName(NSNotification.Name(rawValue: "MediaInfoMonitoredFolderChanged"), object: Bundle.main.bundleIdentifier, userInfo: nil, options: [.deliverImmediately])
+            DistributedNotificationCenter.default().postNotificationName(.MediaInfoMonitoredFolderChanged, object: Bundle.main.bundleIdentifier, userInfo: nil, options: [.deliverImmediately])
         }
-    
-        self.view.window?.orderOut(sender)
+        DistributedNotificationCenter.default().postNotificationName(.MediaInfoSettingsChanged, object: Bundle.main.bundleIdentifier, userInfo: nil, options: [.deliverImmediately])
     }
 
     @IBAction func doClose(_ sender: Any) {
-        self.view.window?.orderOut(sender)
+        self.view.window?.close()
     }
     
     @IBAction func openSystemPreferences(_ sender: Any) {
