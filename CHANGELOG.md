@@ -1,7 +1,7 @@
 Changelog
 =======
 
-### 1.0.b910
+### 1.0.b10
 
 - Support for _ratio_, _resolution name_ and _file size_ menu item.
 - Reorganized some settings UI.
