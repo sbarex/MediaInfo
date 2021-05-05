@@ -108,12 +108,12 @@ class FinderSync: FIFinderSync {
         return String(format: "%02d:%02d:%02d", h, m, s)
     }
     
-    override func menu(for menuKind: FIMenuKind) -> NSMenu {
+    override func menu(for menuKind: FIMenuKind) -> NSMenu? {
         if menuKind == .contextualMenuForItems {
-            let settings = Settings.shared
-            
             if let items = FIFinderSyncController.default().selectedItemURLs(), items.count == 1, let item = items.first, let uti = try? item.resourceValues(forKeys: [.typeIdentifierKey]).typeIdentifier {
-                                
+                
+                let settings = Settings.shared
+                
                 if settings.isImagesHandled && UTTypeConformsTo(uti as CFString, kUTTypeImage), let menu = getMenuForImage(atURL: item) {
                     return menu
                 } else if settings.isMediaHandled && UTTypeConformsTo(uti as CFString, kUTTypeMovie), let menu = getMenuForVideo(atURL: item) {
@@ -124,40 +124,47 @@ class FinderSync: FIFinderSync {
             }
         }
         
-        // // Produce a menu for the extension.
-        // menu.addItem(withTitle: "Example Menu Item", action: #selector(sampleAction(_:)), keyEquivalent: "")
-        let menu = NSMenu(title: "")
-        menu.autoenablesItems = false
-        return menu
+        return nil
     }
     
-    internal func image(for mode: String/*, isDark dark: Bool*/) -> NSImage? {
+    internal func image(for mode: String) -> NSImage? {
         var img: NSImage?
+        var isColor = false
         switch mode {
         case "image":
             /*
             if #available(macOSApplicationExtension 11.0, *) {
                 img = NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
             } else {
-                img = NSImage(named: dark ? "image_w" : "image")
+                img = NSImage(named: "image")
             }
  */
             img = NSImage(named: "image")
+        case "image_v":
+            img = NSImage(named: "image_v")
         case "color":
-            /*
-            /*if #available(macOSApplicationExtension 11.0, *) {
-                return NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
-            } else {*/
-                img = NSImage(named: dark ? "color_w" : "color")
-            //}
-            */
             img = NSImage(named: "color")
+        case "color_rgb":
+            img = NSImage(named: "color_rgb")
+            isColor = true
+        case "color_cmyk":
+            img = NSImage(named: "color_cmyk")
+            isColor = true
+        case "color_gray":
+            img = NSImage(named: "color_gray")
+            isColor = true
+        case "color_lab":
+            img = NSImage(named: "color_lab")
+            isColor = true
+        case "color_bw":
+            img = NSImage(named: "color_bw")
+            isColor = true
         case "print":
             /*
             if #available(macOSApplicationExtension 11.0, *) {
                 img = NSImage(systemSymbolName: "printer", accessibilityDescription: nil)
             } else {
-                img = NSImage(named: dark ? "print_w" : "print")
+                img = NSImage(named: "print")
             }
  */
             img = NSImage(named: "print")
@@ -166,15 +173,17 @@ class FinderSync: FIFinderSync {
             if #available(macOSApplicationExtension 11.0, *) {
                 img = NSImage(systemSymbolName: "video", accessibilityDescription: nil)
             } else {
-                img = NSImage(named: dark ? "video_w" : "video")
+                img = NSImage(named: "video")
             }*/
             img = NSImage(named: "video")
+        case "video_v":
+            img = NSImage(named: "video_v")
         case "audio":
             /*
             if #available(macOSApplicationExtension 11.0, *) {
                 img = NSImage(systemSymbolName: "speaker.wave.1", accessibilityDescription: nil)
             } else {
-                img = NSImage(named: dark ? "audio_w" : "audio")
+                img = NSImage(named: "audio")
             }
             */
             img = NSImage(named: "audio")
@@ -183,18 +192,24 @@ class FinderSync: FIFinderSync {
             if #available(macOSApplicationExtension 11.0, *) {
                 img = NSImage(systemSymbolName: "captions.bubble", accessibilityDescription: nil)
             } else {
-                img = NSImage(named: dark ? "txt_w" : "txt")
+                img = NSImage(named: "txt")
             }*/
             img = NSImage(named: "txt")
         case "ratio":
             img = NSImage(named: "aspectratio")
+        case "ratio_v":
+            img = NSImage(named: "aspectratio_v")
         default:
             return nil
         }
         
-        img?.isTemplate = true
-        
-        return img?.image(withTintColor: NSColor.labelColor)
+        if !isColor {
+            img?.isTemplate = true
+            
+            return img?.image(withTintColor: NSColor.labelColor)
+        } else {
+            return img
+        }
     }
 
     internal func createMenuItem(title: String, image: String?) -> NSMenuItem {
@@ -220,14 +235,20 @@ class FinderSync: FIFinderSync {
         guard !Settings.shared.isRatioHidden else {
             return nil
         }
-        let gcd = self.gcd(width, height)
+        var gcd = self.gcd(width, height)
         guard gcd != 1 else {
             return nil
         }
+        
+        var circa = false
+        if !Settings.shared.isRatioPrecise, gcd < 8, let gcd1 = [self.gcd(width+1, height), self.gcd(width-1, height), self.gcd(width, height+1), self.gcd(width, height-1)].max(), gcd1 > gcd {
+            gcd = gcd1 * self.gcd(width/gcd1, height / gcd1)
+            circa = true
+        }
         let w = width / gcd
         let h = height / gcd
-            
-        return createMenuItem(title: "\(w) : \(h)", image: "ratio")
+        
+        return createMenuItem(title: "\(circa ? "~ " : "")\(w) : \(h)", image: "ratio"+(h>w ? "_v" : ""))
     }
     
     internal func gcd(_ a: Int, _ b: Int) -> Int {
@@ -349,13 +370,13 @@ class FinderSync: FIFinderSync {
         let info_sub_menu = NSMenu(title: "MediaInfo")
         if use_submenu {
             let info_mnu = menu.addItem(withTitle: "Media info", action: #selector(sampleAction(_:)), keyEquivalent: "")
-            info_mnu.image = image(for: "image")
+            info_mnu.image = image(for: "image"+(image_info.height>image_info.width ? "_v" : ""))
             
             menu.setSubmenu(info_sub_menu, for: info_mnu)
         }
         var colors: [String] = []
         if !settings.isColorHidden && !image_info.colorMode.isEmpty {
-            colors.append(image_info.colorMode)
+            colors.append(image_info.formattedColorMode)
         }
         if !settings.isDepthHidden && image_info.depth > 0 {
             colors.append("\(image_info.depth) bit")
@@ -372,7 +393,7 @@ class FinderSync: FIFinderSync {
         if print_hidden && image_info.dpi > 0 {
             title += " (\(image_info.dpi) dpi)"
         }
-        let mnu = createMenuItem(title: title, image: "image")
+        let mnu = createMenuItem(title: title, image: "image"+(image_info.height>image_info.width ? "_v" : ""))
         (use_submenu ? info_sub_menu : menu).addItem(mnu)
         
         if use_submenu && settings.isInfoOnMainItem {
@@ -387,7 +408,7 @@ class FinderSync: FIFinderSync {
         }
         
         if use_submenu && !colors.isEmpty {
-            let mnu = createMenuItem(title: colors.joined(separator: " "), image: "color")
+            let mnu = createMenuItem(title: colors.joined(separator: " "), image: image_info.color_image_name)
             info_sub_menu.addItem(mnu)
             
             if use_submenu && settings.isInfoOnMainItem {
@@ -494,7 +515,7 @@ class FinderSync: FIFinderSync {
                 if !extra.isEmpty {
                     title += " (" + extra.joined(separator: ", ") + ")"
                 }
-                let mnu = createMenuItem(title: title, image: "video")
+                let mnu = createMenuItem(title: title, image: "video"+(height>width ? "_v" : ""))
                 (group_tracks ? mnu_video : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
                 if mainTitle.isEmpty {
                     mainTitle = title

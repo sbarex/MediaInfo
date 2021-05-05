@@ -33,6 +33,7 @@ class ViewController: NSViewController {
     @objc dynamic var isInfoOnMainItem: Bool = false
     @objc dynamic var isFileSizeHidden: Bool = false
     @objc dynamic var isRatioHidden: Bool = false
+    @objc dynamic var isRatioPrecise: Int = 0
     @objc dynamic var isResolutionNameHidden: Bool = false
     
     @objc dynamic var customDPI: Int = 300
@@ -70,6 +71,7 @@ class ViewController: NSViewController {
         self.isInfoOnMainItem = settings.isInfoOnMainItem
         self.isFileSizeHidden = settings.isFileSizeHidden
         self.isRatioHidden = settings.isRatioHidden
+        self.isRatioPrecise = settings.isRatioPrecise ? 0 : 1
         self.isResolutionNameHidden = settings.isResolutionNameHidden
         
         self.isImageHandled = settings.isImagesHandled
@@ -180,6 +182,7 @@ class ViewController: NSViewController {
         settings.isInfoOnMainItem = self.isInfoOnMainItem
         settings.isFileSizeHidden = self.isFileSizeHidden
         settings.isRatioHidden = self.isRatioHidden
+        settings.isRatioPrecise = self.isRatioPrecise == 0
         settings.isResolutionNameHidden = self.isResolutionNameHidden
         
         settings.isImagesHandled = self.isImageHandled

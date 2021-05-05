@@ -22,6 +22,7 @@ class Settings {
     var isInfoOnMainItem = false
     var isFileSizeHidden = true
     var isRatioHidden = false
+    var isRatioPrecise = false
     var isResolutionNameHidden = false
     
     var isImagesHandled = true
@@ -86,6 +87,7 @@ class Settings {
         defaults?.set(self.isInfoOnMainItem, forKey: "main_info")
         defaults?.set(!self.isFileSizeHidden, forKey: "file_size")
         defaults?.set(!self.isRatioHidden, forKey: "ratio")
+        defaults?.set(self.isRatioPrecise, forKey: "ratio-precise")
         defaults?.set(!self.isResolutionNameHidden, forKey: "resolution-name")
         
         defaults?.set(self.isImagesHandled, forKey: "image_handled")
@@ -113,6 +115,7 @@ class Settings {
         self.isInfoOnMainItem = defaults?.bool(forKey: "main_info") ?? true
         self.isFileSizeHidden = !(defaults?.bool(forKey: "file_size") ?? false)
         self.isRatioHidden = !(defaults?.bool(forKey: "ratio") ?? true)
+        self.isRatioPrecise = defaults?.bool(forKey: "ratio-precise") ?? true
         self.isResolutionNameHidden = !(defaults?.bool(forKey: "resolution-name") ?? true)
         
         self.isImagesHandled = defaults?.bool(forKey: "image_handled") ?? true

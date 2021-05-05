@@ -16,6 +16,32 @@ struct ImageInfo {
     let colorMode: String
     let depth: Int
     let animated: Bool?
+    
+    var formattedColorMode: String {
+        let color = colorMode.uppercased()
+        if color.contains("GRAY") && depth == 1 {
+            return "B/W"
+        } else {
+            return colorMode
+        }
+    }
+    
+    var color_image_name: String {
+        let color = colorMode.uppercased()
+        if color.contains("RGB") {
+            return "color_rgb"
+        } else if color.contains("CMYK") {
+            return "color_cmyk"
+        } else if color.contains("CMYK") {
+            return "color_rgb"
+        } else if color.contains("LAB") {
+            return "color_lab"
+        } else if color.contains("GRAY") {
+            return depth == 1 ? "color_bw" : "color_gray"
+        } else {
+            return "color"
+        }
+    }
 }
 
 /// Get image info for image format supported by coregraphics.

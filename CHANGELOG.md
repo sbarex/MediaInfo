@@ -1,6 +1,12 @@
 Changelog
 =======
 
+### 1.0.b11
+
+- Video and images icon on the menu respect the orientation (landscape / portrait).
+- Color menu icon for the different color space.
+- Allow to show an approximate ratio when the value is not optimal.   
+
 ### 1.0.b10
 
 - Support for _ratio_, _resolution name_ and _file size_ menu item.

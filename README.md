@@ -3,8 +3,11 @@
 This extension display information about multimedia files (images, videos and sounds) in the Finder contextual menu.
 Information is shown only for files within the monitored folders (and their subfolders).
 
+> **MediaInfo is distributed in the hope that it will be useful but WITHOUT ANY WARRANTY.**
 
 ## Build and Installation
+
+**There is currently no updated pre-compiled release, you need to compile the code yourself.** 
 
 Clone the repository (do not download the source code because break the required git submodule):
 
@@ -16,9 +19,9 @@ then open the Xcode project, change the signing team and build. (First time the 
 
 _Apple require that the Application and his Finder Extension must be code signed. I do not have a personal Developer Account so I cannot release a prebuild signed binary._
 
-The required `FFMpeg` and `WebP` libraries are linked inside the extension, so do others extearnal dependency are required.
+The required `FFMpeg` and `WebP` libraries are linked inside the extension, so no others external dependency are required.
 
-Move the builded app on your Applications folder and launch it to set the monitored folders and the other settings. Then you need to enable the associated Finder Sync Extension on the System Preferences / Extensions.
+Move the build app on your Applications folder and launch it to set the monitored folders and the other settings. Then you need to enable the associated Finder Sync Extension on the System Preferences / Extensions.
 
 ![System preferences/Extensions](extensions.png)
 
@@ -51,7 +54,7 @@ Available information:
 - aspect ratio
 - resolution (dpi)
 - resolution name (as _VGA_, _FullHD_, …)
-- color mode (_RGB_, _CMYK_, _GRAYSCALE_)
+- color mode (_RGB_, _CMYK_, _GRAYSCALE_, …)
 - number of bit
 - animation
 - printed size (you can also set custom dpi resolution)
@@ -95,4 +98,4 @@ This application uses these libraries:
 - [FFMpeg](https://www.ffmpeg.org/)
 - [WebP](https://developers.google.com/speed/webp/)
 
-This application was inspired by the quicklook generator [qlImageSize](https://github.com/Nyx0uf/qlImageSize).
+This application was inspired by the Quick Look Generator [qlImageSize](https://github.com/Nyx0uf/qlImageSize).

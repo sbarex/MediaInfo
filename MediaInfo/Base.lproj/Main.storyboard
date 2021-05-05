@@ -327,7 +327,7 @@ Gw
                                                     </connections>
                                                 </button>
                                                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="arr-OG-Fv8">
-                                                    <rect key="frame" x="18" y="142" width="492" height="18"/>
+                                                    <rect key="frame" x="18" y="142" width="212" height="18"/>
                                                     <buttonCell key="cell" type="check" title="Show image/video aspect ratio" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="2uO-lI-Axl">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="system"/>
@@ -354,17 +354,38 @@ Gw
                                                         </binding>
                                                     </connections>
                                                 </button>
+                                                <popUpButton verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="vnO-8J-ztr">
+                                                    <rect key="frame" x="235" y="137" width="116" height="25"/>
+                                                    <popUpButtonCell key="cell" type="push" title="Precise" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="mU5-l8-31s" id="8qT-Zu-1e5">
+                                                        <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
+                                                        <font key="font" metaFont="menu"/>
+                                                        <menu key="menu" id="9cA-ey-18o">
+                                                            <items>
+                                                                <menuItem title="Precise" state="on" id="mU5-l8-31s"/>
+                                                                <menuItem title="Approximate" id="G5Z-lg-hla"/>
+                                                            </items>
+                                                        </menu>
+                                                    </popUpButtonCell>
+                                                    <connections>
+                                                        <binding destination="XfG-lQ-9wD" name="enabled" keyPath="self.isRatioHidden" id="fOD-kR-Yqv">
+                                                            <dictionary key="options">
+                                                                <string key="NSValueTransformerName">NSNegateBoolean</string>
+                                                            </dictionary>
+                                                        </binding>
+                                                        <binding destination="XfG-lQ-9wD" name="selectedIndex" keyPath="self.isRatioPrecise" id="Tls-gg-Npe"/>
+                                                    </connections>
+                                                </popUpButton>
                                             </subviews>
                                             <constraints>
                                                 <constraint firstItem="jRX-qu-hpZ" firstAttribute="leading" secondItem="1OG-P0-wh2" secondAttribute="leading" constant="20" symbolic="YES" id="0At-dV-5XR"/>
                                                 <constraint firstItem="4zc-YQ-A7w" firstAttribute="leading" secondItem="1OG-P0-wh2" secondAttribute="leading" constant="20" symbolic="YES" id="0Jk-ix-YrQ"/>
-                                                <constraint firstAttribute="trailing" secondItem="arr-OG-Fv8" secondAttribute="trailing" constant="20" symbolic="YES" id="0a6-Ot-ejl"/>
                                                 <constraint firstItem="oD4-ZQ-Fwn" firstAttribute="leading" secondItem="1OG-P0-wh2" secondAttribute="leading" constant="20" symbolic="YES" id="1nu-d0-u94"/>
                                                 <constraint firstItem="COp-j7-nzf" firstAttribute="top" secondItem="arr-OG-Fv8" secondAttribute="bottom" constant="6" symbolic="YES" id="8Nd-H1-18L"/>
                                                 <constraint firstAttribute="trailing" secondItem="GZj-Fi-caD" secondAttribute="trailing" constant="20" symbolic="YES" id="FYu-d9-bJs"/>
                                                 <constraint firstAttribute="trailing" secondItem="jRX-qu-hpZ" secondAttribute="trailing" constant="20" symbolic="YES" id="GM9-no-bfc"/>
                                                 <constraint firstItem="4zc-YQ-A7w" firstAttribute="top" secondItem="jRX-qu-hpZ" secondAttribute="bottom" constant="6" symbolic="YES" id="Ijp-93-itQ"/>
                                                 <constraint firstItem="jRX-qu-hpZ" firstAttribute="top" secondItem="1OG-P0-wh2" secondAttribute="top" constant="20" symbolic="YES" id="JDy-s5-rh1"/>
+                                                <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="vnO-8J-ztr" secondAttribute="trailing" constant="20" symbolic="YES" id="NWH-Ni-O1Q"/>
                                                 <constraint firstAttribute="trailing" secondItem="oD4-ZQ-Fwn" secondAttribute="trailing" constant="20" symbolic="YES" id="You-Vx-NVZ"/>
                                                 <constraint firstItem="GZj-Fi-caD" firstAttribute="leading" secondItem="1OG-P0-wh2" secondAttribute="leading" constant="20" symbolic="YES" id="ZCu-0s-r2S"/>
                                                 <constraint firstItem="oD4-ZQ-Fwn" firstAttribute="top" secondItem="GZj-Fi-caD" secondAttribute="bottom" constant="6" symbolic="YES" id="bth-Xv-KTO"/>
@@ -373,7 +394,9 @@ Gw
                                                 <constraint firstItem="GZj-Fi-caD" firstAttribute="top" secondItem="4zc-YQ-A7w" secondAttribute="bottom" constant="6" symbolic="YES" id="kJX-PF-Xpo"/>
                                                 <constraint firstItem="COp-j7-nzf" firstAttribute="leading" secondItem="arr-OG-Fv8" secondAttribute="leading" id="lXO-4h-UiS"/>
                                                 <constraint firstAttribute="trailing" secondItem="4zc-YQ-A7w" secondAttribute="trailing" constant="20" symbolic="YES" id="nV7-at-Rpk"/>
+                                                <constraint firstItem="vnO-8J-ztr" firstAttribute="leading" secondItem="arr-OG-Fv8" secondAttribute="trailing" constant="8" symbolic="YES" id="pzr-sL-y3p"/>
                                                 <constraint firstItem="arr-OG-Fv8" firstAttribute="leading" secondItem="1OG-P0-wh2" secondAttribute="leading" constant="20" symbolic="YES" id="vYu-bb-ACQ"/>
+                                                <constraint firstItem="vnO-8J-ztr" firstAttribute="centerY" secondItem="arr-OG-Fv8" secondAttribute="centerY" id="yOF-22-jwn"/>
                                             </constraints>
                                         </view>
                                     </tabViewItem>
