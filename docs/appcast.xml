@@ -1,0 +1,16 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>MediaInfo</title> 
+        <item>
+            <title>1.0.0</title>
+            <pubDate>gio, 6 Mag 2021 16:21:25 +0100</pubDate>
+            <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.0.0/QLMardown.zip" sparkle:version="12" sparkle:shortVersionString="1.0.0" type="application/octet-stream" sparkle:edSignature="Irh4XpVkGNuOqI30m3DFRTPRgDAQuwM62zVH1ONUWpYYHyMCfYkELQH6y8vTkyH3tq9+XIpJWE0fg9Ax3hk+CQ=="/>
+            <description><![CDATA[
+                <p>First version.</p>
+            ]]>
+            </description>
+        </item>
+    </channel>
+</rss>
