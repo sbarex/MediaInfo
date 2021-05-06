@@ -11,6 +11,13 @@
 "Ignore" = "Ignora";
 "Continue" = "Continua";
 "Cancel" = "Annulla";
+"Yes" = "Sì";
+"No" = "No";
+"Save" = "Salva";
+"Don't Save" = "Non salvare";
 
 "No folders selected to be monitored" = "Nessuna cartella monitorata";
 "Are you sure you want to continue?" = "Sicuro di voler continuare?";
+
+"Are you sure to revert to the original saved settings?" = "Sicuro di ripristinare le ultime impostazioni salvate?";
+"Save the settings before closing?" = "Salvare le impostazioni prima di chiudere?";

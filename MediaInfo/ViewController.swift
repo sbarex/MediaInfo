@@ -9,86 +9,210 @@
 import Cocoa
 import FinderSync
 
+class WindowController: NSWindowController, NSWindowDelegate {
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        if self.window?.isDocumentEdited ?? false {
+            let alert = NSAlert()
+            alert.messageText = NSLocalizedString("Save the settings before closing?", comment: "")
+            alert.addButton(withTitle: NSLocalizedString("Save", comment: "")).keyEquivalent = "\r"
+            alert.addButton(withTitle: NSLocalizedString("Don't Save", comment: "")).keyEquivalent = "d"
+            alert.addButton(withTitle: NSLocalizedString("Cancel", comment: "")).keyEquivalent = "\u{1b}"
+            switch alert.runModal() {
+            case .alertFirstButtonReturn:
+                (self.contentViewController as? ViewController)?.saveDocument(self)
+            case .alertThirdButtonReturn:
+                return false
+            default:
+                break
+            }
+        }
+        return true
+    }
+}
+
 class ViewController: NSViewController {
+    
     @objc dynamic var isImageHandled: Bool = true {
         willSet {
             self.willChangeValue(forKey: "isDPIEnabled")
         }
         didSet {
             self.didChangeValue(forKey: "isDPIEnabled")
+            if oldValue != isImageHandled {
+                self.view.window?.isDocumentEdited = true
+            }
         }
     }
-    @objc dynamic var isPrintedSizeHidden: Bool = false
+    @objc dynamic var isPrintedSizeHidden: Bool = false {
+        didSet {
+            if oldValue != isPrintedSizeHidden {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
     @objc dynamic var isCustomDPIHidden: Bool = false  {
         willSet {
             self.willChangeValue(forKey: "isDPIEnabled")
         }
         didSet {
             self.didChangeValue(forKey: "isDPIEnabled")
+            if oldValue != isCustomDPIHidden {
+                self.view.window?.isDocumentEdited = true
+            }
         }
     }
     
-    @objc dynamic var isIconHidden: Bool = false
-    @objc dynamic var isInfoOnSubmenu: Bool = true
-    @objc dynamic var isInfoOnMainItem: Bool = false
-    @objc dynamic var isFileSizeHidden: Bool = false
-    @objc dynamic var isRatioHidden: Bool = false
-    @objc dynamic var isRatioPrecise: Int = 0
-    @objc dynamic var isResolutionNameHidden: Bool = false
+    @objc dynamic var isIconHidden: Bool = false {
+        didSet {
+            if oldValue != isIconHidden {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isInfoOnSubmenu: Bool = true {
+        didSet {
+            if oldValue != isInfoOnSubmenu {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isInfoOnMainItem: Bool = false {
+        didSet {
+            if oldValue != isInfoOnMainItem {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isFileSizeHidden: Bool = false {
+        didSet {
+            if oldValue != isFileSizeHidden {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isRatioHidden: Bool = false {
+        didSet {
+            if oldValue != isRatioHidden {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isRatioPrecise: Int = 0 {
+        didSet {
+            if oldValue != isRatioPrecise {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isResolutionNameHidden: Bool = false {
+        didSet {
+            if oldValue != isResolutionNameHidden {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
     
-    @objc dynamic var customDPI: Int = 300
-    @objc dynamic var unit: Int = 0
-    @objc dynamic var isColorHidden: Bool = false
-    @objc dynamic var isDepthHidden: Bool = false
+    @objc dynamic var customDPI: Int = 300 {
+        didSet {
+            if oldValue != customDPI {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var unit: Int = 0 {
+        didSet {
+            if oldValue != unit {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isColorHidden: Bool = false {
+        didSet {
+            if oldValue != isColorHidden {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isDepthHidden: Bool = false {
+        didSet {
+            if oldValue != isDepthHidden {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
     
     @objc dynamic var isDPIEnabled: Bool {
         return isImageHandled && !isCustomDPIHidden
     }
     
-    @objc dynamic var isVideoHandled: Bool = true
-    @objc dynamic var isFramesHidden: Bool = false
-    @objc dynamic var isCodecHidden: Bool = false
-    @objc dynamic var isBPSHidden: Bool = false
-    @objc dynamic var isTracksGrouped: Bool = false
-    @objc dynamic var isMediaIconHidden: Bool = false
-    @objc dynamic var isMediaInfoOnSubmenu: Bool = true
+    @objc dynamic var isVideoHandled: Bool = true {
+        didSet {
+            if oldValue != isVideoHandled {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isFramesHidden: Bool = false {
+        didSet {
+            if oldValue != isFramesHidden {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isCodecHidden: Bool = false {
+        didSet {
+            if oldValue != isColorHidden {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isBPSHidden: Bool = false {
+        didSet {
+            if oldValue != isBPSHidden {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isTracksGrouped: Bool = false {
+        didSet {
+            if oldValue != isTracksGrouped {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isMediaIconHidden: Bool = false {
+        didSet {
+            if oldValue != isMediaIconHidden {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isMediaInfoOnSubmenu: Bool = true {
+        didSet {
+            if oldValue != isMediaInfoOnSubmenu {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
     
     @objc dynamic var isExtensionEnabled: Bool {
         return FIFinderSyncController.isExtensionEnabled
     }
     
-    var folders: [URL] = []
+    var folders: [URL] = [] {
+        didSet {
+            if oldValue != folders {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
     
     @IBOutlet weak var tableView: NSTableView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let settings = Settings.shared
-        
-        self.isIconHidden = settings.isIconHidden
-        self.isInfoOnSubmenu = settings.isInfoOnSubMenu
-        self.isInfoOnMainItem = settings.isInfoOnMainItem
-        self.isFileSizeHidden = settings.isFileSizeHidden
-        self.isRatioHidden = settings.isRatioHidden
-        self.isRatioPrecise = settings.isRatioPrecise ? 0 : 1
-        self.isResolutionNameHidden = settings.isResolutionNameHidden
-        
-        self.isImageHandled = settings.isImagesHandled
-        self.isPrintedSizeHidden = settings.isPrintHidden
-        self.isCustomDPIHidden = settings.isCustomPrintHidden
-        self.isColorHidden = settings.isColorHidden
-        self.isDepthHidden = settings.isDepthHidden
-        self.customDPI = settings.customDPI
-        self.unit = settings.unit.rawValue
-        
-        self.isVideoHandled = settings.isMediaHandled
-        self.isFramesHidden = settings.isFramesHidden
-        self.isCodecHidden = settings.isCodecHidden
-        self.isBPSHidden = settings.isBPSHidden
-        self.isTracksGrouped = settings.isTracksGrouped
-        
-        self.folders = settings.folders.sorted(by: { $0.path < $1.path })
+        self.reset()
         
         DispatchQueue.main.async {
             if !FIFinderSyncController.isExtensionEnabled {
@@ -136,6 +260,7 @@ class ViewController: NSViewController {
                 self.folders.append(result)
                 self.folders.sort(by: { $0.path < $1.path })
                 self.tableView.reloadData()
+                self.view.window?.isDocumentEdited = true
             }
         } else {
             // User clicked on "Cancel"
@@ -148,12 +273,62 @@ class ViewController: NSViewController {
             return
         }
         self.folders.remove(at: tableView.selectedRow)
+        self.view.window?.isDocumentEdited = true
         self.tableView.reloadData()
     }
 
     @IBAction func doSave(_ sender: Any) {
         self.doApplySettings(self)
-        self.view.window?.close()
+    }
+    
+    func reset() {
+        let settings = Settings.shared
+        settings.refresh()
+        
+        self.isIconHidden = settings.isIconHidden
+        self.isInfoOnSubmenu = settings.isInfoOnSubMenu
+        self.isInfoOnMainItem = settings.isInfoOnMainItem
+        self.isFileSizeHidden = settings.isFileSizeHidden
+        self.isRatioHidden = settings.isRatioHidden
+        self.isRatioPrecise = settings.isRatioPrecise ? 0 : 1
+        self.isResolutionNameHidden = settings.isResolutionNameHidden
+        
+        self.isImageHandled = settings.isImagesHandled
+        self.isPrintedSizeHidden = settings.isPrintHidden
+        self.isCustomDPIHidden = settings.isCustomPrintHidden
+        self.isColorHidden = settings.isColorHidden
+        self.isDepthHidden = settings.isDepthHidden
+        self.customDPI = settings.customDPI
+        self.unit = settings.unit.rawValue
+        
+        self.isVideoHandled = settings.isMediaHandled
+        self.isFramesHidden = settings.isFramesHidden
+        self.isCodecHidden = settings.isCodecHidden
+        self.isBPSHidden = settings.isBPSHidden
+        self.isTracksGrouped = settings.isTracksGrouped
+        
+        self.folders = settings.folders.sorted(by: { $0.path < $1.path })
+        
+        self.view.window?.isDocumentEdited = false
+    }
+    
+    @IBAction func revertDocumentToSaved(_ sender: Any) {
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Are you sure to revert to the original saved settings?", comment: "")
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: NSLocalizedString("Yes", comment: "")) // .keyEquivalent = "\r"
+        alert.addButton(withTitle: NSLocalizedString("No", comment: "")).keyEquivalent = "\u{1b}"
+        alert.beginSheetModal(for: self.view.window!) { result in
+            guard result == .alertFirstButtonReturn else {
+                return
+            }
+            
+            self.reset()
+        }
+    }
+    
+    @IBAction func saveDocument(_ sender: Any) {
+        doApplySettings(sender)
     }
     
     @IBAction func doApplySettings(_ sender: Any) {
@@ -205,6 +380,8 @@ class ViewController: NSViewController {
             DistributedNotificationCenter.default().postNotificationName(.MediaInfoMonitoredFolderChanged, object: Bundle.main.bundleIdentifier, userInfo: nil, options: [.deliverImmediately])
         }
         DistributedNotificationCenter.default().postNotificationName(.MediaInfoSettingsChanged, object: Bundle.main.bundleIdentifier, userInfo: nil, options: [.deliverImmediately])
+        
+        self.view.window?.isDocumentEdited = false
     }
 
     @IBAction func doClose(_ sender: Any) {

@@ -11,6 +11,13 @@
 "Ignore" = "Ignore";
 "Continue" = "Continue";
 "Cancel" = "Cancel";
+"Yes" = "Yes";
+"No" = "No";
+"Save" = "Save";
+"Don't Save" = "Don't Save";
 
 "No folders selected to be monitored" = "No folders selected to be monitored";
 "Are you sure you want to continue?" = "Are you sure you want to continue?";
+
+"Are you sure to revert to the original saved settings?" = "Are you sure to revert to the original saved settings?";
+"Save the settings before closing?" = "Save the settings before closing?";

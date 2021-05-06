@@ -2,7 +2,7 @@
 "1Xt-HY-uBw.title" = "MediaInfo";
 
 /* Class = "NSButtonCell"; title = "Save and close"; ObjectID = "3ol-h5-zyQ"; */
-"3ol-h5-zyQ.title" = "Salva e chiudi";
+"3ol-h5-zyQ.title" = "Salva";
 
 /* Class = "NSMenuItem"; title = "Quit MediaInfo"; ObjectID = "4sb-4s-VLi"; */
 "4sb-4s-VLi.title" = "Chiudi MediaInfo";
@@ -85,10 +85,6 @@
 /* Class = "NSMenu"; title = "Services"; ObjectID = "hz9-B4-Xy5"; */
 "hz9-B4-Xy5.title" = "Servizi";
 
-/* Class = "NSButtonCell"; title = "Close"; ObjectID = "jsV-5y-gqO"; */
-"jsV-5y-gqO.title" = "Chiudi";
-"jMs-wz-9jt.title" = "Applica";
-
 /* Class = "NSTextFieldCell"; title = "Monitored folders:"; ObjectID = "leZ-K3-ufv"; */
 "leZ-K3-ufv.title" = "Cartelle monitorate:";
 
@@ -143,3 +139,7 @@
 
 "mU5-l8-31s.title" = "Preciso";
 "G5Z-lg-hla.title" = "Approssimato";
+
+"Pb9-Aa-T3f.title" = "Resetta all'ultimo salvataggio…";
+"umV-Rf-qNd.title" = "Chiudi";
+"2pJ-Nh-3D0.title" = "Salva";
