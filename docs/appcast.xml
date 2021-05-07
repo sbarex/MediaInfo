@@ -6,7 +6,7 @@
             <title>1.0.0</title>
             <pubDate>gio, 6 Mag 2021 16:21:25 +0100</pubDate>
             <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.0.0/QLMardown.zip" sparkle:version="12" sparkle:shortVersionString="1.0.0" type="application/octet-stream" sparkle:edSignature="Irh4XpVkGNuOqI30m3DFRTPRgDAQuwM62zVH1ONUWpYYHyMCfYkELQH6y8vTkyH3tq9+XIpJWE0fg9Ax3hk+CQ=="/>
+            <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.0.0/MediaInfo.zip" sparkle:version="12" sparkle:shortVersionString="1.0.0" type="application/octet-stream" sparkle:edSignature="EnGfJCCroZJBR9ORX3rRcv0mRutef5N67NZBLhC9t2Uicr+K/aWLKM40c3mrkQbuH6/IAKe2Zq2RZbpetC8yAw==" length="20041388"/>
             <description><![CDATA[
                 <p>First version.</p>
             ]]>
