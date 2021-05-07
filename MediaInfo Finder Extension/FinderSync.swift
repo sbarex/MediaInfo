@@ -12,50 +12,43 @@ import FinderSync
 class FinderSync: FIFinderSync {
     let numberFormatter = NumberFormatter()
     let byteCountFormatter = ByteCountFormatter()
+
+    var settings: Settings = Settings(fromDict: [:])
     
     override init() {
         super.init()
         
-        let settings = Settings.shared
+        NSLog("MediaInfo FinderSync launched from %@", Bundle.main.bundlePath as NSString)
+        
+        refreshSettings()
         
         numberFormatter.allowsFloats = true
         numberFormatter.numberStyle = .decimal
         numberFormatter.maximumFractionDigits = 2
         
-        NSLog("FinderSync() launched from %@", Bundle.main.bundlePath as NSString)
-        
-        // Set up the directory we are syncing.
-        
-        NSLog("FinderSync() watching folders:\n %@", settings.folders.map({ $0.path }).joined(separator: "\n"))
-        FIFinderSyncController.default().directoryURLs = Set(settings.folders)
-        
         // Set up images for our badge identifiers. For demonstration purposes, this uses off-the-shelf images.
         // FIFinderSyncController.default().setBadgeImage(NSImage(named: NSImage.colorPanelName)!, label: "Status One" , forBadgeIdentifier: "One")
         // FIFinderSyncController.default().setBadgeImage(NSImage(named: NSImage.cautionName)!, label: "Status Two", forBadgeIdentifier: "Two")
-        
-        DistributedNotificationCenter.default().addObserver(self, selector: #selector(self.handleFolderChanged(_:)), name: .MediaInfoMonitoredFolderChanged, object: nil)
         
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(self.handleSettingsChanged(_:)), name: .MediaInfoSettingsChanged, object: nil)
     }
     
     deinit {
-        DistributedNotificationCenter.default().removeObserver(self, name: .MediaInfoMonitoredFolderChanged, object: nil)
         DistributedNotificationCenter.default().removeObserver(self, name: .MediaInfoSettingsChanged, object: nil)
     }
     
-    @objc func handleFolderChanged(_ notification: Notification) {
-        let settings = Settings.shared
-        settings.refresh()
-        
-        NSLog("FinderSync() watching folders:\n %@", settings.folders.map({$0.path}).joined(separator: "\n"))
-        FIFinderSyncController.default().directoryURLs = Set(settings.folders)
+    func refreshSettings() {
+        SettingsWrapper.getSettings() { settings in
+            self.settings = settings
+            
+            NSLog("MediaInfo FinderSync watching folders:\n %@", settings.folders.map({ $0.path }).joined(separator: "\n"))
+            // Set up the directory we are syncing.
+            FIFinderSyncController.default().directoryURLs = Set(settings.folders)
+        }
     }
     
     @objc func handleSettingsChanged(_ notification: Notification) {
-        let settings = Settings.shared
-        settings.refresh()
-        
-        NSLog("FinderSync() settings changes")
+        refreshSettings()
     }
     
     // MARK: - Primary Finder Sync protocol methods
@@ -111,8 +104,6 @@ class FinderSync: FIFinderSync {
     override func menu(for menuKind: FIMenuKind) -> NSMenu? {
         if menuKind == .contextualMenuForItems {
             if let items = FIFinderSyncController.default().selectedItemURLs(), items.count == 1, let item = items.first, let uti = try? item.resourceValues(forKeys: [.typeIdentifierKey]).typeIdentifier {
-                
-                let settings = Settings.shared
                 
                 if settings.isImagesHandled && UTTypeConformsTo(uti as CFString, kUTTypeImage), let menu = getMenuForImage(atURL: item) {
                     return menu
@@ -215,12 +206,12 @@ class FinderSync: FIFinderSync {
     internal func createMenuItem(title: String, image: String?) -> NSMenuItem {
         let mnu = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         mnu.isEnabled = true
-        mnu.image = image == nil || Settings.shared.isIconHidden ? nil : self.image(for: image!)
+        mnu.image = image == nil || settings.isIconHidden ? nil : self.image(for: image!)
         return mnu
     }
     
     internal func getFileSizeMenuItem(for item: URL)->NSMenuItem? {
-        guard !Settings.shared.isFileSizeHidden, let attr = try? FileManager.default.attributesOfItem(atPath: item.path), let fileSize = attr[FileAttributeKey.size] as? Int64 else {
+        guard !settings.isFileSizeHidden, let attr = try? FileManager.default.attributesOfItem(atPath: item.path), let fileSize = attr[FileAttributeKey.size] as? Int64 else {
             return nil
         }
             
@@ -232,7 +223,7 @@ class FinderSync: FIFinderSync {
     }
     
     internal func getRatioMenuItem(width: Int, height: Int)->NSMenuItem? {
-        guard !Settings.shared.isRatioHidden else {
+        guard !settings.isRatioHidden else {
             return nil
         }
         var gcd = self.gcd(width, height)
@@ -241,7 +232,7 @@ class FinderSync: FIFinderSync {
         }
         
         var circa = false
-        if !Settings.shared.isRatioPrecise, gcd < 8, let gcd1 = [self.gcd(width+1, height), self.gcd(width-1, height), self.gcd(width, height+1), self.gcd(width, height-1)].max(), gcd1 > gcd {
+        if !settings.isRatioPrecise, gcd < 8, let gcd1 = [self.gcd(width+1, height), self.gcd(width-1, height), self.gcd(width, height+1), self.gcd(width, height-1)].max(), gcd1 > gcd {
             gcd = gcd1 * self.gcd(width/gcd1, height / gcd1)
             circa = true
         }
@@ -261,7 +252,7 @@ class FinderSync: FIFinderSync {
     }
     
     internal func getResolutioNameMenuItem(width: Int, height: Int)->NSMenuItem? {
-        guard !Settings.shared.isResolutionNameHidden, let res = getResolutioName(width: width, height: height) else {
+        guard !settings.isResolutionNameHidden, let res = getResolutioName(width: width, height: height) else {
             return nil
         }
         
@@ -359,8 +350,6 @@ class FinderSync: FIFinderSync {
         let menu = NSMenu(title: "")
         menu.autoenablesItems = false
         
-        let settings = Settings.shared
-        
         let use_submenu  = settings.isInfoOnSubMenu
         let print_hidden = settings.isPrintHidden
         
@@ -369,7 +358,7 @@ class FinderSync: FIFinderSync {
         
         let info_sub_menu = NSMenu(title: "MediaInfo")
         if use_submenu {
-            let info_mnu = menu.addItem(withTitle: "Media info", action: #selector(sampleAction(_:)), keyEquivalent: "")
+            let info_mnu = menu.addItem(withTitle: "MediaInfo", action: #selector(sampleAction(_:)), keyEquivalent: "")
             info_mnu.image = image(for: "image"+(image_info.height>image_info.width ? "_v" : ""))
             
             menu.setSubmenu(info_sub_menu, for: info_mnu)
@@ -465,8 +454,6 @@ class FinderSync: FIFinderSync {
         guard !streams.isEmpty else {
             return nil
         }
-    
-        let settings = Settings.shared
         
         let use_submenu   = settings.isInfoOnSubMenu
         let group_tracks  = settings.isTracksGrouped
@@ -483,7 +470,7 @@ class FinderSync: FIFinderSync {
         
         let info_sub_menu = NSMenu(title: "MediaInfo")
         if use_submenu {
-            let info_mnu = menu.addItem(withTitle: "Media info", action: nil, keyEquivalent: "")
+            let info_mnu = menu.addItem(withTitle: "MediaInfo", action: nil, keyEquivalent: "")
             info_mnu.image = image(for: "video")
             menu.setSubmenu(info_sub_menu, for: info_mnu)
         }
@@ -605,8 +592,6 @@ class FinderSync: FIFinderSync {
             return nil
         }
         
-        let settings = Settings.shared
-        
         let use_submenu   = settings.isInfoOnSubMenu
         let codec_hidden  = settings.isCodecHidden
         let bps_hidden    = settings.isBPSHidden
@@ -616,7 +601,7 @@ class FinderSync: FIFinderSync {
         
         let info_sub_menu = NSMenu(title: "MediaInfo")
         if use_submenu {
-            let info_mnu = menu.addItem(withTitle: "Media info", action: nil, keyEquivalent: "")
+            let info_mnu = menu.addItem(withTitle: "MediaInfo", action: nil, keyEquivalent: "")
             info_mnu.image = image(for: "audio")
             menu.setSubmenu(info_sub_menu, for: info_mnu)
         }

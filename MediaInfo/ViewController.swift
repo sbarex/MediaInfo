@@ -9,6 +9,7 @@
 import Cocoa
 import FinderSync
 
+
 class WindowController: NSWindowController, NSWindowDelegate {
     func windowShouldClose(_ sender: NSWindow) -> Bool {
         if self.window?.isDocumentEdited ?? false {
@@ -31,7 +32,6 @@ class WindowController: NSWindowController, NSWindowDelegate {
 }
 
 class ViewController: NSViewController {
-    
     @objc dynamic var isImageHandled: Bool = true {
         willSet {
             self.willChangeValue(forKey: "isDPIEnabled")
@@ -204,6 +204,7 @@ class ViewController: NSViewController {
             if oldValue != folders {
                 self.view.window?.isDocumentEdited = true
             }
+            tableView.reloadData()
         }
     }
     
@@ -278,60 +279,6 @@ class ViewController: NSViewController {
     }
 
     @IBAction func doSave(_ sender: Any) {
-        self.doApplySettings(self)
-    }
-    
-    func reset() {
-        let settings = Settings.shared
-        settings.refresh()
-        
-        self.isIconHidden = settings.isIconHidden
-        self.isInfoOnSubmenu = settings.isInfoOnSubMenu
-        self.isInfoOnMainItem = settings.isInfoOnMainItem
-        self.isFileSizeHidden = settings.isFileSizeHidden
-        self.isRatioHidden = settings.isRatioHidden
-        self.isRatioPrecise = settings.isRatioPrecise ? 0 : 1
-        self.isResolutionNameHidden = settings.isResolutionNameHidden
-        
-        self.isImageHandled = settings.isImagesHandled
-        self.isPrintedSizeHidden = settings.isPrintHidden
-        self.isCustomDPIHidden = settings.isCustomPrintHidden
-        self.isColorHidden = settings.isColorHidden
-        self.isDepthHidden = settings.isDepthHidden
-        self.customDPI = settings.customDPI
-        self.unit = settings.unit.rawValue
-        
-        self.isVideoHandled = settings.isMediaHandled
-        self.isFramesHidden = settings.isFramesHidden
-        self.isCodecHidden = settings.isCodecHidden
-        self.isBPSHidden = settings.isBPSHidden
-        self.isTracksGrouped = settings.isTracksGrouped
-        
-        self.folders = settings.folders.sorted(by: { $0.path < $1.path })
-        
-        self.view.window?.isDocumentEdited = false
-    }
-    
-    @IBAction func revertDocumentToSaved(_ sender: Any) {
-        let alert = NSAlert()
-        alert.messageText = NSLocalizedString("Are you sure to revert to the original saved settings?", comment: "")
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: NSLocalizedString("Yes", comment: "")) // .keyEquivalent = "\r"
-        alert.addButton(withTitle: NSLocalizedString("No", comment: "")).keyEquivalent = "\u{1b}"
-        alert.beginSheetModal(for: self.view.window!) { result in
-            guard result == .alertFirstButtonReturn else {
-                return
-            }
-            
-            self.reset()
-        }
-    }
-    
-    @IBAction func saveDocument(_ sender: Any) {
-        doApplySettings(sender)
-    }
-    
-    @IBAction func doApplySettings(_ sender: Any) {
         let folders = Array(Set(self.folders))
         if folders.isEmpty {
             let p = NSAlert()
@@ -346,9 +293,7 @@ class ViewController: NSViewController {
             }
         }
         
-        let settings = Settings.shared
-        
-        let current_folders = settings.folders
+        let settings = Settings(fromDict: [:])
         
         settings.folders = folders
                 
@@ -374,18 +319,88 @@ class ViewController: NSViewController {
         settings.isBPSHidden = self.isBPSHidden
         settings.isTracksGrouped = self.isTracksGrouped
         
-        settings.synchronize()
-        
-        if current_folders != folders && FIFinderSyncController.isExtensionEnabled {
-            DistributedNotificationCenter.default().postNotificationName(.MediaInfoMonitoredFolderChanged, object: Bundle.main.bundleIdentifier, userInfo: nil, options: [.deliverImmediately])
+        SettingsWrapper.setSettings(settings) { status in
+            DispatchQueue.main.async {
+                guard status else {
+                    let alert = NSAlert()
+                    alert.messageText = NSLocalizedString("Unable to save the settings!", comment: "")
+                    alert.alertStyle = .critical
+                    alert.addButton(withTitle: NSLocalizedString("Close", comment: ""))
+                    if let window = self.view.window {
+                        alert.beginSheetModal(for: window, completionHandler: nil)
+                    } else {
+                        alert.runModal()
+                    }
+                    return
+                }
+                self.view.window?.isDocumentEdited = false
+                
+                let alert = NSAlert()
+                alert.messageText = NSLocalizedString("Settings saved", comment: "")
+                alert.alertStyle = .informational
+                alert.addButton(withTitle: NSLocalizedString("OK", comment: ""))
+                if let window = self.view.window {
+                    alert.beginSheetModal(for: window, completionHandler: nil)
+                } else {
+                    alert.runModal()
+                }
+            }
         }
-        DistributedNotificationCenter.default().postNotificationName(.MediaInfoSettingsChanged, object: Bundle.main.bundleIdentifier, userInfo: nil, options: [.deliverImmediately])
-        
-        self.view.window?.isDocumentEdited = false
     }
-
-    @IBAction func doClose(_ sender: Any) {
-        self.view.window?.close()
+    
+    func setSettings(_ settings: Settings) {
+        DispatchQueue.main.async {
+            self.isIconHidden = settings.isIconHidden
+            self.isInfoOnSubmenu = settings.isInfoOnSubMenu
+            self.isInfoOnMainItem = settings.isInfoOnMainItem
+            self.isFileSizeHidden = settings.isFileSizeHidden
+            self.isRatioHidden = settings.isRatioHidden
+            self.isRatioPrecise = settings.isRatioPrecise ? 0 : 1
+            self.isResolutionNameHidden = settings.isResolutionNameHidden
+            
+            self.isImageHandled = settings.isImagesHandled
+            self.isPrintedSizeHidden = settings.isPrintHidden
+            self.isCustomDPIHidden = settings.isCustomPrintHidden
+            self.isColorHidden = settings.isColorHidden
+            self.isDepthHidden = settings.isDepthHidden
+            self.customDPI = settings.customDPI
+            self.unit = settings.unit.rawValue
+            
+            self.isVideoHandled = settings.isMediaHandled
+            self.isFramesHidden = settings.isFramesHidden
+            self.isCodecHidden = settings.isCodecHidden
+            self.isBPSHidden = settings.isBPSHidden
+            self.isTracksGrouped = settings.isTracksGrouped
+            
+            self.folders = settings.folders.sorted(by: { $0.path < $1.path })
+            
+            self.view.window?.isDocumentEdited = false
+        }
+    }
+    
+    func reset() {
+        SettingsWrapper.getSettings(withReply: {
+            self.setSettings($0)
+        })
+    }
+    
+    @IBAction func revertDocumentToSaved(_ sender: Any) {
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Are you sure to revert to the original saved settings?", comment: "")
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: NSLocalizedString("Yes", comment: "")) // .keyEquivalent = "\r"
+        alert.addButton(withTitle: NSLocalizedString("No", comment: "")).keyEquivalent = "\u{1b}"
+        alert.beginSheetModal(for: self.view.window!) { result in
+            guard result == .alertFirstButtonReturn else {
+                return
+            }
+            
+            self.reset()
+        }
+    }
+    
+    @IBAction func saveDocument(_ sender: Any) {
+        doSave(sender)
     }
     
     @IBAction func openSystemPreferences(_ sender: Any) {

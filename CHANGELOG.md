@@ -1,6 +1,13 @@
 Changelog
 =======
 
+### 1.0.0
+
+- Universal binary support (_but `ffmpeg` for arm64 is compiled on intel platform without assembly optimizations_).
+- Sparke auto update support.
+- New app icon.
+- Removed App Group capability to handle the settings (App Group _require_ codesign). Now the settings are handled with an XPC service.
+
 ### 1.0.b11
 
 - Video and images icon on the menu respect the orientation (landscape / portrait).

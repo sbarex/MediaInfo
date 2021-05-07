@@ -15,8 +15,6 @@ enum PrintUnit: Int {
 }
 
 class Settings {
-    static let shared = Settings()
-    
     var isIconHidden = false
     var isInfoOnSubMenu = true
     var isInfoOnMainItem = false
@@ -41,99 +39,67 @@ class Settings {
     
     var folders: [URL] = []
     
-    static let SharedDomainName: String = "group.org.sbarex.MediaInfo"
+    static let SharedDomainName: String = "org.sbarex.MediaInfo"
     
-    private init() {
-        let defaults = UserDefaults(suiteName: Settings.SharedDomainName)
-
-        var defaultsDomain: [String: Any] = [:]
-        
-        defaultsDomain["icons"] = true
-        defaultsDomain["sub_menu"] = true
-        defaultsDomain["file_size"] = false
-        defaultsDomain["ratio"] = true
-        defaultsDomain["resolutio-name"] = true
-        
-        defaultsDomain["image_handled"] = true
-        defaultsDomain["print_hidden"] = false
-        defaultsDomain["custom_dpi_hidden"] = false
-        defaultsDomain["custom_dpi"] = 300
-        defaultsDomain["unit"] = 0
-        defaultsDomain["color_hidden"] = 0
-        defaultsDomain["depth_hidden"] = 0
-        
-        defaultsDomain["video_handled"] = true
-        defaultsDomain["frames_hidden"] = true
-        defaultsDomain["codec_hidden"] = true
-        defaultsDomain["bps_hidden"] = true
-        defaultsDomain["group_tracks"] = false
-        
-        defaultsDomain["folders"] = []
-        
-        defaults?.register(defaults: defaultsDomain)
-        
-        self.refresh()
+    init(fromDict dict: [String: AnyHashable]) {
+        refresh(fromDict: dict)
     }
     
-    @discardableResult
-    func synchronize() -> Bool {
-        let defaults = UserDefaults(suiteName: Settings.SharedDomainName)
+    func refresh(fromDict defaultsDomain: [String: AnyHashable]) {
+        self.isIconHidden = !(defaultsDomain["icons"] as? Bool ?? true)
+        self.isInfoOnSubMenu = defaultsDomain["sub_menu"] as? Bool ?? true
+        self.isInfoOnMainItem = defaultsDomain["main_info"] as? Bool ?? true
+        self.isFileSizeHidden = !(defaultsDomain["file_size"] as? Bool ?? false)
+        self.isRatioHidden = !(defaultsDomain["ratio"] as? Bool ?? true)
+        self.isRatioPrecise = defaultsDomain["ratio-precise"] as? Bool ?? true
+        self.isResolutionNameHidden = !(defaultsDomain["resolution-name"] as? Bool ?? true)
         
-        let folders = Array(Set(self.folders.map({ $0.path })))
-        defaults?.set(folders, forKey: "folders")
+        self.isImagesHandled = defaultsDomain["image_handled"] as? Bool ?? true
+        self.isPrintHidden = defaultsDomain["print_hidden"] as? Bool ?? false
+        self.isCustomPrintHidden = defaultsDomain["custom_dpi_hidden"] as? Bool ?? false
+        self.isColorHidden = defaultsDomain["color_hidden"] as? Bool ?? false
+        self.isDepthHidden = defaultsDomain["depth_hidden"] as? Bool ?? false
+        self.customDPI = defaultsDomain["custom_dpi"] as? Int ?? 300
+        self.unit = PrintUnit(rawValue: defaultsDomain["unit"] as? Int ?? 0) ?? .cm
         
-        defaults?.set(!self.isIconHidden, forKey: "icons")
-        defaults?.set(self.isInfoOnSubMenu, forKey: "sub_menu")
-        defaults?.set(self.isInfoOnMainItem, forKey: "main_info")
-        defaults?.set(!self.isFileSizeHidden, forKey: "file_size")
-        defaults?.set(!self.isRatioHidden, forKey: "ratio")
-        defaults?.set(self.isRatioPrecise, forKey: "ratio-precise")
-        defaults?.set(!self.isResolutionNameHidden, forKey: "resolution-name")
+        self.isMediaHandled = defaultsDomain["video_handled"] as? Bool ?? true
+        self.isFramesHidden = defaultsDomain["frames_hidden"] as? Bool ?? false
+        self.isCodecHidden = defaultsDomain["codec_hidden"] as? Bool ?? false
+        self.isBPSHidden = defaultsDomain["bps_hidden"] as? Bool ?? false
+        self.isTracksGrouped = defaultsDomain["group_tracks"] as? Bool ?? false
         
-        defaults?.set(self.isImagesHandled, forKey: "image_handled")
-        defaults?.set(self.isPrintHidden, forKey: "print_hidden")
-        defaults?.set(self.isCustomPrintHidden, forKey: "custom_dpi_hidden")
-        defaults?.set(self.isColorHidden, forKey: "color_hidden")
-        defaults?.set(self.isDepthHidden, forKey: "depth_hidden")
-        defaults?.set(self.customDPI, forKey: "custom_dpi")
-        defaults?.set(self.unit.rawValue, forKey: "unit")
-        
-        defaults?.set(self.isMediaHandled, forKey: "video_handled")
-        defaults?.set(self.isFramesHidden, forKey: "frames_hidden")
-        defaults?.set(self.isCodecHidden, forKey: "codec_hidden")
-        defaults?.set(self.isBPSHidden, forKey: "bps_hidden")
-        defaults?.set(self.isTracksGrouped, forKey: "group_tracks")
-        
-        return defaults?.synchronize() ?? false
-    }
-    
-    func refresh() {
-        let defaults = UserDefaults(suiteName: Settings.SharedDomainName)
-
-        self.isIconHidden = !(defaults?.bool(forKey: "icons") ?? true)
-        self.isInfoOnSubMenu = defaults?.bool(forKey: "sub_menu") ?? true
-        self.isInfoOnMainItem = defaults?.bool(forKey: "main_info") ?? true
-        self.isFileSizeHidden = !(defaults?.bool(forKey: "file_size") ?? false)
-        self.isRatioHidden = !(defaults?.bool(forKey: "ratio") ?? true)
-        self.isRatioPrecise = defaults?.bool(forKey: "ratio-precise") ?? true
-        self.isResolutionNameHidden = !(defaults?.bool(forKey: "resolution-name") ?? true)
-        
-        self.isImagesHandled = defaults?.bool(forKey: "image_handled") ?? true
-        self.isPrintHidden = defaults?.bool(forKey: "print_hidden") ?? false
-        self.isCustomPrintHidden = defaults?.bool(forKey: "custom_dpi_hidden") ?? false
-        self.isColorHidden = defaults?.bool(forKey: "color_hidden") ?? false
-        self.isDepthHidden = defaults?.bool(forKey: "depth_hidden") ?? false
-        self.customDPI = defaults?.integer(forKey: "custom_dpi") ?? 300
-        self.unit = PrintUnit(rawValue: defaults?.integer(forKey: "unit") ?? 0) ?? .cm
-        
-        self.isMediaHandled = defaults?.bool(forKey: "video_handled") ?? true
-        self.isFramesHidden = defaults?.bool(forKey: "frames_hidden") ?? false
-        self.isCodecHidden = defaults?.bool(forKey: "codec_hidden") ?? false
-        self.isBPSHidden = defaults?.bool(forKey: "bps_hidden") ?? false
-        self.isTracksGrouped = defaults?.bool(forKey: "group_tracks") ?? false
-        
-        if let d = defaults?.array(forKey: "folders") as? [String] {
+        if let d = defaultsDomain["folders"] as? [String] {
             self.folders = d.sorted().map({ URL(fileURLWithPath: $0 )})
         }
+    }
+    
+    func toDictionary() -> [String: AnyHashable] {
+        var dict: [String: AnyHashable] = [:]
+        let folders = Array(Set(self.folders.map({ $0.path })))
+        dict["folders"] = folders
+        
+        dict["icons"] = !self.isIconHidden
+        dict["sub_menu"] = self.isInfoOnSubMenu
+        dict["main_info"] = self.isInfoOnMainItem
+        dict["file_size"] = !self.isFileSizeHidden
+        dict["ratio"] = !self.isRatioHidden
+        dict["ratio-precise"] = self.isRatioPrecise
+        dict["resolution-name"] = !self.isResolutionNameHidden
+        
+        dict["image_handled"] = self.isImagesHandled
+        dict["print_hidden"] = self.isPrintHidden
+        dict["custom_dpi_hidden"] = self.isCustomPrintHidden
+        dict["color_hidden"] = self.isColorHidden
+        dict["depth_hidden"] = self.isDepthHidden
+        dict["custom_dpi"] = self.customDPI
+        dict["unit"] = self.unit.rawValue
+        
+        dict["video_handled"] = self.isMediaHandled
+        dict["frames_hidden"] = self.isFramesHidden
+        dict["codec_hidden"] = self.isCodecHidden
+        dict["bps_hidden"] = self.isBPSHidden
+        dict["group_tracks"] = self.isTracksGrouped
+        
+        return dict
     }
 }

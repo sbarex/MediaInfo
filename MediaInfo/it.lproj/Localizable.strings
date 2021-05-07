@@ -15,9 +15,16 @@
 "No" = "No";
 "Save" = "Salva";
 "Don't Save" = "Non salvare";
+"OK" = "OK";
 
 "No folders selected to be monitored" = "Nessuna cartella monitorata";
 "Are you sure you want to continue?" = "Sicuro di voler continuare?";
 
 "Are you sure to revert to the original saved settings?" = "Sicuro di ripristinare le ultime impostazioni salvate?";
 "Save the settings before closing?" = "Salvare le impostazioni prima di chiudere?";
+
+"Settings saved" = "Impostazioni salvate correttamete.";
+"Unable to save the settings!" = "Impossibile salvare le impostazioni!";
+
+"Updater Error" = "Errore di aggiornamento";
+"The Updater failed to start. For detailed error information, check the Console.app log." = "Impossibile avviare il servizio di aggiornamento. Per ulteriori informazioni controlla il log con Console.app.";

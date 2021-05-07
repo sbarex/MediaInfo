@@ -9,6 +9,5 @@
 import Foundation
 
 extension NSNotification.Name {
-    static let MediaInfoMonitoredFolderChanged = NSNotification.Name(rawValue: "MediaInfoMonitoredFolderChanged")
     static let MediaInfoSettingsChanged = NSNotification.Name(rawValue: "MediaInfoSettingsChanged")
 }

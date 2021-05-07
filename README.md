@@ -1,46 +1,52 @@
 #  MediaInfo - MacOS Finder Sync Extension
 
-This extension display information about multimedia files (images, videos and sounds) in the Finder contextual menu.
-Information is shown only for files within the monitored folders (and their subfolders).
+Extension to display information about multimedia files (images, videos and audio) in the Finder contextual menu.
 
 > **MediaInfo is distributed in the hope that it will be useful but WITHOUT ANY WARRANTY.**
 
-## Build and Installation
+![contextual menu](menu.png)
 
-**There is currently no updated pre-compiled release, you need to compile the code yourself.** 
+## Installation
 
-Clone the repository (do not download the source code because break the required git submodule):
+Head over to the [releases](https://github.com/sbarex/MediaInfo/releases) page to view the latest version. 
 
-```sh
-git clone https://github.com/sbarex/MediaInfo.git 
-```
-
-then open the Xcode project, change the signing team and build. (First time the build process can be slow due to the compilation of `ffmpeg`.) 
-
-_Apple require that the Application and his Finder Extension must be code signed. I do not have a personal Developer Account so I cannot release a prebuild signed binary._
-
-The required `FFMpeg` and `WebP` libraries are linked inside the extension, so no others external dependency are required.
-
-Move the build app on your Applications folder and launch it to set the monitored folders and the other settings. Then you need to enable the associated Finder Sync Extension on the System Preferences / Extensions.
+Move the downloaded app on your Applications folder and launch it to set the monitored folders and the other settings. Then you need to enable the associated Finder Sync Extension on the System Preferences / Extensions.
 
 ![System preferences/Extensions](extensions.png)
 
 Now right click (or `control` click) on an image or video within a monitored folder to see the contextual menu with the media information.
 
-Example of a contextual menu for an image:
-![Media settings](menu_image.png)
+| Image menu | Video Menu |
+|:---------|:--------- |
+| ![Image settings](menu_image.png) | ![Media settings](menu_video.png) |
 
-Example of a contextual menu for a video:
-![Media settings](menu_video.png)
+
+**The precompiled app is not notarized or signed.**
+
+When you download the precompiled app directly you must strip quarantine flag.
+
+You can launch the app with right click (or ctrl click) on the app icon and choosing the open action.
+
+Also you can execute this command from the terminal:
+
+```
+$ xattr -r -d com.apple.quarantine "FULL PATH OF THE MediaInfo .app (you can drag the file to get the pull path)"
+```
+
+Alternatively you can open System Preferences > Security & Privacy > General (tab) then clicking the `Open Anyway` button.
+
+This will resolve the error of an unsigned application when launching the app.
 
 
 ## Settings
 
 With the Application you can customize the monitored folders and the properties to be shown inside the contextual menu.
 
+**Information about media files is shown only for files within the monitored folders (and their subfolders).**
+
 ![Folder settings](settings_folder.png)
 
-The _General_ tab allow to set some common options.
+The _General_ tab allow to set some common options:
 
 ![General settings](settings_general.png)
 
@@ -87,7 +93,20 @@ Not all properties are always available, depending on the type of file and the l
 
 Supported audio/video format:
 - audio and video handled by the MacOS via CoreMedia
-- audio and video supported by `ffmpeg` library
+- audio and video supported by `ffmpeg` library.
+
+
+## Build from source
+
+Clone the repository (do not download the source code because break the required git submodule):
+
+```sh
+git clone https://github.com/sbarex/MediaInfo.git 
+```
+
+then open the Xcode project, change the signing team and build. First time the build process can be slow due to the compilation of `ffmpeg`.
+
+The required `FFMpeg` and `WebP` libraries are linked inside the extension and compiled within Xcode, so no others external dependency are required.
 
 
 ## Credits

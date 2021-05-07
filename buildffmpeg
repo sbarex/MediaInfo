@@ -1,5 +1,67 @@
 #!/bin/bash
 
+compile() {
+    mkdir -p "$1"
+    cd "$1"
+        
+    if [ -f config.h ]; then
+        echo "Skipping configure"
+    else
+        CFLAGS="$2"
+        if [ "${CONFIGURATION}" == "Debug" ]; then
+            CFLAGS="$CFLAGS -g"
+            FLAGS="--disable-optimizations"
+        else
+            CFLAGS="$CFLAGS -DNDEBUG"
+            FLAGS="--disable-debug"
+        fi
+        if [[ "$4" == "arm64" ]]; then
+            if [[ "$CURRENT_ARCH" != "$4" ]]; then
+                FLAGS="${FLAGS=} --disable-asm" #FIXME: arm64 assembly cause compilation error on a intel host.
+            else
+                FLAGS="${FLAGS} --enable-neon"
+            fi
+        fi
+        if [[ "$CURRENT_ARCH" != "$4" ]]; then
+            FLAGS="${FLAGS} --enable-cross-compile"
+        fi
+        echo "-> Do configure ($1/config.h)"
+        #--enable-fontconfig --enable-libopus --enable-libtheora --enable-libvorbis --enable-libmp3lame --enable-libfreetype --enable-libx264 --enable-libx265 --enable-libvpx --enable-libaom --enable-libvidstab  --enable-postproc
+        
+        CFLAGS="$CFLAGS" LDFLAGS="$3" ${SRCROOT}/ffmpeg/configure --prefix=$1 --cc=/usr/bin/clang --disable-stripping --enable-gpl --enable-nonfree --enable-version3 --disable-pthreads --disable-indevs --disable-outdevs --disable-network --disable-avdevice --disable-muxers --disable-encoders --disable-bsfs --disable-filters --disable-protocols --enable-muxer=image2 --enable-encoder=png --enable-protocol=file --disable-programs --disable-ffprobe --disable-doc --disable-htmlpages --disable-manpages --disable-podpages --disable-txtpages ${FLAGS} --arch=$4 --extra-cflags='-fno-stack-check' --pkg-config-flags=--static --enable-runtime-cpudetect
+        
+        retVal=$?
+        if [ $retVal -ne 0 ]; then
+            exit $retVal
+        fi
+    fi
+    
+    make -j`sysctl -n hw.physicalcpu` ${ACTION}
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+        exit $retVal
+    fi
+    
+    make install
+    retVal=$?
+    if [ $retVal -ne 0 ]; then
+        exit $retVal
+    fi
+}
+
+if [[ "${ONLY_ACTIVE_ARCH}" == "" ]]; then
+    ONLY_ACTIVE_ARCH="NO"
+fi
+
+CURRENT_ARCH=`uname -m`
+if [[ "$NATIVE_ARCH" == "" ]]; then
+    NATIVE_ARCH="${CURRENT_ARCH}"
+fi
+
+if [[ "$CONFIGURATION" == "" ]]; then
+    CONFIGURATION="Release"
+fi
+
 if [[ "${TARGET_BUILD_DIR: -1}" == "/" ]]; then
 	OUTDIR="${TARGET_BUILD_DIR}${TARGET_NAME}"
 else
@@ -7,10 +69,21 @@ else
 fi
 
 if [ "${ACTION}" == "clean" ]; then
-	echo Remove "${OUTDIR}"
-	if [ -n "${OUTDIR}" ]; then
-		rm -rf "${OUTDIR}"
-	fi
+    if [[ "$ONLY_ACTIVE_ARCH" == "NO" ]]; then
+        echo Remove "${OUTDIR}/${CONFIGURATION}/x86_64"
+        if [ -n "${OUTDIR}/${CONFIGURATION}/x86_64" ]; then
+            rm -rf "${OUTDIR}/${CONFIGURATION}/x86_64"
+        fi
+        echo Remove "${OUTDIR}/${CONFIGURATION}/arm64"
+        if [ -n "${OUTDIR}/${CONFIGURATION}/arm64" ]; then
+            rm -rf "${OUTDIR}/${CONFIGURATION}/arm64"
+        fi
+    else
+        echo Remove "${OUTDIR}"
+        if [ -n "${OUTDIR}" ]; then
+            rm -rf "${OUTDIR}"
+        fi
+    fi
 else
 	# For yasm
 	PATH=$PATH:/usr/local/bin
@@ -19,21 +92,55 @@ else
 		echo "-> Clone to ${SRCROOT}/ffmpeg"
 		cd "${SRCROOT}"
 		git submodule update --init
+        retVal=$?
+        if [ $retVal -ne 0 ]; then
+            exit $retVal
+        fi
 	fi
 	echo "-> Build for ${ACTION} in ${OUTDIR}"
 	
-	mkdir -p "${OUTDIR}"
-	cd "${OUTDIR}"
-	if [ -f config.h ]; then
-		echo "-> Skipping configure"
-	else
-		if [ "${CONFIGURATION}" == "Debug" ]; then
-			FLAGS="--disable-optimizations"
-		else
-			FLAGS=
-		fi
-		echo "-> Do configure"
-		${SRCROOT}/ffmpeg/configure --cc=clang --cpu=core2 --disable-stripping --enable-gpl --enable-hardcoded-tables --disable-doc --disable-pthreads --disable-indevs --disable-outdevs --disable-network --disable-avdevice --disable-muxers --disable-encoders --disable-bsfs --disable-filters --disable-protocols --enable-muxer=image2 --enable-encoder=png --enable-protocol=file --disable-programs --disable-ffprobe --disable-doc --disable-htmlpages --disable-manpages --disable-podpages --disable-txtpages --enable-nonfree ${FLAGS}
-	fi
-	make -j`sysctl -n hw.physicalcpu` ${ACTION}
+    libraries=( libavcodec libavfilter libavformat libavutil libpostproc libswresample libswscale )
+	
+    mkdir -p "${OUTDIR}"
+    if [[ "$ONLY_ACTIVE_ARCH" == "YES" ]]; then
+        if [[ "$NATIVE_ARCH" == "x86_64" ]]; then
+            compile "${OUTDIR}/${CONFIGURATION}/${NATIVE_ARCH}" "-mmacosx-version-min=10.15 -DNDEBUG" "" ""
+        else
+            compile "${OUTDIR}/${CONFIGURATION}/${NATIVE_ARCH}" "-target arm64-apple-macos11 -DNDEBUG" "-target arm64-apple-macos11" "arm"
+        fi
+
+        for lib in "${libraries[@]}"
+        do
+            ln -f "${OUTDIR}/${CONFIGURATION}/${NATIVE_ARCH}/lib/${lib}.a" "${OUTDIR}/${lib}.a"
+            retVal=$?
+            if [ $retVal -ne 0 ]; then
+                exit $retVal
+            fi
+        done
+        
+        ln -fs "${OUTDIR}/${CONFIGURATION}/${NATIVE_ARCH}/include" "${OUTDIR}/include"
+        retVal=$?
+        if [ $retVal -ne 0 ]; then
+            exit $retVal
+        fi
+    else
+        compile "${OUTDIR}/${CONFIGURATION}/x86_64" "-mmacosx-version-min=10.15 -DNDEBUG" "" "x86_64"
+        
+        compile "${OUTDIR}/${CONFIGURATION}/arm64" "-target arm64-apple-macos11 -DNDEBUG" "-target arm64-apple-macos11" "arm64"
+        
+        for lib in "${libraries[@]}"
+        do
+            lipo -create -output "${OUTDIR}/${lib}.a"  "${OUTDIR}/${CONFIGURATION}/x86_64/lib/${lib}.a" "${OUTDIR}/${CONFIGURATION}/arm64/lib/${lib}.a"
+            retVal=$?
+            if [ $retVal -ne 0 ]; then
+                exit $retVal
+            fi
+        done
+        
+        ln -fs "${OUTDIR}/${CONFIGURATION}/x86_64/include" "${OUTDIR}/include"
+        retVal=$?
+        if [ $retVal -ne 0 ]; then
+            exit $retVal
+        fi
+    fi
 fi

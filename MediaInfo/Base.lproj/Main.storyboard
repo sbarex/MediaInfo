@@ -24,6 +24,18 @@
                                         </menuItem>
                                         <menuItem isSeparatorItem="YES" id="VOq-y0-SEH"/>
                                         <menuItem title="Preferences…" keyEquivalent="," id="BOF-NM-1cW"/>
+                                        <menuItem title="Check for Updates…" keyEquivalent="u" id="8ph-NU-oZq">
+                                            <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
+                                            <connections>
+                                                <action selector="checkForUpdates:" target="Voe-Tx-rLC" id="k5L-6J-4nj"/>
+                                            </connections>
+                                        </menuItem>
+                                        <menuItem title="Reveal settings file" id="fDY-I1-4OC">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="revealSettingsFile:" target="Voe-Tx-rLC" id="Ek8-7i-tIf"/>
+                                            </connections>
+                                        </menuItem>
                                         <menuItem isSeparatorItem="YES" id="wFC-TO-SCJ"/>
                                         <menuItem title="Services" id="NMo-om-nkz">
                                             <modifierMask key="keyEquivalentModifierMask"/>

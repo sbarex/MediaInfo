@@ -21,37 +21,37 @@
       "size" : "32x32"
     },
     {
-      "filename" : "appicon128.png",
+      "filename" : "Icon-MacOS-128x128@1x.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "128x128"
     },
     {
-      "filename" : "appicon256-1.png",
+      "filename" : "Icon-MacOS-256x256@1x-1.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "128x128"
     },
     {
-      "filename" : "appicon256.png",
+      "filename" : "Icon-MacOS-256x256@1x.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "256x256"
     },
     {
-      "filename" : "appicon512-1.png",
+      "filename" : "Icon-MacOS-256x256@2x.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "256x256"
     },
     {
-      "filename" : "appicon512.png",
+      "filename" : "Icon-MacOS-512x512@1x.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "512x512"
     },
     {
-      "filename" : "appicon512@2x.png",
+      "filename" : "Icon-MacOS-512x512@2x.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "512x512"

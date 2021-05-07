@@ -15,9 +15,15 @@
 "No" = "No";
 "Save" = "Save";
 "Don't Save" = "Don't Save";
+"OK" = "OK";
 
 "No folders selected to be monitored" = "No folders selected to be monitored";
 "Are you sure you want to continue?" = "Are you sure you want to continue?";
 
 "Are you sure to revert to the original saved settings?" = "Are you sure to revert to the original saved settings?";
 "Save the settings before closing?" = "Save the settings before closing?";
+
+"Settings saved" = "Settings saved.";
+"Unable to save the settings!" = "Unable to save the settings!";
+
+"Updater Error" = "Updater Error";
