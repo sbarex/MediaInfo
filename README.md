@@ -238,10 +238,10 @@ Available information:
 |**placeholder**|**description**|**example**|**require deep scan**|
 |:----|:----|:----|:-----:|
 |page size|Page size. _Only for text document files._ You can choose different unit (inch, cm, mm). Can also show the paper format, like _A4_.|_21 × 29.7 cm_, _A4_, …|_Yes_|
-|creator|File creator.||_sbarex_|
-|creation date|Creation date.||_3 May 2021 11:23_|
-|last author|User who made the last save.||_sbarex_|
-|modification date|Last save date.||_3 May 2021 11:23_|
+|creator|File creator.|_sbarex_||
+|creation date|Creation date.|_3 May 2021 11:23_||
+|last author|User who made the last save.|_sbarex_||
+|modification date|Last save date.|_3 May 2021 11:23_||
 |title||||
 |subject||||
 |description|File description / comments.|||
