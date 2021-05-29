@@ -30,5 +30,17 @@
             ]]>
             </description>
         </item>
+        <item>
+            <title>1.5.1</title>
+            <pubDate>sab, 29 Mag 2021 23:43:12 +0100</pubDate>
+            <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.5.0/MediaInfo.zip" sparkle:version="14" sparkle:shortVersionString="1.5.1" type="application/octet-stream" sparkle:edSignature="kFET0rOCROKJ0azCjbCcuFKXenRFk4v0dBXMQfUuF6lDtSgqv9SCVK8tgy9AGJXrfdukMJ8ZQp3e7giv/U07AA==" length="20797265"/>
+            <description><![CDATA[
+                <ul>
+                    <li>Bugfix on image print size.</li>
+                </ul>
+            ]]>
+            </description>
+        </item>
     </channel>
 </rss>

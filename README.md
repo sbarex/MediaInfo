@@ -203,10 +203,10 @@ Supported audio format:
 Available information:
 |**placeholder**|**description**|**example**|
 |:----|:----|:----|
-|media box|Media box. You can choose different unit (pt, inch, mm, cm).|_595 × 842 pt_|
-|bleed box|Bleed box. You can choose different unit (pt, inch, mm, cm).|_595 × 842 pt_|
-|crop box|Crop box. You can choose different unit (pt, inch, mm, cm).|_595 × 842 pt_|
-|art box|Art box. You can choose different unit (pt, inch, mm, cm).|_595 × 842 pt_|
+|media box|Media box. You can choose different unit (pt, inch, mm, cm).|_595 × 842 pt_, _A4_, …|
+|bleed box|Bleed box. You can choose different unit (pt, inch, mm, cm, paper size).|_595 × 842 pt_, _A4_, …|
+|crop box|Crop box. You can choose different unit (pt, inch, mm, cm, paper size).|_595 × 842 pt_, _A4_, …|
+|art box|Art box. You can choose different unit (pt, inch, mm, cm, paper size).|_595 × 842 pt_, _A4_, …|
 |paper format|Paper format for the printed size.|_A4_, _Letter_, …|
 |pages|Number of pages.|_15 pages_|
 |author|Author.|_sbarex_|

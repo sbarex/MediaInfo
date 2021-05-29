@@ -1,6 +1,9 @@
 Changelog
 =======
 
+### 1.5.1
+- Bugfix on image print size. 
+
 ### 1.5
 - New user interface.
 - Customization of all menu items.

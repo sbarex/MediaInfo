@@ -170,7 +170,6 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
                     isFilled = false
                     return self.formatERR(useEmptyData: useEmptyData)
                 }
-                let isCustomDPI = dpi != self.dpi
                 
                 return format(value: [values?["width"] ?? width, values?["height"] ?? height], isFilled: &isFilled) { v, isFilled in
                     guard let dim = v as? [Int] else {
@@ -183,7 +182,7 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
                     if let w_print = Self.numberFormatter.string(from: NSNumber(value: Double(width) / Double(dpi) * unit.scale)), let h_print = Self.numberFormatter.string(from: NSNumber(value: Double(height) / Double(dpi) * unit.scale)) {
                             
                         isFilled = true
-                        return "\(w_print) × \(h_print) \(unit.label)" + (isCustomDPI ? " (\(dpi) "+NSLocalizedString("dpi", tableName: "LocalizableExt", comment: "")+")" : "")
+                        return "\(w_print) × \(h_print) \(unit.label) (\(dpi) "+NSLocalizedString("dpi", tableName: "LocalizableExt", comment: "")+")"
                     } else {
                         isFilled = false
                         return self.formatND(useEmptyData: useEmptyData)
@@ -192,6 +191,33 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
             } else {
                 return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
             }
+        }
+    }
+    
+    override func processSpecialMenuItem(_ item: Settings.MenuItem, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+        if item.template.hasPrefix("[[print:") {
+            let s = item.template.trimmingCharacters(in: CharacterSet(charactersIn: "[]")) .split(separator: ":")
+            guard s.count > 2 else {
+                return false
+            }
+            
+            guard let um = PrintUnit(placeholder: String(s[1])),  let dpi = Int(String(s[2])), dpi == self.dpi else {
+                return false
+            }
+            
+            for item2 in settings.imageMenuItems {
+                guard item2.template != item.template else {
+                    continue
+                }
+                if item2.template == "[[print:\(um.placeholder)]]" {
+                    // Prevents duplicate menu items.
+                    return true
+                }
+            }
+            
+            return false
+        } else {
+            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
         }
     }
     
