@@ -1,0 +1,38 @@
+/* 
+  Localizable.strings
+  MediaInfo
+
+  Created by Sbarex on 29/08/2020.
+  Copyright © 2020 sbarex. All rights reserved.
+*/
+" cm" = " cm";
+
+" mm" = " mm";
+
+" inch" = "\"";
+
+"Subtitle" = "Sottotiloli";
+
+"animated" = "animata";
+"static" = "statica";
+
+"frames" = "fotogrammi";
+
+"N/D" = "N/D";
+"ERR" = "ERR";
+"B/W" = "B/N";
+
+"1 page" = "1 pagina";
+"pages" = "pagine";
+
+"audio track" = "traccia audio";
+"audio tracks" = "tracce audio";
+
+"video track" = "traccia video";
+"video tracks" = "tracce video";
+
+"subtitle" = "sottotilo";
+"subtitles" = "sottotitoli";
+
+"language" = "lingua";
+"languages" = "lingue";

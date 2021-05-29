@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="18122" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="18122"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="DPIView" customModule="MediaInfoEx" customModuleProvider="target">
+            <connections>
+                <outlet property="contentView" destination="c22-O7-iKe" id="gkh-Ov-WYJ"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="c22-O7-iKe">
+            <rect key="frame" x="0.0" y="0.0" width="276" height="23"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Lqz-cQ-Ksw">
+                    <rect key="frame" x="105" y="2" width="118" height="19"/>
+                    <constraints>
+                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="40" id="8QX-60-GTO"/>
+                    </constraints>
+                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" enabled="NO" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="right" title="72" drawsBackground="YES" id="opC-1B-oyK">
+                        <numberFormatter key="formatter" formatterBehavior="custom10_4" numberStyle="decimal" formatWidth="-1" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" id="J2L-fg-B9c">
+                            <integer key="roundingIncrement" value="1"/>
+                            <real key="minimum" value="0.0"/>
+                        </numberFormatter>
+                        <font key="font" metaFont="smallSystem"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                    <connections>
+                        <binding destination="-2" name="value" keyPath="self.dpi" id="Lzy-ro-vXW"/>
+                        <binding destination="-2" name="enabled" keyPath="self.isEnabled" id="Df2-lK-oGY"/>
+                    </connections>
+                </textField>
+                <stepper horizontalHuggingPriority="750" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="rRM-xZ-0bE">
+                    <rect key="frame" x="228" y="0.0" width="15" height="22"/>
+                    <stepperCell key="cell" controlSize="small" continuous="YES" enabled="NO" alignment="left" maxValue="100000" id="JoD-5l-foZ"/>
+                    <connections>
+                        <binding destination="-2" name="value" keyPath="self.dpi" id="2sW-YF-qwR"/>
+                        <binding destination="-2" name="enabled" keyPath="self.isEnabled" id="A6E-H8-txr"/>
+                    </connections>
+                </stepper>
+                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="571-F8-7Xi">
+                    <rect key="frame" x="3" y="3" width="94" height="18"/>
+                    <buttonCell key="cell" type="check" title="Resolution:" bezelStyle="regularSquare" imagePosition="left" inset="2" id="1Ry-71-CkD">
+                        <behavior key="behavior" pushIn="YES" changeContents="YES" lightByContents="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <binding destination="-2" name="value" keyPath="self.isEnabled" id="kV1-Hg-DP9"/>
+                    </connections>
+                </button>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Gel-gI-JTm">
+                    <rect key="frame" x="247" y="4" width="23" height="16"/>
+                    <textFieldCell key="cell" lineBreakMode="clipping" title="dpi" id="byj-3w-CQH">
+                        <font key="font" usesAppearanceFont="YES"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+            </subviews>
+            <constraints>
+                <constraint firstItem="Lqz-cQ-Ksw" firstAttribute="leading" secondItem="571-F8-7Xi" secondAttribute="trailing" constant="8" symbolic="YES" id="1j3-e0-Sex"/>
+                <constraint firstItem="Lqz-cQ-Ksw" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" constant="2" id="D0l-7t-UYa"/>
+                <constraint firstItem="rRM-xZ-0bE" firstAttribute="centerY" secondItem="Lqz-cQ-Ksw" secondAttribute="centerY" id="KyG-8Q-ZjI"/>
+                <constraint firstAttribute="trailing" secondItem="Gel-gI-JTm" secondAttribute="trailing" constant="8" id="SHm-Nf-KVt"/>
+                <constraint firstItem="571-F8-7Xi" firstAttribute="firstBaseline" secondItem="Lqz-cQ-Ksw" secondAttribute="firstBaseline" id="VaJ-iy-87F"/>
+                <constraint firstItem="rRM-xZ-0bE" firstAttribute="leading" secondItem="Lqz-cQ-Ksw" secondAttribute="trailing" constant="7" id="dGU-uW-qd2"/>
+                <constraint firstItem="Gel-gI-JTm" firstAttribute="leading" secondItem="rRM-xZ-0bE" secondAttribute="trailing" constant="8" symbolic="YES" id="i1j-uZ-GkM"/>
+                <constraint firstItem="571-F8-7Xi" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="5" id="n3o-7N-noc"/>
+                <constraint firstItem="Gel-gI-JTm" firstAttribute="firstBaseline" secondItem="571-F8-7Xi" secondAttribute="firstBaseline" id="oiB-bB-TJP"/>
+                <constraint firstAttribute="bottom" secondItem="Lqz-cQ-Ksw" secondAttribute="bottom" constant="2" id="wJj-U1-Te8"/>
+            </constraints>
+            <point key="canvasLocation" x="42" y="105.5"/>
+        </customView>
+        <userDefaultsController representsSharedInstance="YES" id="zs7-3L-LsF"/>
+    </objects>
+</document>

@@ -1,29 +1,168 @@
-/* 
+
+/*
   Localizable.strings
   MediaInfo
 
   Created by Sbarex on 26/08/2020.
   Copyright © 2020 sbarex. All rights reserved.
 */
-"Finder extension not enabled" = "Finder extension not enabled";
 
-"Enable" = "Open System Preferences";
-"Ignore" = "Ignore";
-"Continue" = "Continue";
-"Cancel" = "Cancel";
-"Yes" = "Yes";
-"No" = "No";
-"Save" = "Save";
-"Don't Save" = "Don't Save";
-"OK" = "OK";
+/* No comment provided by engineer. */
+"animated" = "animated";
 
-"No folders selected to be monitored" = "No folders selected to be monitored";
+/* No comment provided by engineer. */
+"Animated status." = "Animated status.";
+
+/* No comment provided by engineer. */
+"animated/static" = "animated/static";
+
+/* No comment provided by engineer. */
+"Are you sure to revert to the original saved settings?" = "Are you sure to revert to the original saved settings?";
+
+/* No comment provided by engineer. */
 "Are you sure you want to continue?" = "Are you sure you want to continue?";
 
-"Are you sure to revert to the original saved settings?" = "Are you sure to revert to the original saved settings?";
+/* No comment provided by engineer. */
+"Bit rate." = "Bit rate.";
+
+/* No comment provided by engineer. */
+"Cancel" = "Cancel";
+
+/* No comment provided by engineer. */
+"Codec." = "Codec.";
+
+/* No comment provided by engineer. */
+"Color depth." = "Color depth.";
+
+/* No comment provided by engineer. */
+"Color space" = "Color space";
+
+/* No comment provided by engineer. */
+"Color space and depth." = "Color space and depth.";
+
+/* No comment provided by engineer. */
+"Color space." = "Color space.";
+
+/* No comment provided by engineer. */
+"Continue" = "Continue";
+
+/* No comment provided by engineer. */
+"Dimension" = "Dimension";
+
+/* No comment provided by engineer. */
+"Don't Save" = "Don't Save";
+
+/* No comment provided by engineer. */
+"Duration" = "Length";
+
+/* No comment provided by engineer. */
+"Duration." = "Length.";
+
+/* No comment provided by engineer. */
+"Enable" = "Open System Preferences";
+
+/* No comment provided by engineer. */
+"File size." = "File size.";
+
+"Finder extension not enabled!" = "Finder extension not enabled!";
+
+/* No comment provided by engineer. */
+"frames" = "frames";
+
+/* No comment provided by engineer. */
+"Height." = "Height.";
+
+/* No comment provided by engineer. */
+"Ignore" = "Ignore";
+
+/* No comment provided by engineer. */
+"Language" = "Language";
+
+/* No comment provided by engineer. */
+"Language code." = "Language code.";
+
+/* No comment provided by engineer. */
+"Language flag." = "Language flag.";
+
+/* No comment provided by engineer. */
+"No" = "No";
+
+/* No comment provided by engineer. */
+"No folders selected to be monitored" = "No folders selected to be monitored";
+
+/* No comment provided by engineer. */
+"Number of frames." = "Number of frames.";
+
+/* No comment provided by engineer. */
+"OK" = "OK";
+
+/* No comment provided by engineer. */
+"Ratio." = "Ratio.";
+
+/* No comment provided by engineer. */
+"Resolution" = "Resolution";
+"Resolution." = "Resolution.";
+
+"Printed size" = "Printed size";
+
+/* No comment provided by engineer. */
+"Resolution name." = "Resolution name.";
+
+/* No comment provided by engineer. */
+"Save" = "Save";
+
+/* No comment provided by engineer. */
 "Save the settings before closing?" = "Save the settings before closing?";
 
+/* No comment provided by engineer. */
 "Settings saved" = "Settings saved.";
+
+/* No comment provided by engineer. */
+"Show only if the image is animated." = "Show only if the image is animated.";
+
+/* No comment provided by engineer. */
+"Time." = "Time.";
+
+/* No comment provided by engineer. */
 "Unable to save the settings!" = "Unable to save the settings!";
 
+/* No comment provided by engineer. */
 "Updater Error" = "Updater Error";
+
+/* No comment provided by engineer. */
+"Width." = "Width.";
+
+/* No comment provided by engineer. */
+"Yes" = "Yes";
+
+/* No comment provided by engineer. */
+"Audio" = "Audio";
+
+/* No comment provided by engineer. */
+"Close" = "Close";
+
+/* No comment provided by engineer. */
+"cm" = "cm";
+
+/* No comment provided by engineer. */
+"inch" = "inch";
+
+/* No comment provided by engineer. */
+"mm" = "mm";
+
+/* No comment provided by engineer. */
+"Subtitle" = "Subtitle";
+
+/* No comment provided by engineer. */
+"The Updater failed to start. For detailed error information, check the Console.app log." = "The Updater failed to start. For detailed error information, check the Console.app log.";
+
+/* No comment provided by engineer. */
+"Video" = "Video";
+
+"List of available languages (on video and audio tracks)." = "List of available languages (on video and audio tracks).";
+"List of available languages (on video and audio tracks) rendered as a country flag." = "List of available languages (on video and audio tracks) rendered as a country flag.";
+
+"Number of audio tracks." = "Number of audio tracks.";
+"Number of video tracks (in addition to the main one)." = "Number of video tracks (in addition to the main one).";
+"Number of available subtitles." = "Number of available subtitles.";
+"Number of available languages." = "Numero di lingue disponibili.";

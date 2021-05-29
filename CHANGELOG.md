@@ -1,18 +1,27 @@
 Changelog
 =======
 
+### 1.5
+- New user interface.
+- Customization of all menu items.
+- Support for PDF files.
+- Support for Office files (`.docx`, `.xlsx`, `.pptx`, `.odt`, `.ods`, `.odp`).
+- Choice of priority of multimedia engines.
+- Support for monitored folders within external disks (disk images, external or network disks).
+- Fixed Finder Extension caption.
+
 ### 1.0.0
 
 - Universal binary support (_but `ffmpeg` for arm64 is compiled on intel platform without assembly optimizations_).
-- Sparke auto update support.
+- Support for automatic Sparke update.
 - New app icon.
-- Removed App Group capability to handle the settings (App Group _require_ codesign). Now the settings are handled with an XPC service.
+- Removed App Group capability to handle the settings (App Group _require_ codesign). Settings are now handled with an XPC service.
 
 ### 1.0.b11
 
 - Video and images icon on the menu respect the orientation (landscape / portrait).
 - Color menu icon for the different color space.
-- Allow to show an approximate ratio when the value is not optimal.   
+- Allow you to show an approximate ratio when the value is not optimal.   
 
 ### 1.0.b10
 

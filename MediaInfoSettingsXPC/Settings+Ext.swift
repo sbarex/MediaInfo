@@ -16,34 +16,22 @@ extension Settings {
         let defaultsDomain = defaults.persistentDomain(forName: name) as? [String: AnyHashable] ?? [:]
         
         self.init(fromDict: defaultsDomain)
+        
+        if defaultsDomain["version"] as? Double == nil {
+            let stdSettings = Self.getStandardSettings()
+            imageMenuItems = stdSettings.imageMenuItems
+            videoMenuItems = stdSettings.videoMenuItems
+            audioMenuItems = stdSettings.audioMenuItems
+            pdfMenuItems = stdSettings.pdfMenuItems
+            officeMenuItems = stdSettings.officeMenuItems
+        }
     }
     
     static func initDefaults() {
+        let settings = Self.getStandardSettings()
+        
         let defaults = UserDefaults(suiteName: Settings.SharedDomainName)
-
-        var defaultsDomain: [String: Any] = [:]
-        
-        defaultsDomain["icons"] = true
-        defaultsDomain["sub_menu"] = true
-        defaultsDomain["file_size"] = false
-        defaultsDomain["ratio"] = true
-        defaultsDomain["resolutio-name"] = true
-        
-        defaultsDomain["image_handled"] = true
-        defaultsDomain["print_hidden"] = false
-        defaultsDomain["custom_dpi_hidden"] = false
-        defaultsDomain["custom_dpi"] = 300
-        defaultsDomain["unit"] = 0
-        defaultsDomain["color_hidden"] = 0
-        defaultsDomain["depth_hidden"] = 0
-        
-        defaultsDomain["video_handled"] = true
-        defaultsDomain["frames_hidden"] = true
-        defaultsDomain["codec_hidden"] = true
-        defaultsDomain["bps_hidden"] = true
-        defaultsDomain["group_tracks"] = false
-        
-        defaultsDomain["folders"] = []
+        let defaultsDomain: [String: Any] = settings.toDictionary()
         
         defaults?.register(defaults: defaultsDomain)
     }
@@ -52,31 +40,17 @@ extension Settings {
     func synchronize() -> Bool {
         let defaults = UserDefaults.standard
         var defaultsDomain = defaults.persistentDomain(forName: Settings.SharedDomainName) ?? [:]
-                
-        let folders = Array(Set(self.folders.map({ $0.path })))
-        defaultsDomain["folders"] = folders
         
-        defaultsDomain["icons"] = !self.isIconHidden
-        defaultsDomain["sub_menu"] = self.isInfoOnSubMenu
-        defaultsDomain["main_info"] = self.isInfoOnMainItem
-        defaultsDomain["file_size"] = !self.isFileSizeHidden
-        defaultsDomain["ratio"] = !self.isRatioHidden
-        defaultsDomain["ratio-precise"] = self.isRatioPrecise
-        defaultsDomain["resolution-name"] = !self.isResolutionNameHidden
-        
-        defaultsDomain["image_handled"] = self.isImagesHandled
-        defaultsDomain["print_hidden"] = self.isPrintHidden
-        defaultsDomain["custom_dpi_hidden"] = self.isCustomPrintHidden
-        defaultsDomain["color_hidden"] = self.isColorHidden
-        defaultsDomain["depth_hidden"] = self.isDepthHidden
-        defaultsDomain["custom_dpi"] = self.customDPI
-        defaultsDomain["unit"] = self.unit.rawValue
-        
-        defaultsDomain["video_handled"] = self.isMediaHandled
-        defaultsDomain["frames_hidden"] = self.isFramesHidden
-        defaultsDomain["codec_hidden"] = self.isCodecHidden
-        defaultsDomain["bps_hidden"] = self.isBPSHidden
-        defaultsDomain["group_tracks"] = self.isTracksGrouped
+        let d = self.toDictionary()
+    
+        for s in d {
+            defaultsDomain[s.key] = s.value
+        }
+        for s in defaultsDomain {
+            if !d.keys.contains(s.key) {
+                defaultsDomain.removeValue(forKey: s.key)
+            }
+        }
         
         let userDefaults = UserDefaults()
         userDefaults.setPersistentDomain(defaultsDomain, forName: Settings.SharedDomainName)

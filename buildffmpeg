@@ -36,6 +36,14 @@ compile() {
         fi
     fi
     
+        
+    make -q ${ACTION}
+    retVal=$?
+    if [ $retVal -eq 0 ]; then
+        echo "-> No need to compile."
+        exit 0 # no need to make
+    fi
+    
     make -j`sysctl -n hw.physicalcpu` ${ACTION}
     retVal=$?
     if [ $retVal -ne 0 ]; then

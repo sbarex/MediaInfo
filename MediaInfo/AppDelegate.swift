@@ -8,6 +8,7 @@
 
 import Cocoa
 import Sparkle
+import Kanna
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {

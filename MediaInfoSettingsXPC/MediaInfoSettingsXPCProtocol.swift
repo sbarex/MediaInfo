@@ -12,8 +12,7 @@ import Foundation
 @objc public protocol MediaInfoSettingsXPCProtocol {
     // func upperCaseString(_ string: String, withReply reply: @escaping (String) -> Void)
     
-    func getSettingsWithReply(_ reply: @escaping (NSDictionary) -> Void)
-    
+    func getSettings(refresh: Bool, withReply reply: @escaping (NSDictionary) -> Void)
     func setSetting(_ settings: NSDictionary, withReply reply: @escaping (Bool) -> Void)
     
     func getSettingsURL(reply: @escaping (_ url: URL?)->Void)

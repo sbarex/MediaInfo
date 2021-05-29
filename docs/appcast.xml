@@ -12,5 +12,23 @@
             ]]>
             </description>
         </item>
+        <item>
+            <title>1.5.0</title>
+            <pubDate>sab, 29 Mag 2021 22:35:12 +0100</pubDate>
+            <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.5.0/MediaInfo.zip" sparkle:version="13" sparkle:shortVersionString="1.5.0" type="application/octet-stream" sparkle:edSignature="SXfKhZgjaNzLwHktTsEzee82zFD2f8xgbRl+JlhJAGgJHWkRfcFAUz+YS1z5AeQJxZYNMSqnOm0jtVKXAUhrBA==" length="20790527"/>
+            <description><![CDATA[
+                <ul>
+                    <li>New user interface.</li>
+                    <li>Customization of all menu items.</li>
+                    <li>Support for PDF files.</li>
+                    <li>Support for Office files (<code>.docx</code>, <code>.xlsx</code>, <code>.pptx</code>, <code>.odt</code>, <code>.ods</code>, <code>.odp</code>).</li>
+                    <li>Choice of priority of multimedia engines.</li>
+                    <li>Support for monitored folders within external disks (disk images, external or network disks).</li>
+                    <li>Fixed Finder Extension caption.</li>
+                </ul>
+            ]]>
+            </description>
+        </item>
     </channel>
 </rss>

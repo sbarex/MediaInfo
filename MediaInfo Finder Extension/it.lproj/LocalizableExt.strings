@@ -1,0 +1,97 @@
+/* 
+  Localizable.strings
+  MediaInfo
+
+  Created by Sbarex on 29/08/2020.
+  Copyright © 2020 sbarex. All rights reserved.
+*/
+"cm" = "cm";
+"mm" = "mm";
+"inch" = "\"";
+"pt" = "pt";
+
+// MARK: -
+"N/D" = "N/D";
+"ERR" = "ERR";
+
+// MARK: -
+"Audio" = "Audio";
+"Audio tracks" = "Tracce audio";
+"Subtitles" = "Sotto tiloli";
+
+// MARK: -
+"B/W" = "B/N";
+"bit" = "bit";
+"dpi" = "dpi";
+
+// MARK: -
+"animated" = "animata";
+"static" = "statica";
+
+"frames" = "fotogrammi";
+"language" = "lingua";
+"languages" = "lingue";
+
+"subtitle" = "sottotilo";
+"subtitles" = "sottotitoli";
+
+"1 Subtitle" = "1 sottotitolo";
+"%d Subtitles" = "%d sottotitoli";
+
+"audio track" = "traccia audio";
+"audio tracks" = "tracce audio";
+
+"1 Audio track" = "1 traccia audio";
+"%d Audio tracks" = "%d tracce audio";
+
+"video track" = "traccia video";
+"video tracks" = "tracce video";
+"1 Video track" = "1 traccia video";
+"%d Video tracks" = "%d tracce video";
+
+"page" = "pagina";
+"pages" = "pagine";
+
+"version" = "versione";
+"no copy" = "copia vietata";
+"no print" = "stampa vietata";
+
+"Yes" = "Sì";
+"No" = "No";
+
+"lossless" = "lossless";
+"lossy" = "lossy";
+
+"chapter" = "capitolo";
+"chapters" = "capitoli";
+
+"1 Chapter" = "1 capitolo";
+"%d Chapters" = "%d capitoli";
+
+"Chapter" = "Capitolo";
+"Chapters" = "Capitoli";
+
+"character" = "carattere";
+"characters" = "caratteri";
+"character (spaces included)" = "carattere (spazi inclusi)";
+"characters (spaces included)" = "caratteri (spazi inclusi)";
+"word" = "parola";
+"words" = "parole";
+
+"sheet" = "foglio";
+"sheets" = "fogli";
+"1 Sheet" = "1 foglio";
+"%d Sheets" = "%d fogli";
+
+"slide" = "diapositiva";
+"slides" = "diapositive";
+
+"Keywords" = "Parole chiave";
+"1 Keyword" = "1 parola chiave";
+"%d Keywords" = "%d parole chiave";
+
+"created by %@" = "creato da %@";
+"created on %@" = "creato il %@";
+"last saved by %@" = "ultimo salvataggio di %@";
+"last saved on %@" = "ultimo salvataggio il %@";
+"on %@" = "il %@";

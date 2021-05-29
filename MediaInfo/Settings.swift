@@ -8,66 +8,254 @@
 
 import Foundation
 
-enum PrintUnit: Int {
-    case cm
+extension Sequence where Iterator.Element: Hashable {
+    func unique() -> [Iterator.Element] {
+        var seen: [Iterator.Element: Bool] = [:]
+        return self.filter { seen.updateValue(true, forKey: $0) == nil }
+    }
+}
+
+enum MediaEngine: Int {
+    case coremedia
+    case ffmpeg
+    case metadata
+    
+    var label: String {
+        switch self {
+        case .coremedia: return "Core Media engine"
+        case .ffmpeg: return "FFMpeg engine"
+        case .metadata: return "Metadata engine"
+        }
+    }
+}
+
+enum PrintUnit: Int, CaseIterable {
+    case cm = 1
     case mm
     case inch
+    
+    init?(placeholder: String) {
+        switch placeholder {
+        case "cm": self = .cm
+        case "mm": self = .mm
+        case "in": self = .inch
+        default: return nil
+        }
+    }
+    
+    var placeholder: String {
+        switch self {
+        case .cm:
+            return "cm"
+        case .mm:
+            return "mm"
+        case .inch:
+            return "in"
+        }
+    }
+    
+    var scale: Double {
+        switch self {
+        case .cm:
+            return 2.54 // cm
+        case .mm:
+            return 25.4 // mm
+        case .inch:
+            return 1
+        }
+    }
+    
+    var label: String {
+        switch self {
+        case .cm:
+            return NSLocalizedString("cm", tableName: "LocalizableExt", comment: "")
+        case .mm:
+            return NSLocalizedString("mm", tableName: "LocalizableExt", comment: "")
+        case .inch:
+            return NSLocalizedString("inch", tableName: "LocalizableExt", comment: "")
+        }
+    }
 }
 
 class Settings {
+    static let Version = 1.5
+    static func getStandardSettings() -> Settings {
+        let settings = Settings(fromDict: [:])
+        settings.imageMenuItems = [
+            MenuItem(image: "image", template: "[[size]], [[color-depth]] [[is-animated]]"),
+            MenuItem(image: "ratio", template: "[[ratio]], [[resolution]]"),
+            MenuItem(image: "color", template: "[[color-depth]]"),
+            MenuItem(image: "printer", template: "[[dpi]]"),
+            MenuItem(image: "printer", template: "[[print:cm]]"),
+            MenuItem(image: "printer", template: "[[print:cm:300]]"),
+            MenuItem(image: "printer", template: "[[paper]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "size", template: "[[filesize]]"),
+        ]
+        settings.videoMenuItems = [
+            MenuItem(image: "video", template: "[[size]], [[duration]], [[fps]] ([[languages-flag]])"),
+            MenuItem(image: "ratio", template: "[[ratio]], [[resolution]]"),
+            MenuItem(image: "video", template: "[[bitrate]], [[codec]]"),
+            MenuItem(image: "", template: "[[frames]]"),
+            MenuItem(image: "tag", template: "[[title]]"),
+            MenuItem(image: "", template: "[[frames]]"),
+            MenuItem(image: "video", template: "[[video]]"),
+            MenuItem(image: "audio", template: "[[audio]]"),
+            MenuItem(image: "txt", template: "[[subtitles]]"),
+            MenuItem(image: "chapters", template: "[[chapters]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "size", template: "[[filesize]]"),
+        ]
+        settings.audioMenuItems = [
+            MenuItem(image: "audio", template: "[[duration]] ([[seconds]]) [[language-flag]]"),
+            MenuItem(image: "audio", template: "[[bitrate]], [[codec]]"),
+            MenuItem(image: "tag", template: "[[title]]"),
+            MenuItem(image: "", template: "([[engine]])"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "size", template: "[[filesize]]"),
+        ]
+        
+        settings.pdfMenuItems = [
+            MenuItem(image: "pdf", template: "[[mediabox:paper:cm]], [[pages]] [[security]]"),
+            MenuItem(image: "pages", template: "[[pages]]"),
+            MenuItem(image: "page", template: "Media box: [[mediabox:mm]], [[mediabox:paper]]"),
+            MenuItem(image: "crop", template: "Crop box: [[cropbox:mm]], [[cropbox:paper]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "tag", template: "[[title]]"),
+            MenuItem(image: "person", template: "Author: [[author]]"),
+            MenuItem(image: "", template: "Creathor: [[creathor]]"),
+            MenuItem(image: "", template: "Application: [[producer]]"),
+            MenuItem(image: "shield", template: "[[version]], [[security]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "size", template: "[[filesize]]"),
+        ]
+        
+        settings.officeMenuItems = [
+            MenuItem(image: "office", template: "[[size:paper:cm]], [[title]], [[pages]]"),
+            MenuItem(image: "tag", template: "subject: [[subject]]"),
+            MenuItem(image: "person", template: "[[creation]]"),
+            MenuItem(image: "pencil", template: "[[last-modification]]"),
+            MenuItem(image: "pages", template: "[[pages]]"),
+            MenuItem(image: "abc", template: "[[words]], [[characters-space]]"),
+            MenuItem(image: "", template: "[[keywords]]"),
+            MenuItem(image: "", template: "([[application]])"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "size", template: "[[filesize]]"),
+        ]
+        
+        return settings
+    }
+    
+    struct MenuItem {
+        var image: String
+        var template: String
+    }
+    
+    var version: Double
+    
     var isIconHidden = false
     var isInfoOnSubMenu = true
     var isInfoOnMainItem = false
-    var isFileSizeHidden = true
-    var isRatioHidden = false
+    var useFirstItemAsMain = true
+    var isEmptyItemsSkipped = true
+    
     var isRatioPrecise = false
-    var isResolutionNameHidden = false
+    var isTracksGrouped = true
+    
+    var menuWillOpenFile = true
+    
+    var isUsingFirstItemAsMain: Bool {
+        return isInfoOnSubMenu && isInfoOnMainItem && useFirstItemAsMain
+    }
     
     var isImagesHandled = true
-    var isPrintHidden = false
-    var isCustomPrintHidden = false
-    var customDPI = 300
-    var unit: PrintUnit = .cm
-    var isColorHidden = false
-    var isDepthHidden = false
+    var imageMenuItems: [MenuItem] = []
     
-    var isMediaHandled = true
-    var isFramesHidden = true
-    var isCodecHidden = true
-    var isBPSHidden = true
-    var isTracksGrouped = false
+    var isVideoHandled = true
+    var videoMenuItems: [MenuItem] = []
+    
+    var isAudioHandled = true
+    var audioMenuItems: [MenuItem] = []
+    
+    var isPDFHandled = true
+    var pdfMenuItems: [MenuItem] = []
+    
+    var isOfficeHandled = true
+    var isOfficeDeepScan = true
+    var officeMenuItems: [MenuItem] = []
     
     var folders: [URL] = []
+    
+    var engines: [MediaEngine] = [.ffmpeg, .coremedia, .metadata]
     
     static let SharedDomainName: String = "org.sbarex.MediaInfo"
     
     init(fromDict dict: [String: AnyHashable]) {
+        self.version = 0
         refresh(fromDict: dict)
     }
     
     func refresh(fromDict defaultsDomain: [String: AnyHashable]) {
+        let processItems: (AnyHashable?) -> [MenuItem] = { dict in
+            var menu: [MenuItem] = []
+            if let items = dict as? [[String]] {
+                for item in items {
+                    guard item.count == 2 else {
+                        continue
+                    }
+                    menu.append(MenuItem(image: item[0], template: item[1]))
+                }
+            }
+            return menu
+        }
+        
+        self.version = defaultsDomain["version"] as? Double ?? 0
         self.isIconHidden = !(defaultsDomain["icons"] as? Bool ?? true)
         self.isInfoOnSubMenu = defaultsDomain["sub_menu"] as? Bool ?? true
         self.isInfoOnMainItem = defaultsDomain["main_info"] as? Bool ?? true
-        self.isFileSizeHidden = !(defaultsDomain["file_size"] as? Bool ?? false)
-        self.isRatioHidden = !(defaultsDomain["ratio"] as? Bool ?? true)
-        self.isRatioPrecise = defaultsDomain["ratio-precise"] as? Bool ?? true
-        self.isResolutionNameHidden = !(defaultsDomain["resolution-name"] as? Bool ?? true)
+        self.useFirstItemAsMain = defaultsDomain["use-first-item"] as? Bool ?? true
+        self.isRatioPrecise = defaultsDomain["ratio-precise"] as? Bool ?? false
+        self.isEmptyItemsSkipped = defaultsDomain["skip-empty"] as? Bool ?? true
         
         self.isImagesHandled = defaultsDomain["image_handled"] as? Bool ?? true
-        self.isPrintHidden = defaultsDomain["print_hidden"] as? Bool ?? false
-        self.isCustomPrintHidden = defaultsDomain["custom_dpi_hidden"] as? Bool ?? false
-        self.isColorHidden = defaultsDomain["color_hidden"] as? Bool ?? false
-        self.isDepthHidden = defaultsDomain["depth_hidden"] as? Bool ?? false
-        self.customDPI = defaultsDomain["custom_dpi"] as? Int ?? 300
-        self.unit = PrintUnit(rawValue: defaultsDomain["unit"] as? Int ?? 0) ?? .cm
+        self.imageMenuItems = processItems(defaultsDomain["image_items"])
         
-        self.isMediaHandled = defaultsDomain["video_handled"] as? Bool ?? true
-        self.isFramesHidden = defaultsDomain["frames_hidden"] as? Bool ?? false
-        self.isCodecHidden = defaultsDomain["codec_hidden"] as? Bool ?? false
-        self.isBPSHidden = defaultsDomain["bps_hidden"] as? Bool ?? false
-        self.isTracksGrouped = defaultsDomain["group_tracks"] as? Bool ?? false
+        self.isVideoHandled = defaultsDomain["video_handled"] as? Bool ?? true
+        self.isTracksGrouped = defaultsDomain["group_tracks"] as? Bool ?? true
+        self.videoMenuItems = processItems(defaultsDomain["video_items"])
         
+        self.isAudioHandled = defaultsDomain["audio_handled"] as? Bool ?? true
+        self.audioMenuItems = processItems(defaultsDomain["audio_items"])
+        
+        self.isPDFHandled = defaultsDomain["pdf_handled"] as? Bool ?? true
+        self.pdfMenuItems   = processItems(defaultsDomain["pdf_items"])
+        
+        self.isOfficeHandled = defaultsDomain["office_handled"] as? Bool ?? true
+        self.isOfficeDeepScan = defaultsDomain["office_deep_scan"] as? Bool ?? true
+        self.officeMenuItems   = processItems(defaultsDomain["office_items"])
+        
+        self.menuWillOpenFile = defaultsDomain["menu-open"] as? Bool ?? true
+        
+        if let e = defaultsDomain["engines"] as? [Int] {
+            self.engines = []
+            for f in e {
+                if let engine = MediaEngine(rawValue: f) {
+                    self.engines.append(engine)
+                }
+            }
+            self.engines = self.engines.unique()
+            
+            if !self.engines.contains(.ffmpeg) {
+                self.engines.append(.ffmpeg)
+            }
+            if !self.engines.contains(.coremedia) {
+                self.engines.append(.coremedia)
+            }
+            if !self.engines.contains(.metadata) {
+                self.engines.append(.metadata)
+            }
+        }
+
         if let d = defaultsDomain["folders"] as? [String] {
             self.folders = d.sorted().map({ URL(fileURLWithPath: $0 )})
         }
@@ -78,28 +266,35 @@ class Settings {
         let folders = Array(Set(self.folders.map({ $0.path })))
         dict["folders"] = folders
         
+        dict["version"] = Settings.Version
+        
         dict["icons"] = !self.isIconHidden
         dict["sub_menu"] = self.isInfoOnSubMenu
         dict["main_info"] = self.isInfoOnMainItem
-        dict["file_size"] = !self.isFileSizeHidden
-        dict["ratio"] = !self.isRatioHidden
+        dict["use-first-item"] = self.useFirstItemAsMain
         dict["ratio-precise"] = self.isRatioPrecise
-        dict["resolution-name"] = !self.isResolutionNameHidden
+        dict["skip-empty"] = self.isEmptyItemsSkipped
         
         dict["image_handled"] = self.isImagesHandled
-        dict["print_hidden"] = self.isPrintHidden
-        dict["custom_dpi_hidden"] = self.isCustomPrintHidden
-        dict["color_hidden"] = self.isColorHidden
-        dict["depth_hidden"] = self.isDepthHidden
-        dict["custom_dpi"] = self.customDPI
-        dict["unit"] = self.unit.rawValue
+        dict["image_items"] = self.imageMenuItems.map({ return [$0.image, $0.template]})
         
-        dict["video_handled"] = self.isMediaHandled
-        dict["frames_hidden"] = self.isFramesHidden
-        dict["codec_hidden"] = self.isCodecHidden
-        dict["bps_hidden"] = self.isBPSHidden
+        dict["video_handled"] = self.isVideoHandled
         dict["group_tracks"] = self.isTracksGrouped
+        dict["video_items"] = self.videoMenuItems.map({ return [$0.image, $0.template]})
         
+        dict["audio_handled"] = self.isAudioHandled
+        dict["audio_items"] = self.audioMenuItems.map({ return [$0.image, $0.template]})
+        
+        dict["pdf_handled"] = self.isPDFHandled
+        dict["pdf_items"]   = self.pdfMenuItems.map({ return [$0.image, $0.template]})
+        
+        dict["office_handled"] = self.isOfficeHandled
+        dict["office_deep_scan"] = self.isOfficeDeepScan
+        dict["office_items"]   = self.officeMenuItems.map({ return [$0.image, $0.template]})
+        
+        dict["menu-open"]   = self.menuWillOpenFile
+        
+        dict["engines"] = self.engines.map({ $0.rawValue })
         return dict
     }
 }

@@ -1,30 +1,198 @@
-/* 
+/*
   Localizable.strings
   MediaInfo
 
   Created by Sbarex on 26/08/2020.
   Copyright © 2020 sbarex. All rights reserved.
 */
-"Finder extension not enabled" = "Estensione del Finder non abilitata";
 
-"Enable" = "Apri le Preferenze di Sistema";
-"Ignore" = "Ignora";
-"Continue" = "Continua";
-"Cancel" = "Annulla";
 "Yes" = "Sì";
 "No" = "No";
-"Save" = "Salva";
-"Don't Save" = "Non salvare";
 "OK" = "OK";
+"Cancel" = "Annulla";
+"Continue" = "Continua";
+"Close" = "Chiudi";
+"Ignore" = "Ignora";
 
+// MARK: -
+"Finder extension not enabled!" = "Estensione del Finder non abilitata!";
+"Open System Settings" = "Apri le Preferenze di Sistema";
+
+// MARK: -
 "No folders selected to be monitored" = "Nessuna cartella monitorata";
 "Are you sure you want to continue?" = "Sicuro di voler continuare?";
-
-"Are you sure to revert to the original saved settings?" = "Sicuro di ripristinare le ultime impostazioni salvate?";
-"Save the settings before closing?" = "Salvare le impostazioni prima di chiudere?";
-
-"Settings saved" = "Impostazioni salvate correttamete.";
 "Unable to save the settings!" = "Impossibile salvare le impostazioni!";
+"Are you sure to reset the current settings to the standar values?" = "Sicuro di resettare le impostazioni ai valori prefefiniti?";
 
-"Updater Error" = "Errore di aggiornamento";
+// MARK: -
+"Save the settings before closing?" = "Salvare le impostazioni prima di chiudere?";
+"Don’t Save" = "Non salvare";
+"Settings saved" = "Impostazioni salvate correttamete.";
+"Save" = "Salva";
+"Are you sure to revert to the original saved settings?" = "Sicuro di ripristinare le ultime impostazioni salvate?";
+
+// MARK: -
+
+"Show only if the image is animated." = "Mostra solo se l’immagine è animata.";
 "The Updater failed to start. For detailed error information, check the Console.app log." = "Impossibile avviare il servizio di aggiornamento. Per ulteriori informazioni controlla il log con Console.app.";
+"Updater Error" = "Errore di aggiornamento";
+
+// MARK: -
+"Dimensions" = "Dimensioni";
+
+"Width." = "Larghezza.";
+"Height." = "Altezza.";
+"Ratio." = "Rapporto.";
+"Resolution name." = "Nome della risoluzione.";
+
+// MARK: -
+"Duration" = "Durata";
+
+"Time." = "Durata.";
+"Duration." = "Durata in secondi.";
+"Bit rate." = "Bit rate.";
+"Number of frames." = "Numbero di frame.";
+
+// MARK: -
+"Color space" = "Spazio colore";
+
+"Color space and depth." = "Spazio colore e profondità.";
+"Color space." = "Spazio colore.";
+"Color depth." = "Profondità colore.";
+"Pixel format." = "Formato del pixel.";
+"Field order." = "Field order.";
+
+// MARK: -
+"Language" = "Lingua";
+
+"Language country code." = "Codice della lingua.";
+"Language country flag." = "Bandiera della lingua.";
+
+// MARK: -
+"File size." = "Dimensioni del file.";
+"Animated/static." = "\"Animata\" o \"Statica\"";
+"Animated status." = "Stato di animazione dell’immagine.";
+"File name." = "Nome del file";
+"File extension." = "Estensione del file";
+"Codec (short name)." = "Codec (nome breve).";
+"Codec (long name)." = "Codec (nome completo).";
+"Codec." = "Codec.";
+"Paper size." = "Dimensioni del foglio.";
+"paper size" = "Dimensione del foglio";
+"Media engine" = "Motore di analisi";
+"Media engine." = "Motore di analisi utilizzato.";
+
+// MARK: -
+"Resolution" = "Risoluzione";
+
+"Resolution." = "Risoluzione.";
+"Printed size" = "Dimensioni a stampa";
+
+// MARK: -
+"Media Box" = "Media Box";
+"Bleed Box" = "Bleed Box";
+"Crop Box" = "Crop Box";
+"Art Box" = "Art Box";
+
+// MARK: -
+"Metadata" = "Metadati";
+"Author" = "Autore";
+"Last author" = "Ultimo autore";
+"Producer" = "Produttore";
+"Creator" = "Creatore";
+"Creation Date" = "Data di creazione";
+"Modification Date" = "Data di modifica";
+"Creator name and date" = "Autore e data di creazione";
+"Last author and date" = "Autore e data dell’ultimo salvataggio";
+"Creator name and date" = "Autore e data di creazione";
+"Keywords" = "Parole chiave" ;
+"Subject" = "Oggetto";
+"Description" = "Descrizione";
+"Title" = "Titolo" ;
+"Locked" = "Bloccatto" ;
+"Encrypted" = "Criptato";
+"Security" = "Sicurezza";
+"PDF Version" = "Versione PDF";
+"Allow copy" = "Copia consentita";
+"Allow print" = "Stampa consentita";
+"Allow copy status (Yes/No)." = "Copia consentita (Sì/No)";
+"Allow Print status (Yes/No)." = "Stampa consentita (Sì/No)";
+"n. of pages/sheets/slides" = "n. di pagine/fogli/diapositive";
+"Number of pages." = "Numero di pagine.";
+"Number of words (for document files)." = "Numbero di parole (for documenti di testo).";
+"Number of characters (for document files)." = "Numbero di caratteri (per i documenti di testo).";
+"Number of characters, spaces included (for document files)." = "Numbero di caratteri, spazi inclusi (per i documenti di testo).";
+"Submenu with all keywords." = "Sottomenu con le parole chiave.";
+"Submenu with sheets name (for spreadsheet files)." = "Sottomenu con i nome dei fogli (per i fogli di calcolo).";
+"sheets" = "fogli";
+"Page size (for document files)." = "Dimensioni sulla pagina (per documenti di testo).";
+"Page format or page size (for document files)." = "Formato pagina o sue dimensioni (per documenti di testo).";
+
+// MARK: -
+"Number of audio tracks." = "Numero di tracce audio.";
+"Number of video tracks." = "Numero di tracce video.";
+"Number of available subtitles." = "Numero di sottotitoli disponibili.";
+"Number of available languages." = "Numero di lingue disponibili.";
+
+"List of available languages (on video and audio tracks)." = "Lista delle lingue disponibili (nelle tracce audio e video).";
+"List of available languages (on video and audio tracks) rendered as a country flag." = "Lista delle lingue disponibili (nelle tracce audio e video) usado le bandiere nazionali.";
+
+"Size: " = "Dimensioni: ";
+"Length: " = "Durata: ";
+"Language: " = "Lingua: ";
+"Extra: " = "Extra: ";
+"Color: " = "Colore: ";
+"Metadata: " = "Metadati: ";
+
+"fps" = "fps";
+"Frames per second." = "Frame al secondo.";
+"Profile." = "Profilo.";
+"Title." = "Titolo.";
+"Encoder." = "Encoder.";
+
+"Start time." = "Ora di inizio.";
+"Start time (in seconds)." = "Ora di inizio (in secondi).";
+"start at" = "Inizio al";
+"start at second" = "Inizio al secondo";
+"Number of chapters." = "Numbero di capitoli.";
+"List of chapters." = "Lista dei capitoli.";
+"Chapters list" = "Lista capitoli";
+"Video tracks" = "Tracce video";
+"Audio tracks" = "Tracce audio";
+"List of video tracks." = "Lista delle tracce video.";
+"video tracks" = "tracce video";
+"List of audio tracks." = "Lista delle tracce audio.";
+"audio tracks" = "tracce audio";
+"List of subtitles." = "Lista dei sotto titoli.";
+"subtitles" = "sotto titoli";
+"Subtitle list" = "Lista sottotitoli";
+
+"No image" = "Nessuna immagine";
+"File size" = "Dimensioni del file";
+"Aspect ratio" = "Proporzioni";
+"Image" = "Immagine";
+"Video" = "Video";
+"Audio" = "Audio";
+"Subtitle" = "Sotto titolo";
+"PDF" = "PDF";
+"Printer" = "Stampante";
+"Person" = "Persona";
+"Color" = "Colore";
+"Black and White" = "Bianco e nero";
+"Gray scale" = "Scala di grigio";
+"RGB color" = "Colore RGB";
+"CMYK color" = "Colore CMYK";
+"CIE Lab color" = "Colore CIE Lab";
+"PDF page" = "Pagina PDF";
+"PDF number of pages" = "Numero di pagine";
+"PDF media box" = "Media box";
+"PDF bleed box" = "Abbondanza";
+"PDF trim box" = "Ritaglio";
+"PDF art box" = "Art box";
+"PDF security" = "Sicurezza PDF";
+"Tag" = "Tag";
+"Pencil" = "Matita";
+"Office suite" = "Suite Office";
+"Office text document" = "Documento di testo";
+"Office spreadsheet" = "Foglio di calcolo";
+"Office presentation" = "Presentazione";

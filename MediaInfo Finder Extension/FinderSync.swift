@@ -10,9 +10,6 @@ import Cocoa
 import FinderSync
 
 class FinderSync: FIFinderSync {
-    let numberFormatter = NumberFormatter()
-    let byteCountFormatter = ByteCountFormatter()
-
     var settings: Settings = Settings(fromDict: [:])
     
     override init() {
@@ -21,10 +18,6 @@ class FinderSync: FIFinderSync {
         NSLog("MediaInfo FinderSync launched from %@", Bundle.main.bundlePath as NSString)
         
         refreshSettings()
-        
-        numberFormatter.allowsFloats = true
-        numberFormatter.numberStyle = .decimal
-        numberFormatter.maximumFractionDigits = 2
         
         // Set up images for our badge identifiers. For demonstration purposes, this uses off-the-shelf images.
         // FIFinderSyncController.default().setBadgeImage(NSImage(named: NSImage.colorPanelName)!, label: "Status One" , forBadgeIdentifier: "One")
@@ -37,13 +30,56 @@ class FinderSync: FIFinderSync {
         DistributedNotificationCenter.default().removeObserver(self, name: .MediaInfoSettingsChanged, object: nil)
     }
     
+    func convertNetwordSharedUrl(_ url: URL) -> URL? {
+        var mountPath: URL?
+        var testUrl = url.standardizedFileURL
+        var path: String = ""
+        let isDir = testUrl.hasDirectoryPath
+        while testUrl.path != "/" {
+            var v: AnyObject?
+            do {
+                try (testUrl as NSURL).getResourceValue(&v, forKey: URLResourceKey.volumeURLForRemountingKey)
+                if let volumePath = v as? NSURL {
+                    mountPath = volumePath as URL
+                    break
+                }
+            } catch {
+                return nil
+            }
+            path = testUrl.lastPathComponent + ((isDir || !path.isEmpty) ? "/" + path : "")
+            testUrl.deleteLastPathComponent()
+        }
+
+        guard var mountPath = mountPath else {
+            return nil;
+        }
+
+        if !path.isEmpty {
+            mountPath.appendPathComponent(path, isDirectory: isDir)
+        }
+        return mountPath
+    }
+    
     func refreshSettings() {
-        SettingsWrapper.getSettings() { settings in
+        HelperWrapper.getSettings() { settings in
             self.settings = settings
             
-            NSLog("MediaInfo FinderSync watching folders:\n %@", settings.folders.map({ $0.path }).joined(separator: "\n"))
             // Set up the directory we are syncing.
-            FIFinderSyncController.default().directoryURLs = Set(settings.folders)
+            
+            // let folders = Set(settings.folders.map({ self.convertNetwordSharedUrl($0) ?? $0 }))
+            let folders = Set(settings.folders)
+            NSLog("MediaInfo FinderSync watching folders:\n %@", folders.map({ $0.path }).joined(separator: "\n"))
+            FIFinderSyncController.default().directoryURLs = folders
+            /*
+            for folder in folders {
+                // Force the request of read access.
+                if let dir = opendir(folder.path) {
+                    closedir(dir)
+                } else {
+                    NSLog("No access to %@", folder.path)
+                }
+            }
+            */
         }
     }
     
@@ -56,13 +92,13 @@ class FinderSync: FIFinderSync {
     override func beginObservingDirectory(at url: URL) {
         // The user is now seeing the container's contents.
         // If they see it in more than one view at a time, we're only told once.
-        NSLog("beginObservingDirectoryAtURL: %@", url.path as NSString)
+        // NSLog("beginObservingDirectoryAtURL: %@", url.path as NSString)
     }
     
     
     override func endObservingDirectory(at url: URL) {
         // The user is no longer seeing the container's contents.
-        NSLog("endObservingDirectoryAtURL: %@", url.path as NSString)
+        // NSLog("endObservingDirectoryAtURL: %@", url.path as NSString)
     }
     
     /*
@@ -78,246 +114,84 @@ class FinderSync: FIFinderSync {
     
     // MARK: - Menu and toolbar item support
     
-    /*
-    override var toolbarItemName: String {
-        return "FinderSy"
-    }
+    var currentFile: URL?
     
-    override var toolbarItemToolTip: String {
-        return "FinderSy: Click the toolbar item for a menu."
-    }
-    
-    override var toolbarItemImage: NSImage {
-        return NSImage(named: NSImage.cautionName)!
-    }
-    */
-    
-    func formatTime(_ time: TimeInterval) -> String {
-        var m = Int(time / 60)
-        let h = Int(TimeInterval(m) / 60)
-        m -= h * 60
-        let s = Int(time) - (m * 60) - (h * 3600)
-        // let ms = time - TimeInterval(s + m * 60 + h * 3600)
-        return String(format: "%02d:%02d:%02d", h, m, s)
+    @objc internal func fakeMenuAction(_ sender: NSMenuItem) {
+        if settings.menuWillOpenFile, let file = currentFile {
+            NSWorkspace.shared.open(file)
+        }
     }
     
     override func menu(for menuKind: FIMenuKind) -> NSMenu? {
-        if menuKind == .contextualMenuForItems {
-            if let items = FIFinderSyncController.default().selectedItemURLs(), items.count == 1, let item = items.first, let uti = try? item.resourceValues(forKeys: [.typeIdentifierKey]).typeIdentifier {
-                
-                if settings.isImagesHandled && UTTypeConformsTo(uti as CFString, kUTTypeImage), let menu = getMenuForImage(atURL: item) {
-                    return menu
-                } else if settings.isMediaHandled && UTTypeConformsTo(uti as CFString, kUTTypeMovie), let menu = getMenuForVideo(atURL: item) {
-                    return menu
-                } else if settings.isMediaHandled && UTTypeConformsTo(uti as CFString, kUTTypeAudio), let menu = getMenuForAudio(atURL: item) {
-                    return menu
+        guard menuKind == .contextualMenuForItems else {
+            return nil
+        }
+        guard let items = FIFinderSyncController.default().selectedItemURLs(), items.count == 1, let item = items.first, let uti = try? item.resourceValues(forKeys: [.typeIdentifierKey]).typeIdentifier else {
+            currentFile = nil
+            return nil
+        }
+            
+        currentFile = item
+        if settings.isImagesHandled && UTTypeConformsTo(uti as CFString, kUTTypeImage), let menu = getMenuForImage(atURL: item) {
+            return menu
+        } else if settings.isVideoHandled && UTTypeConformsTo(uti as CFString, kUTTypeMovie), let menu = getMenuForVideo(atURL: item) {
+            return menu
+        } else if settings.isAudioHandled && UTTypeConformsTo(uti as CFString, kUTTypeAudio), let menu = getMenuForAudio(atURL: item) {
+            return menu
+        } else if settings.isPDFHandled && UTTypeConformsTo(uti as CFString, kUTTypePDF), let menu = getMenuForPDF(atURL: item) {
+            return menu
+        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.openxmlformats.wordprocessingml.document" as CFString), let menu = getMenuForWordDocument(atURL: item) {
+            return menu
+        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.openxmlformats.spreadsheetml.sheet" as CFString), let menu = getMenuForExcelDocument(atURL: item) {
+            return menu
+        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.openxmlformats.presentationml.presentation" as CFString), let menu = getMenuForPowerpointDocument(atURL: item) {
+            return menu
+        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.oasis-open.opendocument.text" as CFString), let menu = getMenuForOpenDocument(atURL: item) {
+            return menu
+        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.oasis-open.opendocument.spreadsheet" as CFString), let menu = getMenuForOpenSpreadsheet(atURL: item) {
+            return menu
+        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.oasis-open.opendocument.presentation" as CFString), let menu = getMenuForOpenPresentation(atURL: item) {
+            return menu
+        } else {
+            currentFile = nil
+            return nil
+        }
+    }
+    
+    /**
+     Sanitize the menu.
+     FinderSync transform NSMenuItem.separator to a normal NSMenuItem with empty title and disabled.
+     */
+    func sanitizeMenu(_ menu: NSMenu?) {
+        guard let menu = menu else { return }
+        
+        if let item = menu.items.last, item.title.isEmpty && !item.isEnabled {
+            // Remove last empty item
+            menu.removeItem(item)
+        }
+        var n = -1
+        var remove: [Int] = []
+        for (i, item) in menu.items.enumerated() {
+            if let m = item.submenu {
+                sanitizeMenu(m)
+            } else {
+                if item.title.isEmpty && !item.isEnabled {
+                    if n + 1 == i {
+                        // Remove consecutive empty items.
+                        remove.append(i)
+                    }
+                    n = i
                 }
             }
         }
-        
-        return nil
-    }
-    
-    internal func image(for mode: String) -> NSImage? {
-        var img: NSImage?
-        var isColor = false
-        switch mode {
-        case "image":
-            /*
-            if #available(macOSApplicationExtension 11.0, *) {
-                img = NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
-            } else {
-                img = NSImage(named: "image")
-            }
- */
-            img = NSImage(named: "image")
-        case "image_v":
-            img = NSImage(named: "image_v")
-        case "color":
-            img = NSImage(named: "color")
-        case "color_rgb":
-            img = NSImage(named: "color_rgb")
-            isColor = true
-        case "color_cmyk":
-            img = NSImage(named: "color_cmyk")
-            isColor = true
-        case "color_gray":
-            img = NSImage(named: "color_gray")
-            isColor = true
-        case "color_lab":
-            img = NSImage(named: "color_lab")
-            isColor = true
-        case "color_bw":
-            img = NSImage(named: "color_bw")
-            isColor = true
-        case "print":
-            /*
-            if #available(macOSApplicationExtension 11.0, *) {
-                img = NSImage(systemSymbolName: "printer", accessibilityDescription: nil)
-            } else {
-                img = NSImage(named: "print")
-            }
- */
-            img = NSImage(named: "print")
-        case "video":
-            /*
-            if #available(macOSApplicationExtension 11.0, *) {
-                img = NSImage(systemSymbolName: "video", accessibilityDescription: nil)
-            } else {
-                img = NSImage(named: "video")
-            }*/
-            img = NSImage(named: "video")
-        case "video_v":
-            img = NSImage(named: "video_v")
-        case "audio":
-            /*
-            if #available(macOSApplicationExtension 11.0, *) {
-                img = NSImage(systemSymbolName: "speaker.wave.1", accessibilityDescription: nil)
-            } else {
-                img = NSImage(named: "audio")
-            }
-            */
-            img = NSImage(named: "audio")
-        case "text":
-            /*
-            if #available(macOSApplicationExtension 11.0, *) {
-                img = NSImage(systemSymbolName: "captions.bubble", accessibilityDescription: nil)
-            } else {
-                img = NSImage(named: "txt")
-            }*/
-            img = NSImage(named: "txt")
-        case "ratio":
-            img = NSImage(named: "aspectratio")
-        case "ratio_v":
-            img = NSImage(named: "aspectratio_v")
-        default:
-            return nil
+        for i in remove.reversed() {
+            menu.removeItem(at: i)
         }
-        
-        if !isColor {
-            img?.isTemplate = true
-            
-            return img?.image(withTintColor: NSColor.labelColor)
-        } else {
-            return img
-        }
-    }
-
-    internal func createMenuItem(title: String, image: String?) -> NSMenuItem {
-        let mnu = NSMenuItem(title: title, action: nil, keyEquivalent: "")
-        mnu.isEnabled = true
-        mnu.image = image == nil || settings.isIconHidden ? nil : self.image(for: image!)
-        return mnu
-    }
-    
-    internal func getFileSizeMenuItem(for item: URL)->NSMenuItem? {
-        guard !settings.isFileSizeHidden, let attr = try? FileManager.default.attributesOfItem(atPath: item.path), let fileSize = attr[FileAttributeKey.size] as? Int64 else {
-            return nil
-        }
-            
-        let bcf = ByteCountFormatter()
-        bcf.allowedUnits = [.useMB]
-        bcf.countStyle = .file
-        let title = bcf.string(fromByteCount: fileSize)
-        return createMenuItem(title: title, image: nil)
-    }
-    
-    internal func getRatioMenuItem(width: Int, height: Int)->NSMenuItem? {
-        guard !settings.isRatioHidden else {
-            return nil
-        }
-        var gcd = self.gcd(width, height)
-        guard gcd != 1 else {
-            return nil
-        }
-        
-        var circa = false
-        if !settings.isRatioPrecise, gcd < 8, let gcd1 = [self.gcd(width+1, height), self.gcd(width-1, height), self.gcd(width, height+1), self.gcd(width, height-1)].max(), gcd1 > gcd {
-            gcd = gcd1 * self.gcd(width/gcd1, height / gcd1)
-            circa = true
-        }
-        let w = width / gcd
-        let h = height / gcd
-        
-        return createMenuItem(title: "\(circa ? "~ " : "")\(w) : \(h)", image: "ratio"+(h>w ? "_v" : ""))
-    }
-    
-    internal func gcd(_ a: Int, _ b: Int) -> Int {
-        let remainder = abs(a) % abs(b)
-        if remainder != 0 {
-            return gcd(abs(b), remainder)
-        } else {
-            return abs(b)
-        }
-    }
-    
-    internal func getResolutioNameMenuItem(width: Int, height: Int)->NSMenuItem? {
-        guard !settings.isResolutionNameHidden, let res = getResolutioName(width: width, height: height) else {
-            return nil
-        }
-        
-        return createMenuItem(title: res, image: nil)
-    }
-        
-    internal func getResolutioName(width: Int, height: Int)->String? {
-        let resolutions = [
-            // Narrowscreen 4:3 computer display resolutions
-            "MCGA": [320, 200],
-            "QVGA" : [320, 240],
-            "VGA" : [640, 480],
-            "Super VGA" : [800, 600],
-            "XGA" : [1024, 768],
-            "SXGA" : [1280, 1024],
-            "UXGA" : [1600, 1200],
-            
-            // Analog
-            "CRT monitors": [320, 200],
-            "Video CD": [352, 240],
-            "VHS": [333, 480],
-            "Betamax": [350, 480],
-            "Super Betamax": [420, 480],
-            "Betacam SP": [460, 480],
-            "Super VHS": [580, 480],
-            "Enhanced Definition Betamax": [700, 480],
-            
-            // Digital
-            "Digital8": [500, 480],
-            "NTSC DV": [720, 480],
-            "NTSC D1": [720, 486],
-            "NTSC D1 Square pixel": [720, 543],
-            "NTSC D1 Widescreen Square Pixel": [782, 486],
-            
-            "EDTV (Enhanced Definition Television)": [854, 480],
-            "D-VHS, DVD, miniDV, Digital8, Digital Betacam (PAL/SECAM)": [720, 576],
-            "PAL D1/DV": [720, 576],
-            "PAL D1/DV Square pixel": [788, 576],
-            "PAL D1/DV Widescreen Square pixel": [1050, 576],
-            
-            
-            "HDV/HDTV 720": [1280, 720],
-            "HDTV 1080": [1440, 1080],
-            "DVCPRO HD 720": [960, 720],
-            "DVCPRO HD 1080": [1440, 1080],
-            
-            "HDTV 1080 (FullHD)": [1920, 1080],
-            
-            // "HDV (miniDV), AVCHD, HD DVD, Blu-ray, HDCAM SR": [1920, 1080],
-            "2K Flat (1.85:1)": [1998, 1080],
-            "UHD 4K": [3840, 2160],
-            "UHD 8K": [7680, 4320],
-            "Cineon Half": [1828, 1332],
-            "Cineon Full": [3656, 2664],
-            "Film (2K)": [2048, 1556],
-            "Film (4K)": [4096, 3112],
-            "Digital Cinema (2K)": [2048, 1080],
-            "Digital Cinema (4K)": [4096, 2160],
-            "Digital Cinema (16K)": [15360, 8640],
-            "Digital Cinema (64K)": [61440, 34560],
-        ]
-        return resolutions.first(where: { $1[0] == width && $1[1] == height })?.key
     }
     
     func getMenuForImage(atURL item: URL) -> NSMenu? {
+        let image_info = HelperWrapper.getImageInfo(for: item)
+        /*
         let image_info: ImageInfo
         if let info = getCGImageInfo(forFile: item) {
             image_info = info
@@ -342,345 +216,122 @@ class FinderSync: FIFinderSync {
                 return nil
             }
         }
-        
-        guard image_info.width > 0 || image_info.height > 0 else {
-            return nil
-        }
-        
-        let menu = NSMenu(title: "")
-        menu.autoenablesItems = false
-        
-        let use_submenu  = settings.isInfoOnSubMenu
-        let print_hidden = settings.isPrintHidden
-        
-        // FIXME: NSImage named with a pdf image don't respect dark theme!
-        // FIXME: NSMenuItem in the extension do not preserve the image template rendering mode, delegate, attributedTitle (rendered as simple string), isAlternate, separator (render as a menu item with an empty title).
-        
-        let info_sub_menu = NSMenu(title: "MediaInfo")
-        if use_submenu {
-            let info_mnu = menu.addItem(withTitle: "MediaInfo", action: #selector(sampleAction(_:)), keyEquivalent: "")
-            info_mnu.image = image(for: "image"+(image_info.height>image_info.width ? "_v" : ""))
-            
-            menu.setSubmenu(info_sub_menu, for: info_mnu)
-        }
-        var colors: [String] = []
-        if !settings.isColorHidden && !image_info.colorMode.isEmpty {
-            colors.append(image_info.formattedColorMode)
-        }
-        if !settings.isDepthHidden && image_info.depth > 0 {
-            colors.append("\(image_info.depth) bit")
-        }
-        
-        var title = "\(image_info.width) × \(image_info.height) px"
-        if let animated = image_info.animated, animated {
-            title += " [" + NSLocalizedString("animated", comment: "") + "]"
-        }
-        
-        if !use_submenu && !colors.isEmpty {
-            title += " " + colors.joined(separator: " ")
-        }
-        if print_hidden && image_info.dpi > 0 {
-            title += " (\(image_info.dpi) dpi)"
-        }
-        let mnu = createMenuItem(title: title, image: "image"+(image_info.height>image_info.width ? "_v" : ""))
-        (use_submenu ? info_sub_menu : menu).addItem(mnu)
-        
-        if use_submenu && settings.isInfoOnMainItem {
-            menu.items.first!.title = title
-        }
-        
-        if let mnu = getRatioMenuItem(width: image_info.width, height: image_info.height) {
-            (use_submenu ? info_sub_menu : menu).addItem(mnu)
-        }
-        if let mnu = getResolutioNameMenuItem(width: image_info.width, height: image_info.height) {
-            (use_submenu ? info_sub_menu : menu).addItem(mnu)
-        }
-        
-        if use_submenu && !colors.isEmpty {
-            let mnu = createMenuItem(title: colors.joined(separator: " "), image: image_info.color_image_name)
-            info_sub_menu.addItem(mnu)
-            
-            if use_submenu && settings.isInfoOnMainItem {
-                menu.items.first!.title += ", " + colors.joined(separator: " ")
-            }
-        }
-        
-        let unit = settings.unit
-        
-        let scale: Double
-        let unit_label: String
-        switch unit {
-        case .cm:
-            scale = 2.54 // cm
-            unit_label = NSLocalizedString(" cm", comment: "")
-        case .mm:
-            scale = 25.4 // mm
-            unit_label = NSLocalizedString(" mm", comment: "")
-        case .inch:
-            scale = 1 // inch
-            unit_label = NSLocalizedString(" inch", comment: "")
-        }
-        
-        if !print_hidden && image_info.dpi != 0, let w_cm = numberFormatter.string(from: NSNumber(value: Double(image_info.width) / Double(image_info.dpi) * scale)), let h_cm = numberFormatter.string(from: NSNumber(value: Double(image_info.height) / Double(image_info.dpi) * scale)) {
-            
-            let mnu = createMenuItem(title: "\(w_cm) × \(h_cm)\(unit_label) (\(image_info.dpi) dpi)", image: "print")
-            (use_submenu ? info_sub_menu : menu).addItem(mnu)
-        }
-        
-        if !settings.isCustomPrintHidden, settings.customDPI > 0 && (image_info.dpi != settings.customDPI || print_hidden), let w_cm = numberFormatter.string(from: NSNumber(value:Double(image_info.width) / Double(settings.customDPI) * scale)), let h_cm = numberFormatter.string(from: NSNumber(value:Double(image_info.height) / Double(settings.customDPI) * scale)) {
-            let mnu = createMenuItem(title: "\(w_cm) × \(h_cm)\(unit_label) (\(settings.customDPI) dpi)", image: "print")
-            (use_submenu ? info_sub_menu : menu).addItem(mnu)
-        }
-        if let mnu = getFileSizeMenuItem(for: item) {
-            (use_submenu ? info_sub_menu : menu).addItem(mnu)
-        }
-        /*
-        if use_submenu {
-            info_sub_menu.addItem(NSMenuItem.separator())
-            info_sub_menu.addItem(NSMenuItem(title: "Settings…", action: #selector(self.openSettings(_:)), keyEquivalent: ""))
-        }
-         */
+        */
+        let menu = image_info?.getMenu(withSettings: settings)
+        sanitizeMenu(menu)
         return menu
     }
     
     func getMenuForVideo(atURL item: URL) -> NSMenu? {
-        var streams: [StreamType] = getCMVideoInfo(forFile: item)
-        if streams.isEmpty {
-            streams = getFFMpegInfo(forFile: item)
-        }
-        if streams.isEmpty {
-            streams = getMetadataVideoInfo(forFile: item)
-        }
-        guard !streams.isEmpty else {
-            return nil
-        }
-        
-        let use_submenu   = settings.isInfoOnSubMenu
-        let group_tracks  = settings.isTracksGrouped
-        let codec_hidden  = settings.isCodecHidden
-        let frames_hidden = settings.isFramesHidden
-        let bps_hidden    = settings.isBPSHidden
-        
-        if !group_tracks {
-            streams.sort(by: {$0.index < $1.index})
-        }
-        
-        let menu = NSMenu(title: "")
-        menu.autoenablesItems = false
-        
-        let info_sub_menu = NSMenu(title: "MediaInfo")
-        if use_submenu {
-            let info_mnu = menu.addItem(withTitle: "MediaInfo", action: nil, keyEquivalent: "")
-            info_mnu.image = image(for: "video")
-            menu.setSubmenu(info_sub_menu, for: info_mnu)
-        }
-        
-        let mnu_video = NSMenu(title: "Video")
-        let mnu_audio = NSMenu(title: "Audio")
-        let mnu_text  = NSMenu(title: "Subtitle")
-        
-        var mainTitle = ""
-        
-        for stream in streams {
-            switch stream {
-            case .video(let width, let height, let duration, let codec, _, let lang, let bit_rate, let frames):
-                var extra: [String] = []
-                if !codec.isEmpty && !codec_hidden {
-                    extra.append(codec)
+        let video = HelperWrapper.getVideoInfo(for: item)
+        /*
+        var video: VideoInfo?
+        for engine in self.settings.engines {
+            switch engine {
+            case .coremedia:
+                if let v = getCMVideoInfo(forFile: item) {
+                    video = v
                 }
-                if let lang = lang, !lang.isEmpty {
-                    extra.append(lang.uppercased())
+            case .ffmpeg:
+                if let v = getFFMpegVideoInfo(forFile: item) {
+                    video = v
                 }
-                let t = formatTime(duration)
-                var title = "\(width) × \(height), \(t)"
-                if frames > 0 && !frames_hidden {
-                    title += " (\(frames) frames)"
+            case .metadata:
+                if let v = getMetadataVideoInfo(forFile: item) {
+                    video = v
                 }
-                if bit_rate > 0 && !bps_hidden {
-                    title += ", " + byteCountFormatter.string(fromByteCount: bit_rate) + "/s"
-                }
-                if !extra.isEmpty {
-                    title += " (" + extra.joined(separator: ", ") + ")"
-                }
-                let mnu = createMenuItem(title: title, image: "video"+(height>width ? "_v" : ""))
-                (group_tracks ? mnu_video : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
-                if mainTitle.isEmpty {
-                    mainTitle = title
-                }
-                
-                if let mnu = getRatioMenuItem(width: width, height: height) {
-                    (group_tracks ? mnu_video : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
-                }
-                if let mnu = getResolutioNameMenuItem(width: width, height: height) {
-                    (group_tracks ? mnu_video : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
-                }
-                
-            case .audio(let duration, let codec, let lang, let bit_rate):
-                var extra: [String] = []
-                if !codec.isEmpty && !codec_hidden {
-                    extra.append(codec)
-                }
-                if let lang = lang, !lang.isEmpty {
-                    extra.append(lang.uppercased())
-                }
-                let t = formatTime(duration)
-                var title = "\(t)"
-                if !bps_hidden && bit_rate > 0 {
-                    title += ", " + byteCountFormatter.string(fromByteCount: bit_rate) + "/s"
-                }
-                if !extra.isEmpty {
-                    title += " (" + extra.joined(separator: ", ") + ")"
-                }
-                
-                let mnu = createMenuItem(title:title, image: "audio")
-                (group_tracks ? mnu_audio : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
-                
-            case .subtitle(let t, let lang):
-                var title = ""
-                if let t = t {
-                    title += t
-                }
-                if let lang = lang, !lang.isEmpty {
-                    title += title.isEmpty ? "(\(lang.uppercased()))" : " " + lang.uppercased()
-                }
-                if !title.isEmpty {
-                    let mnu = createMenuItem(title: title, image: "text")
-                    (group_tracks ? mnu_text : (use_submenu ? info_sub_menu : menu)).addItem(mnu)
-                }
-                break
-            default:
+            }
+            if video != nil {
                 break
             }
         }
-        if use_submenu && settings.isInfoOnMainItem && !mainTitle.isEmpty {
-            menu.items.first!.title = mainTitle
-        }
-        if mnu_video.items.count > 0 {
-            let m = NSMenuItem(title: NSLocalizedString("Video", comment: ""), action: nil, keyEquivalent: "")
-            m.image = image(for: "video")
-            (use_submenu ? info_sub_menu : menu).addItem(m)
-            (use_submenu ? info_sub_menu : menu).setSubmenu(mnu_video, for: m)
-        }
-        if mnu_audio.items.count > 0 {
-            let m = NSMenuItem(title: NSLocalizedString("Audio", comment: ""), action: nil, keyEquivalent: "")
-            m.image = image(for: "audio")
-            (use_submenu ? info_sub_menu : menu).addItem(m)
-            (use_submenu ? info_sub_menu : menu).setSubmenu(mnu_audio, for: m)
-        }
-        if mnu_text.items.count > 0 {
-            let m = NSMenuItem(title: NSLocalizedString("Subtitle", comment: ""), action: nil, keyEquivalent: "")
-            m.image = image(for: "text")
-            (use_submenu ? info_sub_menu : menu).addItem(m)
-            (use_submenu ? info_sub_menu : menu).setSubmenu(mnu_text, for: m)
-        }
-        
-        if let mnu = getFileSizeMenuItem(for: item) {
-            (use_submenu ? info_sub_menu : menu).addItem(mnu)
-        }
+        */
+        let menu = video?.getMenu(withSettings: settings)
+        sanitizeMenu(menu)
         return menu
     }
     
     func getMenuForAudio(atURL item: URL) -> NSMenu? {
-        var streams: [StreamType] = getCMVideoInfo(forFile: item)
-        if streams.isEmpty {
-            streams = getFFMpegInfo(forFile: item)
-        }
-        if streams.isEmpty {
-            streams = getMetadataVideoInfo(forFile: item)
-        }
-        guard !streams.isEmpty else {
-            return nil
-        }
-        
-        let use_submenu   = settings.isInfoOnSubMenu
-        let codec_hidden  = settings.isCodecHidden
-        let bps_hidden    = settings.isBPSHidden
-        
-        let menu = NSMenu(title: "")
-        menu.autoenablesItems = false
-        
-        let info_sub_menu = NSMenu(title: "MediaInfo")
-        if use_submenu {
-            let info_mnu = menu.addItem(withTitle: "MediaInfo", action: nil, keyEquivalent: "")
-            info_mnu.image = image(for: "audio")
-            menu.setSubmenu(info_sub_menu, for: info_mnu)
-        }
-        
-        for stream in streams {
-            switch stream {
-            case .audio(let duration, let codec, let lang, let bit_rate):
-                var extra: [String] = []
-                if !codec.isEmpty && !codec_hidden {
-                    extra.append(codec)
+        let audio = HelperWrapper.getAudioInfo(for: item)
+        /*
+        var audio: AudioInfo?
+        for engine in self.settings.engines {
+            switch engine {
+            case .coremedia:
+                if let a = getCMAudioInfo(forFile: item) {
+                    audio = a
                 }
-                if let lang = lang, !lang.isEmpty {
-                    extra.append(lang.uppercased())
+            case .ffmpeg:
+                if let a = getFFMpegAudioInfo(forFile: item) {
+                    audio = a
                 }
-                let t = formatTime(duration)
-                var title = "\(t)"
-                if !bps_hidden && bit_rate > 0 {
-                    title += ", " + byteCountFormatter.string(fromByteCount: bit_rate) + "/s"
+            case .metadata:
+                if let a = getMetadataAudioInfo(forFile: item) {
+                    audio = a
                 }
-                if !extra.isEmpty {
-                    title += " (" + extra.joined(separator: ", ") + ")"
-                }
-                
-                let mnu = createMenuItem(title:title, image: "audio")
-                (use_submenu ? info_sub_menu : menu).addItem(mnu)
-            default:
+            }
+            if audio != nil {
                 break
             }
         }
-        
-        if use_submenu && settings.isInfoOnMainItem, info_sub_menu.items.count > 0 {
-            menu.items.first!.title = info_sub_menu.items.first!.title
-            if info_sub_menu.items.count == 1 {
-                menu.setSubmenu(nil, for: menu.items.first!)
-            }
-        }
-        
-        if let mnu = getFileSizeMenuItem(for: item) {
-            (use_submenu ? info_sub_menu : menu).addItem(mnu)
-        }
-        
+ */
+        let menu = audio?.getMenu(withSettings: settings)
+        sanitizeMenu(menu)
         return menu
     }
     
-    @IBAction func openSettings(_ sender: AnyObject?) {
-        FIFinderSyncController.showExtensionManagementInterface()
+    func getMenuForPDF(atURL item: URL) -> NSMenu? {
+        /*
+        guard let pdf = CGPDFDocument(item as CFURL) else {
+            return nil
+        }
+        let pdf_info = PDFInfo(file: item, pdf: pdf)
+        */
+        let pdf_info = HelperWrapper.getPDFInfo(for: item)
+        let menu = pdf_info?.getMenu(withSettings: settings)
+        sanitizeMenu(menu)
+        return menu
     }
     
-    @IBAction func sampleAction(_ sender: AnyObject?) {
-        /*
-        let target = FIFinderSyncController.default().targetedURL()
-        let items = FIFinderSyncController.default().selectedItemURLs()
-        
-        let item = sender as! NSMenuItem
-        NSLog("sampleAction: menu item: %@, target = %@, items = ", item.title as NSString, target!.path as NSString)
-        for obj in items! {
-            NSLog("    %@", obj.path as NSString)
-        }
-        */
+    func getMenuForWordDocument(atURL item: URL) -> NSMenu? {
+        let doc_info = HelperWrapper.getWordInfo(for: item)
+        let menu = doc_info?.getMenu(withSettings: settings)
+        sanitizeMenu(menu)
+        return menu
     }
-}
-
-extension Double {
-    func rounded(to places: Int) -> Double {
-        let divisor = pow(10.0, Double(places))
-        return (self * divisor).rounded() / divisor
+    
+    func getMenuForExcelDocument(atURL item: URL) -> NSMenu? {
+        let xls_info = HelperWrapper.getExcelInfo(for: item)
+        let menu = xls_info?.getMenu(withSettings: settings)
+        sanitizeMenu(menu)
+        return menu
     }
-}
-
-extension NSImage {
-   func image(withTintColor tintColor: NSColor) -> NSImage {
-       guard isTemplate else { return self }
-       guard let copiedImage = self.copy() as? NSImage else { return self }
-       copiedImage.lockFocus()
-       tintColor.set()
-       let imageBounds = NSMakeRect(0, 0, copiedImage.size.width, copiedImage.size.height)
-       imageBounds.fill(using: .sourceAtop)
-       copiedImage.unlockFocus()
-       copiedImage.isTemplate = false
-       return copiedImage
-   }
+    
+    func getMenuForPowerpointDocument(atURL item: URL) -> NSMenu? {
+        let ppt_info = HelperWrapper.getPowerpointInfo(for: item)
+        let menu = ppt_info?.getMenu(withSettings: settings)
+        sanitizeMenu(menu)
+        return menu
+    }
+    
+    func getMenuForOpenDocument(atURL item: URL) -> NSMenu? {
+        let ppt_info = HelperWrapper.getOpenDocumentInfo(for: item)
+        let menu = ppt_info?.getMenu(withSettings: settings)
+        sanitizeMenu(menu)
+        return menu
+    }
+    
+    func getMenuForOpenSpreadsheet(atURL item: URL) -> NSMenu? {
+        let ppt_info = HelperWrapper.getOpenSpreadsheetInfo(for: item)
+        let menu = ppt_info?.getMenu(withSettings: settings)
+        sanitizeMenu(menu)
+        return menu
+    }
+    
+    func getMenuForOpenPresentation(atURL item: URL) -> NSMenu? {
+        let xls_info = HelperWrapper.getOpenPresentationInfo(for: item)
+        let menu = xls_info?.getMenu(withSettings: settings)
+        sanitizeMenu(menu)
+        return menu
+    }
 }

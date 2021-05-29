@@ -6,7 +6,7 @@
 //  Copyright © 2021 sbarex. All rights reserved.
 //
 
-import Foundation
+import Cocoa
 
 // This object implements the protocol which we have defined. It provides the actual behavior for the service. It is 'exported' by the service to make it available to the process hosting the service over an NSXPCConnection.
 class MediaInfoSettingsXPC: NSObject, MediaInfoSettingsXPCProtocol {
@@ -14,6 +14,8 @@ class MediaInfoSettingsXPC: NSObject, MediaInfoSettingsXPCProtocol {
     static var preferencesUrl: URL? {
         return FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first?.appendingPathComponent("Preferences")
     }
+    
+    var settings: Settings?
     
     override init() {
         super.init()
@@ -26,10 +28,15 @@ class MediaInfoSettingsXPC: NSObject, MediaInfoSettingsXPCProtocol {
         reply(response)
     }
     */
+    func getSettings() -> Settings {
+        return Settings(fromDomain: Settings.SharedDomainName)
+    }
     
-    func getSettingsWithReply(_ reply: @escaping (NSDictionary) -> Void) {
-        let settings = Settings(fromDomain: Settings.SharedDomainName)
-        reply(settings.toDictionary() as NSDictionary)
+    func getSettings(refresh: Bool, withReply reply: @escaping (NSDictionary) -> Void) {
+        if self.settings == nil || refresh {
+            self.settings = self.getSettings()
+        }
+        reply(settings!.toDictionary() as NSDictionary)
     }
     
     func setSetting(_ settings_dict: NSDictionary, withReply reply: @escaping (Bool) -> Void) {

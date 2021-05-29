@@ -1,0 +1,10 @@
+/* 
+  InfoPlist.strings
+  MediaInfo
+
+  Created by Sbarex on 07/05/21.
+  Copyright © 2021 sbarex. All rights reserved.
+*/
+
+CFBundleDisplayName = "MediaInfo Finder Extension";
+
