@@ -115,13 +115,13 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
         case "[[creation]]":
             var template = ""
             if !self.creator.isEmpty {
-                template += String(format: NSLocalizedString("created by %@", comment: ""), "[[creator]]")
+                template += String(format: NSLocalizedString("created by %@", tableName: "LocalizableExt",comment: ""), "[[creator]]")
             }
             if self.creationDate != nil {
                 if !self.creator.isEmpty {
-                    template += " " + String(format: NSLocalizedString("on %@", comment: ""), "[[creation-date]]")
+                    template += " " + String(format: NSLocalizedString("on %@", tableName: "LocalizableExt",comment: ""), "[[creation-date]]")
                 } else {
-                    template += String(format: NSLocalizedString("created on %@", comment: ""), "[[creation-date]]")
+                    template += String(format: NSLocalizedString("created on %@", tableName: "LocalizableExt",comment: ""), "[[creation-date]]")
                 }
             }
             return self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled)
@@ -130,13 +130,13 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
         case "[[last-modification]]":
             var template = ""
             if !self.modified.isEmpty {
-                template += String(format: NSLocalizedString("last saved by %@", comment: ""), "[[last-author]]")
+                template += String(format: NSLocalizedString("last saved by %@", tableName: "LocalizableExt", comment: ""), "[[last-author]]")
             }
             if self.modificationDate != nil {
                 if !self.modified.isEmpty {
-                    template += " " + String(format: NSLocalizedString("on %@", comment: ""), "[[modification-date]]")
+                    template += " " + String(format: NSLocalizedString("on %@", tableName: "LocalizableExt",comment: ""), "[[modification-date]]")
                 } else {
-                    template += String(format: NSLocalizedString("last saved on %@", comment: ""), "[[modification-date]]")
+                    template += String(format: NSLocalizedString("last saved on %@", tableName: "LocalizableExt",comment: ""), "[[modification-date]]")
                 }
             }
             return self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled)
