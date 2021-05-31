@@ -1,6 +1,9 @@
 Changelog
 =======
 
+### 1.5.3
+- Bugfix for chapters.
+
 ### 1.5.2
 - Bugfix on ratio. 
 - Bugfix of ffmpeg and metadata engine disabled.

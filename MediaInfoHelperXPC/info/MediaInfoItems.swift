@@ -749,12 +749,10 @@ extension ChaptersInfo {
         let n = coder.decodeInteger(forKey: "chapters_count")
         var chapters: [Chapter] = []
         for i in 0 ..< n {
-            guard let c = coder.decodeObject(forKey: "chapter_\(i)") as? NSCoder else {
+            guard let d = coder.decodeObject(forKey: "chapter_\(i)") as? Data, let c = try? NSKeyedUnarchiver(forReadingFrom: d), let chapter = Chapter(coder: c) else {
                 continue
             }
-            if let chapter = Chapter(coder: c) {
-                chapters.append(chapter)
-            }
+            chapters.append(chapter)
         }
         return chapters
     }
@@ -762,7 +760,9 @@ extension ChaptersInfo {
     func encodeChapters(in coder: NSCoder) {
         coder.encode(self.chapters.count, forKey: "chapters_count")
         for i in 0 ..< self.chapters.count {
-            coder.encode(self.chapters[i], forKey: "chapter_\(i)")
+            let c = NSKeyedArchiver(requiringSecureCoding: coder.requiresSecureCoding)
+            self.chapters[i].encode(with: c)
+            coder.encode(c.encodedData, forKey: "chapter_\(i)")
         }
     }
     
