@@ -82,14 +82,13 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
                     video = v
                 }
             case .ffmpeg:
-                /*
                 if let v = getFFMpegVideoInfo(forFile: item) {
                     video = v
-                }*/ break
+                }
             case .metadata:
-                /*if let v = getMetadataVideoInfo(forFile: item) {
+                if let v = getMetadataVideoInfo(forFile: item) {
                     video = v
-                }*/ break
+                }
             }
             if video != nil {
                 break
