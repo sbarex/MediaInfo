@@ -51,7 +51,9 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
     }
     
     required init?(coder: NSCoder) {
-        let r = Self.decodeFileInfo(coder)
+        guard let r = Self.decodeFileInfo(coder) else {
+            return nil
+        }
         self.file = r.0
         self.fileSize = r.1 ?? -1
         

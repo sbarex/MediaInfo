@@ -47,19 +47,23 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
     }
     
     required init?(coder: NSCoder) {
-        let r = Self.decodeFileInfo(coder)
+        guard let r = Self.decodeFileInfo(coder) else {
+            return nil
+        }
         self.file = r.0
         self.fileSize = r.1 ?? -1
         
-        self.creator = coder.decodeObject(forKey: "creator") as! String
-        self.title = coder.decodeObject(forKey: "title") as! String
-        self.subject = coder.decodeObject(forKey: "subject") as! String
-        self.description = coder.decodeObject(forKey: "description") as! String
+        self.creator = coder.decodeObject(forKey: "creator") as? String ?? ""
+        self.title = coder.decodeObject(forKey: "title") as? String ?? ""
+        self.subject = coder.decodeObject(forKey: "subject") as? String ?? ""
+        self.description = coder.decodeObject(forKey: "description") as? String ?? ""
         
         let n = coder.decodeInteger(forKey: "keywords_count")
         var keywords: [String] = []
         for i in 0 ..< n {
-            keywords.append(coder.decodeObject(forKey: "keyword_\(i)") as! String)
+            if let k = coder.decodeObject(forKey: "keyword_\(i)") as? String {
+                keywords.append(k)
+            }
         }
         self.keywords = keywords
         
@@ -74,9 +78,9 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
             self.modificationDate = nil
         }
         
-        self.modified = coder.decodeObject(forKey: "modified") as! String
+        self.modified = coder.decodeObject(forKey: "modified") as? String ?? ""
         
-        self.application = coder.decodeObject(forKey: "application") as! String
+        self.application = coder.decodeObject(forKey: "application") as? String ?? ""
         
         super.init(coder: coder)
     }

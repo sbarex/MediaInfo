@@ -334,11 +334,13 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
     }
     
     required init?(coder: NSCoder) {
-        let r = Self.decodeFileInfo(coder)
+        guard let r = Self.decodeFileInfo(coder) else {
+            return nil
+        }
         self.file = r.0
         self.fileSize = r.1 ?? -1
         
-        self.version = coder.decodeObject(forKey: "version") as! String
+        self.version = coder.decodeObject(forKey: "version") as? String ?? ""
         self.author = coder.decodeObject(forKey: "author") as? String
         self.subject = coder.decodeObject(forKey: "subject") as? String
         self.title = coder.decodeObject(forKey: "title") as? String
@@ -368,8 +370,9 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
         let n = coder.decodeInteger(forKey: "keywords_count")
         var keywords: [String] = []
         for i in 0 ..< n {
-            let k = coder.decodeObject(forKey: "keyword_\(i)") as! String
-            keywords.append(k)
+            if let k = coder.decodeObject(forKey: "keyword_\(i)") as? String {
+                keywords.append(k)
+            }
         }
         self.keywords = keywords
         

@@ -375,7 +375,7 @@ protocol FileInfo: BaseInfo {
     func processFilePlaceholder(_ placeholder: String, settings: Settings, values: [String: Any]?, isFilled: inout Bool) -> String
     
     func encodeFileInfo(_ encoder: NSCoder)
-    static func decodeFileInfo(_ coder: NSCoder) -> (URL, Int64?)
+    static func decodeFileInfo(_ coder: NSCoder) -> (URL, Int64?)?
 }
 
 extension FileInfo {
@@ -387,8 +387,11 @@ extension FileInfo {
         }
     }
     
-    static func decodeFileInfo(_ coder: NSCoder) -> (URL, Int64?) {
-        let file = URL(fileURLWithPath: coder.decodeObject(forKey: "file") as! String)
+    static func decodeFileInfo(_ coder: NSCoder) -> (URL, Int64?)? {
+        guard let u = coder.decodeObject(forKey: "file") as? String else {
+            return nil
+        }
+        let file = URL(fileURLWithPath: u)
         let fileSize = coder.decodeInt64(forKey: "fileSize")
         return (file, fileSize)
     }
@@ -567,6 +570,10 @@ class DimensionalInfo: BaseInfo {
         let w = width / gcd
         let h = height / gcd
         
+        guard w <= 30 && h <= 30 else {
+            return nil
+        }
+        
         return "\(circa ? "~ " : "")\(w) : \(h)"
     }
     
@@ -709,16 +716,17 @@ class DimensionalInfo: BaseInfo {
             }
         case "[[ratio]]":
             return format(value: [values?["width"] ?? width, values?["height"] ?? height], isFilled: &isFilled) { v, isFilled in
-                isFilled = true
                 guard let dim = v as? [Int], dim.count == 2 else {
                     isFilled = false
                     return self.formatERR(useEmptyData: useEmptyData)
                 }
                 let width = dim[0]
                 let height = dim[1]
-                guard let ratio = self.getRatio(approximate: !settings.isRatioPrecise) else {
-                    return "\(width) : \(height)"
+                guard let ratio = Self.getRatio(width: width, height: height, approximate: !settings.isRatioPrecise) else {
+                    isFilled = false
+                    return ""
                 }
+                isFilled = true
                 return ratio
             }
         case "[[resolution]]":

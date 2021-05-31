@@ -1,6 +1,11 @@
 Changelog
 =======
 
+### 1.5.2
+- Bugfix on ratio. 
+- Bugfix of ffmpeg and metadata engine disabled.
+- Bugfix for unhandled nil exception.
+
 ### 1.5.1
 - Bugfix on image print size. 
 

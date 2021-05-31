@@ -247,7 +247,7 @@ func getCMMediaInfo(forFile file: URL) -> MediaInfo? {
             engine: .coremedia
         )
         return video
-    } else if let a =  streams.first(where: {$0 is AudioTrackInfo }) as? AudioTrackInfo  {
+    } else if let a = streams.first(where: {$0 is AudioTrackInfo }) as? AudioTrackInfo  {
         let audio = AudioInfo(
             file: file,
             duration: CMTimeGetSeconds(asset.duration), start_time: -1,

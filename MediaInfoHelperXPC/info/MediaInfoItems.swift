@@ -749,7 +749,10 @@ extension ChaptersInfo {
         let n = coder.decodeInteger(forKey: "chapters_count")
         var chapters: [Chapter] = []
         for i in 0 ..< n {
-            if let chapter = Chapter(coder: coder.decodeObject(forKey: "chapter_\(i)") as! NSCoder) {
+            guard let c = coder.decodeObject(forKey: "chapter_\(i)") as? NSCoder else {
+                continue
+            }
+            if let chapter = Chapter(coder: c) {
                 chapters.append(chapter)
             }
         }
@@ -854,7 +857,7 @@ class VideoTrackInfo: DimensionalInfo, LanguageInfo, DurationInfo, CodecInfo {
     required init?(coder: NSCoder) {
         self.duration = coder.decodeDouble(forKey: "duration")
         self.start_time = coder.decodeDouble(forKey: "start_time")
-        self.codec_short_name = coder.decodeObject(forKey: "codec_short_name") as! String
+        self.codec_short_name = coder.decodeObject(forKey: "codec_short_name") as? String ?? ""
         self.codec_long_name = coder.decodeObject(forKey: "codec_long_name") as? String
         self.profile = coder.decodeObject(forKey: "profile") as? String
         self.pixel_format = VideoPixelFormat(rawValue: coder.decodeInteger(forKey: "pixel_format"))
@@ -1045,9 +1048,12 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
     }
     
     required init?(coder: NSCoder) {
-        let r = Self.decodeFileInfo(coder)
+        guard let r = Self.decodeFileInfo(coder) else {
+            return nil
+        }
         self.file = r.0
         self.fileSize = r.1 ?? -1
+            
         self.engine = MediaEngine(rawValue: coder.decodeInteger(forKey: "engine"))!
         
         self.chapters = Self.decodeChapters(from: coder)
@@ -1338,10 +1344,12 @@ class ImageVideoInfo: DimensionalInfo, CodecInfo, FileInfo {
     }
 
     required init?(coder: NSCoder) {
-        let r = Self.decodeFileInfo(coder)
+        guard let r = Self.decodeFileInfo(coder) else {
+            return nil
+        }
         self.file = r.0
         self.fileSize = r.1 ?? -1
-        self.codec_short_name = coder.decodeObject(forKey: "codec_short_name") as! String
+        self.codec_short_name = coder.decodeObject(forKey: "codec_short_name") as? String ?? ""
         self.codec_long_name = coder.decodeObject(forKey: "codec_long_name") as? String
         self.encoder = coder.decodeObject(forKey: "encoder") as? String
         self.isLossless = coder.decodeObject(forKey: "isLossless") as? Bool
@@ -1399,7 +1407,7 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
     required init?(coder: NSCoder) {
         self.duration = coder.decodeDouble(forKey: "duration")
         self.start_time = coder.decodeDouble(forKey: "start_time")
-        self.codec_short_name = coder.decodeObject(forKey: "codec_short_name") as! String
+        self.codec_short_name = coder.decodeObject(forKey: "codec_short_name") as? String ?? ""
         self.codec_long_name = coder.decodeObject(forKey: "codec_long_name") as? String
         self.lang = coder.decodeObject(forKey: "lang") as? String
         self.bitRate = coder.decodeInt64(forKey: "bitRate")
@@ -1478,11 +1486,16 @@ class AudioInfo: AudioTrackInfo, MediaInfo, ChaptersInfo {
     }
     
     required init?(coder: NSCoder) {
-        let r = Self.decodeFileInfo(coder)
+        guard let r = Self.decodeFileInfo(coder) else {
+            return nil
+        }
         self.file = r.0
         self.fileSize = r.1 ?? -1
         
-        self.engine = MediaEngine(rawValue: coder.decodeInteger(forKey: "engine"))!
+        guard let e = MediaEngine(rawValue: coder.decodeInteger(forKey: "engine")) else {
+            return nil
+        }
+        self.engine = e
         
         self.chapters = Self.decodeChapters(from: coder)
         

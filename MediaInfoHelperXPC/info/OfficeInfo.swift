@@ -155,7 +155,9 @@ class ExcelInfo: BaseOfficeInfo {
         let n = coder.decodeInteger(forKey: "sheets_count")
         var sheets: [String] = []
         for i in 0 ..< n {
-            sheets.append(coder.decodeObject(forKey: "sheet_\(i)") as! String)
+            if let name = coder.decodeObject(forKey: "sheet_\(i)") as? String {
+                sheets.append(name)
+            }
         }
         self.sheets = sheets
         
