@@ -138,6 +138,8 @@ class TokenAudioMetadata: Token {
         case encoder
         case chapters
         case chaptersCount
+        case channels
+        case channels_name
         
         static var pasteboardType: NSPasteboard.PasteboardType {
             return .MITokenAudioMetadata
@@ -149,6 +151,8 @@ class TokenAudioMetadata: Token {
             case .encoder: return "encoder"
             case .chaptersCount: return String(format: NSLocalizedString("%d Chapters", tableName: "LocalizableExt", comment: ""), 2)
             case .chapters: return NSLocalizedString("Chapters list", comment: "")
+            case .channels: return NSLocalizedString("1 channel", tableName: "LocalizableExt", comment: "")
+            case .channels_name: return NSLocalizedString("mono", tableName: "LocalizableExt", comment: "")
             }
         }
         
@@ -158,6 +162,8 @@ class TokenAudioMetadata: Token {
             case .encoder: return "[[encoder]]"
             case .chaptersCount: return "[[chapters-count]]"
             case .chapters: return "[[chapters]]"
+            case .channels: return "[[channels]]"
+            case .channels_name: return "[[channels-name]]"
             }
         }
         
@@ -167,6 +173,8 @@ class TokenAudioMetadata: Token {
             case .encoder: return NSLocalizedString("Encoder.", comment: "")
             case .chapters: return NSLocalizedString("List of chapters.", comment: "")
             case .chaptersCount: return NSLocalizedString("Number of chapters.", comment: "")
+            case .channels: return NSLocalizedString("Number of channels.", comment: "")
+            case .channels_name: return NSLocalizedString("Mono, Stereo, or number of channels.", comment: "")
             }
         }
         
@@ -176,7 +184,8 @@ class TokenAudioMetadata: Token {
             case "[[encoder]]": self = .encoder
             case "[[chapters]]": self = .chapters
             case "[[chapters-count]]": self = .chaptersCount
-            
+            case "[[channels]]": self = .channels
+            case "[[channels-name]]": self = .channels_name
             default: return nil
             }
         }

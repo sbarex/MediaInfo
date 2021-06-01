@@ -60,10 +60,24 @@
             <title>1.5.3</title>
             <pubDate>lun, 31 Mag 2021 15:53:12 +0100</pubDate>
             <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.5.2/MediaInfo.zip" sparkle:version="16" sparkle:shortVersionString="1.5.3" type="application/octet-stream" sparkle:edSignature="hQXPkd55WWS3aqBxaY7VrNL7LmpoOXsz6o8LmQ3BxRi5H6feEsEAHpDO/ozCP3SHrgfR/YT+LeNb528KR+IWCw==" length="20825675"/>
+            <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.5.3/MediaInfo.zip" sparkle:version="16" sparkle:shortVersionString="1.5.3" type="application/octet-stream" sparkle:edSignature="hQXPkd55WWS3aqBxaY7VrNL7LmpoOXsz6o8LmQ3BxRi5H6feEsEAHpDO/ozCP3SHrgfR/YT+LeNb528KR+IWCw==" length="20825675"/>
             <description><![CDATA[
                 <ul>
                     <li>Bugfix for chapters.</li>
+                </ul>
+            ]]>
+            </description>
+        </item>
+        <item>
+            <title>1.5.4</title>
+            <pubDate>mar, 1 Giu 2021 19:16:12 +0100</pubDate>
+            <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.5.4/MediaInfo.zip" sparkle:version="17" sparkle:shortVersionString="1.5.4" type="application/octet-stream" sparkle:edSignature="4Wz0DPD8Q1OKPcqFvPjwn5/uTi1THN3Z5+giSCF1EPZ/mQfH1bnxZFGJgQJ5LDSFnuCtljS/JT+q2s9pbcV9Aw==" length="24340833"/>
+            <description><![CDATA[
+                <ul>
+                    <li>Add info about number of audio channels.</li>
+                    <li>Bugfix tracks (audio, video, subtitle) menu.</li>
+                    <li>Experimental support for macOS 10.14.</li>
                 </ul>
             ]]>
             </description>

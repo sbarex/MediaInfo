@@ -258,6 +258,7 @@ func getCMMediaInfo(forFile file: URL) -> MediaInfo? {
             encoder: encoder ?? a.encoder,
             isLossless: a.isLossless,
             chapters: chapters,
+            channels: a.channels,
             engine: .coremedia
         )
         return audio
@@ -303,13 +304,20 @@ func getCMMediaStreams(forFile file: URL) -> [BaseInfo] {
             let numberOfFrames = Int((durationInSeconds * framesPerSecond).rounded())
             // let d = track.formatDescriptions.first as! CMVideoFormatDescription
             let formatDescriptions = track.formatDescriptions as! [CMFormatDescription]
-            let formatDesc = formatDescriptions.first
+            var mediaType: FourCharCode?
+            if let formatDesc = formatDescriptions.first {
+                if #available(macOS 10.15, *) {
+                    mediaType = formatDesc.mediaSubType.rawValue
+                } else {
+                    mediaType = CMFormatDescriptionGetMediaSubType(formatDesc)
+                }
+            }
             
             let v = VideoTrackInfo(
                 width: Int(track.naturalSize.width), height: Int(track.naturalSize.height),
                 duration: durationInSeconds, start_time: startTime,
-                codec_short_name: codecForVideoCode(formatDesc?.mediaSubType.rawValue) ?? "",
-                codec_long_name: longCodecForVideoCode(formatDesc?.mediaSubType.rawValue),
+                codec_short_name: codecForVideoCode(mediaType) ?? "",
+                codec_long_name: longCodecForVideoCode(mediaType),
                 profile: nil,
                 pixel_format: nil, color_space: nil, field_order: nil,
                 lang: lang,
@@ -326,17 +334,30 @@ func getCMMediaStreams(forFile file: URL) -> [BaseInfo] {
             let durationInSeconds = CMTimeGetSeconds(track.timeRange.duration)
             let startTime = CMTimeGetSeconds(track.timeRange.start)
             let formatDescriptions = track.formatDescriptions as! [CMFormatDescription]
-            let formatDesc = formatDescriptions.first
+            
+            var channels = -1
+            var mediaType: FourCharCode? = nil
+            if let formatDesc = formatDescriptions.first {
+                if let basic = CMAudioFormatDescriptionGetStreamBasicDescription(formatDesc) {
+                    channels = Int(basic.pointee.mChannelsPerFrame)
+                }
+                if #available(macOS 10.15, *) {
+                    mediaType = formatDesc.mediaSubType.rawValue
+                } else {
+                    mediaType = CMFormatDescriptionGetMediaSubType(formatDesc)
+                }
+            }
             
             let a = AudioTrackInfo(
                 duration: durationInSeconds, start_time: startTime,
-                codec_short_name: codecForVideoCode(formatDesc?.mediaSubType.rawValue) ?? "",
-                codec_long_name: longCodecForVideoCode(formatDesc?.mediaSubType.rawValue),
+                codec_short_name: codecForVideoCode(mediaType) ?? "",
+                codec_long_name: longCodecForVideoCode(mediaType),
                 lang: lang,
                 bitRate: Int64(track.estimatedDataRate),
                 title: title,
                 encoder: encoder,
-                isLossless: nil
+                isLossless: nil,
+                channels: channels
             )
             streams.append(a)
 

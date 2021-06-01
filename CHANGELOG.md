@@ -1,6 +1,11 @@
 Changelog
 =======
 
+### 1.5.4
+- Add info about number of audio channels.
+- Bugfix tracks (audio, video, subtitle) menu.
+- Experimental support for macOS 10.14.
+
 ### 1.5.3
 - Bugfix for chapters.
 
@@ -24,9 +29,9 @@ Changelog
 ### 1.0.0
 
 - Universal binary support (_but `ffmpeg` for arm64 is compiled on intel platform without assembly optimizations_).
-- Support for automatic Sparke update.
+- Support for automatic Sparkle update.
 - New app icon.
-- Removed App Group capability to handle the settings (App Group _require_ codesign). Settings are now handled with an XPC service.
+- Removed App Group capability to handle the settings (App Group _require_ code sign). Settings are now handled with an XPC service.
 
 ### 1.0.b11
 

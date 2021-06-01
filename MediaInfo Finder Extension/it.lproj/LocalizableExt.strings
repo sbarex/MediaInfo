@@ -95,3 +95,8 @@
 "last saved by %@" = "ultimo salvataggio di %@";
 "last saved on %@" = "ultimo salvataggio il %@";
 "on %@" = "il %@";
+
+"mono" = "mono";
+"stereo" = "stereo";
+"1 channel" = "1 canale";
+"%d channels" = "%d canali";

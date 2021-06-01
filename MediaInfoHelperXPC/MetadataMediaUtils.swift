@@ -105,6 +105,7 @@ func getMetadataAudioInfo(forFile file: URL) -> AudioInfo? {
             encoder: a.encoder,
             isLossless: a.isLossless,
             chapters: [],
+            channels: a.channels,
             engine: .metadata
         )
         return audio
@@ -174,6 +175,12 @@ func getMetadataMediaStreams(forFile file: URL, withMetadata metadata: MDItem) -
         CFNumberGetValue((n as! CFNumber), CFNumberType.sInt64Type, &audioBitRate)
     }
     
+    var channels: Int = 0
+    if let n = MDItemCopyAttribute(metadata, kMDItemAudioChannelCount) {
+        CFNumberGetValue((n as! CFNumber), CFNumberType.sInt64Type, &channels)
+    }
+    
+    
     for (i, type) in types.enumerated() {
         let codec = i < codecs.count ? codecs[i] : ""
         let lang = i < langs.count ? langs[i] : nil
@@ -193,16 +200,18 @@ func getMetadataMediaStreams(forFile file: URL, withMetadata metadata: MDItem) -
                 bitRate: videoBitRate, fps: 0,
                 frames: 0,
                 title: nil, encoder: nil,
-                isLossless: nil)
+                isLossless: nil
+            )
             streams.append(v)
         case "Sound":
             let a = AudioTrackInfo(
-                              duration: duration, start_time: -1,
-                              codec_short_name: codec, codec_long_name: nil,
-                              lang: lang,
-                              bitRate: audioBitRate,
-                              title: nil, encoder: nil,
-                              isLossless: nil
+                duration: duration, start_time: -1,
+                codec_short_name: codec, codec_long_name: nil,
+                lang: lang,
+                bitRate: audioBitRate,
+                title: nil, encoder: nil,
+                isLossless: nil,
+                channels: channels
             )
             streams.append(a)
         default:

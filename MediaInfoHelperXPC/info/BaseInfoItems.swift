@@ -89,6 +89,8 @@ class BaseInfo: NSCoding {
             img = NSImage(named: "ppt")
         case "abc":
             img = NSImage(named: "abc")
+        case "speaker":
+            img = NSImage(named: "speaker_mono")
         default:
             img = NSImage(named: mode)
         }

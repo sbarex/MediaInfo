@@ -183,6 +183,8 @@ Available information:
 |codec|Codec name (full name if available, otherwise short name).|_MPEG audio layer 2/3_|
 |codec short name|Codec short name.|_mp3_|
 |codec long name|Codec long name.|_MPEG audio layer 2/3_|
+|channels|Number of channels|_2 channels_|
+|channels|Audio mono, stereo or number of channels|_Mono_, _Stereo_, _3 channels_, …|
 |chapters|Number of chapters.|_2 chapters_ If this placeholder is the only in the menu item will be added a submenu with the list of the chapters.|
 |title|Title.||
 |encoder|Encoder.|_libffmpeg_|

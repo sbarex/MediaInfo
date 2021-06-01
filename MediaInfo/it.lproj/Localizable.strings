@@ -127,6 +127,8 @@
 "sheets" = "fogli";
 "Page size (for document files)." = "Dimensioni sulla pagina (per documenti di testo).";
 "Page format or page size (for document files)." = "Formato pagina o sue dimensioni (per documenti di testo).";
+"Number of channels." = "Numero di canali";
+"Mono, Stereo, or number of channels." = "Mono, Stereo, o numbero di canali.";
 
 // MARK: -
 "Number of audio tracks." = "Numero di tracce audio.";
@@ -177,6 +179,9 @@
 "PDF" = "PDF";
 "Printer" = "Stampante";
 "Person" = "Persona";
+"Speaker (mono or stereo)" = "Altoparlante (mono o stereo)";
+"Speaker" = "Altoparlante";
+"Speakers" = "Altoparlanti";
 "Color" = "Colore";
 "Black and White" = "Bianco e nero";
 "Gray scale" = "Scala di grigio";

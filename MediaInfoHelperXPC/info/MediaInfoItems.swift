@@ -1153,7 +1153,7 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
             return s
         case "[[audio-count]]":
             let s = format(value: values?["audio"] ?? self.audioTracks, isFilled: &isFilled) { v, isFilled in
-                guard let audio = v as? [AudioInfo] else {
+                guard let audio = v as? [AudioTrackInfo] else {
                     isFilled = false
                     return self.formatERR(useEmptyData: useEmptyData)
                 }
@@ -1240,16 +1240,15 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
             
             let group_tracks = settings.isTracksGrouped // FIXME: rename
             let video_sub_menu: NSMenu
+            var title = ""
             if group_tracks {
                 var filled = false
-                var title = self.replacePlaceholders(in: "[[video-count]]", settings: settings, isFilled: &filled)
+                title = self.replacePlaceholders(in: "[[video-count]]", settings: settings, isFilled: &filled)
                 if !filled || title.isEmpty {
                     title = NSLocalizedString("Video", tableName: "LocalizableExt", comment: "")
                 }
-                let video_mnu = destination_sub_menu.addItem(withTitle: title, action: nil, keyEquivalent: "")
-                video_mnu.image = self.getImage(for: "video")
                 video_sub_menu = NSMenu(title: title)
-                destination_sub_menu.setSubmenu(video_sub_menu, for: video_mnu)
+                
             } else {
                 video_sub_menu = destination_sub_menu
             }
@@ -1261,6 +1260,15 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
                     video_sub_menu.addItem(item.copy() as! NSMenuItem)
                 }
             }
+            if group_tracks {
+                if n == 1 && settings.isInfoOnMainItem && video_sub_menu.items.count == 1 {
+                    destination_sub_menu.addItem(video_sub_menu.items.first!.copy() as! NSMenuItem)
+                } else {
+                    let video_mnu = destination_sub_menu.addItem(withTitle: title, action: nil, keyEquivalent: "")
+                    video_mnu.image = self.getImage(for: "video")
+                    destination_sub_menu.setSubmenu(video_sub_menu, for: video_mnu)
+                }
+            }
         case "[[audio]]":
             let n = audioTracks.count
             guard n > 0 else {
@@ -1268,20 +1276,20 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
             }
             
             let audio_sub_menu: NSMenu
-            let group_tracks = settings.isTracksGrouped // FIXME: rename
+            let group_tracks = settings.isTracksGrouped
+            var title = ""
             if group_tracks {
                 var filled = false
-                var title = self.replacePlaceholders(in: "[[audio-count]]", settings: settings, isFilled: &filled)
+                title = self.replacePlaceholders(in: "[[audio-count]]", settings: settings, isFilled: &filled)
                 if !filled || title.isEmpty {
                     title = NSLocalizedString("Audio", tableName: "LocalizableExt", comment: "")
                 }
-                let audio_mnu = destination_sub_menu.addItem(withTitle: title, action: nil, keyEquivalent: "")
-                audio_mnu.image = self.getImage(for: "audio")
+                
                 audio_sub_menu = NSMenu(title: title)
-                destination_sub_menu.setSubmenu(audio_sub_menu, for: audio_mnu)
             } else {
                 audio_sub_menu = destination_sub_menu
             }
+            
             for audio in audioTracks {
                guard let audio_menu = audio.getMenu(withSettings: settings) else {
                    continue
@@ -1290,9 +1298,22 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
                    audio_sub_menu.addItem(item.copy() as! NSMenuItem)
                }
             }
+            if group_tracks {
+                if n == 1 && settings.isInfoOnMainItem && audio_sub_menu.items.count == 1 {
+                    destination_sub_menu.addItem(audio_sub_menu.items.first!.copy() as! NSMenuItem)
+                } else {
+                    let audio_mnu = destination_sub_menu.addItem(withTitle: title, action: nil, keyEquivalent: "")
+                    audio_mnu.image = self.getImage(for: "audio")
+                    destination_sub_menu.setSubmenu(audio_sub_menu, for: audio_mnu)
+                }
+            }
         case "[[subtitles]]":
-            let sub_menu_txt: NSMenu
             let n = subtitles.count
+            guard n > 0 else {
+                return true
+            }
+            
+            let sub_menu_txt: NSMenu
             let group_tracks = settings.isTracksGrouped // FIXME: rename
             if group_tracks {
                let mnu_txt = destination_sub_menu.addItem(withTitle: "\(n) " + NSLocalizedString("Subtitles", tableName: "LocalizableExt", comment: ""), action: nil, keyEquivalent: "")
@@ -1390,8 +1411,15 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
     let title: String?
     let encoder: String?
     let isLossless: Bool?
+    let channels: Int
+    var isMono: Bool {
+        return channels == 1
+    }
+    var isStereo: Bool {
+        return channels == 2
+    }
     
-    init(duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, lang: String?, bitRate: Int64, title: String?, encoder: String?, isLossless: Bool?) {
+    init(duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, lang: String?, bitRate: Int64, title: String?, encoder: String?, isLossless: Bool?, channels: Int) {
         self.duration = duration
         self.start_time = start_time
         self.codec_short_name = codec_short_name
@@ -1401,6 +1429,7 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
         self.isLossless = isLossless
         self.title = title
         self.encoder = encoder
+        self.channels = channels
         super.init()
     }
     
@@ -1414,6 +1443,7 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
         self.title = coder.decodeObject(forKey: "title") as? String
         self.encoder = coder.decodeObject(forKey: "encoder") as? String
         self.isLossless = coder.decodeObject(forKey: "isLossless") as? Bool
+        self.channels = coder.decodeInteger(forKey: "channels")
         
         super.init(coder: coder)
     }
@@ -1427,11 +1457,21 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
         coder.encode(self.title, forKey: "title")
         coder.encode(self.encoder, forKey: "encoder")
         coder.encode(self.isLossless, forKey: "isLossless")
+        coder.encode(self.channels, forKey: "channels")
         
         super.encode(with: coder)
     }
     
+    override func getImage(for name: String) -> NSImage? {
+        if name == "speaker" && self.isStereo {
+            return super.getImage(for: "speaker_stereo");
+        } else {
+            return super.getImage(for: name)
+        }
+    }
+    
     override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool) -> String {
+        let useEmptyData = false
         switch placeholder {
         case "[[duration]]", "[[seconds]]", "[[bitrate]]", "[[start-time]]", "[[start-time-s]]":
             return processDurationPlaceholder(placeholder, values: values, isFilled: &isFilled)
@@ -1443,6 +1483,39 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
              "[[chapters-count]]", "[[engine]]":
             isFilled = false
             return ""
+        case "[[channels]]":
+            return format(value: values?["channels"] ?? self.channels, isFilled: &isFilled) { v, isFilled in
+                guard let channels = v as? Int else {
+                    isFilled = false
+                    return self.formatERR(useEmptyData: useEmptyData)
+                }
+                isFilled = channels > 0
+                if channels <= 0 {
+                    return self.formatND(useEmptyData: useEmptyData)
+                } else if channels == 1 {
+                    return NSLocalizedString("1 channel", tableName: "LocalizableExt", comment: "")
+                } else {
+                    return String(format: NSLocalizedString("%d channels", tableName: "LocalizableExt", comment: ""), channels)
+                }
+            }
+            
+        case "[[channels-name]]":
+            return format(value: values?["channels"] ?? self.channels, isFilled: &isFilled) { v, isFilled in
+                guard let channels = v as? Int else {
+                    isFilled = false
+                    return self.formatERR(useEmptyData: useEmptyData)
+                }
+                isFilled = channels > 0
+                if channels <= 0 {
+                    return self.formatND(useEmptyData: useEmptyData)
+                } else if channels == 1 {
+                    return NSLocalizedString("mono", tableName: "LocalizableExt", comment: "")
+                } else if channels == 2 {
+                    return NSLocalizedString("stereo", tableName: "LocalizableExt", comment: "")
+                } else {
+                    return String(format: NSLocalizedString("%d channels", tableName: "LocalizableExt", comment: ""), channels)
+                }
+            }
         default:
             return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
         }
@@ -1476,13 +1549,13 @@ class AudioInfo: AudioTrackInfo, MediaInfo, ChaptersInfo {
     let chapters: [Chapter]
     let engine: MediaEngine
     
-    init(file: URL, duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, lang: String?, bitRate: Int64, title: String?, encoder: String?, isLossless: Bool?, chapters: [Chapter], engine: MediaEngine) {
+    init(file: URL, duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, lang: String?, bitRate: Int64, title: String?, encoder: String?, isLossless: Bool?, chapters: [Chapter], channels: Int, engine: MediaEngine) {
         self.file = file
         self.fileSize = Self.getFileSize(file) ?? -1
         
         self.chapters = chapters
         self.engine = engine
-        super.init(duration: duration, start_time: start_time, codec_short_name: codec_short_name, codec_long_name: codec_long_name, lang: lang, bitRate: bitRate, title: title, encoder: encoder, isLossless: isLossless)
+        super.init(duration: duration, start_time: start_time, codec_short_name: codec_short_name, codec_long_name: codec_long_name, lang: lang, bitRate: bitRate, title: title, encoder: encoder, isLossless: isLossless, channels: channels)
     }
     
     required init?(coder: NSCoder) {

@@ -107,7 +107,7 @@ class Settings {
             MenuItem(image: "size", template: "[[filesize]]"),
         ]
         settings.audioMenuItems = [
-            MenuItem(image: "audio", template: "[[duration]] ([[seconds]]) [[language-flag]]"),
+            MenuItem(image: "audio", template: "[[duration]] ([[seconds]]) [[channels-name]] [[language-flag]]"),
             MenuItem(image: "audio", template: "[[bitrate]], [[codec]]"),
             MenuItem(image: "tag", template: "[[title]]"),
             MenuItem(image: "", template: "([[engine]])"),

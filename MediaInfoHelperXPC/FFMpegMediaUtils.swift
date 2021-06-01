@@ -431,6 +431,7 @@ func getFFMpegAudioInfo(forFile file: URL) -> AudioInfo? {
         title: title ?? a.title, encoder: encoder ?? a.encoder,
         isLossless: a.isLossless,
         chapters: chapters,
+        channels: a.channels,
         engine: .ffmpeg
         )
     return audio
@@ -611,7 +612,8 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
                 lang: lang,
                 bitRate: bit_rate,
                 title: title, encoder: encoder,
-                isLossless: isLossless
+                isLossless: isLossless,
+                channels: Int(avctx!.pointee.channels)
             )
             streams.append(a)
             

@@ -235,7 +235,7 @@ class ViewController: NSViewController {
                 isLossless: false,
                 chapters: [Chapter(title: "title1", start: 0, end: 200), Chapter(title: "title2", start: 201, end: 600)],
                 video: [], audio: [
-                    AudioTrackInfo(duration: 3600, start_time: 0, codec_short_name: "mp3", codec_long_name: "MP3 (MPEG audio layer 3)", lang: "EN", bitRate: 512*1025, title: "Audio title", encoder: "Encoder", isLossless: false)
+                    AudioTrackInfo(duration: 3600, start_time: 0, codec_short_name: "mp3", codec_long_name: "MP3 (MPEG audio layer 3)", lang: "EN", bitRate: 512*1025, title: "Audio title", encoder: "Encoder", isLossless: false, channels: 2)
                 ], subtitles: [
                     SubtitleTrackInfo(title: "English subtitle", lang: "EN"),
                     SubtitleTrackInfo(title: "Sottitoli in italiano", lang: "IT"),
@@ -265,6 +265,7 @@ class ViewController: NSViewController {
                 title: "Audio title", encoder: "Encoder",
                 isLossless: false,
                 chapters: [],
+                channels: 2,
                 engine: .coremedia)
         }
         

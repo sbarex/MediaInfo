@@ -56,6 +56,9 @@ class MenuItemEditor: NSViewController {
         Image(name: "size", title: NSLocalizedString("File size", comment: "")),
         Image(name: "print", title: NSLocalizedString("Printer", comment: "")),
         Image(name: "person", title: NSLocalizedString("Person", comment: "")),
+        Image(name: "speaker", title: NSLocalizedString("Speaker (mono or stereo)", comment: "")),
+        Image(name: "speaker_mono", title: NSLocalizedString("Speaker", comment: "")),
+        Image(name: "speaker_stereo", title: NSLocalizedString("Speakers", comment: "")),
         
         Image.separator(),
         Image(name: "color", title: NSLocalizedString("Color", comment: "")),
