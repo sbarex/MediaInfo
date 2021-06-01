@@ -98,7 +98,9 @@ class BaseInfo: NSCoding {
         img = img?.resized(to: NSSize(width: 16, height: 16))
         if !isColor {
             img?.isTemplate = true
-            return img?.image(withTintColor: NSColor.labelColor)
+            let i = img?.image(withTintColor: NSColor.labelColor)
+            i?.isTemplate = true
+            return i
         } else {
             return img
         }
