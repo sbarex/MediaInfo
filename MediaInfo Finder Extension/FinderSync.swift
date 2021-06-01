@@ -165,10 +165,6 @@ class FinderSync: FIFinderSync {
     func sanitizeMenu(_ menu: NSMenu?) {
         guard let menu = menu else { return }
         
-        if let item = menu.items.last, item.title.isEmpty && !item.isEnabled {
-            // Remove last empty item
-            menu.removeItem(item)
-        }
         var n = -1
         var remove: [Int] = []
         for (i, item) in menu.items.enumerated() {
@@ -187,36 +183,15 @@ class FinderSync: FIFinderSync {
         for i in remove.reversed() {
             menu.removeItem(at: i)
         }
+        
+        while let item = menu.items.last, item.title.isEmpty && !item.isEnabled {
+            // Remove last empty item
+            menu.removeItem(item)
+        }
     }
     
     func getMenuForImage(atURL item: URL) -> NSMenu? {
         let image_info = HelperWrapper.getImageInfo(for: item)
-        /*
-        let image_info: ImageInfo
-        if let info = getCGImageInfo(forFile: item) {
-            image_info = info
-        } else {
-            guard let uti = try? item.resourceValues(forKeys: [.typeIdentifierKey]).typeIdentifier else {
-                return nil
-            }
-            
-            if UTTypeConformsTo(uti as CFString, "public.pbm" as CFString), let info = getNetPBMImageInfo(forFile: item) {
-                image_info = info
-            } else if UTTypeConformsTo(uti as CFString, "public.webp" as CFString), let info = getWebPImageInfo(forFile: item) {
-                image_info = info
-            } /*else if UTTypeConformsTo(uti as CFString, "fr.whine.bpg" as CFString) || item.pathExtension == "bpg", let info = getBPGImageInfo(forFile: item) {
-                image_info = info
-            } */else if UTTypeConformsTo(uti as CFString, "public.svg-image" as CFString), let info = getSVGImageInfo(forFile: item) {
-                image_info = info
-            } else if let info = getFFMpegImageInfo(forFile: item) {
-                image_info = info
-            } else if let info = getMetadataImageInfo(forFile: item) {
-                image_info = info
-            } else {
-                return nil
-            }
-        }
-        */
         let menu = image_info?.getMenu(withSettings: settings)
         sanitizeMenu(menu)
         return menu
@@ -224,28 +199,6 @@ class FinderSync: FIFinderSync {
     
     func getMenuForVideo(atURL item: URL) -> NSMenu? {
         let video = HelperWrapper.getVideoInfo(for: item)
-        /*
-        var video: VideoInfo?
-        for engine in self.settings.engines {
-            switch engine {
-            case .coremedia:
-                if let v = getCMVideoInfo(forFile: item) {
-                    video = v
-                }
-            case .ffmpeg:
-                if let v = getFFMpegVideoInfo(forFile: item) {
-                    video = v
-                }
-            case .metadata:
-                if let v = getMetadataVideoInfo(forFile: item) {
-                    video = v
-                }
-            }
-            if video != nil {
-                break
-            }
-        }
-        */
         let menu = video?.getMenu(withSettings: settings)
         sanitizeMenu(menu)
         return menu
@@ -253,40 +206,12 @@ class FinderSync: FIFinderSync {
     
     func getMenuForAudio(atURL item: URL) -> NSMenu? {
         let audio = HelperWrapper.getAudioInfo(for: item)
-        /*
-        var audio: AudioInfo?
-        for engine in self.settings.engines {
-            switch engine {
-            case .coremedia:
-                if let a = getCMAudioInfo(forFile: item) {
-                    audio = a
-                }
-            case .ffmpeg:
-                if let a = getFFMpegAudioInfo(forFile: item) {
-                    audio = a
-                }
-            case .metadata:
-                if let a = getMetadataAudioInfo(forFile: item) {
-                    audio = a
-                }
-            }
-            if audio != nil {
-                break
-            }
-        }
- */
         let menu = audio?.getMenu(withSettings: settings)
         sanitizeMenu(menu)
         return menu
     }
     
     func getMenuForPDF(atURL item: URL) -> NSMenu? {
-        /*
-        guard let pdf = CGPDFDocument(item as CFURL) else {
-            return nil
-        }
-        let pdf_info = PDFInfo(file: item, pdf: pdf)
-        */
         let pdf_info = HelperWrapper.getPDFInfo(for: item)
         let menu = pdf_info?.getMenu(withSettings: settings)
         sanitizeMenu(menu)
