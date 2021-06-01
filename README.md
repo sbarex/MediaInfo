@@ -21,20 +21,20 @@ Now right click (or `control` click) on an image or video within a monitored fol
 | ![Image settings](menu_image.png) | ![Media settings](menu_video.png) |
 
 
-> **The precompiled app is not notarized or signed.**
+**The precompiled application is not notarized or signed.** The application is compiled as universal binary (Intel and Apple Silicon processor).
 
 When you download the precompiled app directly you must strip quarantine flag.
 The first time you can launch the app with right click (or ctrl click) on the app icon and choosing the open action.
 
-To strip the quarantine flag you can also execute this command from the terminal:
-
-```
-$ xattr -r -d com.apple.quarantine "FULL PATH OF THE MediaInfo .app (you can drag the file to get the pull path)"
-```
-
 Alternatively, you can open System Preferences > Security & Privacy > General (tab) then clicking the `Open Anyway` button.
 
-This will resolve the error of an unsigned application when launching the app.
+If the system warns that the application is damaged, use the following terminal command:
+
+```
+$ xattr -cr "FULL PATH OF THE MediaInfo .app (you can drag the file to get the pull path)"
+```
+
+This will resolve the error of an unsigned/damaged application when launching the app.
 
 **When the monitored folders are changed or when the Finder Sync extension is restarted, the System may display a confirmation warning to allow read access to the files of the monitored folders. _Access must be granted for the Finder extension to work._**
 
@@ -102,9 +102,9 @@ Available information:
 |dpi|Printer resolution.|_150 dpi_|
 |printed size|Printer size. You can choose a custom dpi resolution and different unit (cm, mm, inch).|_21 × 29.7 cm (300 dpi)_|
 |paper format|Paper format for the printed size.|_A4_, _Letter_, …|
-|file size|File size|_5 Mb_|
-|file name|Name of the file|_image.jpg_|
-|file extension|Extension of the file|_jpg_|
+|file size|File size.|_5 Mb_|
+|file name|Name of the file.|_image.jpg_|
+|file extension|Extension of the file.|_jpg_|
 
 Supported image formats:
 - images handled by the MacOS via CoreGraphics
@@ -150,9 +150,9 @@ Available information:
 |field order|Field order.|_top first_|\*|
 |pixel format|Pixel format.|_yuv420p_|\*|
 |color space|Color space.|_gbr_|\*|
-|file size|File size|_5 Mb_||
-|file name|Name of the file|_image.jpg_||
-|file extension|Extension of the file|_jpg_||
+|file size|File size.|_5 Mb_||
+|file name|Name of the file.|_image.jpg_||
+|file extension|Extension of the file.|_jpg_||
 
 Not all properties are always available, depending on the type of file and the engine used to decode it.
 
@@ -183,14 +183,14 @@ Available information:
 |codec|Codec name (full name if available, otherwise short name).|_MPEG audio layer 2/3_|
 |codec short name|Codec short name.|_mp3_|
 |codec long name|Codec long name.|_MPEG audio layer 2/3_|
-|channels|Number of channels|_2 channels_|
-|channels|Audio mono, stereo or number of channels|_Mono_, _Stereo_, _3 channels_, …|
+|channels|Number of channels.|_2 channels_|
+|channels|Audio mono, stereo or number of channels.|_Mono_, _Stereo_, _3 channels_, …|
 |chapters|Number of chapters.|_2 chapters_ If this placeholder is the only in the menu item will be added a submenu with the list of the chapters.|
 |title|Title.||
 |encoder|Encoder.|_libffmpeg_|
-|file size|File size|_5 Mb_|
-|file name|Name of the file|_image.jpg_|
-|file extension|Extension of the file|_jpg_|
+|file size|File size.|_5 Mb_|
+|file name|Name of the file.|_image.jpg_|
+|file extension|Extension of the file.|_jpg_|
 
 Not all properties are always available, depending on the type of file and the engine used to decode it.
 
@@ -224,10 +224,10 @@ Available information:
 |allows copy|Allows copy status.|_yes_ or _no_|
 |allows print|Allows print status.|_yes_ or _no_|
 |security|Security state. Compose the _locked_, _encrypted_, _copy_ and _print_ tokens.|_:lock: no copy_|
-|version|PDF version|_version 1.6_|
-|file size|File size|_5 Mb_|
-|file name|Name of the file|_image.jpg_|
-|file extension|Extension of the file|_jpg_|
+|version|PDF version.|_version 1.6_|
+|file size|File size.|_5 Mb_|
+|file name|Name of the file.|_image.jpg_|
+|file extension|Extension of the file.|_jpg_|
 
 ### Office files
 The following file formats are supported: `.docx`, `.rtfx`, `.pptx`, `.odt`, `.ods`, .`odp` (standard office files based on the `XML` format).
@@ -254,9 +254,9 @@ Available information:
 |words|Number of words. _Only for text document files._|_150 words_||
 |sheets|List of the sheet names, show as a submenu. _Only for spreadsheet files._||_Yes_|
 |application|Application that generated the file.|_MicrosoftOffice/15.0 MicrosoftWord_||
-|file size|File size|_5 Mb_||
-|file name|Name of the file|_image.jpg_||
-|file extension|Extension of the file|_jpg_||
+|file size|File size.|_5 Mb_||
+|file name|Name of the file.|_image.jpg_||
+|file extension|Extension of the file.|_jpg_||
 
 ## Build from source
 
