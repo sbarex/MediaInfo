@@ -84,6 +84,22 @@ class MenuItemEditor: NSViewController {
         Image(name: "ppt", title: NSLocalizedString("Office presentation", comment: "")),
         
         Image.separator(),
+        Image(name: "3d", title: NSLocalizedString("3D model", comment: "")),
+        
+        Image(name: "3d_point", title: NSLocalizedString("3D points", comment: "")),
+        Image(name: "3d_line", title: NSLocalizedString("3D lines", comment: "")),
+        Image(name: "3d_triangle", title: NSLocalizedString("3D triangle faces", comment: "")),
+        Image(name: "3d_triangle_stripe", title: NSLocalizedString("3D triangle stripe", comment: "")),
+        Image(name: "3d_quads", title: NSLocalizedString("3D quads faces", comment: "")),
+        Image(name: "3d_variable", title: NSLocalizedString("3D variable faces", comment: "")),
+        
+        Image(name: "3d_normal", title: NSLocalizedString("3D normals", comment: "")),
+        Image(name: "3d_tangent", title: NSLocalizedString("3D tangents", comment: "")),
+        Image(name: "3d_color", title: NSLocalizedString("3D color per vertex", comment: ""), color: true),
+        Image(name: "3d_uv", title: NSLocalizedString("3D texture coords", comment: "")),
+        Image(name: "3d_occlusion", title: NSLocalizedString("3D occlusion per vertex", comment: ""), color: true),
+
+        Image.separator(),
         Image(name: "tag", title: NSLocalizedString("Tag", comment: "")),
         Image(name: "pencil", title: NSLocalizedString("Pencil", comment: "")),
         Image(name: "abc", title: NSLocalizedString("ABC", comment: "")),

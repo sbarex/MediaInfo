@@ -24,4 +24,8 @@ import Foundation
     func getOpenDocumentInfo(for item: URL, withReply reply: @escaping (NSData?)->Void)
     func getOpenSpreadsheetInfo(for item: URL, withReply reply: @escaping (NSData?)->Void)
     func getOpenPresentationInfo(for item: URL, withReply reply: @escaping (NSData?)->Void)
+    
+    func getModelInfo(for item: URL, withReply reply: @escaping (NSData?)->Void)
+    
+    func openFile(url: URL)
 }

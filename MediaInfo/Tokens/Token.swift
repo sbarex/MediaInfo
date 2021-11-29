@@ -24,6 +24,7 @@ extension NSPasteboard.PasteboardType {
     static let MITokenOfficeMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-office-metadata")
     static let MITokenVideoMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-video-metadata")
     static let MITokenAudioMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-audio-metadata")
+    static let MITokenModelMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.model-metadata")
 }
 
 protocol BaseMode {
@@ -78,6 +79,7 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
         case pdf
         case subtitle
         case office
+        case model
     }
     
     enum Mode: Int, BaseMode {

@@ -91,6 +91,16 @@ class BaseInfo: NSCoding {
             img = NSImage(named: "abc")
         case "speaker":
             img = NSImage(named: "speaker_mono")
+            
+        case "3d", "3D":
+            img = NSImage(named: "3d")
+        case "3d_color":
+            img = NSImage(named: mode)
+            isColor = true
+        case "3d_occlusion":
+            img = NSImage(named: mode)
+            isColor = true
+            
         default:
             img = NSImage(named: mode)
         }

@@ -6,7 +6,7 @@
 //  Copyright © 2021 sbarex. All rights reserved.
 //
 
-import Foundation
+import Cocoa
 
 class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
     func getInfo(for item: URL, type: String, withReply reply: @escaping (NSData?)->Void) {
@@ -34,6 +34,10 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
             getOpenSpreadsheetInfo(for: item, withReply: reply)
         case "odp":
             getOpenPresentationInfo(for: item, withReply: reply)
+        
+        case "3d":
+            getModelInfo(for: item, withReply: reply)
+        
         default:
             reply(nil)
         }
@@ -214,5 +218,25 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         let coder = NSKeyedArchiver(requiringSecureCoding: false)
         odp_info.encode(with: coder)
         reply(coder.encodedData as NSData)
+    }
+    
+    func getModelInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
+        if #available(macOS 11.0, *) {
+            guard let model_info = ModelInfo(file: item) else {
+                reply(nil)
+                return
+            }
+            
+            let coder = NSKeyedArchiver(requiringSecureCoding: false)
+            model_info.encode(with: coder)
+            reply(coder.encodedData as NSData)
+        } else {
+            reply(nil)
+        }
+    }
+    
+    
+    func openFile(url: URL) {
+        NSWorkspace.shared.open(url)
     }
 }

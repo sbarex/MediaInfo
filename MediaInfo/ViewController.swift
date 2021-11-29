@@ -37,15 +37,23 @@ class ViewController: NSViewController {
     @IBOutlet weak var audioPopupButton: NSPopUpButton!
     @IBOutlet weak var pdfPopupButton: NSPopUpButton!
     @IBOutlet weak var officePopupButton: NSPopUpButton!
+    @IBOutlet weak var modelPopupButton: NSPopUpButton!
+    
+    @IBOutlet weak var tabView: NSTabView!
     
     @IBOutlet weak var imageMenuTableView: MenuTableView!
     @IBOutlet weak var videoMenuTableView: MenuTableView!
     @IBOutlet weak var audioMenuTableView: MenuTableView!
     @IBOutlet weak var pdfMenuTableView: MenuTableView!
     @IBOutlet weak var officeMenuTableView: MenuTableView!
+    @IBOutlet weak var modelsMenuTableView: MenuTableView!
     
     @IBOutlet weak var enginesTableView: NSTableView!
     @IBOutlet weak var engineSegmentedControl: NSSegmentedControl!
+    
+    @IBOutlet weak var externalDiskButton: NSButton!
+    
+    @objc dynamic var isExternalDiskHandled: Bool = false
     
     @IBOutlet weak var tableView: NSTableView!
     
@@ -91,7 +99,15 @@ class ViewController: NSViewController {
     
     @objc dynamic var isOfficeDeepScan: Bool = true {
         didSet {
-            if oldValue != isOfficeHandled {
+            if oldValue != isOfficeDeepScan {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    
+    @objc dynamic var isModelsHandled: Bool = true {
+        didSet {
+            if oldValue != isModelsHandled {
                 self.view.window?.isDocumentEdited = true
             }
         }
@@ -193,6 +209,7 @@ class ViewController: NSViewController {
         audioPopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "public.mp3").resized(to: NSSize(width: 24, height: 24))
         pdfPopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "com.adobe.pdf").resized(to: NSSize(width: 24, height: 24))
         officePopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "org.openxmlformats.wordprocessingml.document").resized(to: NSSize(width: 24, height: 24))
+        modelPopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "public.polygon-file-format").resized(to: NSSize(width: 24, height: 24))
         
         imageMenuTableView.getSettings = { self.getSettings() }
         imageMenuTableView.supportedType = .image
@@ -205,7 +222,7 @@ class ViewController: NSViewController {
         if let url = Bundle.main.url(forResource: "test", withExtension: "jpg"), let img = getCGImageInfo(forFile: url) {
             imageMenuTableView.example = img
         } else {
-            imageMenuTableView.example = ImageInfo(file: Bundle.main.bundleURL, width: 1920, height: 1080, dpi: 150, colorMode: "RGB", depth: 8, animated: false)
+            imageMenuTableView.example = ImageInfo(file: Bundle.main.bundleURL, width: 1920, height: 1080, dpi: 150, colorMode: "RGB", depth: 8, animated: false, withAlpha: false)
         }
         
         videoMenuTableView.getSettings = { self.getSettings() }
@@ -289,6 +306,18 @@ class ViewController: NSViewController {
         officeMenuTableView.validTokens = [TokenOfficeSize.self, TokenOfficeMetadata.self, TokenText.self]
         officeMenuTableView.example = WordInfo(file: Bundle.main.bundleURL, charactersCount: 1765, charactersWithSpacesCount: 2000, wordsCount: 123, pagesCount: 3, creator: "sbarex", creationDate: Date(timeIntervalSinceNow: -60*60), modified: "sbarex", modificationDate: Date(timeIntervalSinceNow: 0), title: "Title", subject: "Subject", keywords: ["key1", "key2"], description: "Description", application: "Microsoft Word", width: 21/2.54, height: 29.7/2.54)
         
+        /*
+         TODO: Implement 3D support.
+        modelsMenuTableView.getSettings = { self.getSettings() }
+        modelsMenuTableView.supportedType = .model
+        modelsMenuTableView.sampleTokens = [
+            (label: NSLocalizedString("Metadata: ", comment: ""), tokens: [TokenModelMetadata(mode: .meshCount)])
+        ]
+        modelsMenuTableView.validTokens = [TokenModelMetadata.self, TokenText.self]
+        modelsMenuTableView.example = ModelInfo(file: Bundle.main.url(forResource: "test", withExtension: "obj")!) ?? ModelInfo(file: Bundle.main.bundleURL, meshes: [ModelInfo.Mesh(name: "mesh1", vertexCount: 2040, hasNormals: true, hasTangent: false, hasTextureCoordinate: true, hasVertexColor: false, hasOcclusion: false)])
+        */
+        tabView.removeTabViewItem(tabView.tabViewItems.last!) // Hide the 3D tab.
+        
         enginesTableView.registerForDraggedTypes([NSPasteboard.PasteboardType("private.table-row-engine")])
         updateEngineSegmentedControl()
         
@@ -339,7 +368,7 @@ class ViewController: NSViewController {
         }
     }
     
-    func convertNetwordSharedUrl(_ url: URL) -> URL? {
+    func convertNetworkSharedUrl(_ url: URL) -> URL? {
         var mountPath: URL?
         var testUrl = url.standardizedFileURL
         var path: String = ""
@@ -374,6 +403,7 @@ class ViewController: NSViewController {
         
         let folders = Array(Set(self.folders))
         settings.folders = folders
+        settings.handleExternalDisk = self.isExternalDiskHandled
                 
         settings.isIconHidden = self.isIconHidden
         settings.isInfoOnSubMenu = self.isInfoOnSubmenu
@@ -399,6 +429,9 @@ class ViewController: NSViewController {
         settings.isOfficeHandled = self.isOfficeHandled
         settings.officeMenuItems = self.officeMenuTableView.items
         settings.isOfficeDeepScan = self.isOfficeDeepScan
+        
+        settings.isModelsHandled = self.isModelsHandled
+        settings.modelsMenuItems = self.modelsMenuTableView.items
         
         settings.engines = self.engines
         
@@ -464,6 +497,7 @@ class ViewController: NSViewController {
             self.isTracksGrouped = settings.isTracksGrouped
             
             self.folders = settings.folders.sorted(by: { $0.path < $1.path })
+            self.isExternalDiskHandled = settings.handleExternalDisk
             
             self.isImageHandled = settings.isImagesHandled
             self.imageMenuTableView.items = settings.imageMenuItems
@@ -485,6 +519,10 @@ class ViewController: NSViewController {
             self.officeMenuTableView.items = settings.officeMenuItems
             self.officeMenuTableView.tableView?.reloadData()
             self.isOfficeDeepScan = settings.isOfficeDeepScan
+            
+            self.isModelsHandled = settings.isModelsHandled
+            self.modelsMenuTableView.items = settings.modelsMenuItems
+            self.modelsMenuTableView.tableView?.reloadData()
             
             self.menuWillOpenFile = settings.menuWillOpenFile
             
@@ -682,6 +720,8 @@ extension ViewController: NSMenuDelegate {
         } else if menu.identifier?.rawValue == "mnu_pdf", let e = pdfMenuTableView.example {
             example = e
         } else if menu.identifier?.rawValue == "mnu_office", let e = officeMenuTableView.example {
+            example = e
+        } else if menu.identifier?.rawValue == "mnu_model", let e = modelsMenuTableView.example {
             example = e
         } else {
             return

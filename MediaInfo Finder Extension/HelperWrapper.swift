@@ -74,6 +74,11 @@ class HelperWrapper: SettingsService {
         return odp
     }
     
+    static func getModelInfo(for url: URL) -> ModelInfo? {
+        let modelInfo: ModelInfo? = Self.getInfoFromService(for: url, type: "3d")
+        return modelInfo
+    }
+    
     static internal func getInfoFromService<T: BaseInfo>(for url: URL, type: String) -> T? {
         guard let service = Self.service as? MediaInfoHelperXPCProtocol else {
             return nil
@@ -109,5 +114,12 @@ class HelperWrapper: SettingsService {
         }
         
         return info
+    }
+    
+    static func openFile(url: URL) {
+        guard let service = Self.service as? MediaInfoHelperXPCProtocol else {
+            return
+        }
+        service.openFile(url: url)
     }
 }

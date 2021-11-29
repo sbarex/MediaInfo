@@ -78,11 +78,11 @@ enum PrintUnit: Int, CaseIterable {
 }
 
 class Settings {
-    static let Version = 1.5
+    static let Version = 1.6
     static func getStandardSettings() -> Settings {
         let settings = Settings(fromDict: [:])
         settings.imageMenuItems = [
-            MenuItem(image: "image", template: "[[size]], [[color-depth]] [[is-animated]]"),
+            MenuItem(image: "image", template: "[[size]], [[color-depth]] [[is-alpha]] [[is-animated]]"),
             MenuItem(image: "ratio", template: "[[ratio]], [[resolution]]"),
             MenuItem(image: "color", template: "[[color-depth]]"),
             MenuItem(image: "printer", template: "[[dpi]]"),
@@ -143,6 +143,15 @@ class Settings {
             MenuItem(image: "size", template: "[[filesize]]"),
         ]
         
+        settings.modelsMenuItems = [
+            MenuItem(image: "3d", template: "[[mesh]], [[vertex]]"),
+            MenuItem(image: "3d", template: "[[normal]], [[tangent]]"),
+            MenuItem(image: "3d", template: "[[texture-coords]]"),
+            MenuItem(image: "3d", template: "[[colors]], [[occlusion]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "size", template: "[[filesize]]"),
+        ]
+        
         return settings
     }
     
@@ -184,7 +193,11 @@ class Settings {
     var isOfficeDeepScan = true
     var officeMenuItems: [MenuItem] = []
     
+    var isModelsHandled = true
+    var modelsMenuItems: [MenuItem] = []
+    
     var folders: [URL] = []
+    var handleExternalDisk = false
     
     var engines: [MediaEngine] = [.ffmpeg, .coremedia, .metadata]
     
@@ -228,11 +241,37 @@ class Settings {
         self.audioMenuItems = processItems(defaultsDomain["audio_items"])
         
         self.isPDFHandled = defaultsDomain["pdf_handled"] as? Bool ?? true
-        self.pdfMenuItems   = processItems(defaultsDomain["pdf_items"])
+        self.pdfMenuItems = processItems(defaultsDomain["pdf_items"])
         
         self.isOfficeHandled = defaultsDomain["office_handled"] as? Bool ?? true
         self.isOfficeDeepScan = defaultsDomain["office_deep_scan"] as? Bool ?? true
-        self.officeMenuItems   = processItems(defaultsDomain["office_items"])
+        self.officeMenuItems = processItems(defaultsDomain["office_items"])
+        
+        self.isModelsHandled = defaultsDomain["3d_handled"] as? Bool ?? true
+        self.modelsMenuItems = processItems(defaultsDomain["3d_items"])
+        
+        if !self.isInfoOnMainItem {
+            let standard = Self.getStandardSettings()
+            
+            if self.imageMenuItems.isEmpty {
+                self.imageMenuItems = standard.imageMenuItems
+            }
+            if self.videoMenuItems.isEmpty {
+                self.videoMenuItems = standard.videoMenuItems
+            }
+            if self.audioMenuItems.isEmpty {
+                self.audioMenuItems = standard.audioMenuItems
+            }
+            if self.pdfMenuItems.isEmpty {
+                self.pdfMenuItems = standard.pdfMenuItems
+            }
+            if self.officeMenuItems.isEmpty {
+                self.officeMenuItems = standard.officeMenuItems
+            }
+            if self.modelsMenuItems.isEmpty {
+                self.modelsMenuItems = standard.modelsMenuItems
+            }
+        }
         
         self.menuWillOpenFile = defaultsDomain["menu-open"] as? Bool ?? true
         
@@ -259,12 +298,14 @@ class Settings {
         if let d = defaultsDomain["folders"] as? [String] {
             self.folders = d.sorted().map({ URL(fileURLWithPath: $0 )})
         }
+        self.handleExternalDisk = (defaultsDomain["external-disk"] as? Bool) ?? false
     }
     
     func toDictionary() -> [String: AnyHashable] {
         var dict: [String: AnyHashable] = [:]
         let folders = Array(Set(self.folders.map({ $0.path })))
         dict["folders"] = folders
+        dict["external-disk"] = self.handleExternalDisk
         
         dict["version"] = Settings.Version
         
@@ -286,11 +327,14 @@ class Settings {
         dict["audio_items"] = self.audioMenuItems.map({ return [$0.image, $0.template]})
         
         dict["pdf_handled"] = self.isPDFHandled
-        dict["pdf_items"]   = self.pdfMenuItems.map({ return [$0.image, $0.template]})
+        dict["pdf_items"] = self.pdfMenuItems.map({ return [$0.image, $0.template]})
         
         dict["office_handled"] = self.isOfficeHandled
         dict["office_deep_scan"] = self.isOfficeDeepScan
-        dict["office_items"]   = self.officeMenuItems.map({ return [$0.image, $0.template]})
+        dict["office_items"] = self.officeMenuItems.map({ return [$0.image, $0.template]})
+        
+        dict["3d_handled"] = self.isModelsHandled
+        dict["3d_items"] = self.modelsMenuItems.map({ return [$0.image, $0.template]})
         
         dict["menu-open"]   = self.menuWillOpenFile
         
