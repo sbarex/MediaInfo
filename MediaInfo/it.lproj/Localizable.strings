@@ -72,6 +72,8 @@
 "File size." = "Dimensioni del file.";
 "Animated/static." = "\"Animata\" o \"Statica\"";
 "Animated status." = "Stato di animazione dell’immagine.";
+"With alpha channel." = "Indica se l'immagine ha un canale alpha.";
+"With/Without alpha channel." = "Stato di presenza del canale alpha.";
 "File name." = "Nome del file";
 "File extension." = "Estensione del file";
 "Codec (short name)." = "Codec (nome breve).";
@@ -201,3 +203,16 @@
 "Office text document" = "Documento di testo";
 "Office spreadsheet" = "Foglio di calcolo";
 "Office presentation" = "Presentazione";
+
+"3D model" = "Modello 3D";
+"3D points" = "Punti 3D";
+"3D lines" = "Linee 3D";
+"3D triangle faces" = "Facce 3D triangolari";
+"3D triangle stripe" = "Facce 3D triangolari (fasce)";
+"3D quads faces" = "Facce 3D quadrangolari";
+"3D variable faces" = "Facce 3D poligonali";
+"3D normals" = "3D vettore normale";
+"3D tangents" = "3D vettore tangente";
+"3D color per vertex" = "3D colori per vertice";
+"3D texture coords" = "3D coordinate per texture";
+"3D occlusion per vertex" = "3D occlusion per vertice";

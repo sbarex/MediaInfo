@@ -91,8 +91,12 @@ func getCGImageInfo(forFile url: URL) -> ImageInfo? {
     // Get the filesize, because it's not always present in the image properties dictionary :/
     // file_size = get_file_size(url)
     
+    n = getKey(kCGImagePropertyHasAlpha, inDictionary: img_properties) ?? 0 as CFNumber
+    var alpha: Int = 0
+    CFNumberGetValue(n, CFNumberType.sInt8Type, &alpha)
+    
     let images = CGImageSourceGetCount(img_src)
-    return ImageInfo(file: url, width: width, height: height, dpi: dpi, colorMode: color, depth: depth, animated: images > 1)
+    return ImageInfo(file: url, width: width, height: height, dpi: dpi, colorMode: color, depth: depth, animated: images > 1, withAlpha: alpha > 0)
 }
 
 func codecForVideoCode(_ code: FourCharCode?) -> String? {

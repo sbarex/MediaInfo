@@ -16,6 +16,7 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
     let isAnimated: Bool
     let file: URL
     let fileSize: Int64
+    let withAlpha: Bool
     
     var color_image_name: String {
         let color = colorMode.uppercased()
@@ -34,7 +35,7 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
         }
     }
     
-    init(file: URL, width: Int, height: Int, dpi: Int, colorMode: String, depth: Int, animated: Bool) {
+    init(file: URL, width: Int, height: Int, dpi: Int, colorMode: String, depth: Int, animated: Bool, withAlpha: Bool) {
         self.file = file
         self.fileSize = Self.getFileSize(file) ?? -1
         self.dpi = dpi
@@ -46,6 +47,7 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
         }
         self.depth = depth
         self.isAnimated = animated
+        self.withAlpha = withAlpha
         
         super.init(width: width, height: height)
     }
@@ -61,6 +63,7 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
         self.colorMode = coder.decodeObject(forKey: "colorMode") as? String ?? ""
         self.depth = coder.decodeInteger(forKey: "depth")
         self.isAnimated = coder.decodeBool(forKey: "isAnimated")
+        self.withAlpha = coder.decodeBool(forKey: "withAlpha")
         
         super.init(coder: coder)
     }
@@ -71,6 +74,7 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
         coder.encode(self.colorMode, forKey: "colorMode")
         coder.encode(self.depth, forKey: "depth")
         coder.encode(self.isAnimated, forKey: "isAnimated")
+        coder.encode(self.withAlpha, forKey: "withAlpha")
         
         super.encode(with: coder)
     }
@@ -93,6 +97,26 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
                 if let animated = v as? Bool, animated {
                     isFilled = true
                     return NSLocalizedString("animated", tableName: "LocalizableExt", comment: "")
+                } else {
+                    isFilled = false
+                    return ""
+                }
+            }
+        case "[[alpha]]":
+            return self.format(value: values?["is-alpha"] ?? withAlpha, isFilled: &isFilled) { v, isFilled in
+                if let animated = v as? Bool {
+                    isFilled = true
+                    return NSLocalizedString(animated ? "transparent" : "opaque", tableName: "LocalizableExt", comment: "")
+                } else {
+                    isFilled = false
+                    return useEmptyData ? "N/D" : ""
+                }
+            }
+        case "[[is-alpha]]":
+            return self.format(value: values?["is-alpha"] ?? withAlpha, isFilled: &isFilled) { v, isFilled in
+                if let withAlpha = v as? Bool, withAlpha {
+                    isFilled = true
+                    return NSLocalizedString("with alpha channel", tableName: "LocalizableExt", comment: "")
                 } else {
                     isFilled = false
                     return ""

@@ -27,6 +27,9 @@
 // MARK: -
 "animated" = "animata";
 "static" = "statica";
+"with alpha channel" = "con trasparenza";
+"transparent" = "trasparente";
+"opaque" = "opaca";
 
 "frames" = "fotogrammi";
 "language" = "lingua";
@@ -100,3 +103,17 @@
 "stereo" = "stereo";
 "1 channel" = "1 canale";
 "%d channels" = "%d canali";
+
+"1 Mesh" = "1 mesh";
+"%d Meshes" = "%d mesh";
+"%@ Vertices" = "%@ vertici";
+"with normals" = "normali presenti";
+"without normals" = "normali assenti";
+"with tangents" = "tangenti presenti";
+"without tangents" = "tangenti assenti";
+"with texture coordinates" = "coordinate texture presenti";
+"without texture coordinates" = "coordinate texture assenti";
+"with vertex colors" = "vertici con colori";
+"without vertex colors" = "veritici privi di colore";
+"with occlusion" = "ambient occlusion per vertici";
+"without occlusion" = "ambient occlusion assente";

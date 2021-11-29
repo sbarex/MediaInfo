@@ -13,6 +13,8 @@ class TokenImageExtra: Token {
         case filesize = 1
         case animated
         case is_animated
+        case alpha
+        case is_alpha
         case fileName
         case fileExtension
         case paper
@@ -26,6 +28,8 @@ class TokenImageExtra: Token {
             case .filesize: return "12 MB"
             case .animated: return NSLocalizedString("animated", tableName: "LocalizableExt", comment: "") + " / " + NSLocalizedString("static", tableName: "LocalizableExt", comment: "")
             case .is_animated: return NSLocalizedString("animated", tableName: "LocalizableExt", comment: "")
+            case .alpha: return NSLocalizedString("transparent", tableName: "LocalizableExt", comment: "") + " / " + NSLocalizedString("opaque", tableName: "LocalizableExt", comment: "")
+            case .is_alpha: return NSLocalizedString("with alpha channel", tableName: "LocalizableExt", comment: "")
             case .fileName: return "filename.ext"
             case .fileExtension: return "ext"
             case .paper: return "A4"
@@ -37,6 +41,8 @@ class TokenImageExtra: Token {
             case .filesize: return "[[filesize]]"
             case .animated: return "[[animated]]"
             case .is_animated: return "[[is-animated]]"
+            case .alpha: return "[[alpha]]"
+            case .is_alpha: return "[[is-alpha]]"
             case .fileName: return "[[file-name]]"
             case .fileExtension: return "[[file-ext]]"
             case .paper: return "[[paper]]"
@@ -48,6 +54,8 @@ class TokenImageExtra: Token {
             case .filesize: return NSLocalizedString("File size.", comment: "")
             case .animated: return NSLocalizedString("Animated/static.", comment: "")
             case .is_animated: return NSLocalizedString("Animated status.", comment: "")
+            case .alpha: return NSLocalizedString("With/Without alpha channel.", comment: "")
+            case .is_alpha: return NSLocalizedString("With alpha channel.", comment: "")
             case .fileName: return NSLocalizedString("File name.", comment: "")
             case .fileExtension: return NSLocalizedString("File extension.", comment: "")
             case .paper: return NSLocalizedString("File extension.", comment: "")
@@ -59,6 +67,8 @@ class TokenImageExtra: Token {
             case "[[filesize]]": self = .filesize
             case "[[animated]]": self = .animated
             case "[[is-animated]]": self = .is_animated
+            case "[[alpha]]": self = .alpha
+            case "[[is-alpha]]": self = .is_alpha
             case "[[file-name]]": self = .fileName
             case "[[file-ext]]": self = .fileExtension
             case "[[paper]]": self = .paper

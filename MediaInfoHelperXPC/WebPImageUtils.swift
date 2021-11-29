@@ -47,5 +47,5 @@ func getWebPImageInfo(forFile file: URL) -> ImageInfo? {
     let width: size_t = size_t(webp_cfg.input.width)
     let height: size_t = size_t(webp_cfg.input.height)
 
-    return ImageInfo(file: file, width: width, height: height, dpi: 0, colorMode: webp_cfg.input.has_alpha != 0 ? "RGBA" : "RGB", depth: webp_cfg.input.has_alpha != 0 ? 32 : 24, animated: webp_cfg.input.has_animation > 0)
+    return ImageInfo(file: file, width: width, height: height, dpi: 0, colorMode: webp_cfg.input.has_alpha != 0 ? "RGBA" : "RGB", depth: webp_cfg.input.has_alpha != 0 ? 32 : 24, animated: webp_cfg.input.has_animation > 0, withAlpha: webp_cfg.input.has_alpha > 0)
 }

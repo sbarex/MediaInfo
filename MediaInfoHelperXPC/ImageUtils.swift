@@ -119,7 +119,7 @@ func getNetPBMImageInfo(forFile url: URL) -> ImageInfo? {
         bytesRead = getline(&lineByteArrayPointer, &lineCap, filePointer)
     }
     
-    return ImageInfo(file: url, width: width, height: height, dpi: 0, colorMode: color, depth: depth, animated: false)
+    return ImageInfo(file: url, width: width, height: height, dpi: 0, colorMode: color, depth: depth, animated: false, withAlpha: false)
 }
 
 /*
@@ -262,7 +262,7 @@ func getSVGImageInfo(forFile file: URL) -> ImageInfo? {
     parser.delegate = delegate
     parser.parse()
     if let w = delegate.width, let h = delegate.height {
-        return ImageInfo(file: file, width: w, height: h, dpi: 0, colorMode: "", depth: 24, animated: false)
+        return ImageInfo(file: file, width: w, height: h, dpi: 0, colorMode: "", depth: 24, animated: false, withAlpha: false)
     } else {
         return nil
     }

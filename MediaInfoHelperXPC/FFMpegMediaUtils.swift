@@ -643,5 +643,17 @@ func getFFMpegImageInfo(forFile file: URL) -> ImageInfo? {
     guard let video = getFFMpegMediaStreams(forFile: file).first(where: {$0 is VideoTrackInfo}) as? VideoTrackInfo else {
         return nil
     }
-    return ImageInfo(file: file, width: video.width, height: video.height, dpi: 0, colorMode: "", depth: 0, animated: video.frames > 1)
+    
+    let AV_PIX_FMT_FLAG_ALPHA = 1 << 7
+    
+    let isAlpha: Bool
+    if video.pixel_format?.rawValue ?? 0 == AV_PIX_FMT_PAL8.rawValue {
+        isAlpha = true
+    } else if video.pixel_format?.rawValue ?? 0 & AV_PIX_FMT_FLAG_ALPHA != 0 {
+        isAlpha = true
+    } else {
+        isAlpha = false
+    }
+    
+    return ImageInfo(file: file, width: video.width, height: video.height, dpi: 0, colorMode: "", depth: 0, animated: video.frames > 1, withAlpha: isAlpha)
 }

@@ -40,8 +40,12 @@ func getMetadataImageInfo(forFile url: URL) -> ImageInfo? {
     if let n = MDItemCopyAttribute(metadata, kMDItemBitsPerSample) {
         CFNumberGetValue((n as! CFNumber), CFNumberType.intType, &bit)
     }
+    var alpha = false
+    if let n = MDItemCopyAttribute(metadata, kMDItemHasAlphaChannel) {
+        alpha = CFBooleanGetValue((n as! CFBoolean))
+    }
     
-    return ImageInfo(file: url, width: width, height: height, dpi: dpi, colorMode: colorSpace, depth: bit, animated: false)
+    return ImageInfo(file: url, width: width, height: height, dpi: dpi, colorMode: colorSpace, depth: bit, animated: false, withAlpha: alpha)
 }
 
 
