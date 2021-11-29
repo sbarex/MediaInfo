@@ -7,6 +7,7 @@
 
 #import "webp/decode.h"
 
+#include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
 #include "libavformat/avlanguage.h"
 
