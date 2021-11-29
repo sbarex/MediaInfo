@@ -1,10 +1,16 @@
-#  MediaInfo - MacOS Finder Sync Extension
+<p align="center">
+  <img src="Assets/icon.png" width="128" height="128" alt="logo" />
+</p>
+
+
+# MediaInfo - MacOS Finder Sync Extension
 
 Extension to display information about multimedia (images, videos and audio), PDF and Office files in the Finder contextual menu.
 
-![contextual menu](menu.png)
+![contextual menu](Assets/menu.png)
 
 > **MediaInfo is distributed in the hope that it will be useful but WITHOUT ANY WARRANTY.**
+
 
 ## Installation
 
@@ -12,13 +18,13 @@ Head over to the [releases](https://github.com/sbarex/MediaInfo/releases) page t
 
 Move the downloaded app on your Applications folder and launch it to set the monitored folders and the other settings. Then you need to enable the associated Finder Sync Extension on the System Preferences / Extensions.
 
-![System preferences/Extensions](extensions.png)
+![System preferences/Extensions](Assets/extensions.png)
 
 Now right click (or `control` click) on an image or video within a monitored folder to see the contextual menu with the media information.
 
 | Image menu | Video Menu |
 |:---------|:--------- |
-| ![Image settings](menu_image.png) | ![Media settings](menu_video.png) |
+| ![Image settings](Assets/menu_image.png) | ![Media settings](Assets/menu_video.png) |
 
 
 **The precompiled application is not notarized or signed.** The application is compiled as universal binary (Intel and Apple Silicon processor).
@@ -38,7 +44,8 @@ This will resolve the error of an unsigned/damaged application when launching th
 
 **When the monitored folders are changed or when the Finder Sync extension is restarted, the System may display a confirmation warning to allow read access to the files of the monitored folders. _Access must be granted for the Finder extension to work._**
 
-![Grant access](grant_access.png)
+![Grant access](Assets/grant_access.png)
+
 
 ## Settings
 
@@ -46,11 +53,11 @@ With the Application you can customize the monitored folders and the properties 
 
 **Information about media files is shown only for files within the monitored folders (and their subfolders).**
 
-![Folder settings](settings_folder.png)
+![Folder settings](Assets/settings_folder.png)
 
 The _General_ tab allow to set some common options:
 
-![General settings](settings_general.png)
+![General settings](Assets/settings_general.png)
 
 
 |**Option**|**Description**|
@@ -80,11 +87,12 @@ You can also specify an explanatory icon for each item. Some icons (_image_, _vi
 
 Use a single dash (`-`) to create a menu separator. Please note that for a macOS limitation the separator item will not be shown with the usual dividing line but with an empty menu item.  
 
-![Customize a menu item](settings_menu_item.png)
+![Customize a menu item](Assets/settings_menu_item.png)
+
 
 ### Images
 
-![Image settings](settings_image.png)
+![Image settings](Assets/settings_image.png)
 
 Available information:
 |**placeholder**|**description**|**example**|
@@ -117,7 +125,7 @@ Supported image formats:
 
 ### Video files
 
-![Video settings](settings_video.png)
+![Video settings](Assets/settings_video.png)
 
 Available information:
 |**placeholder**|**description**|**example**| |
@@ -165,9 +173,10 @@ Supported video format:
 - video handled by the MacOS via CoreMedia
 - video supported by `ffmpeg` library.
 
+
 ### Audio files
 
-![Audio settings](settings_audio.png)
+![Audio settings](Assets/settings_audio.png)
 
 Available information:
 |**placeholder**|**description**|**example**|
@@ -198,9 +207,10 @@ Supported audio format:
 - audio handled by the MacOS via CoreMedia
 - audio supported by `ffmpeg` library.
 
+
 ### PDF documents
 
-![PDF settings](settings_pdf.png)
+![PDF settings](Assets/settings_pdf.png)
 
 Available information:
 |**placeholder**|**description**|**example**|
@@ -229,12 +239,16 @@ Available information:
 |file name|Name of the file.|_image.jpg_|
 |file extension|Extension of the file.|_jpg_|
 
+Adobe Illustrator `.ai` files are also supported.
+
+
 ### Office files
+
 The following file formats are supported: `.docx`, `.rtfx`, `.pptx`, `.odt`, `.ods`, .`odp` (standard office files based on the `XML` format).
 
 Extracting some metadata requires a deep scan of the main file. This can cause a delay in the display of the context menu of office files. 
 
-![Office settings](settings_office.png)
+![Office settings](Assets/settings_office.png)
 
 Available information:
 |**placeholder**|**description**|**example**|**require deep scan**|
@@ -258,6 +272,20 @@ Available information:
 |file name|Name of the file.|_image.jpg_||
 |file extension|Extension of the file.|_jpg_||
 
+
+### 3D Model files
+
+The following file formats are supported: `.abc` (Alembic), `.usd`, `.usda`, `.usdc`, `.usdz` (Universal Scene Description), `.ply` (Polygon), .`obj` (Wavefront Object), `.stl` (Standard Tessellation Language).
+
+![3D model settings](Assets/settings_3d.png)
+
+Available information:
+|**placeholder**|**description**|**example**|
+|:----|:----|:----|
+|mesh count|Number of meshes in the file.|_1 Mesh_|
+|meshes|Submenu with all meshes. For every mesh is show the geometry type (points, lines, triangles, triangles stripe, quads, polygonal), number of vertex, status of normal, tangents, color per vertex, texture coordinates, ambient occlusion per vertex.||
+
+
 ## Build from source
 
 Clone the repository (do not download the source code because break the required git submodule):
@@ -274,6 +302,7 @@ The required `FFMpeg` and `WebP` libraries are linked inside the extension and c
 The application uses two XPC process:
 - _MediaInfo Settings XPC_: used by the main application to store the settings. This bypass the _AppGroup_ functionality that require a signed app to works.
 - _MediaInfo Helper XPC_: used by the Finder Extension to read the settings an analyze the selected file. The XPC process can access to files within mounted disks (external or network disks) that would not be accessible by the MediaInfo Finder Extension.
+
 
 ## Credits
 
