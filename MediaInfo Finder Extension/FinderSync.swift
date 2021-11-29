@@ -24,13 +24,38 @@ class FinderSync: FIFinderSync {
         // FIFinderSyncController.default().setBadgeImage(NSImage(named: NSImage.cautionName)!, label: "Status Two", forBadgeIdentifier: "Two")
         
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(self.handleSettingsChanged(_:)), name: .MediaInfoSettingsChanged, object: nil)
+        
+        // Monitor the mounted volumes.
+        let notificationCenter = NSWorkspace.shared.notificationCenter
+        notificationCenter.addObserver(self, selector: #selector(self.handleMount(_:)), name: NSWorkspace.didMountNotification, object: nil)
+        notificationCenter.addObserver(self, selector: #selector(self.handleUnmount(_:)), name: NSWorkspace.didMountNotification, object: nil)
     }
     
     deinit {
         DistributedNotificationCenter.default().removeObserver(self, name: .MediaInfoSettingsChanged, object: nil)
+        NSWorkspace.shared.notificationCenter.removeObserver(self, name: NSWorkspace.didMountNotification, object: nil)
+        NSWorkspace.shared.notificationCenter.removeObserver(self, name: NSWorkspace.didUnmountNotification, object: nil)
     }
     
-    func convertNetwordSharedUrl(_ url: URL) -> URL? {
+    @objc func handleMount(_ notification: NSNotification) {
+        guard self.settings.handleExternalDisk, let volumeURL = notification.userInfo?[NSWorkspace.volumeURLUserInfoKey] as? URL else {
+            return
+        }
+        let finderSync = FIFinderSyncController.default()
+        finderSync.directoryURLs.insert(volumeURL)
+    }
+    
+    @objc func handleUnmount(_ notification: NSNotification) {
+        guard self.settings.handleExternalDisk else {
+            return
+        }
+        let finderSync = FIFinderSyncController.default()
+        if let volumeURL = notification.userInfo?[NSWorkspace.volumeURLUserInfoKey] as? URL, finderSync.directoryURLs.contains(volumeURL) {
+            finderSync.directoryURLs.remove(volumeURL)
+        }
+    }
+    
+    func convertNetworkSharedUrl(_ url: URL) -> URL? {
         var mountPath: URL?
         var testUrl = url.standardizedFileURL
         var path: String = ""
@@ -66,9 +91,22 @@ class FinderSync: FIFinderSync {
             
             // Set up the directory we are syncing.
             
-            // let folders = Set(settings.folders.map({ self.convertNetwordSharedUrl($0) ?? $0 }))
-            let folders = Set(settings.folders)
+            // let folders = Set(settings.folders.map({ self.convertNetworkSharedUrl($0) ?? $0 }))
+            var folders = Set(settings.folders)
             NSLog("MediaInfo FinderSync watching folders:\n %@", folders.map({ $0.path }).joined(separator: "\n"))
+            
+            if settings.handleExternalDisk {
+                let keys: [URLResourceKey] = [.volumeNameKey, .volumeIsRemovableKey, .volumeIsEjectableKey]
+                if let paths = FileManager.default.mountedVolumeURLs(includingResourceValuesForKeys: keys, options: [.skipHiddenVolumes]) {
+                    for url in paths {
+                        let components = url.pathComponents
+                        if components.count > 1 && components[1] == "Volumes" {
+                            folders.insert(url)
+                        }
+                    }
+                }
+            }
+            
             FIFinderSyncController.default().directoryURLs = folders
             /*
             for folder in folders {
@@ -118,7 +156,7 @@ class FinderSync: FIFinderSync {
     
     @objc internal func fakeMenuAction(_ sender: NSMenuItem) {
         if settings.menuWillOpenFile, let file = currentFile {
-            NSWorkspace.shared.open(file)
+            HelperWrapper.openFile(url: file)
         }
     }
     
@@ -131,14 +169,16 @@ class FinderSync: FIFinderSync {
             return nil
         }
             
+        // Specific menu item properties are used: title, action, image, and enabled. Starting in 10.11: tag, state, and indentationLevel also work, and submenus are allowed.
+        
         currentFile = item
-        if settings.isImagesHandled && UTTypeConformsTo(uti as CFString, kUTTypeImage), let menu = getMenuForImage(atURL: item) {
+        if settings.isPDFHandled && (UTTypeConformsTo(uti as CFString, kUTTypePDF) || UTTypeConformsTo(uti as CFString, "com.adobe.illustrator.ai-image" as CFString)), let menu = getMenuForPDF(atURL: item) {
+            return menu
+        } else if settings.isImagesHandled && UTTypeConformsTo(uti as CFString, kUTTypeImage), let menu = getMenuForImage(atURL: item) {
             return menu
         } else if settings.isVideoHandled && UTTypeConformsTo(uti as CFString, kUTTypeMovie), let menu = getMenuForVideo(atURL: item) {
             return menu
         } else if settings.isAudioHandled && UTTypeConformsTo(uti as CFString, kUTTypeAudio), let menu = getMenuForAudio(atURL: item) {
-            return menu
-        } else if settings.isPDFHandled && UTTypeConformsTo(uti as CFString, kUTTypePDF), let menu = getMenuForPDF(atURL: item) {
             return menu
         } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.openxmlformats.wordprocessingml.document" as CFString), let menu = getMenuForWordDocument(atURL: item) {
             return menu
@@ -151,6 +191,8 @@ class FinderSync: FIFinderSync {
         } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.oasis-open.opendocument.spreadsheet" as CFString), let menu = getMenuForOpenSpreadsheet(atURL: item) {
             return menu
         } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.oasis-open.opendocument.presentation" as CFString), let menu = getMenuForOpenPresentation(atURL: item) {
+            return menu
+        } else if settings.isModelsHandled && UTTypeConformsTo(uti as CFString, "public.3d-content" as CFString), let menu = getMenuForModel(atURL: item) {
             return menu
         } else {
             currentFile = nil
@@ -170,6 +212,9 @@ class FinderSync: FIFinderSync {
         for (i, item) in menu.items.enumerated() {
             if let m = item.submenu {
                 sanitizeMenu(m)
+                if m.items.isEmpty {
+                    item.submenu = nil
+                }
             } else {
                 if item.title.isEmpty && !item.isEnabled {
                     if n + 1 == i {
@@ -256,6 +301,13 @@ class FinderSync: FIFinderSync {
     func getMenuForOpenPresentation(atURL item: URL) -> NSMenu? {
         let xls_info = HelperWrapper.getOpenPresentationInfo(for: item)
         let menu = xls_info?.getMenu(withSettings: settings)
+        sanitizeMenu(menu)
+        return menu
+    }
+
+    func getMenuForModel(atURL item: URL) -> NSMenu? {
+        let model_info = HelperWrapper.getModelInfo(for: item)
+        let menu = model_info?.getMenu(withSettings: settings)
         sanitizeMenu(menu)
         return menu
     }

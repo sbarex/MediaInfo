@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="18122" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="19455" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="18122"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="19455"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -199,8 +199,8 @@
         <scene sceneID="hIz-AP-VOD">
             <objects>
                 <viewController title="MediaInfo Preferences" id="XfG-lQ-9wD" customClass="ViewController" customModule="MediaInfoEx" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" id="m2S-Jp-Qdl">
-                        <rect key="frame" x="0.0" y="0.0" width="553" height="507"/>
+                    <view key="view" misplaced="YES" id="m2S-Jp-Qdl">
+                        <rect key="frame" x="0.0" y="0.0" width="585" height="489"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="gJo-e5-mLS">
@@ -215,7 +215,7 @@
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="BN3-cE-auX">
-                                <rect key="frame" x="476" y="13" width="64" height="32"/>
+                                <rect key="frame" x="512" y="13" width="64" height="32"/>
                                 <buttonCell key="cell" type="push" title="Save" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="3ol-h5-zyQ">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -228,7 +228,7 @@ DQ
                                 </connections>
                             </button>
                             <tabView horizontalHuggingPriority="249" verticalHuggingPriority="249" misplaced="YES" initialItem="kZH-lG-0GR" translatesAutoresizingMaskIntoConstraints="NO" id="haS-fN-iLJ">
-                                <rect key="frame" x="13" y="50" width="531" height="443"/>
+                                <rect key="frame" x="13" y="32" width="531" height="443"/>
                                 <font key="font" metaFont="system"/>
                                 <tabViewItems>
                                     <tabViewItem label="Folders" identifier="" id="kZH-lG-0GR">
@@ -237,13 +237,13 @@ DQ
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <scrollView verticalHuggingPriority="249" verticalCompressionResistancePriority="749" autohidesScrollers="YES" horizontalLineScroll="38" horizontalPageScroll="10" verticalLineScroll="38" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TiM-Wm-0vj">
-                                                    <rect key="frame" x="20" y="48" width="475" height="295"/>
+                                                    <rect key="frame" x="20" y="48" width="503" height="295"/>
                                                     <clipView key="contentView" id="pg6-I8-4zN">
-                                                        <rect key="frame" x="1" y="1" width="473" height="293"/>
+                                                        <rect key="frame" x="1" y="1" width="501" height="293"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <subviews>
                                                             <tableView focusRingType="none" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" typeSelect="NO" rowHeight="36" viewBased="YES" id="qlN-dX-2UK">
-                                                                <rect key="frame" x="0.0" y="0.0" width="473" height="293"/>
+                                                                <rect key="frame" x="0.0" y="0.0" width="501" height="293"/>
                                                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                                 <size key="intercellSpacing" width="3" height="2"/>
                                                                 <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -346,24 +346,37 @@ DQ
                                                     </connections>
                                                 </segmentedControl>
                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="iOU-R1-5ZC">
-                                                    <rect key="frame" x="18" y="351" width="479" height="16"/>
+                                                    <rect key="frame" x="18" y="351" width="507" height="16"/>
                                                     <textFieldCell key="cell" lineBreakMode="clipping" title="Monitored folders:" id="leZ-K3-ufv">
                                                         <font key="font" usesAppearanceFont="YES"/>
                                                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                     </textFieldCell>
                                                 </textField>
+                                                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="7SF-UQ-eaN">
+                                                    <rect key="frame" x="373" y="21" width="150" height="18"/>
+                                                    <buttonCell key="cell" type="check" title="Handle external disk" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="I2d-2L-day">
+                                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <binding destination="XfG-lQ-9wD" name="value" keyPath="self.isExternalDiskHandled" id="SRp-k1-7lM"/>
+                                                    </connections>
+                                                </button>
                                             </subviews>
                                             <constraints>
+                                                <constraint firstItem="7SF-UQ-eaN" firstAttribute="trailing" secondItem="TiM-Wm-0vj" secondAttribute="trailing" id="3xX-zv-Hsv"/>
                                                 <constraint firstItem="iOU-R1-5ZC" firstAttribute="top" secondItem="d4p-JA-fML" secondAttribute="top" constant="20" symbolic="YES" id="4NS-PX-WE8"/>
                                                 <constraint firstAttribute="trailing" secondItem="iOU-R1-5ZC" secondAttribute="trailing" constant="20" symbolic="YES" id="Gf5-1O-bQF"/>
                                                 <constraint firstItem="KCe-hb-UkW" firstAttribute="leading" secondItem="d4p-JA-fML" secondAttribute="leading" constant="20" symbolic="YES" id="KaV-yn-h9z"/>
                                                 <constraint firstItem="TiM-Wm-0vj" firstAttribute="top" secondItem="iOU-R1-5ZC" secondAttribute="bottom" constant="8" symbolic="YES" id="KiA-n1-wT6"/>
+                                                <constraint firstItem="7SF-UQ-eaN" firstAttribute="centerY" secondItem="KCe-hb-UkW" secondAttribute="centerY" id="Ok9-bv-ncY"/>
                                                 <constraint firstItem="KCe-hb-UkW" firstAttribute="top" secondItem="TiM-Wm-0vj" secondAttribute="bottom" constant="8" symbolic="YES" id="QjP-mn-9a8"/>
                                                 <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="KCe-hb-UkW" secondAttribute="trailing" constant="20" symbolic="YES" id="QxI-F6-IIM"/>
                                                 <constraint firstAttribute="bottom" secondItem="KCe-hb-UkW" secondAttribute="bottom" constant="20" symbolic="YES" id="S1j-jg-ULW"/>
                                                 <constraint firstAttribute="trailing" secondItem="TiM-Wm-0vj" secondAttribute="trailing" constant="20" symbolic="YES" id="ift-2b-c8v"/>
                                                 <constraint firstItem="iOU-R1-5ZC" firstAttribute="leading" secondItem="d4p-JA-fML" secondAttribute="leading" constant="20" symbolic="YES" id="mqR-xh-X3d"/>
+                                                <constraint firstItem="7SF-UQ-eaN" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="KCe-hb-UkW" secondAttribute="trailing" constant="8" symbolic="YES" id="y40-X9-uTH"/>
                                                 <constraint firstItem="TiM-Wm-0vj" firstAttribute="leading" secondItem="d4p-JA-fML" secondAttribute="leading" constant="20" symbolic="YES" id="zaW-f1-ckk"/>
                                             </constraints>
                                         </view>
@@ -374,7 +387,7 @@ DQ
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="4zc-YQ-A7w">
-                                                    <rect key="frame" x="18" y="310" width="471" height="18"/>
+                                                    <rect key="frame" x="18" y="300" width="451" height="18"/>
                                                     <buttonCell key="cell" type="check" title="Show info on a submenu" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="miM-mB-nHF">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="system"/>
@@ -384,7 +397,7 @@ DQ
                                                     </connections>
                                                 </button>
                                                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="jRX-qu-hpZ">
-                                                    <rect key="frame" x="18" y="360" width="471" height="18"/>
+                                                    <rect key="frame" x="18" y="350" width="451" height="18"/>
                                                     <buttonCell key="cell" type="check" title="Show menu icons" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="cYX-CY-lD3">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="system"/>
@@ -398,7 +411,7 @@ DQ
                                                     </connections>
                                                 </button>
                                                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="arr-OG-Fv8">
-                                                    <rect key="frame" x="18" y="209" width="471" height="18"/>
+                                                    <rect key="frame" x="18" y="199" width="451" height="18"/>
                                                     <buttonCell key="cell" type="check" title="Allow rounded aspect ratio" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="2uO-lI-Axl">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="system"/>
@@ -408,7 +421,7 @@ DQ
                                                     </connections>
                                                 </button>
                                                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="2GA-IJ-HgR">
-                                                    <rect key="frame" x="42" y="288" width="447" height="18"/>
+                                                    <rect key="frame" x="42" y="278" width="427" height="18"/>
                                                     <buttonCell key="cell" type="check" title="Show main info on the submenu title" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="pfb-Pi-02t">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="system"/>
@@ -419,7 +432,7 @@ DQ
                                                     </connections>
                                                 </button>
                                                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="GZj-Fi-caD">
-                                                    <rect key="frame" x="42" y="266" width="447" height="18"/>
+                                                    <rect key="frame" x="42" y="256" width="427" height="18"/>
                                                     <buttonCell key="cell" type="check" title="Use first menu item as Main info" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="FzS-qT-KmD">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="system"/>
@@ -438,7 +451,7 @@ DQ
                                                     </connections>
                                                 </button>
                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="AIa-LP-oiv">
-                                                    <rect key="frame" x="18" y="54" width="473" height="16"/>
+                                                    <rect key="frame" x="18" y="136" width="453" height="16"/>
                                                     <textFieldCell key="cell" lineBreakMode="clipping" title="Media engine priority:" id="ddE-RW-f86">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -446,10 +459,10 @@ DQ
                                                     </textFieldCell>
                                                 </textField>
                                                 <scrollView autohidesScrollers="YES" horizontalLineScroll="24" horizontalPageScroll="10" verticalLineScroll="24" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="E7Q-Ra-8nb">
-                                                    <rect key="frame" x="20" y="-34" width="469" height="80"/>
+                                                    <rect key="frame" x="20" y="48" width="449" height="80"/>
                                                     <clipView key="contentView" id="xjg-PI-pIH">
-                                                        <rect key="frame" x="1" y="1" width="467" height="78"/>
-                                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                        <rect key="frame" x="1" y="1" width="447" height="78"/>
+                                                        <autoresizingMask key="autoresizingMask"/>
                                                         <subviews>
                                                             <tableView identifier="engines" verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" rowHeight="24" viewBased="YES" id="0fM-LK-xck">
                                                                 <rect key="frame" x="0.0" y="0.0" width="467" height="78"/>
@@ -471,7 +484,7 @@ DQ
                                                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                                         <prototypeCellViews>
                                                                             <tableCellView identifier="EngineCell" id="RUc-7i-sif">
-                                                                                <rect key="frame" x="8" y="0.0" width="450" height="24"/>
+                                                                                <rect key="frame" x="18" y="0.0" width="450" height="24"/>
                                                                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                                                 <subviews>
                                                                                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="Do5-Da-yZF">
@@ -505,8 +518,8 @@ DQ
                                                     <constraints>
                                                         <constraint firstAttribute="height" constant="80" id="DCh-iL-Xds"/>
                                                     </constraints>
-                                                    <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="aey-Cp-1nZ">
-                                                        <rect key="frame" x="1" y="63" width="462" height="16"/>
+                                                    <scroller key="horizontalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="aey-Cp-1nZ">
+                                                        <rect key="frame" x="1" y="63" width="447" height="16"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                     </scroller>
                                                     <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="wV7-UV-kmc">
@@ -515,7 +528,7 @@ DQ
                                                     </scroller>
                                                 </scrollView>
                                                 <segmentedControl identifier="video" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="4yl-Be-JKi">
-                                                    <rect key="frame" x="17" y="-64" width="71" height="24"/>
+                                                    <rect key="frame" x="17" y="18" width="71" height="24"/>
                                                     <constraints>
                                                         <constraint firstAttribute="height" constant="20" id="lkr-5Y-ZFh"/>
                                                     </constraints>
@@ -531,7 +544,7 @@ DQ
                                                     </connections>
                                                 </segmentedControl>
                                                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="PsW-oz-jko">
-                                                    <rect key="frame" x="18" y="231" width="471" height="18"/>
+                                                    <rect key="frame" x="18" y="221" width="431" height="18"/>
                                                     <buttonCell key="cell" type="check" title="Menu action open the selected file" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="p0Z-Xy-5E8">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="system"/>
@@ -541,7 +554,7 @@ DQ
                                                     </buttonCell>
                                                 </button>
                                                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="KwF-IK-haA">
-                                                    <rect key="frame" x="18" y="338" width="471" height="18"/>
+                                                    <rect key="frame" x="18" y="328" width="431" height="18"/>
                                                     <buttonCell key="cell" type="check" title="Skip items with no data for the placeholders" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="3zV-9Z-t4J">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="system"/>
@@ -591,7 +604,7 @@ DQ
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aZQ-4n-VZC">
-                                                    <rect key="frame" x="18" y="360" width="116" height="18"/>
+                                                    <rect key="frame" x="18" y="350" width="116" height="18"/>
                                                     <buttonCell key="cell" type="check" title="Handle images" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="evg-H0-dfl">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="system"/>
@@ -601,7 +614,7 @@ DQ
                                                     </connections>
                                                 </button>
                                                 <popUpButton toolTip="Test the image menu." translatesAutoresizingMaskIntoConstraints="NO" id="ml2-T5-Jby">
-                                                    <rect key="frame" x="469" y="363" width="20" height="14"/>
+                                                    <rect key="frame" x="498" y="353" width="20" height="14"/>
                                                     <popUpButtonCell key="cell" type="roundRect" bezelStyle="roundedRect" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="ZNl-KD-nbO" id="ZsP-Lk-Fse">
                                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                         <font key="font" metaFont="cellTitle"/>
@@ -620,7 +633,7 @@ DQ
                                                     </connections>
                                                 </popUpButton>
                                                 <customView translatesAutoresizingMaskIntoConstraints="NO" id="P5M-HO-yJw" customClass="MenuTableView" customModule="MediaInfoEx" customModuleProvider="target">
-                                                    <rect key="frame" x="0.0" y="-82" width="509" height="435"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="538" height="343"/>
                                                 </customView>
                                             </subviews>
                                             <constraints>
@@ -809,7 +822,7 @@ DQ
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Ln8-4y-Xje">
-                                                    <rect key="frame" x="18" y="368" width="220" height="18"/>
+                                                    <rect key="frame" x="18" y="350" width="220" height="18"/>
                                                     <buttonCell key="cell" type="check" title="Handle Office (XML based) files" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="AVX-yc-4RG">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="system"/>
@@ -819,7 +832,7 @@ DQ
                                                     </connections>
                                                 </button>
                                                 <popUpButton toolTip="Test the Office menu." translatesAutoresizingMaskIntoConstraints="NO" id="Npm-5O-fge">
-                                                    <rect key="frame" x="467" y="371" width="20" height="14"/>
+                                                    <rect key="frame" x="429" y="353" width="20" height="14"/>
                                                     <popUpButtonCell key="cell" type="roundRect" bezelStyle="roundedRect" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="jL3-Zj-xVH" id="Pjm-sy-VbQ">
                                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                         <font key="font" metaFont="cellTitle"/>
@@ -838,17 +851,17 @@ DQ
                                                     </connections>
                                                 </popUpButton>
                                                 <customView translatesAutoresizingMaskIntoConstraints="NO" id="mYb-0Q-KgW" customClass="MenuTableView" customModule="MediaInfoEx" customModuleProvider="target">
-                                                    <rect key="frame" x="0.0" y="0.0" width="507" height="339"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="469" height="321"/>
                                                 </customView>
                                                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="mtg-Yv-CZJ">
-                                                    <rect key="frame" x="18" y="346" width="469" height="18"/>
+                                                    <rect key="frame" x="18" y="328" width="431" height="18"/>
                                                     <buttonCell key="cell" type="check" title="Use deep scan" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="PgS-dl-4cp">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="system"/>
                                                     </buttonCell>
                                                     <connections>
-                                                        <binding destination="XfG-lQ-9wD" name="enabled" keyPath="self.isOfficeHandled" id="xpZ-Yv-oYh"/>
                                                         <binding destination="XfG-lQ-9wD" name="value" keyPath="self.isOfficeDeepScan" id="IiO-Ak-IMp"/>
+                                                        <binding destination="XfG-lQ-9wD" name="enabled" keyPath="self.isOfficeHandled" id="xpZ-Yv-oYh"/>
                                                     </connections>
                                                 </button>
                                             </subviews>
@@ -865,6 +878,57 @@ DQ
                                                 <constraint firstItem="mtg-Yv-CZJ" firstAttribute="top" secondItem="Ln8-4y-Xje" secondAttribute="bottom" constant="6" symbolic="YES" id="sRl-br-Kz5"/>
                                                 <constraint firstAttribute="trailing" secondItem="Npm-5O-fge" secondAttribute="trailing" constant="20" symbolic="YES" id="v0X-QC-OU3"/>
                                                 <constraint firstAttribute="trailing" secondItem="mYb-0Q-KgW" secondAttribute="trailing" id="vrM-Hp-1th"/>
+                                            </constraints>
+                                        </view>
+                                    </tabViewItem>
+                                    <tabViewItem label="3D" identifier="" id="vBS-o8-IES">
+                                        <view key="view" id="dYg-a3-jbk">
+                                            <rect key="frame" x="10" y="33" width="511" height="397"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                            <subviews>
+                                                <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="9hh-Yn-CYD">
+                                                    <rect key="frame" x="18" y="350" width="119" height="18"/>
+                                                    <buttonCell key="cell" type="check" title="Handle 3D files" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="h6Y-aK-mcn">
+                                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <binding destination="XfG-lQ-9wD" name="value" keyPath="self.isOfficeHandled" id="8md-PZ-BBP"/>
+                                                    </connections>
+                                                </button>
+                                                <popUpButton toolTip="Test the 3D model menu." translatesAutoresizingMaskIntoConstraints="NO" id="j8w-VA-0Jo">
+                                                    <rect key="frame" x="484" y="353" width="20" height="14"/>
+                                                    <popUpButtonCell key="cell" type="roundRect" bezelStyle="roundedRect" alignment="left" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" pullsDown="YES" selectedItem="fKz-WP-M5f" id="ZwX-Iv-Y45">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <font key="font" metaFont="cellTitle"/>
+                                                        <menu key="menu" identifier="mnu_model" id="Jef-E8-fuX">
+                                                            <items>
+                                                                <menuItem state="on" hidden="YES" id="fKz-WP-M5f"/>
+                                                                <menuItem title="Item 2" id="CGA-2S-eAL"/>
+                                                            </items>
+                                                            <connections>
+                                                                <outlet property="delegate" destination="XfG-lQ-9wD" id="UjW-BD-iCE"/>
+                                                            </connections>
+                                                        </menu>
+                                                    </popUpButtonCell>
+                                                    <connections>
+                                                        <binding destination="XfG-lQ-9wD" name="enabled" keyPath="self.isPDFHandled" id="hnH-N2-0ws"/>
+                                                    </connections>
+                                                </popUpButton>
+                                                <customView translatesAutoresizingMaskIntoConstraints="NO" id="YLv-Cn-GOi" customClass="MenuTableView" customModule="MediaInfoEx" customModuleProvider="target">
+                                                    <rect key="frame" x="0.0" y="0.0" width="524" height="343"/>
+                                                </customView>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstItem="j8w-VA-0Jo" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="9hh-Yn-CYD" secondAttribute="trailing" constant="8" symbolic="YES" id="0hV-dJ-Me4"/>
+                                                <constraint firstItem="9hh-Yn-CYD" firstAttribute="top" secondItem="dYg-a3-jbk" secondAttribute="top" constant="20" symbolic="YES" id="BCx-f3-9E6"/>
+                                                <constraint firstItem="9hh-Yn-CYD" firstAttribute="leading" secondItem="dYg-a3-jbk" secondAttribute="leading" constant="20" symbolic="YES" id="I9b-iP-6jk"/>
+                                                <constraint firstAttribute="trailing" secondItem="YLv-Cn-GOi" secondAttribute="trailing" id="Pr8-1M-l7e"/>
+                                                <constraint firstItem="YLv-Cn-GOi" firstAttribute="top" secondItem="9hh-Yn-CYD" secondAttribute="bottom" constant="8" symbolic="YES" id="WpJ-n3-4Tx"/>
+                                                <constraint firstAttribute="trailing" secondItem="j8w-VA-0Jo" secondAttribute="trailing" constant="20" symbolic="YES" id="bWs-5J-S3M"/>
+                                                <constraint firstItem="YLv-Cn-GOi" firstAttribute="leading" secondItem="dYg-a3-jbk" secondAttribute="leading" id="cfL-AW-ME9"/>
+                                                <constraint firstItem="j8w-VA-0Jo" firstAttribute="top" secondItem="dYg-a3-jbk" secondAttribute="top" constant="20" symbolic="YES" id="h0T-c8-IRx"/>
+                                                <constraint firstAttribute="bottom" secondItem="YLv-Cn-GOi" secondAttribute="bottom" id="ukK-5k-vcP"/>
                                             </constraints>
                                         </view>
                                     </tabViewItem>
@@ -890,10 +954,13 @@ DQ
                         <outlet property="enginesTableView" destination="0fM-LK-xck" id="NOd-Ok-ylm"/>
                         <outlet property="imageMenuTableView" destination="P5M-HO-yJw" id="SNp-ah-2HU"/>
                         <outlet property="imagePopupButton" destination="ml2-T5-Jby" id="w6Q-4d-xu0"/>
+                        <outlet property="modelPopupButton" destination="j8w-VA-0Jo" id="TkD-Rj-5ja"/>
+                        <outlet property="modelsMenuTableView" destination="YLv-Cn-GOi" id="omB-uA-f9k"/>
                         <outlet property="officeMenuTableView" destination="mYb-0Q-KgW" id="AN2-N1-Jln"/>
                         <outlet property="officePopupButton" destination="Npm-5O-fge" id="3nJ-7f-sBP"/>
                         <outlet property="pdfMenuTableView" destination="zH3-z0-FGA" id="m7F-lq-Q22"/>
                         <outlet property="pdfPopupButton" destination="7ap-HR-bdU" id="PnC-mm-h8m"/>
+                        <outlet property="tabView" destination="haS-fN-iLJ" id="QGU-yy-bGl"/>
                         <outlet property="tableView" destination="qlN-dX-2UK" id="6KH-dR-U6X"/>
                         <outlet property="videoMenuTableView" destination="dbU-fO-uSD" id="oap-C5-iZi"/>
                         <outlet property="videoPopupButton" destination="kpF-J6-FOz" id="E6f-ha-JCz"/>

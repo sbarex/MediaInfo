@@ -69,6 +69,7 @@
 
 /* Class = "NSTextFieldCell"; title = "Monitored folders:"; ObjectID = "leZ-K3-ufv"; */
 "leZ-K3-ufv.title" = "Cartelle monitorate:";
+"I2d-2L-day.title" = "Gestisci dischi esterni";
 
 /* Class = "NSMenuItem"; title = "Delete"; ObjectID = "pa3-QI-u2k"; */
 "pa3-QI-u2k.title" = "Cancella";
