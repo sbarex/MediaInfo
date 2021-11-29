@@ -112,7 +112,7 @@ else
     mkdir -p "${OUTDIR}"
     if [[ "$ONLY_ACTIVE_ARCH" == "YES" ]]; then
         if [[ "$NATIVE_ARCH" == "x86_64" ]]; then
-            compile "${OUTDIR}/${CONFIGURATION}/${NATIVE_ARCH}" "-mmacosx-version-min=10.14 -DNDEBUG" "" ""
+            compile "${OUTDIR}/${CONFIGURATION}/${NATIVE_ARCH}" "-target x86_64-apple-macos10.14 -DNDEBUG" "" ""
         else
             compile "${OUTDIR}/${CONFIGURATION}/${NATIVE_ARCH}" "-target arm64-apple-macos11 -DNDEBUG" "-target arm64-apple-macos11" "arm"
         fi
@@ -132,7 +132,7 @@ else
             exit $retVal
         fi
     else
-        compile "${OUTDIR}/${CONFIGURATION}/x86_64" "-mmacosx-version-min=10.14 -DNDEBUG" "" "x86_64"
+        compile "${OUTDIR}/${CONFIGURATION}/x86_64" "-target x86_64-apple-macos10.14 -DNDEBUG" "" "x86_64"
         
         compile "${OUTDIR}/${CONFIGURATION}/arm64" "-target arm64-apple-macos11 -DNDEBUG" "-target arm64-apple-macos11" "arm64"
         
