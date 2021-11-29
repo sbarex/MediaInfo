@@ -10,6 +10,9 @@ import Foundation
 
 extension Int {
     static func gcd(_ a: Int, _ b: Int) -> Int {
+        guard b != 0 else {
+            return 1
+        }
         let remainder = abs(a) % abs(b)
         if remainder != 0 {
             return gcd(abs(b), remainder)
