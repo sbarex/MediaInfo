@@ -1,3 +1,5 @@
+[![counter](https://img.shields.io/github/downloads/sbarex/MediaInfo/latest/total)](https://github.com/sbarex/MediaInfo/releases) [![counter](https://img.shields.io/github/downloads/sbarex/MediaInfo/total)](https://github.com/sbarex/MediaInfo/releases)
+
 #  MediaInfo - MacOS Finder Sync Extension
 
 Extension to display information about multimedia (images, videos and audio), PDF and Office files in the Finder contextual menu.
