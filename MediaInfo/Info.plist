@@ -29,7 +29,7 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2020-2021 Sbarex. All rights reserved.</string>
+	<string>Copyright © 2020-2022 Sbarex. All rights reserved.</string>
 	<key>NSMainStoryboardFile</key>
 	<string>Main</string>
 	<key>NSPrincipalClass</key>
@@ -38,14 +38,14 @@
 	<true/>
 	<key>NSSupportsSuddenTermination</key>
 	<true/>
+	<key>SUEnableInstallerLauncherService</key>
+	<true/>
 	<key>SUFeedURL</key>
 	<string>https://sbarex.github.io/MediaInfo/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>J+ikFQXeR6eaUV0jvyfZAJKeYh+9UKGJuD/kJSIXnZk=</string>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
-	<key>SUEnableInstallerLauncherService</key>
-	<true/>
 	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict>
