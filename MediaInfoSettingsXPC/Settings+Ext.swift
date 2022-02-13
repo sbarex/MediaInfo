@@ -24,6 +24,7 @@ extension Settings {
             audioMenuItems = stdSettings.audioMenuItems
             pdfMenuItems = stdSettings.pdfMenuItems
             officeMenuItems = stdSettings.officeMenuItems
+            archiveMenuItems = stdSettings.archiveMenuItems
         }
     }
     

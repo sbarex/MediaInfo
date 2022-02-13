@@ -55,6 +55,16 @@
 /* Class = "NSMenu"; title = "Edit"; ObjectID = "W48-6f-4Dl"; */
 "W48-6f-4Dl.title" = "Modifica";
 
+"ZP7-f3-Ke7.title" = "Mostra JS Console";
+
+"uAz-Go-CoT.title" = "Cerca";
+"ELb-WN-nv4.title" = "Cerca…";
+"f0X-jS-X6S.title" = "Trova e sostituisci…";
+"KBO-Qr-cJu.title" = "Cerca successivo";
+"gi8-nk-QLg.title" = "Cerca precedente";
+"ER1-kS-ibx.title" = "Usa selezione per cercare";
+"Sy2-8T-qos.title" = "Vai alla selezione";
+
 /* Class = "NSViewController"; title = "MediaInfo Preferences"; ObjectID = "XfG-lQ-9wD"; */
 "XfG-lQ-9wD.title" = "Impostazioni di MediaInfo";
 
@@ -94,8 +104,11 @@
 /* Class = "NSTabViewItem"; label = "Video"; ObjectID = "FmM-UB-BFQ"; */
 "24D-c5-lnm.label" = "Audio";
 "nYK-6W-4zO.label" = "PDF";
+"ZkG-Ty-mBG.label" = "Office";
+"vBS-o8-IES.label" = "3D";
+"7iY-oQ-aUh.label" = "Archivi";
 
-"ddE-RW-f86.title" = "Priorità motore di analisi:";
+"ddE-RW-f86.title" = "Priorità motore di analisi per audio e video:";
 "3zV-9Z-t4J.title" = "Ignora voci di menu con segnaposti privi di valore";
 "p0Z-Xy-5E8.title" = "L’azione del menu apre il file selezionato";
 
@@ -107,8 +120,6 @@
 "lDw-rK-mCc.title" = "Gestisci file audio";
 "V0e-Bt-gdg.title" = "Gestisci file PDF";
 "AVX-yc-4RG.title" = "Gestisci file Office (formati XML)";
-
-"PgS-dl-4cp.title" = "Usa scansione approfondita";
 
 /* Class = "NSButtonCell"; title = "Enable the Finder extension"; ObjectID = "i4R-xf-NHN"; */
 "i4R-xf-NHN.title" = "Abilita l’estensione del Finder";
@@ -144,9 +155,21 @@
 "Ejm-cd-U4C.ibShadowedToolTip" = "Prova il menu per i file audio.";
 "7ap-HR-bdU.ibShadowedToolTip" = "Prova il menu per i documenti PDF.";
 "Npm-5O-fge.ibShadowedToolTip" = "Prova il menu per i documenti di Office.";
+"6Yh-1b-1uZ.ibShadowedToolTip" = "Prova il menu per gli archivi compressi.";
 
 "hhb-PW-yj6.title" = "Personalizza la voce di menu:";
 "G9y-SI-1Ri.title" = "Segnaposto";
 "RJU-Dr-O1W.title" = "Annulla";
 "gAy-XH-7VJ.title" = "OK";
 
+"hkM-Fc-2qh.title" = "Gestisci gli archivi compressi";
+"Fw5-Hp-WKw.title" = "Numero totale di file processabili";
+"K5p-FH-df2.title" = "Limite sottolivelli";
+"P3E-fJ-Jhx.title" = "Limite di file per cartella";
+
+"o81-Ld-5Eb.title" = "Annulla";
+"57J-bu-UG3.title" = "Salva";
+
+"3ia-5X-Wg0.title" = "Testo a capo";
+"Tt7-eY-hRC.title" = "Modello per codice inline";
+"k8N-8k-h1C.title" = "Modello per codice globale";

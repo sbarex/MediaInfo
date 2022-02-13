@@ -74,6 +74,13 @@ class TokenOfficeSize: Token {
         return [.office]
     }
     
+    override var informativeMessage: String {
+        guard let mode = self.mode as? Mode else {
+            return super.informativeMessage
+        }
+        return String(format: NSLocalizedString("The token '%@' require the deep scan of the file and can slow down menu generation.", comment: ""), mode.displayString)
+    }
+    
     required convenience init?(mode: BaseMode) {
         guard let m = mode as? Mode else { return nil }
         self.init(mode: m)

@@ -16,3 +16,6 @@ profile
 xcuserdata
 
 !xcshareddata
+
+build/
+

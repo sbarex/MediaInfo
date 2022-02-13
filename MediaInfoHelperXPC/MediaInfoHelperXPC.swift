@@ -38,6 +38,9 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         case "3d":
             getModelInfo(for: item, withReply: reply)
         
+        case "archive":
+            getArchiveInfo(for: item, withReply: reply)
+            
         default:
             reply(nil)
         }
@@ -45,7 +48,9 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
     
     func getImageInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
         let image_info: ImageInfo
-        if let info = getCGImageInfo(forFile: item) {
+        let settings = self.settings ?? self.getSettings()
+        
+        if let info = getCGImageInfo(forFile: item, processMetadata: settings.extractImageMetadata) {
             image_info = info
         } else {
             guard let uti = try? item.resourceValues(forKeys: [.typeIdentifierKey]).typeIdentifier else {
@@ -115,17 +120,13 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
                     audio = a
                 }
             case .ffmpeg:
-                /*
                 if let a = getFFMpegAudioInfo(forFile: item) {
                     audio = a
-                }*/
-            break
+                }
             case .metadata:
-                /*
                 if let a = getMetadataAudioInfo(forFile: item) {
                     audio = a
-                }*/
-                break
+                }
             }
             if audio != nil {
                 break
@@ -235,8 +236,24 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         }
     }
     
+    func getArchiveInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
+        guard let model_info = try? ArchiveInfo(file: item, limit: self.settings?.maxFilesInArchive ?? 0) else {
+            reply(nil)
+            return
+        }
+        
+        let coder = NSKeyedArchiver(requiringSecureCoding: false)
+        model_info.encode(with: coder)
+        reply(coder.encodedData as NSData)
+    }
+    
     
     func openFile(url: URL) {
         NSWorkspace.shared.open(url)
+    }
+    
+    func getWebPVersion(reply: @escaping (String)->Void) {
+        let v = WebPGetDecoderVersion()
+        reply(String(format:"%02X", v))
     }
 }

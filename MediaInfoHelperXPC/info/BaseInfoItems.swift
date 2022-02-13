@@ -7,9 +7,22 @@
 //
 
 import Cocoa
+import JavaScriptCore
+
+extension CodingUserInfoKey {
+    static let exportStoredValues = CodingUserInfoKey(rawValue: "exportStored")!
+}
+
+protocol JSExceptionDelegate: AnyObject {
+    func onJSException(info: BaseInfo, exception: String?, atLine line: Int, forItemAtIndex itemIndex: Int)
+}
+
+enum JSException: Error {
+    case exception(desc: String, line: Int)
+}
 
 // MARK: - BaseInfo
-class BaseInfo: NSCoding {
+class BaseInfo: NSCoding, Encodable {
     static let numberFormatter: NumberFormatter = {
         let numberFormatter = NumberFormatter()
         numberFormatter.allowsFloats = true
@@ -30,10 +43,12 @@ class BaseInfo: NSCoding {
         var img: NSImage?
         var isColor = false
         switch mode {
-        case "image":
+        case "image", "image_h":
             img = NSImage(named: "image")
         case "image_v":
             img = NSImage(named: "image_v")
+        case "aspectratio_h":
+            img = NSImage(named: "aspectratio")
         case "color":
             img = NSImage(named: "color")
         case "color_rgb":
@@ -51,9 +66,9 @@ class BaseInfo: NSCoding {
         case "color_bw":
             img = NSImage(named: "color_bw")
             isColor = true
-        case "print":
+        case "print", "printer":
             img = NSImage(named: "print")
-        case "video":
+        case "video", "video_h":
             img = NSImage(named: "video")
         case "video_v":
             img = NSImage(named: "video_v")
@@ -67,7 +82,7 @@ class BaseInfo: NSCoding {
             img = NSImage(named: "aspectratio_v")
         case "size":
             img = NSImage(named: "size")
-        case "page":
+        case "page", "page_h":
             img = NSImage(named: "page")
         case "page_v":
             img = NSImage(named: "page_v")
@@ -116,11 +131,22 @@ class BaseInfo: NSCoding {
         }
     }
     
+    lazy fileprivate(set) var jsContext: JSContext? = {
+        return self.initJSContext()
+    }()
+    
+    weak var jsDelegate: JSExceptionDelegate?
+    
     init() { }
+    
     required init?(coder: NSCoder) {
         
     }
     func encode(with coder: NSCoder) {
+        
+    }
+    
+    func encode(to encoder: Encoder) throws {
         
     }
     
@@ -143,9 +169,143 @@ class BaseInfo: NSCoding {
         return s
     }
     
-    internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String: Any]? = nil, isFilled: inout Bool) -> String {
+    func initJSContext() -> JSContext? {
+        guard let context = JSContext() else {
+            return nil
+        }
+        
+        let encoder = JSONEncoder()
+        encoder.userInfo[.exportStoredValues] = true
+        
+        context.exceptionHandler = { context, exception in
+            print(exception?.toString() ?? "JS exception!")
+        }
+       
+        /*
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try! encoder.encode(self)
+        print(String(data: data, encoding: .utf8)!)
+        encoder.outputFormatting = JSONEncoder.OutputFormatting(rawValue: 0)
+        */
+        
+        if let data = try? encoder.encode(self), let s = String(data: data, encoding: .utf8) {
+            context.setObject(s , forKeyedSubscript: "fileJSONData" as NSString)
+            context.evaluateScript("const fileData = JSON.parse(fileJSONData); ")
+            context.evaluateScript("""
+if (fileData["metadataRaw"]) {
+    for (key in fileData["metadataRaw"]) {
+        if (!fileData["metadataRaw"].hasOwnProperty(key)) {
+            continue;
+        }
+        fileData["metadataRaw"][key] = JSON.parse(fileData["metadataRaw"][key]);
+    }
+}
+""")
+        } else {
+            context.setObject(nil, forKeyedSubscript: "fileJSONData" as NSString)
+        }
+        context.evaluateScript("""
+function __consoleLog() { }
+const console = {
+    debug: function() {
+        let a = Array.prototype.slice.call(arguments);
+        a.unshift("debug");
+        __consoleLog(a);
+    },
+    log: function() {
+        let a = Array.prototype.slice.call(arguments);
+        a.unshift("log");
+        __consoleLog(a);
+    },
+    info: function() {
+        let a = Array.prototype.slice.call(arguments);
+        a.unshift("info");
+        __consoleLog(a);
+    },
+    warn: function() {
+        let a = Array.prototype.slice.call(arguments);
+        a.unshift("warn");
+        __consoleLog(a);
+    },
+    error: function() {
+        let a = Array.prototype.slice.call(arguments);
+        a.unshift("error");
+        __consoleLog(a);
+    },
+    assert: function() {
+        let a = Array.prototype.slice.call(arguments);
+        if (a.shift()) {
+            a.unshift("info");
+            __consoleLog(a);
+        }
+    },
+}
+""");
+        
+        /*
+        let logFunction: @convention(block) (String) -> Void  = { (object: AnyHashable) in
+            print("JSConsole: ", object)
+        }
+        context.setObject(logFunction, forKeyedSubscript: "__consoleLog" as NSString)
+         */
+        
+        return context
+    }
+    
+    func evaluateScript(code: String, forItem itemIndex: Int) throws -> JSValue? {
+        guard let context = self.jsContext else {
+            return nil
+        }
+        var js_exception: JSException?
+        let old_exceptionHandler = context.exceptionHandler
+        context.exceptionHandler = { context, exception in
+            let line_num = exception?.objectForKeyedSubscript("line")?.toNumber().intValue ?? -1
+            let message = exception?.toString()
+            js_exception = JSException.exception(desc: message ?? "", line: line_num)
+            self.jsDelegate?.onJSException(info: self, exception: message, atLine: line_num, forItemAtIndex: itemIndex)
+            old_exceptionHandler?(context, exception)
+        }
+        defer {
+            context.exceptionHandler = old_exceptionHandler
+        }
+        context.setObject(itemIndex, forKeyedSubscript: "menuItemIndex" as NSString)
+        let result = context.evaluateScript(code)
+        
+        if let js_exception = js_exception {
+            throw js_exception
+        }
+        
+        return result
+    }
+    
+    internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String: Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         isFilled = false
-        return placeholder
+        if placeholder.hasPrefix("[[script-inline:") {
+            guard let code = String(placeholder.dropFirst(16).dropLast(2)).fromBase64(), !code.isEmpty else {
+                isFilled = false
+                return ""
+            }
+            
+            guard let result = try? evaluateScript(code: code, forItem: itemIndex) else {
+                isFilled = false
+                return ""
+            }
+            guard !result.isNull else {
+                isFilled = false
+                return ""
+            }
+            if !result.isString {
+                self.jsDelegate?.onJSException(info: self, exception: "Inline script token must return a string value!", atLine: -1, forItemAtIndex: itemIndex)
+            }
+            if let r = result.toString() {
+                isFilled = true
+                return r
+            } else {
+                return ""
+            }
+        } else {
+            return placeholder
+        }
     }
     
     func purgeString(_ text: String) -> String {
@@ -173,11 +333,9 @@ class BaseInfo: NSCoding {
     ///   - settings: Settings used to customize the data.
     ///   - values: Values that override the standard value.
     ///   - isFilled: Set to `true` when at least one placeholder is replaced.
-    func replacePlaceholders(in template: String, settings: Settings, values: [String: Any]? = nil, isFilled: inout Bool) -> String {
-        guard let regex = try? NSRegularExpression(pattern: #"\[\[([^]]+)\]\]"#) else {
-            return template
-        }
-        let results = regex.matches(in: template, range: NSRange(template.startIndex..., in: template))
+    ///   - itemIndex: Index of the menu item.
+    func replacePlaceholders(in template: String, settings: Settings, values: [String: Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+        let results = Self.splitTokens(in: template)
         
         var text = template
        
@@ -185,7 +343,7 @@ class BaseInfo: NSCoding {
         var isPlaceholderFilled = false
         for result in results {
             let placeholder = String(template[Range(result.range, in: template)!])
-            let r = processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isPlaceholderFilled)
+            let r = processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isPlaceholderFilled, forItem: itemIndex)
             if isPlaceholderFilled {
                 isFilled = true
             }
@@ -204,7 +362,8 @@ class BaseInfo: NSCoding {
     ///   - attributes: Attributes used to format the value of placeholders.
     ///   - values: Values that override the standard value.
     ///   - isFilled: Set to `true` when at least one placeholder is replaced.
-    func replacePlaceholders(in template: String, settings: Settings, values: [String: Any]? = nil, attributes: [NSAttributedString.Key: Any]? = nil, isFilled: inout Bool) -> NSMutableAttributedString {
+    ///   - itemIndex: Index of the menu item.
+    func replacePlaceholders(in template: String, settings: Settings, values: [String: Any]? = nil, attributes: [NSAttributedString.Key: Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> NSMutableAttributedString {
         guard let regex = try? NSRegularExpression(pattern: #"\[\[([^]]+)\]\]"#) else {
             return NSMutableAttributedString(string: template)
         }
@@ -216,7 +375,7 @@ class BaseInfo: NSCoding {
         var isPlaceholderFilled = false
         for result in results {
             let placeholder = String(template[Range(result.range, in: template)!])
-            let r = processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isPlaceholderFilled)
+            let r = processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isPlaceholderFilled, forItem: itemIndex)
             if isPlaceholderFilled {
                 isFilled = true
             }
@@ -245,27 +404,12 @@ class BaseInfo: NSCoding {
         return text.capitalizingFirstLetter()
     }
     
-    static func replacePlaceholdersFake(in template: String, settings: Settings, attributes: [NSAttributedString.Key: Any]? = nil) -> NSMutableAttributedString {
+    static func splitTokens(in template: String) -> [NSTextCheckingResult] {
         guard let regex = try? NSRegularExpression(pattern: #"\[\[([^]]+)\]\]"#) else {
-            return NSMutableAttributedString(string: template)
+            return []
         }
         let results = regex.matches(in: template, range: NSRange(template.startIndex..., in: template))
-        
-        let text = NSMutableAttributedString(string: template)
-        
-        for result in results {
-            let placeholder = String(template[Range(result.range, in: template)!])
-            let r = "<" + placeholder.trimmingCharacters(in: CharacterSet(charactersIn: "[]")) + ">"
-            guard r != placeholder else {
-                continue
-            }
-            while text.mutableString.contains(placeholder) {
-                let range = text.mutableString.range(of: placeholder)
-                text.replaceCharacters(in: range, with: NSAttributedString(string: r, attributes: attributes))
-            }
-        }
-        
-        return text
+        return results
     }
     
     func getStandardTitle(forSettings settings: Settings) -> String {
@@ -281,7 +425,9 @@ class BaseInfo: NSCoding {
         mnu.isEnabled = true
         mnu.target = self
         if !settings.isIconHidden {
-            if let image = image, !image.isEmpty {
+            if image == "no-space" {
+                mnu.image = nil
+            } else if let image = image, !image.isEmpty {
                 mnu.image = self.getImage(for: image)
             } else {
                 mnu.image = self.getImage(for: "no-image")
@@ -318,16 +464,16 @@ class BaseInfo: NSCoding {
         
         var isFirst = true
         var isFirstFilled = false
-        for item in items {
+        for (i, item) in items.enumerated() {
             defer {
                 isFirst = false
             }
-            if self.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings) {
+            if self.processSpecialMenuItem(item, atIndex: i, inMenu: destination_sub_menu, withSettings: settings) {
                 continue
             }
             
             var isFilled = false
-            let s = self.replacePlaceholders(in: item.template, settings: settings, isFilled: &isFilled)
+            let s = self.replacePlaceholders(in: item.template, settings: settings, isFilled: &isFilled, forItem: i)
             if s.isEmpty || (settings.isEmptyItemsSkipped && !isFilled) {
                 continue
             }
@@ -343,9 +489,80 @@ class BaseInfo: NSCoding {
         return menu
     }
     
-    internal func processSpecialMenuItem(_ item: Settings.MenuItem, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+    internal func generateMenuFromGlobalScript(_ result: [Any], in submenu: NSMenu, settings: Settings) -> Bool {
+        guard !result.isEmpty else {
+            return false
+        }
+        var n = 0
+        for item in result {
+            if let title = item as? String {
+                if title == "-" {
+                    submenu.addItem(NSMenuItem.separator())
+                } else {
+                    let mnu = self.createMenuItem(title: title, image: nil, settings: settings)
+                    submenu.addItem(mnu)
+                }
+                n += 1
+            } else if let item = item as? [String: AnyHashable] {
+                guard let title = item["title"] as? String else {
+                    continue
+                }
+                if title == "-" {
+                    submenu.addItem(NSMenuItem.separator())
+                    continue
+                }
+                let image = item["image"] as? String
+                let mnu = self.createMenuItem(title: title, image: image, settings: settings)
+                if let b = item["checked"] as? Bool, b {
+                    mnu.state = .on
+                }
+                if let i = item["indent"] as? Int {
+                    mnu.indentationLevel = i
+                }
+                if let i = item["tag"] as? Int {
+                    mnu.tag = i
+                }
+                submenu.addItem(mnu)
+                if let items = item["items"] as? [Any] {
+                    let new_sub_menu = NSMenu()
+                    _ = generateMenuFromGlobalScript(items, in: new_sub_menu, settings: settings)
+                    if !new_sub_menu.items.isEmpty {
+                        mnu.submenu = new_sub_menu
+                    }
+                }
+                n += 1
+            }
+        }
+        return n > 0
+    }
+    
+    internal func processSpecialMenuItem(_ item: Settings.MenuItem, atIndex itemIndex: Int, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
         if item.template == "-" {
             destination_sub_menu.addItem(NSMenuItem.separator())
+            return true
+        } else if item.template.hasPrefix("[[script-global:")  {
+            guard let code = String(item.template.dropFirst(16).dropLast(2)).fromBase64(), !code.isEmpty else {
+                return false
+            }
+            
+            guard let result = try? evaluateScript(code: code, forItem: itemIndex) else {
+                return false
+            }
+            
+            guard !result.isNull else {
+                return false
+            }
+            
+            if !result.isArray {
+                self.jsDelegate?.onJSException(info: self, exception: "Global script token must return an array!", atLine: -1, forItemAtIndex: itemIndex)
+            }
+            if let r = result.toArray() {
+                return self.generateMenuFromGlobalScript(r, in: destination_sub_menu, settings: settings)
+            } else if let r = result.toString(), !r.isEmpty {
+                destination_sub_menu.addItem(self.createMenuItem(title: r, image: nil, settings: settings))
+            } else {
+                return false
+            }
             return true
         } else {
             return false
@@ -380,6 +597,15 @@ class BaseInfo: NSCoding {
     }
 }
 
+
+enum FileCodingKeys: String, CodingKey {
+    case fileUrl
+    case fileSize
+    case filePath
+    case fileName
+    case fileExtension
+}
+
 // MARK: -
 protocol FileInfo: BaseInfo {
     static func getFileSize(_ file: URL) -> Int64?
@@ -390,6 +616,7 @@ protocol FileInfo: BaseInfo {
     
     func encodeFileInfo(_ encoder: NSCoder)
     static func decodeFileInfo(_ coder: NSCoder) -> (URL, Int64?)?
+    func encodeFileInfo(to encoder: Encoder) throws
 }
 
 extension FileInfo {
@@ -402,17 +629,29 @@ extension FileInfo {
     }
     
     static func decodeFileInfo(_ coder: NSCoder) -> (URL, Int64?)? {
-        guard let u = coder.decodeObject(forKey: "file") as? String else {
+        guard let u = coder.decodeObject(of: NSString.self, forKey: "file") else {
             return nil
         }
-        let file = URL(fileURLWithPath: u)
+        let file = URL(fileURLWithPath: u as String)
         let fileSize = coder.decodeInt64(forKey: "fileSize")
         return (file, fileSize)
     }
     
     func encodeFileInfo(_ coder: NSCoder) {
-        coder.encode(self.file.path, forKey: "file")
+        coder.encode(self.file.path as NSString, forKey: "file")
         coder.encode(self.fileSize, forKey: "fileSize")
+    }
+    
+    func encodeFileInfo(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: FileCodingKeys.self)
+        try container.encode(self.file, forKey: .fileUrl)
+        try container.encode(self.fileSize, forKey: .fileSize)
+        
+        if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
+            try container.encode(self.file.path, forKey: .filePath)
+            try container.encode(self.file.lastPathComponent, forKey: .fileName)
+            try container.encode(self.file.pathExtension, forKey: .fileExtension)
+        }
     }
     
     func processFilePlaceholder(_ placeholder: String, settings: Settings, values: [String: Any]?, isFilled: inout Bool) -> String {
@@ -692,7 +931,7 @@ class DimensionalInfo: BaseInfo {
         return Self.getRatio(width: width, height: height, approximate: approximate)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String: Any]? = nil, isFilled: inout Bool) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String: Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         let useEmptyData = false
         switch placeholder {
         case "[[size]]":
@@ -755,7 +994,7 @@ class DimensionalInfo: BaseInfo {
                 return Self.getResolutioName(width: width, height: height) ?? ""
             }
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     

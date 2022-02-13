@@ -59,8 +59,11 @@
 "Color space and depth." = "Spazio colore e profondità.";
 "Color space." = "Spazio colore.";
 "Color depth." = "Profondità colore.";
+"Profile name." = "Nome del profilo.";
+"Color table" = "Tabella colori";
 "Pixel format." = "Formato del pixel.";
 "Field order." = "Field order.";
+"Submenu metadata." = "Menu dei metadati.";
 
 // MARK: -
 "Language" = "Lingua";
@@ -119,7 +122,7 @@
 "Allow print" = "Stampa consentita";
 "Allow copy status (Yes/No)." = "Copia consentita (Sì/No)";
 "Allow Print status (Yes/No)." = "Stampa consentita (Sì/No)";
-"n. of pages/sheets/slides" = "n. di pagine/fogli/diapositive";
+"pages/sheets/slides count" = "numero di pagine/fogli/diapositive";
 "Number of pages." = "Numero di pagine.";
 "Number of words (for document files)." = "Numbero di parole (for documenti di testo).";
 "Number of characters (for document files)." = "Numbero di caratteri (per i documenti di testo).";
@@ -172,6 +175,7 @@
 "Subtitle list" = "Lista sottotitoli";
 
 "No image" = "Nessuna immagine";
+"No image (and no space)" = "Nessuna immagine (non riserva lo spazio)";
 "File size" = "Dimensioni del file";
 "Aspect ratio" = "Proporzioni";
 "Image" = "Immagine";
@@ -216,3 +220,39 @@
 "3D color per vertex" = "3D colori per vertice";
 "3D texture coords" = "3D coordinate per texture";
 "3D occlusion per vertex" = "3D occlusion per vertice";
+
+"Compressed archive" = "Archivio compresso";
+"Files submenu" = "Menu gerarchico dei file";
+"Files submenu." = "Menu gerarchico dei file.";
+"Files submenu (with icons)" = "Menu gerarchico dei file (con icone)";
+"Files submenu (with icons)." = "Menu gerarchico dei file (con icone).";
+"Plain files submenu" = "Menu dei file";
+"Plain files submenu." = "Menu dei file.";
+"Plain files submenu (with icons)" = "Menu dei file (con icone)";
+"Plain files submenu (with icons)." = "Menu dei file (con icone).";
+
+"Compression method." = "Algoritmo di compressione";
+"File count." = "Numero di files.";
+"Uncompressed size." = "Dimensione non compressa.";
+
+"Settings not found!" = "Impostazioni non trovate!";
+"You probably haven't customize the standard settings." = "Probabilmente non hai ancora personalizzato le impostazioni standard.";
+
+"Inline script." = "Script in linea.";
+"Global script." = "Script globale.";
+"Script" = "Script";
+"Inline script" = "Script in linea";
+"Global script" = "Script globale";
+"Customize the script…" = "Modifica lo script…";
+
+"Extracting metadata can slow down menu generation." = "L'estrazione dei metadati può rallentare la generazione del menu.";
+"The token '%@' require the deep scan of the file and can slow down menu generation." = "Il token '%@` richede la scansione approfondita del file che può rallentare la generazione del menu.";
+"If the script does not need the metadata it is recommended to insert the comment /* no-metadata */ as the first line to speed up the generation of the menu." = "Se lo script non ha bisogno di accedere ai metadati si consiglia in inserire come prima riga il commento /* no-metadata */ per velocizzare la generazione del menu.";
+
+"If the script does not need the metadata it is recommended to insert the comment /* no-deep-scan */ as the first line to speed up the generation of the menu." = "Se lo script non ha bisogno di accedere ai metadati si consiglia in inserire come prima riga il commento /* no-deep-scan */ per velocizzare la generazione del menu.";
+
+"Are you sure to replace the current script code?" = "Sicuro di sostituire il codice attuale?";
+"Replace" = "Sostituisci";
+
+"JS Exception" = "Eccezione JS";
+"JS Exception at line %d" = "Eccezione JS alla linea %d";

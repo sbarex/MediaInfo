@@ -9,6 +9,24 @@
 import AppKit
 
 class MenuTableView: NSView {
+    class MenuItem {
+        var image: String
+        var template: String
+        
+        var exception: String?
+        var line: Int?
+        
+        var info: Set<String>?
+        
+        init(image: String, template: String, exception: String? = nil, line: Int? = nil, info: Set<String>? = nil) {
+            self.image = image
+            self.template = template
+            self.exception = exception
+            self.line = line
+            self.info = info
+        }
+    }
+    
     @IBOutlet weak var contentView: NSView!
     @IBOutlet weak var tableView: NSTableView!
     @IBOutlet weak var tagButton: NSButton!
@@ -27,12 +45,18 @@ class MenuTableView: NSView {
             tableView.reloadData()
         }
     }
+    
     var sampleTokens: [MenuItemEditor.TokenSample] = []
     var validTokens: [Token.Type] = []
     
-    var items: [Settings.MenuItem] = []
+    var items: [MenuItem] = []
     
-    var example: BaseInfo?
+    var example: BaseInfo? {
+        didSet {
+            oldValue?.jsDelegate = nil
+            example?.jsDelegate = self
+        }
+    }
     var supportedType: Token.SupportedType = .image
     
     var getSettings: ()->Settings = { return Settings(fromDict: [:]) }
@@ -80,7 +104,6 @@ class MenuTableView: NSView {
                 self.tableView.removeRows(at: IndexSet(integer: index), withAnimation: .slideUp)
                 
                 self.tableView.endUpdates()
-                
                 
                 self.contentView.window?.isDocumentEdited = true
             }
@@ -131,6 +154,10 @@ class MenuTableView: NSView {
         }
     }
     
+    internal func getTokens(from template: String) -> [Token] {
+        return Token.parseTemplate(template, for: self.supportedType)
+    }
+    
     internal func presentMenuEditor(row: Int) {
         guard let editor = NSStoryboard(name: NSStoryboard.Name("Main"), bundle: nil).instantiateController(withIdentifier: "MenuItemEditor") as? MenuItemEditor else {
             return
@@ -140,7 +167,7 @@ class MenuTableView: NSView {
         let tokens: [Token]
         if row >= 0 {
             imageName = items[row].image
-            tokens = Token.parseTemplate(items[row].template, for: self.supportedType)
+            tokens = self.getTokens(from: items[row].template)
         } else {
             imageName = ""
             tokens = []
@@ -152,16 +179,18 @@ class MenuTableView: NSView {
             if row >= 0 {
                 self.items[row].image = image
                 self.items[row].template = self.getTemplate(fromTokens: tokens)
-                self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integer: 0))
+                self.items[row].info = nil
+                self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integersIn: 0...1))
             } else {
                 let index = self.tableView.selectedRow
                 if index >= 0 {
-                    self.items.insert(Settings.MenuItem(image: image, template: self.getTemplate(fromTokens: tokens)), at: index+1)
+                    self.items.insert(MenuItem(image: image, template: self.getTemplate(fromTokens: tokens)), at: index+1)
                     self.tableView.insertRows(at: IndexSet(integer: index+1), withAnimation: .slideDown)
                     self.tableView.selectRowIndexes(IndexSet(integer: index+1), byExtendingSelection: false)
                 } else {
-                    self.items.append(Settings.MenuItem(image: image, template: self.getTemplate(fromTokens: tokens)))
-                    self.tableView.reloadData()
+                    self.items.append(MenuItem(image: image, template: self.getTemplate(fromTokens: tokens)))
+                    self.tableView.insertRows(at: IndexSet(integer: self.items.count - 1), withAnimation: .slideDown)
+                    // self.tableView.reloadData()
                     // self.tableView.selectRowIndexes(IndexSet(integer: self.items.count-1), byExtendingSelection: false)
                 }
             }
@@ -188,8 +217,40 @@ class MenuTableView: NSView {
 }
 
 extension MenuTableView: NSTableViewDelegate {
+    func validateTokens(in template: String)->Set<String> {
+        let tokens = self.getTokens(from: template)
+        var messages: Set<String> = []
+        for token in tokens {
+            let msg = token.informativeMessage
+            if !msg.isEmpty {
+                messages.insert(msg)
+            }
+            if let token = token as? TokenScript, let example = self.example {
+                let msg = example.getScriptInfo(token: token)
+                if !msg.isEmpty {
+                    messages.insert(msg)
+                }
+            }
+        }
+        return messages
+    }
+    
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let item = items[row]
+        
+        if item.info == nil {
+            item.info = validateTokens(in: item.template)
+        }
+        
+        if tableColumn?.identifier.rawValue == "exception" {
+            let exception = item.exception
+            let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "MenuExceptionCell"), owner: nil) as? ExceptionCell
+            cell?.exception = exception
+            cell?.line = item.line
+            cell?.info = item.info
+            return cell
+        }
+        
         let settings = self.getSettings()
         let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "MenuTokensCell"), owner: nil) as? NSTableCellView
         let attributedString: NSMutableAttributedString
@@ -198,15 +259,20 @@ extension MenuTableView: NSTableViewDelegate {
             // let font = NSFont.systemFont(ofSize: NSFont.systemFontSize, weight: .light)
             // let font = NSFontManager.shared.convert(NSFont.systemFont(ofSize: NSFont.systemFontSize), toHaveTrait: [.italicFontMask])
             var isFilled = false
-            let s = example.replacePlaceholders(in: item.template, settings: settings, attributes: [.underlineStyle: NSUnderlineStyle.single.rawValue], isFilled: &isFilled)
+            let oldException = item.exception
+            item.exception = nil
+            let s = example.replacePlaceholders(in: item.template, settings: settings, attributes: [.underlineStyle: NSUnderlineStyle.single.rawValue], isFilled: &isFilled, forItem: row)
             if isFilled {
                 attributedString = s
             } else {
-                attributedString = BaseInfo.replacePlaceholdersFake(in: item.template, settings: settings, attributes: [.underlineStyle: NSUnderlineStyle.single.rawValue])
+                attributedString = example.replacePlaceholdersFake(in: item.template, settings: settings, attributes: [.underlineStyle: NSUnderlineStyle.single.rawValue], forItem: row)
+            }
+            if /*(oldException == nil && self.items[row].exception != nil) || */ (oldException != nil && self.items[row].exception == nil) {
+                tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integer: 1))
             }
         } else {
             let font = NSFont.systemFont(ofSize: NSFont.systemFontSize, weight: .light)
-            attributedString = BaseInfo.replacePlaceholdersFake(in: item.template, settings: settings, attributes: [.font: font, .underlineStyle: NSUnderlineStyle.single.rawValue])
+            attributedString = BaseInfo.replacePlaceholdersFake(in: item.template, settings: settings, attributes: [.font: font, .underlineStyle: NSUnderlineStyle.single.rawValue], forItem: row)
         }
         if row == 0 && settings.isUsingFirstItemAsMain {
             attributedString.addAttribute(.font, value: NSFont.boldSystemFont(ofSize: NSFont.systemFontSize), range: NSRange(location: 0, length: attributedString.length))
@@ -295,7 +361,19 @@ extension MenuTableView: NSTableViewDataSource {
     }
 }
 
+extension MenuTableView: JSExceptionDelegate {
+    func onJSException(info: BaseInfo, exception: String?, atLine line: Int, forItemAtIndex itemIndex: Int) {
+        let old = self.items[itemIndex].exception
+        self.items[itemIndex].exception = exception
+        self.items[itemIndex].line = line
+        if old == nil {
+            self.tableView.reloadData(forRowIndexes: IndexSet(integer: itemIndex), columnIndexes: IndexSet(integer: 1))
+        }
+        NotificationCenter.default.post(name: .JSException, object: (info, exception, line, itemIndex))
+    }
+}
 
+// MARK: -
 extension NSResponder {
     public var parentViewController: NSViewController? {
         return nextResponder as? NSViewController ?? nextResponder?.parentViewController
@@ -323,5 +401,54 @@ extension Array {
             return self.swapAt(oldIndex, newIndex)
         }
         self.insert(self.remove(at: oldIndex), at: newIndex)
+    }
+}
+
+// MARK: -
+class ExceptionCell: NSTableCellView {
+    @IBOutlet weak var button: NSButton!
+    @IBOutlet weak var infoButton: NSButton!
+    var exception: String? {
+        didSet {
+            button?.isHidden = exception == nil
+        }
+    }
+    var line: Int?
+    var info: Set<String>? {
+        didSet {
+            infoButton?.isHidden = info == nil || info!.isEmpty
+        }
+    }
+    
+    override func prepareForReuse() {
+        self.exception = nil
+        self.line = nil
+        self.info = nil
+        super.prepareForReuse()
+    }
+    
+    @IBAction func handleJSButton(_ sender: Any) {
+        let alert = NSAlert()
+        alert.alertStyle = .critical
+        
+        if let num = line, num >= 0 {
+            alert.messageText = NSLocalizedString(String(format: "JS Exception at line %d", num), comment: "")
+        } else {
+            alert.messageText = NSLocalizedString("JS Exception", comment: "")
+        }
+        alert.informativeText = self.exception ?? ""
+        alert.addButton(withTitle: NSLocalizedString("OK", comment: "")).keyEquivalent = "\r"
+        alert.runModal()
+    }
+    
+    @IBAction func handleInfoButton(_ sender: Any) {
+        guard let info = self.info, !info.isEmpty else {
+            return
+        }
+        let alert = NSAlert()
+        alert.alertStyle = .informational
+        alert.messageText = info.joined(separator: " \n")
+        alert.addButton(withTitle: NSLocalizedString("OK", comment: "")).keyEquivalent = "\r"
+        alert.runModal()
     }
 }

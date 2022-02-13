@@ -98,6 +98,8 @@
 "last saved by %@" = "ultimo salvataggio di %@";
 "last saved on %@" = "ultimo salvataggio il %@";
 "on %@" = "il %@";
+"Application name" = "Nome dell'applicazione";
+"[deep scan required]" = "[richiede scansione approfondita]";
 
 "mono" = "mono";
 "stereo" = "stereo";
@@ -117,3 +119,11 @@
 "without vertex colors" = "veritici privi di colore";
 "with occlusion" = "ambient occlusion per vertici";
 "without occlusion" = "ambient occlusion assente";
+
+"1 file" = "1 file";
+"%@ files" = "%@ file";
+
+"normal" = "normale";
+"indexed" = "tabella di indici";
+"float" = "decimale";
+"Metadata" = "Metadati";

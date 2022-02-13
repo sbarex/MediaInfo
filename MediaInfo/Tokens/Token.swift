@@ -16,6 +16,7 @@ extension NSPasteboard.PasteboardType {
     static let MITokenVideoExtra = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-video-extra")
     static let MITokenMediaTrack = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-media-track")
     static let MITokenColor = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-color")
+    static let MITokenPrint = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-print")
     static let MITokenLanguage = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-language")
     static let MIText = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-text")
     static let MITokenPDFBox = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-pdfbox")
@@ -25,6 +26,8 @@ extension NSPasteboard.PasteboardType {
     static let MITokenVideoMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-video-metadata")
     static let MITokenAudioMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-audio-metadata")
     static let MITokenModelMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.model-metadata")
+    static let MITokenArchiveTrack = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-archive-track")
+    static let MITokenScript = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-script")
 }
 
 protocol BaseMode {
@@ -69,6 +72,7 @@ extension BaseMode where Self: RawRepresentable, Self.RawValue == Int {
 protocol BaseToken {
     static var ModeClass: BaseMode.Type { get }
     var mode: BaseMode { get }
+    var informativeMessage: String { get }
 }
 
 class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
@@ -80,6 +84,7 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
         case subtitle
         case office
         case model
+        case archive
     }
     
     enum Mode: Int, BaseMode {
@@ -106,6 +111,9 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
     }
     var displayString: String {
         return mode.displayString
+    }
+    var informativeMessage: String {
+        return ""
     }
     
     var hasMenu: Bool { return true }
@@ -173,7 +181,9 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
             TokenAudioMetadata.self,
             TokenMediaTrack.self,
             TokenOfficeSize.self,
-            TokenOfficeMetadata.self
+            TokenOfficeMetadata.self,
+            TokenArchive.self,
+            TokenScript.self
         ]
         var tokens: [Token] = []
         

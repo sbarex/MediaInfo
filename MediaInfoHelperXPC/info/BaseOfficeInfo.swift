@@ -9,6 +9,18 @@
 import Cocoa
 
 class BaseOfficeInfo: BaseInfo, FileInfo {
+    enum CodingKeys: String, CodingKey {
+        case creator
+        case title
+        case subject
+        case keywords
+        case description
+        case creationDate
+        case modificationDate
+        case modified
+        case application
+    }
+    
     let file: URL
     let fileSize: Int64
     
@@ -53,34 +65,34 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
         self.file = r.0
         self.fileSize = r.1 ?? -1
         
-        self.creator = coder.decodeObject(forKey: "creator") as? String ?? ""
-        self.title = coder.decodeObject(forKey: "title") as? String ?? ""
-        self.subject = coder.decodeObject(forKey: "subject") as? String ?? ""
-        self.description = coder.decodeObject(forKey: "description") as? String ?? ""
+        self.creator = coder.decodeObject(of: NSString.self, forKey: "creator") as String? ?? ""
+        self.title = coder.decodeObject(of: NSString.self, forKey: "title") as String? ?? ""
+        self.subject = coder.decodeObject(of: NSString.self, forKey: "subject") as String? ?? ""
+        self.description = coder.decodeObject(of: NSString.self, forKey: "description") as String? ?? ""
         
         let n = coder.decodeInteger(forKey: "keywords_count")
         var keywords: [String] = []
         for i in 0 ..< n {
-            if let k = coder.decodeObject(forKey: "keyword_\(i)") as? String {
+            if let k = coder.decodeObject(of: NSString.self, forKey: "keyword_\(i)") as String? {
                 keywords.append(k)
             }
         }
         self.keywords = keywords
         
-        if let n = coder.decodeObject(forKey: "creationDate") as? TimeInterval {
+        if let n = coder.decodeObject(of: NSNumber.self, forKey: "creationDate")?.doubleValue {
             self.creationDate = Date(timeIntervalSince1970: n)
         } else {
             self.creationDate = nil
         }
-        if let n = coder.decodeObject(forKey: "modificationDate") as? TimeInterval {
+        if let n = coder.decodeObject(of: NSNumber.self, forKey: "modificationDate")?.doubleValue {
             self.modificationDate = Date(timeIntervalSince1970: n)
         } else {
             self.modificationDate = nil
         }
         
-        self.modified = coder.decodeObject(forKey: "modified") as? String ?? ""
+        self.modified = coder.decodeObject(of: NSString.self, forKey: "modified") as String? ?? ""
         
-        self.application = coder.decodeObject(forKey: "application") as? String ?? ""
+        self.application = coder.decodeObject(of: NSString.self, forKey: "application") as String? ?? ""
         
         super.init(coder: coder)
     }
@@ -88,27 +100,48 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
     override func encode(with coder: NSCoder) {
         self.encodeFileInfo(coder)
         
-        coder.encode(self.creator, forKey: "creator")
-        coder.encode(self.title, forKey: "title")
-        coder.encode(self.subject, forKey: "subject")
-        coder.encode(self.description, forKey: "description")
+        coder.encode(self.creator as NSString, forKey: "creator")
+        coder.encode(self.title as NSString, forKey: "title")
+        coder.encode(self.subject as NSString, forKey: "subject")
+        coder.encode(self.description as NSString, forKey: "description")
         
         coder.encode(self.keywords.count, forKey: "keywords_count")
         for i in 0 ..< self.keywords.count {
-            coder.encode(self.keywords[i], forKey: "keyword_\(i)")
+            coder.encode(self.keywords[i] as NSString, forKey: "keyword_\(i)")
         }
         
-        coder.encode(self.creationDate?.timeIntervalSince1970, forKey: "creationDate")
-        coder.encode(self.modificationDate?.timeIntervalSince1970, forKey: "modificationDate")
+        coder.encode((self.creationDate?.timeIntervalSince1970) as NSNumber?, forKey: "creationDate")
+        coder.encode((self.modificationDate?.timeIntervalSince1970) as NSNumber?, forKey: "modificationDate")
         
-        coder.encode(self.modified, forKey: "modified")
+        coder.encode(self.modified as NSString, forKey: "modified")
         
-        coder.encode(self.application, forKey: "application")
+        coder.encode(self.application as NSString, forKey: "application")
         
         super.encode(with: coder)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool) -> String {
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        try self.encodeFileInfo(to: encoder)
+        
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.creator, forKey: .creator)
+        try container.encode(self.title, forKey: .title)
+        try container.encode(self.subject, forKey: .subject)
+        try container.encode(self.description, forKey: .description)
+        try container.encode(self.keywords, forKey: .keywords)
+        if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
+            try container.encode(self.creationDate?.timeIntervalSince1970, forKey: .creationDate)
+            try container.encode(self.modificationDate?.timeIntervalSince1970, forKey: .modificationDate)
+        } else  {
+            try container.encode(self.creationDate, forKey: .creationDate)
+            try container.encode(self.modificationDate, forKey: .modificationDate)
+        }
+        try container.encode(self.modified, forKey: .modified)
+        try container.encode(self.application, forKey: .application)
+    }
+    
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         let useEmptyData = false
         
         switch placeholder {
@@ -128,7 +161,7 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
                     template += String(format: NSLocalizedString("created on %@", tableName: "LocalizableExt",comment: ""), "[[creation-date]]")
                 }
             }
-            return self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled)
+            return self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         case "[[last-author]]":
             return format(value: values?["modified"] ?? self.modified, isFilled: &isFilled)
         case "[[last-modification]]":
@@ -143,7 +176,7 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
                     template += String(format: NSLocalizedString("last saved on %@", tableName: "LocalizableExt",comment: ""), "[[modification-date]]")
                 }
             }
-            return self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled)
+            return self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         case "[[title]]":
             return format(value: values?["title"] ?? self.title, isFilled: &isFilled)
         case "[[subject]]":
@@ -185,7 +218,7 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
             isFilled = false
             return ""
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     
@@ -193,7 +226,7 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
         return self.generateMenu(items: settings.officeMenuItems, image: self.getImage(for: "office"), withSettings: settings)
     }
     
-    override internal func processSpecialMenuItem(_ item: Settings.MenuItem, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+    override internal func processSpecialMenuItem(_ item: Settings.MenuItem, atIndex itemIndex: Int, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
         if item.template == "[[keywords]]" {
             guard !self.keywords.isEmpty else {
                 return true
@@ -218,7 +251,7 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
             
             return true
         } else {
-            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, atIndex: itemIndex, inMenu: destination_sub_menu, withSettings: settings)
         }
     }
 }

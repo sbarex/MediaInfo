@@ -66,4 +66,17 @@ struct AVDictionary {
 //     return ret;
 // }
 
+
+
+#include "libarchive/include/archive.h"
+#include "libarchive/include/archive_entry.h"
+#define FORMAT_AE_IFMT      0170000
+#define FORMAT_AE_IFREG     0100000
+#define FORMAT_AE_IFLNK     0120000
+#define FORMAT_AE_IFSOCK    0140000
+#define FORMAT_AE_IFCHR     0020000
+#define FORMAT_AE_IFBLK     0060000
+#define FORMAT_AE_IFDIR     0040000
+#define FORMAT_AE_IFIFO     0010000
+
 #endif /* BridgeHeader_h */

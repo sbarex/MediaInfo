@@ -7,9 +7,13 @@
 //
 
 import Cocoa
+// import Sparkle
 import FinderSync
 
-class FinderSync: FIFinderSync {
+class FinderSync: FIFinderSync {/*
+    var userDriver: SPUStandardUserDriver?
+    var updater: SPUUpdater?*/
+    
     var settings: Settings = Settings(fromDict: [:])
     
     override init() {
@@ -29,6 +33,18 @@ class FinderSync: FIFinderSync {
         let notificationCenter = NSWorkspace.shared.notificationCenter
         notificationCenter.addObserver(self, selector: #selector(self.handleMount(_:)), name: NSWorkspace.didMountNotification, object: nil)
         notificationCenter.addObserver(self, selector: #selector(self.handleUnmount(_:)), name: NSWorkspace.didMountNotification, object: nil)
+        
+        /*
+        let hostBundle = Bundle.main
+        let url = hostBundle.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
+        let applicationBundle = Bundle(url: url)
+        self.userDriver = SPUStandardUserDriver(hostBundle: hostBundle, delegate: nil)
+        self.updater = SPUUpdater(hostBundle: hostBundle, applicationBundle: applicationBundle, userDriver: self.userDriver!, delegate: nil)
+        do {
+            try self.updater!.start()
+        } catch {
+            print("Failed to start updater with error: \(error)")
+        }*/
     }
     
     deinit {
@@ -194,6 +210,8 @@ class FinderSync: FIFinderSync {
             return menu
         } else if settings.isModelsHandled && UTTypeConformsTo(uti as CFString, "public.3d-content" as CFString), let menu = getMenuForModel(atURL: item) {
             return menu
+        } else if settings.isArchiveHandled && (UTTypeConformsTo(uti as CFString, "public.zip-archive" as CFString) || UTTypeConformsTo(uti as CFString, "com.rarlab.rar-archive" as CFString)), let menu = getMenuForArchive(atURL: item) {
+            return menu
         } else {
             currentFile = nil
             return nil
@@ -308,6 +326,13 @@ class FinderSync: FIFinderSync {
     func getMenuForModel(atURL item: URL) -> NSMenu? {
         let model_info = HelperWrapper.getModelInfo(for: item)
         let menu = model_info?.getMenu(withSettings: settings)
+        sanitizeMenu(menu)
+        return menu
+    }
+    
+    func getMenuForArchive(atURL item: URL) -> NSMenu? {
+        let archive_info = HelperWrapper.getArchiveInfo(for: item)
+        let menu = archive_info?.getMenu(withSettings: settings)
         sanitizeMenu(menu)
         return menu
     }

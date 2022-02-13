@@ -152,6 +152,11 @@ class Settings {
             MenuItem(image: "size", template: "[[filesize]]"),
         ]
         
+        settings.archiveMenuItems = [
+            MenuItem(image: "zip", template: "[[filesize]] = [[uncompressed-size]] uncompressed, [[n-files]]"),
+            MenuItem(image: "", template: "[[files-plain-with-icon]]"),
+        ]
+        
         return settings
     }
     
@@ -178,6 +183,7 @@ class Settings {
     }
     
     var isImagesHandled = true
+    var extractImageMetadata = false
     var imageMenuItems: [MenuItem] = []
     
     var isVideoHandled = true
@@ -190,11 +196,17 @@ class Settings {
     var pdfMenuItems: [MenuItem] = []
     
     var isOfficeHandled = true
-    var isOfficeDeepScan = true
+    var isOfficeDeepScan = false
     var officeMenuItems: [MenuItem] = []
     
-    var isModelsHandled = true
+    var isModelsHandled = false
     var modelsMenuItems: [MenuItem] = []
+    
+    var isArchiveHandled = true
+    var maxFilesInArchive = 100
+    var maxDepthArchive = 10
+    var maxFilesInDepth = 30
+    var archiveMenuItems: [MenuItem] = []
     
     var folders: [URL] = []
     var handleExternalDisk = false
@@ -231,6 +243,7 @@ class Settings {
         self.isEmptyItemsSkipped = defaultsDomain["skip-empty"] as? Bool ?? true
         
         self.isImagesHandled = defaultsDomain["image_handled"] as? Bool ?? true
+        self.extractImageMetadata = defaultsDomain["image_metadata"] as? Bool ?? false
         self.imageMenuItems = processItems(defaultsDomain["image_items"])
         
         self.isVideoHandled = defaultsDomain["video_handled"] as? Bool ?? true
@@ -247,8 +260,14 @@ class Settings {
         self.isOfficeDeepScan = defaultsDomain["office_deep_scan"] as? Bool ?? true
         self.officeMenuItems = processItems(defaultsDomain["office_items"])
         
-        self.isModelsHandled = defaultsDomain["3d_handled"] as? Bool ?? true
+        self.isModelsHandled = defaultsDomain["3d_handled"] as? Bool ?? false
         self.modelsMenuItems = processItems(defaultsDomain["3d_items"])
+        
+        self.isArchiveHandled = defaultsDomain["archive_handled"] as? Bool ?? true
+        self.maxFilesInArchive = defaultsDomain["archive_max_files"] as? Int ?? 100
+        self.maxDepthArchive = defaultsDomain["archive_max_depth"] as? Int ?? 10
+        self.maxFilesInDepth = defaultsDomain["archive_max_files_in_depth"] as? Int ?? 30
+        self.archiveMenuItems = processItems(defaultsDomain["archive_items"])
         
         if !self.isInfoOnMainItem {
             let standard = Self.getStandardSettings()
@@ -317,6 +336,8 @@ class Settings {
         dict["skip-empty"] = self.isEmptyItemsSkipped
         
         dict["image_handled"] = self.isImagesHandled
+        dict["image_metadata"] = self.extractImageMetadata
+        
         dict["image_items"] = self.imageMenuItems.map({ return [$0.image, $0.template]})
         
         dict["video_handled"] = self.isVideoHandled
@@ -335,6 +356,12 @@ class Settings {
         
         dict["3d_handled"] = self.isModelsHandled
         dict["3d_items"] = self.modelsMenuItems.map({ return [$0.image, $0.template]})
+        
+        dict["archive_handled"] = self.isArchiveHandled
+        dict["archive_max_files"] = self.maxFilesInArchive
+        dict["archive_max_depth"] = self.maxDepthArchive
+        dict["archive_max_files_in_depth"] = self.maxFilesInDepth
+        dict["archive_items"] = self.archiveMenuItems.map({ return [$0.image, $0.template]})
         
         dict["menu-open"]   = self.menuWillOpenFile
         

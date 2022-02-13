@@ -13,6 +13,7 @@ class TokenImageExtra: Token {
         case filesize = 1
         case animated
         case is_animated
+        case metadata
         case alpha
         case is_alpha
         case fileName
@@ -33,6 +34,7 @@ class TokenImageExtra: Token {
             case .fileName: return "filename.ext"
             case .fileExtension: return "ext"
             case .paper: return "A4"
+            case .metadata: return "<metadata>"
             }
         }
         
@@ -46,6 +48,7 @@ class TokenImageExtra: Token {
             case .fileName: return "[[file-name]]"
             case .fileExtension: return "[[file-ext]]"
             case .paper: return "[[paper]]"
+            case .metadata: return "[[metadata]]"
             }
         }
         
@@ -59,6 +62,7 @@ class TokenImageExtra: Token {
             case .fileName: return NSLocalizedString("File name.", comment: "")
             case .fileExtension: return NSLocalizedString("File extension.", comment: "")
             case .paper: return NSLocalizedString("File extension.", comment: "")
+            case .metadata: return NSLocalizedString("Submenu metadata.", comment: "")
             }
         }
         
@@ -72,6 +76,7 @@ class TokenImageExtra: Token {
             case "[[file-name]]": self = .fileName
             case "[[file-ext]]": self = .fileExtension
             case "[[paper]]": self = .paper
+            case "[[metadata]]": self = .metadata
             default: return nil
             }
         }
@@ -81,6 +86,27 @@ class TokenImageExtra: Token {
     
     override class var supportedTypes: [SupportedType] {
         return [.image]
+    }
+    
+    override var requireSingle: Bool {
+        guard let mode = self.mode as? Mode else {
+            return false
+        }
+        switch mode {
+        case .metadata:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    override var informativeMessage: String {
+        switch self.mode as! Mode {
+        case .metadata:
+            return NSLocalizedString("Extracting metadata can slow down menu generation.", comment: "")
+        default:
+            return super.informativeMessage
+        }
     }
     
     init(mode: Mode) {

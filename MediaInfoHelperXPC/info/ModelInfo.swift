@@ -9,7 +9,12 @@
 import Cocoa
 
 class ModelInfo: BaseInfo, FileInfo {
-    class SubMesh {
+    class SubMesh: Encodable {
+        enum CodingKeys: String, CodingKey {
+            case name
+            case material
+            case geometryType
+        }
         let name: String
         let material: String?
         let geometryType: Int
@@ -21,25 +26,31 @@ class ModelInfo: BaseInfo, FileInfo {
         }
         
         required init?(coder: NSCoder) {
-            if let s = coder.decodeObject(forKey: "name") as? String {
-                self.name = s
-            } else {
+            guard let s = coder.decodeObject(of: NSString.self, forKey: "name") as String? else {
                 return nil
             }
-            self.material = coder.decodeObject(forKey: "material") as? String
+            self.name = s
+            self.material = coder.decodeObject(of: NSString.self, forKey: "material") as String?
             self.geometryType = coder.decodeInteger(forKey: "geometryType")
         }
         
         func encode(with coder: NSCoder) {
-            coder.encode(self.name, forKey: "name")
-            coder.encode(self.material, forKey: "material")
+            coder.encode(self.name as NSString, forKey: "name")
+            coder.encode(self.material as NSString?, forKey: "material")
             coder.encode(self.geometryType, forKey: "geometryType")
+        }
+        
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.name, forKey: .name)
+            try container.encode(self.material, forKey: .material)
+            try container.encode(self.geometryType, forKey: .geometryType)
         }
         
         var imageName: String {
             switch self.geometryType {
-            case 0: return "3d_point"
-            case 1: return "3d_line"
+            case 0: return "3d_points"
+            case 1: return "3d_lines"
             case 2: return "3d_triangle"
             case 3: return "3d_triangle_stripe"
             case 4: return "3d_quads"
@@ -50,7 +61,19 @@ class ModelInfo: BaseInfo, FileInfo {
         }
     }
     
-    class Mesh {
+    class Mesh: Encodable {
+        enum CodingKeys: String, CodingKey {
+            case name
+            case vertexCount
+            
+            case hasNormals
+            case hasTangent
+            case hasTextureCoordinate
+            case hasVertexColor
+            case hasOcclusion
+            case meshes
+        }
+        
         let name: String
         let vertexCount: Int
         
@@ -73,11 +96,10 @@ class ModelInfo: BaseInfo, FileInfo {
         }
         
         required init?(coder: NSCoder) {
-            if let s = coder.decodeObject(forKey: "name") as? String {
-                self.name = s
-            } else {
+            guard let s = coder.decodeObject(of: NSString.self, forKey: "name") as String? else {
                 return nil
             }
+            self.name = s
             self.vertexCount = coder.decodeInteger(forKey: "vertexCount")
             self.hasNormals = coder.decodeBool(forKey: "hasNormals")
             self.hasTangent = coder.decodeBool(forKey: "hasTangent")
@@ -88,8 +110,11 @@ class ModelInfo: BaseInfo, FileInfo {
             self.meshes = []
             let n = coder.decodeInteger(forKey: "submeshesCount")
             for i in 0 ..< n {
-                if let data = coder.decodeObject(forKey: "submesh_\(i)") as? Data, let c = try? NSKeyedUnarchiver(forReadingFrom: data), let m = SubMesh(coder: c) {
-                    meshes.append(m)
+                if let data = coder.decodeObject(of: NSData.self, forKey: "submesh_\(i)") as Data?, let c = try? NSKeyedUnarchiver(forReadingFrom: data) {
+                    if let m = SubMesh(coder: c) {
+                        meshes.append(m)
+                    }
+                    c.finishDecoding()
                 }
             }
         }
@@ -112,6 +137,22 @@ class ModelInfo: BaseInfo, FileInfo {
                 coder.encode(c.encodedData, forKey: "submesh_\(i)")
             }
         }
+        
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.name, forKey: .name)
+            try container.encode(self.vertexCount, forKey: .vertexCount)
+            try container.encode(self.hasNormals, forKey: .hasNormals)
+            try container.encode(self.hasTangent, forKey: .hasTangent)
+            try container.encode(self.hasTextureCoordinate, forKey: .hasTextureCoordinate)
+            try container.encode(self.hasVertexColor, forKey: .hasVertexColor)
+            try container.encode(self.hasOcclusion, forKey: .hasOcclusion)
+            try container.encode(self.meshes, forKey: .meshes)
+        }
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case meshes
     }
     
     let file: URL
@@ -138,7 +179,6 @@ class ModelInfo: BaseInfo, FileInfo {
         return meshes.first(where: { $0.hasOcclusion }) != nil
     }
     
-    
     init(file: URL, meshes: [Mesh]) {
         self.file = file
         self.fileSize = Self.getFileSize(file) ?? -1
@@ -157,8 +197,11 @@ class ModelInfo: BaseInfo, FileInfo {
         self.meshes = []
         let n = coder.decodeInteger(forKey: "meshCount")
         for i in 0 ..< n {
-            if let data = coder.decodeObject(forKey: "mesh_\(i)") as? Data, let c = try? NSKeyedUnarchiver(forReadingFrom: data), let m = Mesh(coder: c) {
-                self.meshes.append(m)
+            if let data = coder.decodeObject(of: NSData.self, forKey: "mesh_\(i)") as Data?, let c = try? NSKeyedUnarchiver(forReadingFrom: data) {
+                if let m = Mesh(coder: c) {
+                    self.meshes.append(m)
+                }
+                c.finishDecoding()
             }
         }
         
@@ -177,6 +220,13 @@ class ModelInfo: BaseInfo, FileInfo {
         super.encode(with: coder)
     }
     
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        try self.encodeFileInfo(to: encoder)
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.meshes, forKey: .meshes)
+    }
+    
     override func getMenu(withSettings settings: Settings) -> NSMenu? {
         return self.generateMenu(items: settings.modelsMenuItems, image: self.getImage(for: "3d"), withSettings: settings)
     }
@@ -184,11 +234,11 @@ class ModelInfo: BaseInfo, FileInfo {
     override func getStandardTitle(forSettings settings: Settings) -> String {
         let template = "[[mesh]], [[vertex]]"
         var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled)
+        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
         return isFilled ? title : ""
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         let useEmptyData = false
         switch placeholder {
             
@@ -267,11 +317,11 @@ class ModelInfo: BaseInfo, FileInfo {
                 return NSLocalizedString(v ? "with occlusion" : "without occlusion", tableName: "LocalizableExt", comment: "")
             }
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     
-    override internal func processSpecialMenuItem(_ item: Settings.MenuItem, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+    override internal func processSpecialMenuItem(_ item: Settings.MenuItem, atIndex itemIndex: Int, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
         if item.template == "[[meshes]]" {
             guard !self.meshes.isEmpty else {
                 return true
@@ -314,7 +364,7 @@ class ModelInfo: BaseInfo, FileInfo {
             
             return true
         } else {
-            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, atIndex: itemIndex, inMenu: destination_sub_menu, withSettings: settings)
         }
     }
 }

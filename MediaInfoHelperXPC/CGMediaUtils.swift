@@ -46,7 +46,7 @@ extension AVAssetTrack {
 }
 
 /// Get image info for image format supported by coregraphics.
-func getCGImageInfo(forFile url: URL) -> ImageInfo? {
+func getCGImageInfo(forFile url: URL, processMetadata: Bool) -> ImageInfo? {
     // Create the image source
     guard let img_src = CGImageSourceCreateWithURL(url as CFURL, nil) else {
         return nil
@@ -96,7 +96,235 @@ func getCGImageInfo(forFile url: URL) -> ImageInfo? {
     CFNumberGetValue(n, CFNumberType.sInt8Type, &alpha)
     
     let images = CGImageSourceGetCount(img_src)
-    return ImageInfo(file: url, width: width, height: height, dpi: dpi, colorMode: color, depth: depth, animated: images > 1, withAlpha: alpha > 0)
+    
+    // Get the color space
+    let cp:CFString = getKey(kCGImagePropertyProfileName, inDictionary: img_properties) ?? "-" as CFString
+    
+    var b: CFBoolean = getKey(kCGImagePropertyIsFloat, inDictionary: img_properties) ?? kCFBooleanFalse
+    let isFloat = b == kCFBooleanTrue
+    b = getKey(kCGImagePropertyIsIndexed, inDictionary: img_properties) ?? kCFBooleanFalse
+    let isIndexed = b == kCFBooleanTrue
+    
+    var metadata: [String: [MetadataInfo]] = [:]
+    var metadata_raw: [String: String] = [:]
+    
+    if processMetadata {
+        if let i: CFDictionary = getKey(kCGImagePropertyExifDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["Exif"] = s
+            }
+            let meta = ImageInfo.parseExif(dict: dict)
+            if !meta.isEmpty {
+                metadata["Exif"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyExifAuxDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["ExifAux"] = s
+            }
+            let meta = ImageInfo.parseExif(dict: dict)
+            if !meta.isEmpty {
+                metadata["ExifAux"] = meta
+            }
+        }
+        
+        if let i: CFDictionary = getKey(kCGImagePropertyTIFFDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["TIFF"] = s
+            }
+            let meta = ImageInfo.parseTiffDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["TIFF"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyJFIFDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["JFIF"] = s
+            }
+            let meta = ImageInfo.parseJfifDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["JFIF"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyGIFDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["GIF"] = s
+            }
+            let meta = ImageInfo.parseGifDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["GIF"] = meta
+            }
+        }
+        if #available(macOS 10.15, *) {
+            if let i: CFDictionary = getKey(kCGImagePropertyHEICSDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+                if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                    metadata_raw["HEICS"] = s
+                }
+                let meta = ImageInfo.parseHeicsDictionary(dict: dict)
+                if !meta.isEmpty {
+                    metadata["HEICS"] = meta
+                }
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyPNGDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["PNG"] = s
+            }
+            let meta = ImageInfo.parsePngDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["PNG"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyIPTCDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["IPTC"] = s
+            }
+            let meta = ImageInfo.parseIptcDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["IPTC"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyGPSDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["GPS"] = s
+            }
+            let meta = ImageInfo.parseGPSDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["GPS"] = meta
+            }
+        }
+        
+        if let i: CFDictionary = getKey(kCGImagePropertyRawDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["RAW"] = s
+            }
+            let meta = ImageInfo.parseMetadataDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["RAW"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyMakerCanonDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["Canon"] = s
+            }
+            let meta = ImageInfo.parseMetadataDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["Canon"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyMakerNikonDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["Nicon"] = s
+            }
+            let meta = ImageInfo.parseMetadataDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["Nicon"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyMakerMinoltaDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["Minolta"] = s
+            }
+            let meta = ImageInfo.parseMetadataDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["Minolta"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyMakerFujiDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["Fuji"] = s
+            }
+            let meta = ImageInfo.parseMetadataDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["Fuji"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyMakerOlympusDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["Olympus"] = s
+            }
+            let meta = ImageInfo.parseMetadataDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["Olympus"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyMakerPentaxDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["Pentax"] = s
+            }
+            let meta = ImageInfo.parseMetadataDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["Pentax"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImageProperty8BIMDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["8BIM"] = s
+            }
+            let meta = ImageInfo.parseMetadataDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["8BIM"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyDNGDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["DNG"] = s
+            }
+            let meta = ImageInfo.parseDNGDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["DNG"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyOpenEXRDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["OpenEXR"] = s
+            }
+            let meta = ImageInfo.parseMetadataDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["OpenEXR"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyMakerAppleDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["Apple"] = s
+            }
+            let meta = ImageInfo.parseMetadataDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["Apple"] = meta
+            }
+        }
+        if let i: CFDictionary = getKey(kCGImagePropertyFileContentsDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["File"] = s
+            }
+            let meta = ImageInfo.parseMetadataDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["File"] = meta
+            }
+        }
+        if #available(macOS 11.0, *) {
+            if let i: CFDictionary = getKey(kCGImagePropertyWebPDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+                if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                    metadata_raw["WebP"] = s
+                }
+                let meta = ImageInfo.parseMetadataDictionary(dict: dict)
+                if !meta.isEmpty {
+                    metadata["WebP"] = meta
+                }
+            }
+            if let i: CFDictionary = getKey(kCGImagePropertyTGADictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+                if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                    metadata_raw["TGA"] = s
+                }
+                let meta = ImageInfo.parseMetadataDictionary(dict: dict)
+                if !meta.isEmpty {
+                    metadata["TGA"] = meta
+                }
+            }
+        }
+    }
+    
+    return ImageInfo(file: url, width: width, height: height, dpi: dpi, colorMode: color, depth: depth, profileName: cp as String, animated: images > 1, withAlpha: alpha > 0, colorTable: isFloat ? .float : (isIndexed ? .indexed : .regular), metadata: metadata, metadataRaw: metadata_raw)
 }
 
 func codecForVideoCode(_ code: FourCharCode?) -> String? {

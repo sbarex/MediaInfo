@@ -33,33 +33,44 @@ class TokenOfficeMetadata: Token {
         
         case application
         
+        var requireDeepScan: Bool {
+            switch self {
+            case .pages, .sheets:
+                return true
+            default:
+                return false
+            }
+        }
+        
         static var pasteboardType: NSPasteboard.PasteboardType {
             return .MITokenOfficeMetadata
         }
         
         var displayString: String {
+            let s: String
             switch self {
-            case .creator: return NSLocalizedString("Creator", comment: "")
-            case .creationDate: return NSLocalizedString("Creation Date", comment: "")
-            case .creation: return NSLocalizedString("Creator name and date", comment: "")
-            case .modified: return NSLocalizedString("Last author", comment: "")
-            case .modificationDate: return NSLocalizedString("Modification Date", comment: "")
-            case .modification: return NSLocalizedString("Last author and date", comment: "")
-            case .title: return NSLocalizedString("Title", comment: "")
-            case .subject: return NSLocalizedString("Subject", comment: "")
-            case .keywords: return NSLocalizedString("Keywords", comment: "")
-            case .description: return NSLocalizedString("Description", comment: "")
+            case .creator: s = NSLocalizedString("Creator", comment: "")
+            case .creationDate: s = NSLocalizedString("Creation Date", comment: "")
+            case .creation: s = NSLocalizedString("Creator name and date", comment: "")
+            case .modified: s = NSLocalizedString("Last author", comment: "")
+            case .modificationDate: s = NSLocalizedString("Modification Date", comment: "")
+            case .modification: s = NSLocalizedString("Last author and date", comment: "")
+            case .title: s = NSLocalizedString("Title", comment: "")
+            case .subject: s = NSLocalizedString("Subject", comment: "")
+            case .keywords: s = NSLocalizedString("Keywords", comment: "")
+            case .description: s = NSLocalizedString("Description", comment: "")
                 
-            case .pages: return NSLocalizedString("n. of pages/sheets/slides", comment: "")
-            case .words: return "235 " + NSLocalizedString("words", tableName: "LocalizableExt", comment: "")
-            case .characters: return "1850 " + NSLocalizedString("characters", tableName: "LocalizableExt", comment: "")
-            case .charactersWithSpacesCount: return "2000 " + NSLocalizedString("characters (spaces included)", tableName: "LocalizableExt", comment: "")
-            case .sheets: return NSLocalizedString("sheets", tableName: "LocalizableExt", comment: "")
-            case .filesize: return "2.5 Mb"
-            case .fileName: return "filename.ext"
-            case .fileExtension: return "ext"
-            case .application: return "MicrosoftOffice/15.0 MicrosoftWord"
+            case .pages: s = NSLocalizedString("pages/sheets/slides count", comment: "")
+            case .words: s = "235 " + NSLocalizedString("words", tableName: "LocalizableExt", comment: "")
+            case .characters: s = "1850 " + NSLocalizedString("characters", tableName: "LocalizableExt", comment: "")
+            case .charactersWithSpacesCount: s = "2000 " + NSLocalizedString("characters (spaces included)", tableName: "LocalizableExt", comment: "")
+            case .sheets: s = NSLocalizedString("sheets", tableName: "LocalizableExt", comment: "")
+            case .filesize: s = "2.5 Mb"
+            case .fileName: s = "filename.ext"
+            case .fileExtension: s = "ext"
+            case .application: s = NSLocalizedString("Application name", tableName: "LocalizableExt", comment: "")
             }
+            return s //  + (self.requireDeepScan ? " " + NSLocalizedString("[deep scan required]", tableName: "LocalizableExt", comment: "") : "")
         }
         
         var placeholder: String {
@@ -155,6 +166,16 @@ class TokenOfficeMetadata: Token {
         default:
             return false
         }
+    }
+    
+    override var informativeMessage: String {
+        guard let mode = self.mode as? Mode else {
+            return super.informativeMessage
+        }
+        if mode.requireDeepScan {
+            return String(format: NSLocalizedString("The token '%@' require the deep scan of the file and can slow down menu generation.", comment: ""), mode.displayString)
+        }
+        return super.informativeMessage
     }
     
     required convenience init?(mode: BaseMode) {

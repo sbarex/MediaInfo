@@ -11,21 +11,27 @@ import Cocoa
 extension CGRect {
     func encode(_ coder: NSCoder, withKey key: String) {
         let c = NSKeyedArchiver(requiringSecureCoding: coder.requiresSecureCoding)
-        c.encode(self.origin.x, forKey: "x")
-        c.encode(self.origin.y, forKey: "y")
-        c.encode(self.width, forKey: "w")
-        c.encode(self.height, forKey: "h")
+        c.encode(Double(self.origin.x), forKey: "x")
+        c.encode(Double(self.origin.y), forKey: "y")
+        c.encode(Double(self.width), forKey: "w")
+        c.encode(Double(self.height), forKey: "h")
         coder.encode(c.encodedData, forKey: key)
     }
     
     init?(_ coder: NSCoder, withKey key: String) {
-        let v = coder.decodeObject(forKey: key)
-        if let data = v as? Data,
-           let d = try? NSKeyedUnarchiver(forReadingFrom: data),
-           let x = d.decodeObject(forKey: "x") as? CGFloat, let y = d.decodeObject(forKey: "y") as? CGFloat,
-           let w = d.decodeObject(forKey: "w") as? CGFloat, let h = d.decodeObject(forKey: "h") as? CGFloat
-           {
-            self.init(x:x, y: y, width: w, height: h)
+        if let data = coder.decodeObject(of: NSData.self, forKey: key) as Data?, let d = try? NSKeyedUnarchiver(forReadingFrom: data) {
+            defer {
+                d.finishDecoding()
+            }
+            guard d.containsValue(forKey: "x") && d.containsValue(forKey: "y") && d.containsValue(forKey: "q") && d.containsValue(forKey: "h") else {
+                return nil
+            }
+            let x = d.decodeDouble(forKey: "x")
+            let y = d.decodeDouble(forKey: "y")
+            let w = d.decodeDouble(forKey: "w")
+            let h = d.decodeDouble(forKey: "h")
+            
+            self.init(x: CGFloat(x), y: CGFloat(y), width: CGFloat(w), height: CGFloat(h))
         } else {
             return nil
         }
@@ -33,6 +39,28 @@ extension CGRect {
 }
 
 class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
+    enum CodingKeys: String, CodingKey {
+        case version
+        case author
+        case subject
+        case title
+        case producer
+        case creationDate
+        case creator
+        case modificationDate
+        case keywords
+        case isLocked
+        case isEncrypted
+        case pagesCount
+        case allowsCopying
+        case allowsPrinting
+        case cropBox
+        case artBox
+        case bleedBox
+        case mediaBox
+        case trimBox
+    }
+    
     enum PrintUnit: Int, CaseIterable {
         case pt = 1
         case cm
@@ -340,18 +368,18 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
         self.file = r.0
         self.fileSize = r.1 ?? -1
         
-        self.version = coder.decodeObject(forKey: "version") as? String ?? ""
-        self.author = coder.decodeObject(forKey: "author") as? String
-        self.subject = coder.decodeObject(forKey: "subject") as? String
-        self.title = coder.decodeObject(forKey: "title") as? String
-        self.producer = coder.decodeObject(forKey: "producer") as? String
-        if let n = coder.decodeObject(forKey: "creationDate") as? TimeInterval {
+        self.version = coder.decodeObject(of: NSString.self, forKey: "version") as String? ?? ""
+        self.author = coder.decodeObject(of: NSString.self, forKey: "author") as String?
+        self.subject = coder.decodeObject(of: NSString.self, forKey: "subject") as String?
+        self.title = coder.decodeObject(of: NSString.self, forKey: "title") as String?
+        self.producer = coder.decodeObject(of: NSString.self, forKey: "producer") as String?
+        if let n = (coder.decodeObject(of: NSNumber.self, forKey: "creationDate")?.doubleValue) {
             self.creationDate = Date(timeIntervalSince1970: n)
         } else {
             self.creationDate = nil
         }
-        self.creator = coder.decodeObject(forKey: "creator") as? String
-        if let n = coder.decodeObject(forKey: "modificationDate") as? TimeInterval {
+        self.creator = coder.decodeObject(of: NSString.self, forKey: "creator") as String?
+        if let n = coder.decodeObject(of: NSNumber.self, forKey: "modificationDate")?.doubleValue {
             self.modificationDate = Date(timeIntervalSince1970: n)
         } else {
             self.modificationDate = nil
@@ -370,7 +398,7 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
         let n = coder.decodeInteger(forKey: "keywords_count")
         var keywords: [String] = []
         for i in 0 ..< n {
-            if let k = coder.decodeObject(forKey: "keyword_\(i)") as? String {
+            if let k = coder.decodeObject(of: NSString.self, forKey: "keyword_\(i)") as String? {
                 keywords.append(k)
             }
         }
@@ -382,14 +410,14 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
     override func encode(with coder: NSCoder) {
         self.encodeFileInfo(coder)
         
-        coder.encode(self.version, forKey: "version")
-        coder.encode(self.author, forKey: "author")
-        coder.encode(self.subject, forKey: "subject")
-        coder.encode(self.title, forKey: "title")
-        coder.encode(self.producer, forKey: "producer")
-        coder.encode(self.creationDate?.timeIntervalSince1970, forKey: "creationDate")
-        coder.encode(self.creator, forKey: "creator")
-        coder.encode(self.modificationDate?.timeIntervalSince1970, forKey: "modificationDate")
+        coder.encode(self.version as String, forKey: "version")
+        coder.encode(self.author as String?, forKey: "author")
+        coder.encode(self.subject as String?, forKey: "subject")
+        coder.encode(self.title as String?, forKey: "title")
+        coder.encode(self.producer as String?, forKey: "producer")
+        coder.encode((self.creationDate?.timeIntervalSince1970) as NSNumber?, forKey: "creationDate")
+        coder.encode(self.creator as String?, forKey: "creator")
+        coder.encode((self.modificationDate?.timeIntervalSince1970) as NSNumber?, forKey: "modificationDate")
         coder.encode(self.isLocked, forKey: "isLocked")
         coder.encode(self.isEncrypted, forKey: "isEncrypted")
         coder.encode(self.pagesCount, forKey: "pagesCount")
@@ -404,10 +432,40 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
         
         coder.encode(self.keywords.count, forKey: "keywords_count")
         for (i, k) in keywords.enumerated() {
-            coder.encode(k, forKey: "keyword_\(i)")
+            coder.encode(k as String, forKey: "keyword_\(i)")
         }
         
         super.encode(with: coder)
+    }
+    
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        try self.encodeFileInfo(to: encoder)
+        
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.version, forKey: .version)
+        try container.encode(self.author, forKey: .author)
+        try container.encode(self.subject, forKey: .subject)
+        try container.encode(self.title, forKey: .title)
+        try container.encode(self.producer, forKey: .producer)
+        try container.encode(self.creator, forKey: .creator)
+        if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
+            try container.encode(self.modificationDate?.timeIntervalSince1970, forKey: .modificationDate)
+            try container.encode(self.creationDate?.timeIntervalSince1970, forKey: .creationDate)
+        } else {
+            try container.encode(self.modificationDate, forKey: .modificationDate)
+            try container.encode(self.creationDate, forKey: .creationDate)
+        }
+        try container.encode(self.isLocked, forKey: .isLocked)
+        try container.encode(self.isEncrypted, forKey: .isEncrypted)
+        try container.encode(self.pagesCount, forKey: .pagesCount)
+        try container.encode(self.allowsCopying, forKey: .allowsCopying)
+        try container.encode(self.allowsPrinting, forKey: .allowsPrinting)
+        try container.encode(self.cropBox, forKey: .cropBox)
+        try container.encode(self.artBox, forKey: .artBox)
+        try container.encode(self.bleedBox, forKey: .bleedBox)
+        try container.encode(self.trimBox, forKey: .trimBox)
+        try container.encode(self.keywords, forKey: .keywords)
     }
     
     func bounds(for box: CGPDFBox) -> CGRect {
@@ -427,7 +485,7 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         let useEmptyData = false
         switch placeholder {
         case "[[pages]]":
@@ -549,13 +607,13 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
                 return v.joined(separator: " ")
             }
         case "[[mediabox]]":
-            return self.processPlaceholder("[[mediabox:pt]]", settings: settings, values: values, isFilled: &isFilled)
+            return self.processPlaceholder("[[mediabox:pt]]", settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
         case "[[bleedbox]]":
-            return self.processPlaceholder("[[bleedbox:pt]]", settings: settings, values: values, isFilled: &isFilled)
+            return self.processPlaceholder("[[bleedbox:pt]]", settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
         case "[[cropbox]]":
-            return self.processPlaceholder("[[cropbox:pt]]", settings: settings, values: values, isFilled: &isFilled)
+            return self.processPlaceholder("[[cropbox:pt]]", settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
         case "[[artbox]]":
-            return self.processPlaceholder("[[artbox:pt]]", settings: settings, values: values, isFilled: &isFilled)
+            return self.processPlaceholder("[[artbox:pt]]", settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
         case "[[security]]":
             var s: [String] = []
             if isLocked {
@@ -600,7 +658,7 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
                     return Self.formatBox(v as? CGRect, placeholder: placeholder) ?? self.formatND(useEmptyData: useEmptyData)
                 }
             } else {
-                return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+                return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
             }
         }
     }
@@ -608,7 +666,7 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
     override func getStandardTitle(forSettings settings: Settings) -> String {
         let template = "[[mediabox:cm]], [[pages]], [[security]]"
         var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled)
+        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
         return isFilled ? title : ""
     }
     

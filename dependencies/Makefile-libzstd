@@ -1,0 +1,147 @@
+.DEFAULT_GOAL:=all
+
+# Output all commands.
+ifeq ($(VERBOSE),1) 
+	SHELL=sh -xv
+endif
+
+bold := $(shell tput bold 2> /dev/null)
+normal := $(shell tput sgr0 2> /dev/null)
+
+ifeq ($(CURDIR),)
+	CURDIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+endif
+SOURCE_ROOT ?= ${CURDIR}
+SOURCE_ROOT := $(SOURCE_ROOT)/dependencies
+
+SPACE := $(null) $(null)
+CURRENT_DIR := $(subst $(SPACE),"\\ ",$(CURDIR))
+
+ifeq ($(BUILT_PRODUCTS_DIR),)
+	BUILD_DIR = ${CURRENT_DIR}/build
+else
+	BUILD_DIR = ${BUILT_PRODUCTS_DIR}
+endif
+
+ONLY_ACTIVE_ARCH ?= NO
+NATIVE_ARCH ?= $(shell uname -m)
+VALID_ARCHS = x86_64 arm64
+unexport INSTALL_DIR
+
+SDK_PATH = $(shell /usr/bin/xcrun --show-sdk-path)
+
+CFLAGS = -I${BUILD_DIR}/liblz4/include
+LDFLAGS = -L${BUILD_DIR}/liblz4 -L${SDK_PATH}/usr/lib
+
+CFLAGS_x86_64 = -target x86_64-apple-macos10.14
+LDFLAGS_x86_64 = -target x86_64-apple-macos10.14
+
+CFLAGS_arm64 = -target arm64-apple-macos11
+LDFLAGS_arm64 = -target arm64-apple-macos11
+
+ifeq ($(CONFIGURATION),Debug)
+	CFLAGS_x86_64 += -g
+	CFLAGS_arm64 += -g
+else
+	CFLAGS_x86_64 += -DNDEBUG
+	CFLAGS_arm64 += -DNDEBUG
+endif
+
+libzstd_files = ${BUILD_DIR}/libzstd/$(NATIVE_ARCH)/lib/libzstd.a
+
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+ifeq ($(NATIVE_ARCH),x86_64)
+# build arm code
+		libzstd_files += ${BUILD_DIR}/libzstd/arm64/lib/libzstd.a
+else
+# build intel code
+		libzstd_files += ${BUILD_DIR}/libzstd/x86_64/lib/libzstd.a
+endif
+endif
+
+check_arch :
+# 	@echo NATIVE_ARCH IS $(NATIVE_ARCH)
+ifeq ($(filter $(NATIVE_ARCH),$(VALID_ARCHS)),)
+		$(error "Current arch ${NATIVE_ARCH} is not supported! Valid archs are: ${VALID_ARCHS}")
+endif
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+		@echo "${bold}Building libzstd universal binary${normal}"
+else
+		@echo "${bold}Building libzstd for $(NATIVE_ARCH) architecture${normal}"
+endif
+	@echo "CURRENT_DIR: ${CURRENT_DIR}"
+	@echo "SOURCE_ROOT: ${SOURCE_ROOT}"
+	@echo "BUILD_DIR: ${BUILD_DIR}"
+
+# Check if the lib lz4 exists.
+lz4 : ${BUILD_DIR}/liblz4/liblz4.a
+${BUILD_DIR}/liblz4/liblz4.a : 
+	@echo ""
+	@echo "${bold}Creating liblz4…${normal}"
+	${MAKE} -f Makefile-liblz4
+#	$(error "liblz4 not found on $@ !")
+
+clean:
+	@echo "${bold}Cleaning libzstd…${normal}"
+	${MAKE} -C "${SOURCE_ROOT}/zstd" clean
+		
+	@rm -rf "${BUILD_DIR}/libzstd/" 2> /dev/null
+	@echo ""
+
+libzstd: ${BUILD_DIR}/libzstd/libzstd.a
+
+${BUILD_DIR}/libzstd/libzstd.a : source-zstd
+
+# Check if the source files are presents.
+source-zstd: ${SOURCE_ROOT}/zstd/Makefile
+${SOURCE_ROOT}/zstd/Makefile :
+	@echo "${bold}Submodule update…${normal}"
+	cd "${SOURCE_ROOT}" && git submodule update --init
+
+# Set Target-specific variables for arm64
+${BUILD_DIR}/libzstd/arm64/lib/libzstd.a : ZSTD_INSTALL_DIR = ${BUILD_DIR}/libzstd/arm64
+${BUILD_DIR}/libzstd/arm64/lib/libzstd.a : CFLAGS := ${CFLAGS} ${CFLAGS_arm64}
+${BUILD_DIR}/libzstd/arm64/lib/libzstd.a : LDFLAGS := ${LDFLAGS} ${LDFLAGS_arm64}
+${BUILD_DIR}/libzstd/arm64/lib/libzstd.a : ARCH := arm64
+
+# Set Target-specific variables for x86_64
+${BUILD_DIR}/libzstd/x86_64/lib/libzstd.a : ZSTD_INSTALL_DIR = ${BUILD_DIR}/libzstd/x86_64
+${BUILD_DIR}/libzstd/x86_64/lib/libzstd.a : CFLAGS := ${CFLAGS} ${CFLAGS_x86_64}
+${BUILD_DIR}/libzstd/x86_64/lib/libzstd.a : LDFLAGS := ${LDFLAGS} ${LDFLAGS_x86_64}
+${BUILD_DIR}/libzstd/x86_64/lib/libzstd.a : ARCH := x86_64
+
+$(libzstd_files) : 
+	@echo ""
+	@echo "${bold}Building libzstd for ${ARCH} platform into ${ZSTD_INSTALL_DIR} ($@)…${normal}"
+	
+	@mkdir -p "${ZSTD_INSTALL_DIR}"
+	
+	@mkdir -p "${BUILD_DIR}/libzstd/build_${ARCH}"
+	@cd "${BUILD_DIR}/libzstd/build_${ARCH}" && BUILD_DIR="${BUILD_DIR}/libzstd/build_${ARCH}" CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" PREFIX="${ZSTD_INSTALL_DIR}" ${MAKE} -C "${SOURCE_ROOT}/zstd" clean VERBOSE=${VERBOSE}
+	@cd "${BUILD_DIR}/libzstd/build_${ARCH}" && BUILD_DIR="${BUILD_DIR}/libzstd/build_${ARCH}" CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" PREFIX="${ZSTD_INSTALL_DIR}" ${MAKE} -C "${SOURCE_ROOT}/zstd" VERBOSE=${VERBOSE}
+
+	@echo ""
+	@echo "${bold}Installing libzstd for ${ARCH} platform on ${ZSTD_INSTALL_DIR} …${normal}"
+	@cd "${BUILD_DIR}/libzstd/build_${ARCH}" && BUILD_DIR="${BUILD_DIR}/libzstd/build_${ARCH}" CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" PREFIX="${ZSTD_INSTALL_DIR}" ${MAKE} -C "${SOURCE_ROOT}/zstd" install
+
+${BUILD_DIR}/libzstd/libzstd.a : ${libzstd_files}
+	@mkdir -p "${BUILD_DIR}/libzstd"
+	@echo ""
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+		@echo "${bold}Creating libzstd universal library…${normal}"
+		lipo -create -output "${BUILD_DIR}/libzstd/libzstd.a" "${BUILD_DIR}/libzstd/x86_64/lib/libzstd.a" "${BUILD_DIR}/libzstd/arm64/lib/libzstd.a"
+		@rm -rf "${BUILD_DIR}/libzstd/include" > /dev/null
+		ln -s "${BUILD_DIR}/libzstd/${NATIVE_ARCH}/include" "${BUILD_DIR}/libzstd/include"
+else
+		@echo "${bold}Creating libzstd library for ${NATIVE_ARCH} platform…${normal}"
+		@rm -f "${BUILD_DIR}/libzstd/libzstd.a" > /dev/null
+		ln "${BUILD_DIR}/libzstd/${NATIVE_ARCH}/lib/libzstd.a" "${BUILD_DIR}/libzstd/libzstd.a"
+		@rm -rf "${BUILD_DIR}/libzstd/include" > /dev/null
+		ln -s "${BUILD_DIR}/libzstd/${NATIVE_ARCH}/include" "${BUILD_DIR}/libzstd/include"
+endif
+	@echo ""
+	
+
+all: check_arch lz4 source-zstd libzstd
+install: check_arch lz4 source-zstd libzstd
+

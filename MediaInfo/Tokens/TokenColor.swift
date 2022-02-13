@@ -13,6 +13,8 @@ class TokenColor: Token {
         case colorSpace = 1
         case depth
         case colorSpaceDepth
+        case profileName
+        case colorTable
         
         static var pasteboardType: NSPasteboard.PasteboardType {
             return .MITokenColor
@@ -23,6 +25,8 @@ class TokenColor: Token {
             case .colorSpaceDepth: return "RGB 8 bit"
             case .colorSpace: return "RGB"
             case .depth: return "8 bit"
+            case .profileName: return "LCD Display"
+            case .colorTable: return "floating/indexed/regular"
             }
         }
         
@@ -31,6 +35,8 @@ class TokenColor: Token {
             case .colorSpaceDepth: return "[[color-depth]]"
             case .colorSpace: return "[[color]]"
             case .depth: return "[[depth]]"
+            case .profileName: return "[[profile-name]]"
+            case .colorTable: return "[[color-table]]"
             }
         }
         
@@ -39,6 +45,8 @@ class TokenColor: Token {
             case .colorSpaceDepth: return NSLocalizedString("Color space and depth.", comment: "")
             case .colorSpace: return NSLocalizedString("Color space.", comment: "")
             case .depth: return NSLocalizedString("Color depth.", comment: "")
+            case .profileName: return NSLocalizedString("Profile name.", comment: "")
+            case .colorTable: return NSLocalizedString("Color table.", comment: "")
             }
         }
         
@@ -47,6 +55,8 @@ class TokenColor: Token {
             case "[[color]]": self = .colorSpace
             case "[[color-depth]]": self = .colorSpaceDepth
             case "[[depth]]": self = .depth
+            case "[[profile-name]]": self = .profileName
+            case "[[color-table]]": self = .colorTable
             default: return nil
             }
         }

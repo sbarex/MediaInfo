@@ -11,6 +11,16 @@ import Cocoa
 
 // MARK: - Word
 class WordInfo: BaseOfficeInfo, PaperInfo {
+    enum CodingKeys: String, CodingKey {
+        case charactersCount
+        case charactersWithSpacesCount
+        case wordsCount
+        case pagesCount
+        
+        case unit
+        case width
+        case height
+    }
     let charactersCount: Int
     let charactersWithSpacesCount: Int
     let wordsCount: Int
@@ -56,6 +66,18 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
         super.encode(with: coder)
     }
     
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.charactersCount, forKey: .charactersCount)
+        try container.encode(self.charactersWithSpacesCount, forKey: .charactersWithSpacesCount)
+        try container.encode(self.wordsCount, forKey: .wordsCount)
+        try container.encode(self.pagesCount, forKey: .pagesCount)
+        try container.encode(self.width, forKey: .width)
+        try container.encode(self.height, forKey: .height)
+    }
+    
     override func getImage(for name: String) -> NSImage? {
         if name == "office" {
             return getImage(for: "doc")
@@ -66,7 +88,7 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
         return Self.getImage(for: name)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         let useEmptyData = false
         let formatCount: (Any?, String, String, inout Bool) -> String = { v, single, plural, isFilled in
             guard let n = v as? Int else {
@@ -107,7 +129,7 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
                 isFilled = true
                 return s
             } else {
-                return self.processPlaceholder("[[size:"+placeholder.suffix(4), settings: settings, isFilled: &isFilled)
+                return self.processPlaceholder("[[size:"+placeholder.suffix(4), settings: settings, isFilled: &isFilled, forItem: itemIndex)
             }
         case "[[size:cm]]", "[[size:mm]]", "[[size:in]]":
             return format(value: [values?["width"] ?? width, values?["height"] ?? height], isFilled: &isFilled) { v, isFilled in
@@ -129,14 +151,14 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
                 return "\(w) × \(h) \(unit.label)"
             }
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     
     override func getStandardTitle(forSettings settings: Settings) -> String {
         let template = "[[size:paper:cm]], [[title]], [[pages]]"
         var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled)
+        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
         return isFilled ? title : ""
     }
 }
@@ -155,7 +177,7 @@ class ExcelInfo: BaseOfficeInfo {
         let n = coder.decodeInteger(forKey: "sheets_count")
         var sheets: [String] = []
         for i in 0 ..< n {
-            if let name = coder.decodeObject(forKey: "sheet_\(i)") as? String {
+            if let name = coder.decodeObject(of: NSString.self, forKey: "sheet_\(i)") as String? {
                 sheets.append(name)
             }
         }
@@ -167,7 +189,7 @@ class ExcelInfo: BaseOfficeInfo {
     override func encode(with coder: NSCoder) {
         coder.encode(self.sheets.count, forKey: "sheets_count")
         for i in 0 ..< self.sheets.count {
-            coder.encode(self.sheets[i], forKey: "sheet_\(i)")
+            coder.encode(self.sheets[i] as NSString, forKey: "sheet_\(i)")
         }
         
         super.encode(with: coder)
@@ -181,7 +203,7 @@ class ExcelInfo: BaseOfficeInfo {
         return Self.getImage(for: name)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIdex: Int) -> String {
         let useEmptyData = false
         
         switch placeholder {
@@ -203,18 +225,18 @@ class ExcelInfo: BaseOfficeInfo {
                 }
             }
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIdex)
         }
     }
     
     override func getStandardTitle(forSettings settings: Settings) -> String {
         let template = "[[title]], [[pages]]"
         var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled)
+        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
         return isFilled ? title : ""
     }
     
-    override internal func processSpecialMenuItem(_ item: Settings.MenuItem, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+    override internal func processSpecialMenuItem(_ item: Settings.MenuItem, atIndex itemIndex: Int, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
         if item.template == "[[sheets]]" || item.template == "[[pages]]" && !self.sheets.isEmpty {
             guard !self.sheets.isEmpty else {
                 return true
@@ -236,7 +258,7 @@ class ExcelInfo: BaseOfficeInfo {
             
             return true
         } else {
-            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, atIndex: itemIndex, inMenu: destination_sub_menu, withSettings: settings)
         }
     }
 }
@@ -255,14 +277,14 @@ class PowerpointInfo: BaseOfficeInfo {
     
     required init?(coder: NSCoder) {
         self.slidesCount = coder.decodeInteger(forKey: "slides_count")
-        self.presentationFormat = coder.decodeObject(forKey: "presentationFormat") as? String ?? ""
+        self.presentationFormat = coder.decodeObject(of: NSString.self, forKey: "presentationFormat") as String? ?? ""
         
         super.init(coder: coder)
     }
     
     override func encode(with coder: NSCoder) {
         coder.encode(self.slidesCount, forKey: "slides_count")
-        coder.encode(self.presentationFormat, forKey: "presentationFormat")
+        coder.encode(self.presentationFormat as NSString, forKey: "presentationFormat")
         
         super.encode(with: coder)
     }
@@ -275,7 +297,7 @@ class PowerpointInfo: BaseOfficeInfo {
         return Self.getImage(for: name)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         let useEmptyData = false
         
         switch placeholder {
@@ -298,14 +320,14 @@ class PowerpointInfo: BaseOfficeInfo {
         case "[[presentation-format]]":
             return format(value: values?["presentation-format"] ?? self.presentationFormat, isFilled: &isFilled)
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     
     override func getStandardTitle(forSettings settings: Settings) -> String {
         let template = "[[title]], [[pages]]"
         var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled)
+        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
         return isFilled ? title : ""
     }
 }

@@ -1,0 +1,180 @@
+.DEFAULT_GOAL:=all
+
+# Output all commands.
+ifeq ($(VERBOSE),1) 
+	SHELL=sh -xv
+endif
+
+bold := $(shell tput bold 2> /dev/null)
+normal := $(shell tput sgr0 2> /dev/null)
+
+ifeq ($(CURDIR),)
+	CURDIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+endif
+SOURCE_ROOT ?= ${CURDIR}
+PROJECT_SOURCE_ROOT := ${SOURCE_ROOT}
+SOURCE_ROOT := $(SOURCE_ROOT)/dependencies
+
+SPACE := $(null) $(null)
+CURRENT_DIR := $(subst $(SPACE),"\\ ",$(CURDIR))
+
+ifeq ($(BUILT_PRODUCTS_DIR),)
+	BUILD_DIR = ${CURRENT_DIR}/build
+else
+	BUILD_DIR = ${BUILT_PRODUCTS_DIR}
+endif
+
+ONLY_ACTIVE_ARCH ?= NO
+NATIVE_ARCH ?= $(shell uname -m)
+VALID_ARCHS = x86_64 arm64
+N_CPU = $(shell sysctl -n hw.physicalcpu)
+
+unexport INSTALL_DIR
+
+SDK_PATH = $(shell /usr/bin/xcrun --show-sdk-path)
+
+CFLAGS = $(shell ${BUILD_DIR}/libpng/libpng-config --cflags) -I${BUILD_DIR}/libjpeg-turbo/include
+LDFLAGS = $(shell ${BUILD_DIR}/libpng/libpng-config --ldflags) -L${SDK_PATH}/usr/lib -lz -L${BUILD_DIR}/libjpeg-turbo/lib
+
+CFLAGS_x86_64 = -target x86_64-apple-macos10.14
+LDFLAGS_x86_64 = -target x86_64-apple-macos10.14
+
+CFLAGS_arm64 = -target arm64-apple-macos11
+LDFLAGS_arm64 = -target arm64-apple-macos11
+
+ifeq ($(CONFIGURATION),Debug)
+	CFLAGS_x86_64 += -g
+	CFLAGS_arm64 += -g
+else
+	CFLAGS_x86_64 += -DNDEBUG
+	CFLAGS_arm64 += -DNDEBUG
+endif
+
+libwebp_files = ${BUILD_DIR}/libwebp/$(NATIVE_ARCH)/lib/libwebp.a
+makefiles = ${BUILD_DIR}/libwebp/$(NATIVE_ARCH)/Makefile 
+
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+ifeq ($(NATIVE_ARCH),x86_64)
+# build arm code
+		libwebp_files += ${BUILD_DIR}/libwebp/arm64/lib/libwebp.a
+		makefiles += ${BUILD_DIR}/libwebp/arm64/Makefile
+else
+# build intel code
+		libwebp_files += ${BUILD_DIR}/libwebp/x86_64/lib/libwebp.a
+		makefiles += ${BUILD_DIR}/libwebp/x86_64/Makefile
+endif
+endif
+
+check_arch :
+# 	@echo NATIVE_ARCH IS $(NATIVE_ARCH)
+ifeq ($(filter $(NATIVE_ARCH),$(VALID_ARCHS)),)
+		$(error "Current arch ${NATIVE_ARCH} is not supported! Valid archs are: ${VALID_ARCHS}")
+endif
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+		@echo "${bold}Building libwebp universal binary${normal}"
+else
+		@echo "${bold}Building libwebp for $(NATIVE_ARCH) architecture${normal}"
+endif
+	@echo "CURRENT_DIR: ${CURRENT_DIR}"
+	@echo "SOURCE_ROOT: ${SOURCE_ROOT}"
+	@echo "BUILD_DIR: ${BUILD_DIR}"
+
+clean:
+	@echo "${bold}Cleaning libwebp…${normal}"
+	
+	@rm -rf "${BUILD_DIR}/libwebp/" 2> /dev/null
+	@echo ""
+
+# Check if the lib png exists.
+libpng : ${BUILD_DIR}/libpng/lib/libpng.a
+${BUILD_DIR}/libpng/lib/libpng.a : 
+	@echo ""
+	@echo "${bold}Creating libpng${normal}"
+	@cd "$(PROJECT_SOURCE_ROOT)" ${MAKE} -f $(SOURCE_ROOT)/Makefile-libpng
+#	$(error "libpng not found on $@ !")
+
+libjpeg : ${BUILD_DIR}/libjpeg-turbo/lib/libjpeg.a
+${BUILD_DIR}/libjpeg-turbo/lib/libjpeg.a : 
+	@echo ""
+	@echo "${bold}Creating libjpeg-turbo${normal}"
+	@cd "$(PROJECT_SOURCE_ROOT)" ${MAKE} -f $(SOURCE_ROOT)/Makefile-libjpeg
+#	$(error "libjpeg not found on $@ !")
+
+libwebp : $(makefiles) ${BUILD_DIR}/libwebp/libwebp.a
+
+${BUILD_DIR}/libwebp/libwebp.a : source-libwebp
+
+# Check if the source files are presents.
+source-libwebp : autogen ${SOURCE_ROOT}/libwebp/configure.ac ${SOURCE_ROOT}/libwebp/configure
+${SOURCE_ROOT}/libwebp/configure.ac :
+	@echo "${bold}Submodule update…${normal}"
+	cd "${SOURCE_ROOT}" && git submodule update --init
+
+# Autogen
+${SOURCE_ROOT}/libwebp/configure :
+	@echo ""
+	@echo "${bold}Autogen configuration files…${normal}"
+	cd "${SOURCE_ROOT}/libwebp" && PATH="/usr/local/bin:${PATH}" sh ./autogen.sh
+
+autogen:
+ifeq (, $(shell PATH="/usr/local/bin:${PATH}" which autoreconf))
+		$(error ${bold}No autoreconf in PATH${normal} ($(PATH)), ${bold}try install autogen tools with homebrew${normal})
+endif
+
+# Set Target-specific variables for arm64
+${BUILD_DIR}/libwebp/arm64/lib/libwebp.a : LIBWEBP_INSTALL_DIR = ${BUILD_DIR}/libwebp/arm64
+${BUILD_DIR}/libwebp/arm64/lib/libwebp.a : ARCH := arm64
+
+${BUILD_DIR}/libwebp/arm64/Makefile : LIBWEBP_INSTALL_DIR = ${BUILD_DIR}/libwebp/arm64
+${BUILD_DIR}/libwebp/arm64/Makefile : CFLAGS := ${CFLAGS} ${CFLAGS_arm64}
+${BUILD_DIR}/libwebp/arm64/Makefile : LDFLAGS := ${LDFLAGS} ${LDFLAGS_arm64}
+${BUILD_DIR}/libwebp/arm64/Makefile : HOST := aarch64-apple-darwin
+${BUILD_DIR}/libwebp/arm64/Makefile : ARCH := arm64
+
+# Set Target-specific variables for x86_64
+${BUILD_DIR}/libwebp/x86_64/lib/libwebp.a : LIBWEBP_INSTALL_DIR = ${BUILD_DIR}/libwebp/x86_64
+${BUILD_DIR}/libwebp/x86_64/lib/libwebp.a : ARCH := x86_64
+
+${BUILD_DIR}/libwebp/x86_64/Makefile : LIBWEBP_INSTALL_DIR = ${BUILD_DIR}/libwebp/x86_64
+${BUILD_DIR}/libwebp/x86_64/Makefile : CFLAGS := ${CFLAGS} ${CFLAGS_x86_64}
+${BUILD_DIR}/libwebp/x86_64/Makefile : LDFLAGS := ${LDFLAGS} ${LDFLAGS_x86_64}
+${BUILD_DIR}/libwebp/x86_64/Makefile : HOST := x86_64-apple-darwin
+${BUILD_DIR}/libwebp/x86_64/Makefile : ARCH := x86_64
+
+# Library configuration for a CPU architecture.
+$(makefiles) : 
+	@echo ""
+	@echo "${bold}libwebp configuration for ${ARCH} platform…${normal}"
+	@mkdir -p "${LIBWEBP_INSTALL_DIR}"
+	@cd "${LIBWEBP_INSTALL_DIR}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" LIBPNG_CONFIG=${BUILD_DIR}/libpng/libpng-config ${SOURCE_ROOT}/libwebp/configure --host=${HOST} --prefix="${LIBWEBP_INSTALL_DIR}" --enable-shared=yes --enable-static=yes --with-pngincludedir=${BUILD_DIR}/libpng/include --with-pnglibdir=${BUILD_DIR}/libpng/lib
+
+# Build the library for a CPU architecture.
+$(libwebp_files) : 
+	@echo ""
+	@echo "${bold}Compiling libwebp for ${ARCH} platform…${normal}"
+	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${LIBWEBP_INSTALL_DIR}" -j${N_CPU}
+
+	@echo ""
+	@echo "${bold}Installing libwebp for ${ARCH} platform on ${LIBWEBP_INSTALL_DIR} …${normal}"
+	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${LIBWEBP_INSTALL_DIR}" -j${N_CPU} install
+
+# Build the library.
+${BUILD_DIR}/libwebp/libwebp.a : ${libwebp_files}
+	@mkdir -p "${BUILD_DIR}/libwebp"
+	@echo ""
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+		@echo "${bold}Creating libwebp universal library…${normal}"
+		lipo -create -output "${BUILD_DIR}/libwebp/libwebp.a" "${BUILD_DIR}/libwebp/x86_64/lib/libwebp.a" "${BUILD_DIR}/libwebp/arm64/lib/libwebp.a"
+else
+		@echo "${bold}Creating libwebp library for ${NATIVE_ARCH} platform…${normal}"
+		@rm -f "${BUILD_DIR}/libwebp/libwebp.a" > /dev/null
+		ln "${BUILD_DIR}/libwebp/${NATIVE_ARCH}/lib/libwebp.a" "${BUILD_DIR}/libwebp/libwebp.a"
+endif
+	@rm -rf "${BUILD_DIR}/libwebp/include" > /dev/null
+	ln -s "${BUILD_DIR}/libwebp/${NATIVE_ARCH}/include" "${BUILD_DIR}/libwebp/include"
+	@echo ""
+	
+
+all: check_arch libpng libjpeg source-libwebp libwebp
+install: check_arch libpng libjpeg source-libwebp libwebp
+

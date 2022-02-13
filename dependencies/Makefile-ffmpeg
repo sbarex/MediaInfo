@@ -1,0 +1,187 @@
+.DEFAULT_GOAL:=all
+
+# Output all commands.
+ifeq ($(VERBOSE),1) 
+	SHELL=sh -xv
+endif
+
+bold := $(shell tput bold 2> /dev/null)
+normal := $(shell tput sgr0 2> /dev/null)
+
+ifeq ($(CURDIR),)
+	CURDIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+endif
+SOURCE_ROOT ?= ${CURDIR}
+SOURCE_ROOT := $(SOURCE_ROOT)/dependencies
+
+SPACE := $(null) $(null)
+CURRENT_DIR := $(subst $(SPACE),"\\ ",$(CURDIR))
+
+ifeq ($(BUILT_PRODUCTS_DIR),)
+	BUILD_DIR = ${CURRENT_DIR}/build
+else
+	BUILD_DIR = ${BUILT_PRODUCTS_DIR}
+endif
+
+ONLY_ACTIVE_ARCH ?= NO
+NATIVE_ARCH ?= $(shell uname -m)
+VALID_ARCHS = x86_64 arm64
+N_CPU = $(shell sysctl -n hw.physicalcpu)
+
+unexport INSTALL_DIR
+
+SDK_PATH = $(shell /usr/bin/xcrun --show-sdk-path)
+
+CFLAGS = -I${BUILD_DIR}/libpng/include -Wno-unused-function -Wno-unneeded-internal-declaration -Wno-unused-variable
+LDFLAGS = -L${BUILD_DIR}/libpng/lib -L${SDK_PATH}/usr/lib -lz
+
+CFLAGS_x86_64 = -target x86_64-apple-macos10.14
+LDFLAGS_x86_64 = -target x86_64-apple-macos10.14
+
+CFLAGS_arm64 = -target arm64-apple-macos11
+LDFLAGS_arm64 = -target arm64-apple-macos11
+
+FLAGS = 
+FLAGS_x86_64 = 
+FLAGS_arm64 = 
+
+ifeq (, $(shell PATH="/usr/local/bin:${PATH}" which yasm))
+	@echo "${bold}*** WARNING: missing yasm in PATH{normal} ($(PATH))"
+	@echo "${bold}try install yasm with homebrew${normal})
+	FLAGS += --disable-x86asm
+endif
+
+ifeq ($(CONFIGURATION),Debug)
+	CFLAGS_x86_64 += -g
+	CFLAGS_arm64 += -g
+	FLAGS += --disable-optimizations
+else
+	CFLAGS_x86_64 += -DNDEBUG
+	CFLAGS_arm64 += -DNDEBUG
+	FLAGS += --disable-debug
+endif
+
+makefiles = ${BUILD_DIR}/ffmpeg/$(NATIVE_ARCH)/Makefile 
+ffmpeg_files = ${BUILD_DIR}/ffmpeg/$(NATIVE_ARCH)/lib/libavcodec.a
+ifeq ($(NATIVE_ARCH),arm64)
+	FLAGS_arm64 += --enable-neon
+endif
+
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+ifeq ($(NATIVE_ARCH),x86_64)
+# build arm code
+		makefiles += ${BUILD_DIR}/ffmpeg/arm64/Makefile 
+		ffmpeg_files += ${BUILD_DIR}/ffmpeg/arm64/lib/libavcodec.a
+#FIXME: for crosscompiling arm64 code from intel host use --disable-asm to avoid a compilation.
+		FLAGS_arm64 += --disable-asm 
+		FLAGS_arm64 += --enable-cross-compile
+else
+# build intel code
+		makefiles += ${BUILD_DIR}/ffmpeg/x86_64/Makefile 
+		ffmpeg_files += ${BUILD_DIR}/ffmpeg/x86_64/lib/libavcodec.a
+		FLAGS_x86_64 += --enable-cross-compile
+endif
+endif
+
+libraries = ${BUILD_DIR}/ffmpeg/libavcodec.a ${BUILD_DIR}/ffmpeg/libavfilter.a ${BUILD_DIR}/ffmpeg/libavformat.a ${BUILD_DIR}/ffmpeg/libavutil.a ${BUILD_DIR}/ffmpeg/libpostproc.a ${BUILD_DIR}/ffmpeg/libswresample.a ${BUILD_DIR}/ffmpeg/libswscale.a
+
+check_arch :
+# 	@echo NATIVE_ARCH IS $(NATIVE_ARCH)
+ifeq ($(filter $(NATIVE_ARCH),$(VALID_ARCHS)),)
+		$(error "Current arch ${NATIVE_ARCH} is not supported! Valid archs are: ${VALID_ARCHS}")
+endif
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+		@echo "${bold}Building ffmpeg universal binary${normal}"
+else
+		@echo "${bold}Building ffmpeg for $(NATIVE_ARCH) architecture${normal}"
+endif
+	@echo "CURRENT_DIR: ${CURRENT_DIR}"
+	@echo "SOURCE_ROOT: ${SOURCE_ROOT}"
+	@echo "BUILD_DIR: ${BUILD_DIR}"
+
+# Check if the lib png exists.
+libpng : ${BUILD_DIR}/libpng/lib/libpng.a
+${BUILD_DIR}/libpng/lib/libpng.a : 
+	@echo ""
+	@echo "${bold}Creating libpng…${normal}"
+	${MAKE} -f Makefile-libpng
+#	$(error "libpng not found on $@ !")
+
+clean:
+	@echo "${bold}Cleaning ffmpeg…${normal}"
+	
+	@rm -rf "${BUILD_DIR}/ffmpeg/" 2> /dev/null
+	@echo ""
+
+ffmpeg: $(makefiles) $(libraries) headers
+
+${BUILD_DIR}/ffmpeg/libavcodec.a : source-ffmpeg
+
+# Check if the source files are presents.
+source-ffmpeg : ${SOURCE_ROOT}/ffmpeg/configure
+${SOURCE_ROOT}/ffmpeg/configure.ac :
+	@echo "${bold}Submodule update…${normal}"
+	cd "${SOURCE_ROOT}" && git submodule update --init
+
+# Set Target-specific variables for arm64
+${BUILD_DIR}/ffmpeg/arm64/lib/libavcodec.a : FFMPEG_INSTALL_DIR = ${BUILD_DIR}/ffmpeg/arm64
+${BUILD_DIR}/ffmpeg/arm64/lib/libavcodec.a : ARCH := arm64
+
+${BUILD_DIR}/ffmpeg/arm64/Makefile : FFMPEG_INSTALL_DIR = ${BUILD_DIR}/ffmpeg/arm64
+${BUILD_DIR}/ffmpeg/arm64/Makefile : CFLAGS := ${CFLAGS} ${CFLAGS_arm64}
+${BUILD_DIR}/ffmpeg/arm64/Makefile : LDFLAGS := ${LDFLAGS} ${LDFLAGS_arm64}
+${BUILD_DIR}/ffmpeg/arm64/Makefile : LIB_FLAGS := ${FLAGS} ${FLAGS_arm64}
+${BUILD_DIR}/ffmpeg/arm64/Makefile : ARCH := arm64
+
+# Set Target-specific variables for x86_64
+${BUILD_DIR}/ffmpeg/x86_64/lib/libavcodec.a : FFMPEG_INSTALL_DIR = ${BUILD_DIR}/ffmpeg/x86_64
+${BUILD_DIR}/ffmpeg/x86_64/lib/libavcodec.a : ARCH := x86_64
+
+${BUILD_DIR}/ffmpeg/x86_64/Makefile : FFMPEG_INSTALL_DIR = ${BUILD_DIR}/ffmpeg/x86_64
+${BUILD_DIR}/ffmpeg/x86_64/Makefile : CFLAGS := ${CFLAGS} ${CFLAGS_x86_64}
+${BUILD_DIR}/ffmpeg/x86_64/Makefile : LDFLAGS := ${LDFLAGS} ${LDFLAGS_x86_64}
+${BUILD_DIR}/ffmpeg/x86_64/Makefile : LIB_FLAGS := ${FLAGS} ${FLAGS_x86_64}
+${BUILD_DIR}/ffmpeg/x86_64/Makefile : ARCH := x86_64
+
+# Library configuration for a CPU architecture.
+$(makefiles) : 
+	@echo ""
+	@echo "${bold}ffmpeg configuration for ${ARCH} platform…${normal}"
+	@mkdir -p "${FFMPEG_INSTALL_DIR}"
+	@cd "${FFMPEG_INSTALL_DIR}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/clang -target ${ARCH}-apple-macos" PATH="/usr/local/bin:${PATH}" LIBPNG_CONFIG=${BUILD_DIR}/libpng ${SOURCE_ROOT}/ffmpeg/configure --prefix="${FFMPEG_INSTALL_DIR}" --disable-stripping --enable-gpl --enable-nonfree --enable-version3 --disable-pthreads --disable-indevs --disable-outdevs --disable-network --disable-avdevice --disable-muxers --disable-encoders --disable-bsfs --disable-filters --disable-protocols --enable-muxer=image2 --enable-encoder=png --enable-protocol=file --disable-programs --disable-ffprobe --disable-doc --disable-htmlpages --disable-manpages --disable-podpages --disable-txtpages $(LIB_FLAGS) --arch=$(ARCH) --extra-cflags='-fno-stack-check' --pkg-config-flags=--static --enable-runtime-cpudetect
+
+# Build the library for a CPU architecture.
+$(ffmpeg_files) : 
+	@echo ""
+	@echo "${bold}Compiling ffmpeg for ${ARCH} platform…${normal}"
+	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${FFMPEG_INSTALL_DIR}" -j${N_CPU}
+
+	@echo ""
+	@echo "${bold}Installing ffmpeg for ${ARCH} platform on ${FFMPEG_INSTALL_DIR} …${normal}"
+	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${FFMPEG_INSTALL_DIR}" -j${N_CPU} install
+
+
+# Build the libraries.
+$(libraries): ${ffmpeg_files}
+	@mkdir -p "${BUILD_DIR}/ffmpeg"
+	@echo ""
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+		@echo "${bold}Creating ffmpeg $(notdir $@) universal library $@…${normal}"
+		lipo -create -output $@ "${BUILD_DIR}/ffmpeg/x86_64/lib/$(notdir $@)" "${BUILD_DIR}/ffmpeg/arm64/lib/$(notdir $@)"
+else
+		@echo "${bold}Creating ffmpeg $(notdir $@) library for ${NATIVE_ARCH} platform…${normal}"
+		@rm -f $@ > /dev/null
+		ln "${BUILD_DIR}/ffmpeg/${NATIVE_ARCH}/lib/$(notdir $@)" $@
+endif
+
+headers : {BUILD_DIR}/ffmpeg/include
+{BUILD_DIR}/ffmpeg/include : ${ffmpeg_files}
+	@mkdir -p "${BUILD_DIR}/ffmpeg"
+	@echo ""
+	@echo "${bold}Creating include dir $(notdir $@)…${normal}"
+	@rm -rf "${BUILD_DIR}/ffmpeg/include" > /dev/null
+	ln -s "${BUILD_DIR}/ffmpeg/${NATIVE_ARCH}/include" "${BUILD_DIR}/ffmpeg/include"
+
+all: check_arch libpng source-ffmpeg ffmpeg
+install: check_arch libpng source-ffmpeg ffmpeg
+

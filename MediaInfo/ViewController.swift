@@ -9,6 +9,10 @@
 import Cocoa
 import FinderSync
 
+extension NSNotification.Name {
+    static let JSConsole = NSNotification.Name(rawValue: "JSConsole")
+    static let JSException = NSNotification.Name(rawValue: "JSException")
+}
 
 class WindowController: NSWindowController, NSWindowDelegate {
     func windowShouldClose(_ sender: NSWindow) -> Bool {
@@ -38,6 +42,7 @@ class ViewController: NSViewController {
     @IBOutlet weak var pdfPopupButton: NSPopUpButton!
     @IBOutlet weak var officePopupButton: NSPopUpButton!
     @IBOutlet weak var modelPopupButton: NSPopUpButton!
+    @IBOutlet weak var archivePopupButton: NSPopUpButton!
     
     @IBOutlet weak var tabView: NSTabView!
     
@@ -47,6 +52,7 @@ class ViewController: NSViewController {
     @IBOutlet weak var pdfMenuTableView: MenuTableView!
     @IBOutlet weak var officeMenuTableView: MenuTableView!
     @IBOutlet weak var modelsMenuTableView: MenuTableView!
+    @IBOutlet weak var archiveMenuTableView: MenuTableView!
     
     @IBOutlet weak var enginesTableView: NSTableView!
     @IBOutlet weak var engineSegmentedControl: NSSegmentedControl!
@@ -97,17 +103,38 @@ class ViewController: NSViewController {
         }
     }
     
-    @objc dynamic var isOfficeDeepScan: Bool = true {
+    @objc dynamic var isModelsHandled: Bool = true {
         didSet {
-            if oldValue != isOfficeDeepScan {
+            if oldValue != isModelsHandled {
                 self.view.window?.isDocumentEdited = true
             }
         }
     }
     
-    @objc dynamic var isModelsHandled: Bool = true {
+    @objc dynamic var isArchiveHandled: Bool = true {
         didSet {
-            if oldValue != isModelsHandled {
+            if oldValue != isArchiveHandled {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var maxFilesInArchive: Int = 100 {
+        didSet {
+            if oldValue != maxFilesInArchive {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var maxDepthArchive: Int = 10 {
+        didSet {
+            if oldValue != maxDepthArchive {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var maxFilesInDepth: Int = 30 {
+        didSet {
+            if oldValue != maxFilesInDepth {
                 self.view.window?.isDocumentEdited = true
             }
         }
@@ -194,36 +221,54 @@ class ViewController: NSViewController {
     }
     
     func refreshFirstItem() {
-        for view in [imageMenuTableView, videoMenuTableView, audioMenuTableView, pdfMenuTableView] {
+        for view in [imageMenuTableView, videoMenuTableView, audioMenuTableView, pdfMenuTableView, officeMenuTableView, modelsMenuTableView, archiveMenuTableView] {
             view?.tableView.reloadData(forRowIndexes: IndexSet(integer: 0), columnIndexes: IndexSet(integer: 0))
         }
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        self.reset()
-        
+    internal func initJSConsole(info: BaseInfo?) {
+        guard let e = info else {
+            return
+        }
+        let logFunction: @convention(block) ([AnyHashable]) -> Void  = { (object: [AnyHashable]) in
+            let level = object.first as? String ?? "info"
+            NotificationCenter.default.post(name: .JSConsole, object: (e, level, Array(object.dropFirst())))
+        }
+        e.jsContext?.setObject(logFunction, forKeyedSubscript: "__consoleLog" as NSString)
+    }
+    
+    internal func initImageTab() {
         imagePopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "public.jpeg").resized(to: NSSize(width: 24, height: 24))
-        videoPopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "public.mpeg-4").resized(to: NSSize(width: 24, height: 24))
-        audioPopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "public.mp3").resized(to: NSSize(width: 24, height: 24))
-        pdfPopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "com.adobe.pdf").resized(to: NSSize(width: 24, height: 24))
-        officePopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "org.openxmlformats.wordprocessingml.document").resized(to: NSSize(width: 24, height: 24))
-        modelPopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "public.polygon-file-format").resized(to: NSSize(width: 24, height: 24))
         
         imageMenuTableView.getSettings = { self.getSettings() }
         imageMenuTableView.supportedType = .image
         imageMenuTableView.sampleTokens = [
             (label: NSLocalizedString("Size: ", comment: ""), tokens: [TokenDimensional(mode: .widthHeight), TokenPrint(mode: TokenPrint.Mode.dpi)]),
             (label: NSLocalizedString("Color: ", comment: ""), tokens: [TokenColor(mode: .colorSpaceDepth)]),
-            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenImageExtra(mode: .animated)])
+            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenImageExtra(mode: .animated), TokenScript(mode: .inline(code: ""))])
         ]
-        imageMenuTableView.validTokens = [TokenDimensional.self, TokenPrint.self, TokenColor.self, TokenImageExtra.self, TokenText.self]
-        if let url = Bundle.main.url(forResource: "test", withExtension: "jpg"), let img = getCGImageInfo(forFile: url) {
+        imageMenuTableView.validTokens = [TokenDimensional.self, TokenPrint.self, TokenColor.self, TokenImageExtra.self, TokenText.self, TokenScript.self]
+        if let url = Bundle.main.url(forResource: "test", withExtension: "jpg"), let img = getCGImageInfo(forFile: url, processMetadata: true) {
             imageMenuTableView.example = img
         } else {
-            imageMenuTableView.example = ImageInfo(file: Bundle.main.bundleURL, width: 1920, height: 1080, dpi: 150, colorMode: "RGB", depth: 8, animated: false, withAlpha: false)
+            imageMenuTableView.example = ImageInfo(file: Bundle.main.bundleURL, width: 1920, height: 1080, dpi: 150, colorMode: "RGB", depth: 8, profileName: "", animated: false, withAlpha: false, colorTable: .regular, metadata: [:], metadataRaw: [:])
         }
+        /*
+        let c = NSKeyedArchiver(requiringSecureCoding: true)
+        imageMenuTableView.example!.encode(with: c)
+        c.finishEncoding()
+        if let d = try? NSKeyedUnarchiver(forReadingWith: c.encodedData) {
+            let a = ImageInfo(coder: d)
+            d.finishDecoding()
+            imageMenuTableView.example = a
+        }
+         */
+        
+        initJSConsole(info: imageMenuTableView.example)
+    }
+    
+    internal func initMovieTab() {
+        videoPopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "public.mpeg-4").resized(to: NSSize(width: 24, height: 24))
         
         videoMenuTableView.getSettings = { self.getSettings() }
         videoMenuTableView.supportedType = .video
@@ -231,9 +276,9 @@ class ViewController: NSViewController {
             (label: NSLocalizedString("Size: ", comment: ""), tokens: [TokenDimensional(mode: .widthHeight)]),
             (label: NSLocalizedString("Length: ", comment: ""), tokens: [TokenDuration(mode: .hours)]),
             (label: NSLocalizedString("Language: ", comment: ""), tokens: [TokenLanguage(mode: .flag)]),
-            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenMediaExtra(mode: .codec_short_name), TokenVideoMetadata(mode: .frames), TokenMediaTrack(mode: .video)]),
+            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenMediaExtra(mode: .codec_short_name), TokenVideoMetadata(mode: .frames), TokenMediaTrack(mode: .video), TokenScript(mode: .inline(code: ""))]),
         ]
-        videoMenuTableView.validTokens = [TokenDimensional.self, TokenDuration.self, TokenLanguage.self, TokenMediaExtra.self, TokenVideoMetadata.self, TokenMediaTrack.self, TokenText.self]
+        videoMenuTableView.validTokens = [TokenDimensional.self, TokenDuration.self, TokenLanguage.self, TokenMediaExtra.self, TokenVideoMetadata.self, TokenMediaTrack.self, TokenText.self, TokenScript.self]
         if let url = Bundle.main.url(forResource: "test", withExtension: "mp4"), let video = getCMVideoInfo(forFile: url) {
             videoMenuTableView.example = video
         } else {
@@ -251,7 +296,10 @@ class ViewController: NSViewController {
                 encoder: "Encoder",
                 isLossless: false,
                 chapters: [Chapter(title: "title1", start: 0, end: 200), Chapter(title: "title2", start: 201, end: 600)],
-                video: [], audio: [
+                video: [
+                    VideoTrackInfo(width: 1920, height: 1080, duration: 3600, start_time: 0, codec_short_name: "Codec", codec_long_name: "Codec long name", profile: "Main", pixel_format: VideoPixelFormat.argb, color_space: nil, field_order: VideoFieldOrder.progressive, lang: nil, bitRate: 1024*1024, fps: 24, frames: 3600*25, title: nil, encoder: nil, isLossless: nil)
+                ],
+                audio: [
                     AudioTrackInfo(duration: 3600, start_time: 0, codec_short_name: "mp3", codec_long_name: "MP3 (MPEG audio layer 3)", lang: "EN", bitRate: 512*1025, title: "Audio title", encoder: "Encoder", isLossless: false, channels: 2)
                 ], subtitles: [
                     SubtitleTrackInfo(title: "English subtitle", lang: "EN"),
@@ -261,22 +309,28 @@ class ViewController: NSViewController {
                 )
         }
         
+        initJSConsole(info: videoMenuTableView.example)
+    }
+    
+    internal func initAudioTab() {
+        audioPopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "public.mp3").resized(to: NSSize(width: 24, height: 24))
+        
         audioMenuTableView.getSettings = { self.getSettings() }
         audioMenuTableView.supportedType = .audio
         audioMenuTableView.sampleTokens = [
             (label: NSLocalizedString("Length: ", comment: ""), tokens: [TokenDuration(mode: .hours)]),
             (label: NSLocalizedString("Language: ", comment: ""), tokens: [TokenLanguage(mode: .flag)]),
-            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenMediaExtra(mode: .codec_short_name)]),
+            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenMediaExtra(mode: .codec_short_name), TokenScript(mode: .inline(code: ""))]),
             (label: NSLocalizedString("Metadata: ", comment: ""), tokens: [TokenAudioMetadata(mode: .title)])
         ]
-        audioMenuTableView.validTokens = [TokenDuration.self, TokenLanguage.self, TokenMediaExtra.self, TokenAudioMetadata.self, TokenText.self]
+        audioMenuTableView.validTokens = [TokenDuration.self, TokenLanguage.self, TokenMediaExtra.self, TokenAudioMetadata.self, TokenText.self, TokenScript.self]
         if let url = Bundle.main.url(forResource: "test", withExtension: "mp3") {
             audioMenuTableView.example = getCMAudioInfo(forFile: url)
         } else {
             audioMenuTableView.example = AudioInfo(
                 file: Bundle.main.bundleURL,
                 duration: 45, start_time: -1,
-                codec_short_name: "mp3", codec_long_name: "MP3 (MPEG audio layer 3)", 
+                codec_short_name: "mp3", codec_long_name: "MP3 (MPEG audio layer 3)",
                 lang: "EN",
                 bitRate: 512*1024,
                 title: "Audio title", encoder: "Encoder",
@@ -286,25 +340,45 @@ class ViewController: NSViewController {
                 engine: .coremedia)
         }
         
+        initJSConsole(info: audioMenuTableView.example)
+    }
+    
+    internal func initAcrobatTab() {
+        pdfPopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "com.adobe.pdf").resized(to: NSSize(width: 24, height: 24))
+        
         pdfMenuTableView.getSettings = { self.getSettings() }
         pdfMenuTableView.supportedType = .pdf
         pdfMenuTableView.sampleTokens = [
             (label: NSLocalizedString("Size: ", comment: ""), tokens: [TokenPdfBox(mode: .mediaBox, unit: .pt), TokenPdfBox(mode: .bleedBox, unit: .pt), TokenPdfBox(mode: .cropBox, unit: .pt), TokenPdfBox(mode: .artBox, unit: .pt)]),
-            (label: NSLocalizedString("Metadata: ", comment: ""), tokens: [TokenPdfMetadata(mode: .pages)])
+            (label: NSLocalizedString("Metadata: ", comment: ""), tokens: [TokenPdfMetadata(mode: .pages)]),
+            (label: NSLocalizedString("Extra", comment: ""), tokens: [ TokenScript(mode: .inline(code: ""))])
         ]
-        pdfMenuTableView.validTokens = [TokenPdfBox.self, TokenPdfMetadata.self, TokenText.self]
+        pdfMenuTableView.validTokens = [TokenPdfBox.self, TokenPdfMetadata.self, TokenText.self, TokenScript.self]
         if let url = Bundle.main.url(forResource: "test", withExtension: "pdf"), let pdf = CGPDFDocument(url as CFURL) {
             pdfMenuTableView.example = PDFInfo(file: url, pdf: pdf)
         }
+        
+        initJSConsole(info: pdfMenuTableView.example)
+    }
+    
+    internal func initOfficeTab() {
+        officePopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "org.openxmlformats.wordprocessingml.document").resized(to: NSSize(width: 24, height: 24))
         
         officeMenuTableView.getSettings = { self.getSettings() }
         officeMenuTableView.supportedType = .office
         officeMenuTableView.sampleTokens = [
             (label: NSLocalizedString("Size: ", comment: ""), tokens: [TokenOfficeSize(mode: .print_paper_cm)]),
-            (label: NSLocalizedString("Metadata: ", comment: ""), tokens: [TokenOfficeMetadata(mode: .pages)])
+            (label: NSLocalizedString("Metadata: ", comment: ""), tokens: [TokenOfficeMetadata(mode: .pages)]),
+            (label: NSLocalizedString("Extra", comment: ""), tokens: [ TokenScript(mode: .inline(code: ""))])
         ]
-        officeMenuTableView.validTokens = [TokenOfficeSize.self, TokenOfficeMetadata.self, TokenText.self]
+        officeMenuTableView.validTokens = [TokenOfficeSize.self, TokenOfficeMetadata.self, TokenText.self, TokenScript.self]
         officeMenuTableView.example = WordInfo(file: Bundle.main.bundleURL, charactersCount: 1765, charactersWithSpacesCount: 2000, wordsCount: 123, pagesCount: 3, creator: "sbarex", creationDate: Date(timeIntervalSinceNow: -60*60), modified: "sbarex", modificationDate: Date(timeIntervalSinceNow: 0), title: "Title", subject: "Subject", keywords: ["key1", "key2"], description: "Description", application: "Microsoft Word", width: 21/2.54, height: 29.7/2.54)
+        
+        initJSConsole(info: officeMenuTableView.example)
+    }
+    
+    internal func initModelTab() {
+        modelPopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "public.polygon-file-format").resized(to: NSSize(width: 24, height: 24))
         
         /*
          TODO: Implement 3D support.
@@ -313,10 +387,47 @@ class ViewController: NSViewController {
         modelsMenuTableView.sampleTokens = [
             (label: NSLocalizedString("Metadata: ", comment: ""), tokens: [TokenModelMetadata(mode: .meshCount)])
         ]
-        modelsMenuTableView.validTokens = [TokenModelMetadata.self, TokenText.self]
-        modelsMenuTableView.example = ModelInfo(file: Bundle.main.url(forResource: "test", withExtension: "obj")!) ?? ModelInfo(file: Bundle.main.bundleURL, meshes: [ModelInfo.Mesh(name: "mesh1", vertexCount: 2040, hasNormals: true, hasTangent: false, hasTextureCoordinate: true, hasVertexColor: false, hasOcclusion: false)])
+        modelsMenuTableView.validTokens = [TokenModelMetadata.self, TokenText.self, TokenScript.self]
+        modelsMenuTableView.example = ModelInfo(file: Bundle.main.url(forResource: "test", withExtension: "obj")!) ?? ModelInfo(file: Bundle.main.bundleURL, meshes: [ModelInfo.Mesh(name: "mesh1", vertexCount: 2040, hasNormals: true, hasTangent: false, hasTextureCoordinate: true, hasVertexColor: false, hasOcclusion: false)]),
+         (label: NSLocalizedString("Extra", comment: ""), tokens: [ TokenScript(mode: .inline(code: ""))])
         */
-        tabView.removeTabViewItem(tabView.tabViewItems.last!) // Hide the 3D tab.
+        if let t = tabView.tabViewItems.first(where: { $0.identifier as? String == "3D"}) {
+            // Hide the 3D tab.
+            tabView.removeTabViewItem(t)
+        }
+        
+        initJSConsole(info: modelsMenuTableView.example)
+    }
+    
+    
+    internal func initArchiveTab() {
+        archivePopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "public.zip-archive").resized(to: NSSize(width: 24, height: 24))
+        
+        archiveMenuTableView.getSettings = { self.getSettings() }
+        archiveMenuTableView.supportedType = .archive
+        archiveMenuTableView.sampleTokens = [
+            // (label: NSLocalizedString("Size: ", comment: ""), tokens: [TokenArchive(mode: .compressionMethod)]),
+            (label: NSLocalizedString("Files", comment: ""), tokens: [TokenArchive(mode: .files)]),
+            (label: NSLocalizedString("Extra", comment: ""), tokens: [ TokenScript(mode: .inline(code: ""))])
+        ]
+        archiveMenuTableView.validTokens = [TokenArchive.self, TokenScript.self]
+        archiveMenuTableView.example = try? ArchiveInfo(file: Bundle.main.url(forResource: "test", withExtension: "zip")!)
+        
+        initJSConsole(info: archiveMenuTableView.example)
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        self.reset()
+        
+        initImageTab()
+        initMovieTab()
+        initAudioTab()
+        initAcrobatTab()
+        initOfficeTab()
+        initModelTab()
+        initArchiveTab()
         
         enginesTableView.registerForDraggedTypes([NSPasteboard.PasteboardType("private.table-row-engine")])
         updateEngineSegmentedControl()
@@ -413,25 +524,31 @@ class ViewController: NSViewController {
         settings.isEmptyItemsSkipped = self.isEmptyItemsSkipped
         
         settings.isImagesHandled = self.isImageHandled
-        settings.imageMenuItems = self.imageMenuTableView.items
+        settings.extractImageMetadata = true
+        settings.imageMenuItems = self.imageMenuTableView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
         
         settings.isVideoHandled = self.isVideoHandled
-        settings.videoMenuItems = self.videoMenuTableView.items
+        settings.videoMenuItems = self.videoMenuTableView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
         
         settings.isTracksGrouped = self.isTracksGrouped
         
         settings.isAudioHandled = self.isAudioHandled
-        settings.audioMenuItems = self.audioMenuTableView.items
+        settings.audioMenuItems = self.audioMenuTableView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
         
         settings.isPDFHandled = self.isPDFHandled
-        settings.pdfMenuItems = self.pdfMenuTableView.items
+        settings.pdfMenuItems = self.pdfMenuTableView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
         
         settings.isOfficeHandled = self.isOfficeHandled
-        settings.officeMenuItems = self.officeMenuTableView.items
-        settings.isOfficeDeepScan = self.isOfficeDeepScan
+        settings.officeMenuItems = self.officeMenuTableView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
         
         settings.isModelsHandled = self.isModelsHandled
-        settings.modelsMenuItems = self.modelsMenuTableView.items
+        settings.modelsMenuItems = self.modelsMenuTableView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
+        
+        settings.isArchiveHandled = self.isArchiveHandled
+        settings.maxFilesInArchive = self.maxFilesInArchive
+        settings.maxDepthArchive = self.maxDepthArchive
+        settings.maxFilesInDepth = self.maxFilesInDepth
+        settings.archiveMenuItems = self.archiveMenuTableView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
         
         settings.engines = self.engines
         
@@ -455,6 +572,8 @@ class ViewController: NSViewController {
         }
         
         let settings = self.getSettings()
+        settings.refreshImageMetadataExtractionRequired()
+        settings.refreshOfficeDeepScanRequired()
         
         SettingsWrapper.setSettings(settings) { status in
             DispatchQueue.main.async {
@@ -500,29 +619,35 @@ class ViewController: NSViewController {
             self.isExternalDiskHandled = settings.handleExternalDisk
             
             self.isImageHandled = settings.isImagesHandled
-            self.imageMenuTableView.items = settings.imageMenuItems
+            self.imageMenuTableView.items = settings.imageMenuItems.map({ MenuTableView.MenuItem(image: $0.image, template: $0.template)})
             self.imageMenuTableView.tableView?.reloadData()
             
             self.isVideoHandled = settings.isVideoHandled
-            self.videoMenuTableView.items = settings.videoMenuItems
+            self.videoMenuTableView.items = settings.videoMenuItems.map({ MenuTableView.MenuItem(image: $0.image, template: $0.template)})
             self.videoMenuTableView.tableView?.reloadData()
             
             self.isAudioHandled = settings.isAudioHandled
-            self.audioMenuTableView.items = settings.audioMenuItems
+            self.audioMenuTableView.items = settings.audioMenuItems.map({ MenuTableView.MenuItem(image: $0.image, template: $0.template)})
             self.audioMenuTableView.tableView?.reloadData()
             
             self.isPDFHandled = settings.isPDFHandled
-            self.pdfMenuTableView.items = settings.pdfMenuItems
+            self.pdfMenuTableView.items = settings.pdfMenuItems.map({ MenuTableView.MenuItem(image: $0.image, template: $0.template)})
             self.pdfMenuTableView.tableView?.reloadData()
             
             self.isOfficeHandled = settings.isOfficeHandled
-            self.officeMenuTableView.items = settings.officeMenuItems
+            self.officeMenuTableView.items = settings.officeMenuItems.map({ MenuTableView.MenuItem(image: $0.image, template: $0.template)})
             self.officeMenuTableView.tableView?.reloadData()
-            self.isOfficeDeepScan = settings.isOfficeDeepScan
             
             self.isModelsHandled = settings.isModelsHandled
-            self.modelsMenuTableView.items = settings.modelsMenuItems
+            self.modelsMenuTableView.items = settings.modelsMenuItems.map({ MenuTableView.MenuItem(image: $0.image, template: $0.template)})
             self.modelsMenuTableView.tableView?.reloadData()
+            
+            self.isArchiveHandled = settings.isArchiveHandled
+            self.maxFilesInArchive = settings.maxFilesInArchive
+            self.maxDepthArchive = settings.maxDepthArchive
+            self.maxFilesInDepth = settings.maxFilesInDepth
+            self.archiveMenuTableView.items = settings.archiveMenuItems.map({ MenuTableView.MenuItem(image: $0.image, template: $0.template)})
+            self.archiveMenuTableView.tableView?.reloadData()
             
             self.menuWillOpenFile = settings.menuWillOpenFile
             
@@ -722,6 +847,8 @@ extension ViewController: NSMenuDelegate {
         } else if menu.identifier?.rawValue == "mnu_office", let e = officeMenuTableView.example {
             example = e
         } else if menu.identifier?.rawValue == "mnu_model", let e = modelsMenuTableView.example {
+            example = e
+        } else if menu.identifier?.rawValue == "mnu_archive", let e = archiveMenuTableView.example {
             example = e
         } else {
             return

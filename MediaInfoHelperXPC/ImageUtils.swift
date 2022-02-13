@@ -119,7 +119,7 @@ func getNetPBMImageInfo(forFile url: URL) -> ImageInfo? {
         bytesRead = getline(&lineByteArrayPointer, &lineCap, filePointer)
     }
     
-    return ImageInfo(file: url, width: width, height: height, dpi: 0, colorMode: color, depth: depth, animated: false, withAlpha: false)
+    return ImageInfo(file: url, width: width, height: height, dpi: 0, colorMode: color, depth: depth, profileName: "", animated: false, withAlpha: false, colorTable: .regular, metadata: [:], metadataRaw: [:])
 }
 
 /*
@@ -245,13 +245,26 @@ func getSVGImageInfo(forFile file: URL) -> ImageInfo? {
         var height: Int?
         func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
             if elementName == "svg" {
+                defer {
+                    parser.abortParsing()
+                }
                 if let v = attributeDict["width"], let vv = Int(v) {
                     self.width = vv
                 }
                 if let v = attributeDict["height"], let vv = Int(v) {
                     self.height = vv
                 }
-                parser.abortParsing()
+                if self.width == nil || self.height == nil, let viewBox = attributeDict["viewBox"] {
+                    let components = viewBox.split(separator: viewBox.contains(",") ? "," : " ")
+                    guard components.count == 4 else {
+                        return
+                    }
+                    if let w = Float(components[2].trimmingCharacters(in: .whitespaces)), let h = Float(components[2].trimmingCharacters(in: .whitespaces)) {
+                        self.width = Int(round(w))
+                        self.height = Int(round(h))
+                    }
+                }
+                
             }
         }
     }
@@ -262,7 +275,7 @@ func getSVGImageInfo(forFile file: URL) -> ImageInfo? {
     parser.delegate = delegate
     parser.parse()
     if let w = delegate.width, let h = delegate.height {
-        return ImageInfo(file: file, width: w, height: h, dpi: 0, colorMode: "", depth: 24, animated: false, withAlpha: false)
+        return ImageInfo(file: file, width: w, height: h, dpi: 0, colorMode: "", depth: 24, profileName: "", animated: false, withAlpha: false, colorTable: .regular, metadata: [:], metadataRaw: [:])
     } else {
         return nil
     }

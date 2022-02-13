@@ -17,7 +17,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         let hostBundle = Bundle.main
-        let applicationBundle = hostBundle;
+        let applicationBundle = hostBundle
         
         self.userDriver = SPUStandardUserDriver(hostBundle: hostBundle, delegate: nil)
         self.updater = SPUUpdater(hostBundle: hostBundle, applicationBundle: applicationBundle, userDriver: self.userDriver!, delegate: nil)
@@ -25,7 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         do {
             try self.updater!.start()
         } catch {
-            print("Failed to start updater with error: \(error)")
+            // print("Failed to start updater with error: \(error)")
             
             let alert = NSAlert()
             alert.messageText = NSLocalizedString("Updater Error", comment: "")
@@ -57,8 +57,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
                 NSWorkspace.shared.activateFileViewerSelecting([u])
             } else {
                 let alert = NSAlert()
-                alert.messageText = "Settings not found!"
-                alert.informativeText = "You probably haven't customize the standard settings."
+                alert.messageText = NSLocalizedString("Settings not found!", comment: "")
+                alert.informativeText = NSLocalizedString("You probably haven't customize the standard settings.", comment: "")
                 alert.addButton(withTitle: NSLocalizedString("Close", comment: ""))
                 alert.alertStyle = .informational
                 
@@ -75,7 +75,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool
     {
         if menuItem.action == #selector(self.checkForUpdates(_:)) {
-            return self.userDriver?.canCheckForUpdates ?? false
+            return self.updater?.canCheckForUpdates ?? false
         }
         return true
     }

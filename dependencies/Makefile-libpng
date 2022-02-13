@@ -1,0 +1,167 @@
+.DEFAULT_GOAL:=all
+
+# Output all commands.
+ifeq ($(VERBOSE),1) 
+	SHELL=sh -xv
+endif
+
+bold := $(shell tput bold 2> /dev/null)
+normal := $(shell tput sgr0 2> /dev/null)
+
+ifeq ($(CURDIR),)
+	CURDIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+endif
+SOURCE_ROOT ?= ${CURDIR}
+SOURCE_ROOT := $(SOURCE_ROOT)/dependencies
+
+SPACE := $(null) $(null)
+CURRENT_DIR := $(subst $(SPACE),"\\ ",$(CURDIR))
+
+ifeq ($(BUILT_PRODUCTS_DIR),)
+	BUILD_DIR = ${CURRENT_DIR}/build
+else
+	BUILD_DIR = ${BUILT_PRODUCTS_DIR}
+endif
+
+ONLY_ACTIVE_ARCH ?= NO
+NATIVE_ARCH ?= $(shell uname -m)
+VALID_ARCHS = x86_64 arm64
+N_CPU = $(shell sysctl -n hw.physicalcpu)
+
+unexport INSTALL_DIR
+
+SDK_PATH = $(shell /usr/bin/xcrun --show-sdk-path)
+
+CFLAGS = 
+LDFLAGS = -L${SDK_PATH}/usr/lib
+
+CFLAGS_x86_64 = -target x86_64-apple-macos10.14
+LDFLAGS_x86_64 = -target x86_64-apple-macos10.14
+
+CFLAGS_arm64 = -target arm64-apple-macos11
+LDFLAGS_arm64 = -target arm64-apple-macos11
+
+ifeq ($(CONFIGURATION),Debug)
+	CFLAGS_x86_64 += -g
+	CFLAGS_arm64 += -g
+else
+	CFLAGS_x86_64 += -DNDEBUG
+	CFLAGS_arm64 += -DNDEBUG
+endif
+
+libpng_files := ${BUILD_DIR}/libpng/$(NATIVE_ARCH)/lib/libpng.a
+makefiles = ${BUILD_DIR}/libpng/$(NATIVE_ARCH)/Makefile 
+
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+ifeq ($(NATIVE_ARCH),x86_64)
+# build arm code
+		libpng_files += ${BUILD_DIR}/libpng/arm64/lib/libpng.a
+		makefiles += ${BUILD_DIR}/libpng/arm64/Makefile 
+else
+# build intel code
+		libpng_files += ${BUILD_DIR}/libpng/x86_64/lib/libpng.a
+		makefiles += ${BUILD_DIR}/libpng/x86_64/Makefile 
+endif
+endif
+
+check_arch :
+# 	@echo NATIVE_ARCH IS $(NATIVE_ARCH)
+ifeq ($(filter $(NATIVE_ARCH),$(VALID_ARCHS)),)
+		$(error "Current arch ${NATIVE_ARCH} is not supported! Valid archs are: ${VALID_ARCHS}")
+endif
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+		@echo "${bold}Building libpng universal binary${normal}"
+else
+		@echo "${bold}Building libpng for $(NATIVE_ARCH) architecture${normal}"
+endif
+	@echo "CURRENT_DIR: ${CURRENT_DIR}"
+	@echo "SOURCE_ROOT: ${SOURCE_ROOT}"
+	@echo "BUILD_DIR: ${BUILD_DIR}"
+
+clean:
+	@echo "${bold}Cleaning libpng…${normal}"
+	
+	@rm -rf "${BUILD_DIR}/libpng/" 2> /dev/null
+	@echo ""
+
+libpng: $(makefiles) ${BUILD_DIR}/libpng/lib/libpng.a
+
+# Check if the source files are presents.
+source-libpng : autogen ${SOURCE_ROOT}/libpng/configure.ac ${SOURCE_ROOT}/libpng/configure
+${SOURCE_ROOT}/libpng/configure.ac :
+	@echo "${bold}Submodule update…${normal}"
+	cd "${SOURCE_ROOT}" && git submodule update --init
+
+# Autogen
+${SOURCE_ROOT}/libpng/configure :
+	@echo ""
+	@echo "${bold}Autogen configuration files…${normal}"
+	cd "${SOURCE_ROOT}/libpng" && PATH="/usr/local/bin:${PATH}" sh ./autogen.sh
+
+autogen:
+ifeq (, $(shell PATH="/usr/local/bin:${PATH}" which autoreconf))
+		$(error ${bold}No autoreconf in PATH${normal} ($(PATH)), ${bold}try install autogen tools with homebrew${normal})
+endif
+
+# Set Target-specific variables for arm64
+${BUILD_DIR}/libpng/arm64/lib/libpng.a : ARCH := arm64
+
+${BUILD_DIR}/libpng/arm64/Makefile : CFLAGS := ${CFLAGS} ${CFLAGS_arm64}
+${BUILD_DIR}/libpng/arm64/Makefile : LDFLAGS := ${LDFLAGS} ${LDFLAGS_arm64}
+${BUILD_DIR}/libpng/arm64/Makefile : HOST := aarch64-apple-darwin
+${BUILD_DIR}/libpng/arm64/Makefile : ARCH := arm64
+
+# Set Target-specific variables for x86_64
+${BUILD_DIR}/libpng/x86_64/lib/libpng.a : ARCH := x86_64
+
+${BUILD_DIR}/libpng/x86_64/Makefile : CFLAGS := ${CFLAGS} ${CFLAGS_x86_64}
+${BUILD_DIR}/libpng/x86_64/Makefile : LDFLAGS := ${LDFLAGS} ${LDFLAGS_x86_64}
+${BUILD_DIR}/libpng/x86_64/Makefile : HOST := x86_64-apple-darwin
+${BUILD_DIR}/libpng/x86_64/Makefile : ARCH := x86_64
+
+# Library configuration for a CPU architecture.
+$(makefiles) &:
+	@echo ""
+	@echo "${bold}libpng configuration for ${ARCH} platform…${normal}"
+	@mkdir -p "${BUILD_DIR}/libpng/${ARCH}"
+	@cd "${BUILD_DIR}/libpng/${ARCH}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" ${SOURCE_ROOT}/libpng/configure --host=${HOST} --prefix="${BUILD_DIR}/libpng/${ARCH}" --enable-shared=no --enable-static=yes
+	${MAKE} -C "${BUILD_DIR}/libpng/${ARCH}" -j${N_CPU} clean
+
+# Build the library for a CPU architecture.
+$(libpng_files) : 
+	@echo ""
+	@echo "${bold}Compiling libpng for ${ARCH} platform…${normal}"
+	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${BUILD_DIR}/libpng/${ARCH}" -j${N_CPU}
+
+	@echo ""
+	@echo "${bold}Installing libpng for ${ARCH} platform on ${BUILD_DIR}/libpng/${ARCH} …${normal}"
+	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${BUILD_DIR}/libpng/${ARCH}" -j${N_CPU} install
+
+# Build the library.
+${BUILD_DIR}/libpng/lib/libpng.a : source-libpng ${libpng_files}
+	@mkdir -p "${BUILD_DIR}/libpng/lib/"
+	@echo ""
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+		@echo "${bold}Creating libpng universal library…${normal}"
+		lipo -create -output "${BUILD_DIR}/libpng/lib/libpng.a" "${BUILD_DIR}/libpng/x86_64/lib/libpng.a" "${BUILD_DIR}/libpng/arm64/lib/libpng.a"
+		lipo -create -output "${BUILD_DIR}/libpng/lib/libpng16.a" "${BUILD_DIR}/libpng/x86_64/lib/libpng16.a" "${BUILD_DIR}/libpng/arm64/lib/libpng16.a"
+else
+		@echo "${bold}Creating libpng library for ${NATIVE_ARCH} platform…${normal}"
+		@rm -f "${BUILD_DIR}/libpng/lib/libpng.a" > /dev/null
+		ln "${BUILD_DIR}/libpng/${NATIVE_ARCH}/lib/libpng.a" "${BUILD_DIR}/libpng/lib/libpng.a"
+		@rm -f "${BUILD_DIR}/libpng/lib/libpng16.a" > /dev/null
+		ln "${BUILD_DIR}/libpng/${NATIVE_ARCH}/lib/libpng16.a" "${BUILD_DIR}/libpng/lib/libpng16.a"
+endif
+	@rm -rf "${BUILD_DIR}/libpng/include" > /dev/null
+	ln -s "${BUILD_DIR}/libpng/${NATIVE_ARCH}/include" "${BUILD_DIR}/libpng/include"
+	@rm -rf "${BUILD_DIR}/libpng/libpng-config" > /dev/null
+	@sed "s,/${NATIVE_ARCH},,g" "${BUILD_DIR}/libpng/${NATIVE_ARCH}/libpng-config" > "${BUILD_DIR}/libpng/libpng-config"
+	@chmod a+x "${BUILD_DIR}/libpng/libpng-config"
+	@sed "s,/${NATIVE_ARCH},,g" "${BUILD_DIR}/libpng/${NATIVE_ARCH}/libpng16-config" > "${BUILD_DIR}/libpng/libpng16-config"
+	@chmod a+x "${BUILD_DIR}/libpng/libpng16-config"
+	@echo ""
+	
+
+all: check_arch source-libpng libpng
+install: check_arch source-libpng libpng
+

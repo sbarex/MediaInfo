@@ -44,12 +44,15 @@ class MenuItemEditor: NSViewController {
     
     static let images: [Image] = [
         Image(name: "", title: NSLocalizedString("No image", comment: ""), color: true),
+        Image(name: "no-space", title: NSLocalizedString("No image (and no space)", comment: ""), color: true),
         Image.separator(),
         Image(name: "image", title: NSLocalizedString("Image", comment: "")),
         Image(name: "video", title: NSLocalizedString("Video", comment: "")),
         Image(name: "audio", title: NSLocalizedString("Audio", comment: "")),
         Image(name: "txt", title: NSLocalizedString("Subtitle", comment: "")),
         Image(name: "pdf", title: NSLocalizedString("PDF", comment: "")),
+        Image(name: "3d", title: NSLocalizedString("3D model", comment: "")),
+        Image(name: "zip", title: NSLocalizedString("Compressed archive", comment: "")),
         
         Image.separator(),
         Image(name: "aspectratio", title: NSLocalizedString("Aspect ratio", comment: "")),
@@ -84,10 +87,9 @@ class MenuItemEditor: NSViewController {
         Image(name: "ppt", title: NSLocalizedString("Office presentation", comment: "")),
         
         Image.separator(),
-        Image(name: "3d", title: NSLocalizedString("3D model", comment: "")),
         
-        Image(name: "3d_point", title: NSLocalizedString("3D points", comment: "")),
-        Image(name: "3d_line", title: NSLocalizedString("3D lines", comment: "")),
+        Image(name: "3d_points", title: NSLocalizedString("3D points", comment: "")),
+        Image(name: "3d_lines", title: NSLocalizedString("3D lines", comment: "")),
         Image(name: "3d_triangle", title: NSLocalizedString("3D triangle faces", comment: "")),
         Image(name: "3d_triangle_stripe", title: NSLocalizedString("3D triangle stripe", comment: "")),
         Image(name: "3d_quads", title: NSLocalizedString("3D quads faces", comment: "")),

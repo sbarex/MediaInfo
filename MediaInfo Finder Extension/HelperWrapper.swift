@@ -79,6 +79,11 @@ class HelperWrapper: SettingsService {
         return modelInfo
     }
     
+    static func getArchiveInfo(for url: URL) -> ArchiveInfo? {
+        let archiveInfo: ArchiveInfo? = Self.getInfoFromService(for: url, type: "archive")
+        return archiveInfo
+    }
+    
     static internal func getInfoFromService<T: BaseInfo>(for url: URL, type: String) -> T? {
         guard let service = Self.service as? MediaInfoHelperXPCProtocol else {
             return nil
@@ -102,6 +107,7 @@ class HelperWrapper: SettingsService {
                 return
             }
             info = T(coder: u)
+            u.finishDecoding()
         }
         
         if !Thread.isMainThread {

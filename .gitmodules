@@ -1,6 +1,24 @@
 [submodule "ffmpeg"]
-	path = ffmpeg
+	path = dependencies/ffmpeg
 	url = git://source.ffmpeg.org/ffmpeg.git
 [submodule "libwebp"]
-	path = libwebp
+	path = dependencies/libwebp
 	url = https://chromium.googlesource.com/webm/libwebp
+[submodule "libpng"]
+	path = dependencies/libpng
+	url = https://github.com/glennrp/libpng
+[submodule "libarchive"]
+	path = dependencies/libarchive
+	url = https://github.com/libarchive/libarchive
+[submodule "lz4"]
+	path = dependencies/lz4
+	url = https://github.com/lz4/lz4
+[submodule "libb2"]
+	path = dependencies/libb2
+	url = https://github.com/BLAKE2/libb2
+[submodule "zstd"]
+	path = dependencies/zstd
+	url = https://github.com/facebook/zstd
+[submodule "dependencies/libjpeg-turbo"]
+	path = dependencies/libjpeg-turbo
+	url = https://github.com/libjpeg-turbo/libjpeg-turbo

@@ -45,7 +45,7 @@ func getMetadataImageInfo(forFile url: URL) -> ImageInfo? {
         alpha = CFBooleanGetValue((n as! CFBoolean))
     }
     
-    return ImageInfo(file: url, width: width, height: height, dpi: dpi, colorMode: colorSpace, depth: bit, animated: false, withAlpha: alpha)
+    return ImageInfo(file: url, width: width, height: height, dpi: dpi, colorMode: colorSpace, depth: bit, profileName: "", animated: false, withAlpha: alpha, colorTable: .unknown, metadata: [:], metadataRaw: [:])
 }
 
 

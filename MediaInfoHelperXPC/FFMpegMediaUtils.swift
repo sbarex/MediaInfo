@@ -263,8 +263,8 @@ func getFFMpegChapters(context pFormatCtx: UnsafeMutablePointer<AVFormatContext>
         
         let start = Double(ch.start) * av_q2d(ch.time_base)
         let end = Double(ch.end) * av_q2d(ch.time_base)
-        let interval = String(format: "%f - %f", start, end)
-        print(interval)
+        // let interval = String(format: "%f - %f", start, end)
+        // print(interval)
         let title: String?
         if let t = av_dict_get(ch.metadata, "title", nil, AV_DICT_IGNORE_SUFFIX) {
             title = String(cString: t.pointee.value)
@@ -352,9 +352,7 @@ func getFFMpegVideoInfo(forFile file: URL) -> VideoInfo? {
          *   creation_time: "2021-03-05T18:17:38.000000Z"
          */
         t = av_dict_get(pFormatCtx.pointee.metadata, "", t, AV_DICT_IGNORE_SUFFIX)
-        if let tt = t?.pointee {
-            let key = String(cString: tt.key)
-            let value = String(cString: tt.value)
+        if let tt = t?.pointee, let key = String(cString: tt.key), let value = String(cString: tt.value) {
             print("\(key): \(value)")
         }
     } while t != nil
@@ -511,9 +509,7 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
         var t: UnsafeMutablePointer<AVDictionaryEntry>?
         repeat {
             t = av_dict_get(pFormatCtx.pointee.streams[i]!.pointee.metadata, "", t, AV_DICT_IGNORE_SUFFIX)
-            if let tt = t?.pointee {
-                let key = String(cString: tt.key)
-                let value = String(cString: tt.value)
+            if let tt = t?.pointee, let key = String(cString: tt.key), let value = String(cString: tt.value) {
                 print("\(key): \(value)")
             }
         } while t != nil
@@ -543,6 +539,7 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
             let width = Int(avctx!.pointee.width)
             let height = Int(avctx!.pointee.height)
             
+            /*
             let sample_aspect_ratio: String
             let display_aspect_ratio: String
             if avctx!.pointee.sample_aspect_ratio.num != 0 {
@@ -558,6 +555,7 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
                 sample_aspect_ratio = ""
                 display_aspect_ratio = ""
             }
+            */
             
             let profile: String?
             if let s = avcodec_profile_name(avctx!.pointee.codec_id, avctx!.pointee.profile) {
@@ -655,5 +653,5 @@ func getFFMpegImageInfo(forFile file: URL) -> ImageInfo? {
         isAlpha = false
     }
     
-    return ImageInfo(file: file, width: video.width, height: video.height, dpi: 0, colorMode: "", depth: 0, animated: video.frames > 1, withAlpha: isAlpha)
+    return ImageInfo(file: file, width: video.width, height: video.height, dpi: 0, colorMode: "", depth: 0, profileName: "", animated: video.frames > 1, withAlpha: isAlpha, colorTable: .regular, metadata: [:], metadataRaw: [:])
 }

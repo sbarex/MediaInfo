@@ -209,7 +209,7 @@ extension ExcelInfo {
                     }
                 }
             } catch {
-                print(error)
+                print("ubable to process xl/workbook.xml", error)
             }
         }
         

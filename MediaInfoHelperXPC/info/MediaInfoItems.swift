@@ -683,7 +683,12 @@ extension CodecInfo {
     }
 }
 
-class Chapter: NSCoding {
+class Chapter: NSCoding, Encodable {
+    enum CodingKeys: String, CodingKey {
+        case title
+        case start
+        case end
+    }
     let title: String?
     let start: Double
     let end: Double
@@ -699,15 +704,22 @@ class Chapter: NSCoding {
     }
     
     required init?(coder: NSCoder) {
-        self.title = coder.decodeObject(forKey: "title") as? String
+        self.title = coder.decodeObject(of: NSString.self, forKey: "title") as String?
         self.start = coder.decodeDouble(forKey: "start")
         self.end = coder.decodeDouble(forKey: "end")
     }
     
     func encode(with coder: NSCoder) {
-        coder.encode(title, forKey: "title")
+        coder.encode(title as NSString?, forKey: "title")
         coder.encode(start, forKey: "start")
         coder.encode(end, forKey: "end")
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.title, forKey: .title)
+        try container.encode(self.start, forKey: .start)
+        try container.encode(self.end, forKey: .end)
     }
     
     var timeInterval: String {
@@ -744,12 +756,22 @@ protocol ChaptersInfo: BaseInfo {
     func encodeChapters(in coder: NSCoder)
 }
 
+enum ChaptersCodingKeys: String, CodingKey {
+    case chapters
+}
+
 extension ChaptersInfo {
     static func decodeChapters(from coder: NSCoder) -> [Chapter] {
         let n = coder.decodeInteger(forKey: "chapters_count")
         var chapters: [Chapter] = []
         for i in 0 ..< n {
-            guard let d = coder.decodeObject(forKey: "chapter_\(i)") as? Data, let c = try? NSKeyedUnarchiver(forReadingFrom: d), let chapter = Chapter(coder: c) else {
+            guard let d = coder.decodeObject(of: NSData.self, forKey: "chapter_\(i)") as Data?, let c = try? NSKeyedUnarchiver(forReadingFrom: d) else {
+                continue
+            }
+            defer {
+                c.finishDecoding()
+            }
+            guard let chapter = Chapter(coder: c) else {
                 continue
             }
             chapters.append(chapter)
@@ -801,6 +823,28 @@ protocol MediaInfo: LanguageInfo, DurationInfo, CodecInfo, FileInfo {
 
 // MARK: -
 class VideoTrackInfo: DimensionalInfo, LanguageInfo, DurationInfo, CodecInfo {
+    enum CodingKeys: String, CodingKey {
+        case duration
+        case startTime
+        case codecShortName
+        case codecLongName
+        case profile
+        case pixelFormat
+        case pixelFormatLabel
+        case fieldOrder
+        case fieldOrderLabel
+        case colorSpace
+        case colorSpaceLabel
+        case lang
+        case langFlag
+        case bitRate
+        case frames
+        case fps
+        case title
+        case encoder
+        case isLossless
+    }
+    
     let start_time: Double
     let duration: Double
     let codec_short_name: String
@@ -857,19 +901,19 @@ class VideoTrackInfo: DimensionalInfo, LanguageInfo, DurationInfo, CodecInfo {
     required init?(coder: NSCoder) {
         self.duration = coder.decodeDouble(forKey: "duration")
         self.start_time = coder.decodeDouble(forKey: "start_time")
-        self.codec_short_name = coder.decodeObject(forKey: "codec_short_name") as? String ?? ""
-        self.codec_long_name = coder.decodeObject(forKey: "codec_long_name") as? String
-        self.profile = coder.decodeObject(forKey: "profile") as? String
+        self.codec_short_name = coder.decodeObject(of: NSString.self, forKey: "codec_short_name") as String? ?? ""
+        self.codec_long_name = coder.decodeObject(of: NSString.self, forKey: "codec_long_name") as String?
+        self.profile = coder.decodeObject(of: NSString.self, forKey: "profile") as String?
         self.pixel_format = VideoPixelFormat(rawValue: coder.decodeInteger(forKey: "pixel_format"))
         self.field_order = VideoFieldOrder(rawValue: coder.decodeInteger(forKey: "field_order"))
         self.color_space = VideoColorSpace(rawValue: coder.decodeInteger(forKey: "color_space"))
-        self.lang = coder.decodeObject(forKey: "lang") as? String
+        self.lang = coder.decodeObject(of: NSString.self, forKey: "lang") as String?
         self.bitRate = coder.decodeInt64(forKey: "bitRate")
         self.frames = coder.decodeInteger(forKey: "frames")
         self.fps = coder.decodeDouble(forKey: "fps")
-        self.title = coder.decodeObject(forKey: "title") as? String
-        self.encoder = coder.decodeObject(forKey: "encoder") as? String
-        self.isLossless = coder.decodeObject(forKey: "isLossless") as? Bool
+        self.title = coder.decodeObject(of: NSString.self, forKey: "title") as String?
+        self.encoder = coder.decodeObject(of: NSString.self, forKey: "encoder") as String?
+        self.isLossless = coder.decodeObject(of: NSNumber.self, forKey: "isLossless")?.boolValue
         
         super.init(coder: coder)
     }
@@ -877,24 +921,53 @@ class VideoTrackInfo: DimensionalInfo, LanguageInfo, DurationInfo, CodecInfo {
     override func encode(with coder: NSCoder) {
         coder.encode(self.duration, forKey: "duration")
         coder.encode(self.start_time, forKey: "start_time")
-        coder.encode(self.codec_short_name, forKey: "codec_short_name")
-        coder.encode(self.codec_long_name, forKey: "codec_long_name")
+        coder.encode(self.codec_short_name as NSString, forKey: "codec_short_name")
+        coder.encode(self.codec_long_name as NSString?, forKey: "codec_long_name")
         coder.encode(self.profile, forKey: "profile")
         coder.encode(self.pixel_format?.rawValue ?? -1, forKey: "pixel_format")
         coder.encode(self.field_order?.rawValue ?? -1, forKey: "field_order")
         coder.encode(self.color_space?.rawValue ?? -1, forKey: "color_space")
-        coder.encode(self.lang, forKey: "lang")
+        coder.encode(self.lang as NSString?, forKey: "lang")
         coder.encode(self.bitRate, forKey: "bitRate")
         coder.encode(self.frames, forKey: "frames")
         coder.encode(self.fps, forKey: "fps")
-        coder.encode(self.title, forKey: "title")
-        coder.encode(self.encoder, forKey: "encoder")
-        coder.encode(self.isLossless, forKey: "isLossless")
+        coder.encode(self.title as NSString?, forKey: "title")
+        coder.encode(self.encoder as NSString?, forKey: "encoder")
+        coder.encode(self.isLossless as NSNumber?, forKey: "isLossless")
         
         super.encode(with: coder)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool) -> String {
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.duration, forKey: .duration)
+        try container.encode(self.start_time, forKey: .startTime)
+        try container.encode(self.codec_short_name, forKey: .codecShortName)
+        try container.encode(self.codec_long_name, forKey: .codecLongName)
+        try container.encode(self.profile, forKey: .profile)
+        try container.encode(self.pixel_format?.rawValue, forKey: .pixelFormat)
+        try container.encode(self.field_order?.rawValue, forKey: .fieldOrder)
+        try container.encode(self.color_space?.rawValue, forKey: .colorSpace)
+        try container.encode(self.lang, forKey: .lang)
+        try container.encode(self.bitRate, forKey: .bitRate)
+        try container.encode(self.frames, forKey: .frames)
+        try container.encode(self.fps, forKey: .fps)
+        try container.encode(self.title, forKey: .title)
+        try container.encode(self.encoder, forKey: .encoder)
+        try container.encode(self.isLossless, forKey: .isLossless)
+        
+        if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
+            try container.encode(self.pixel_format?.label, forKey: .pixelFormatLabel)
+            try container.encode(self.field_order?.label, forKey: .fieldOrderLabel)
+            try container.encode(self.color_space?.label, forKey: .colorSpaceLabel)
+            try container.encode(self.getCountryFlag(), forKey: .langFlag)
+        }
+        
+    }
+    
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         let useEmptyData = false
         switch placeholder {
         case "[[duration]]", "[[seconds]]", "[[bitrate]]", "[[start-time]]", "[[start-time-s]]":
@@ -989,7 +1062,7 @@ class VideoTrackInfo: DimensionalInfo, LanguageInfo, DurationInfo, CodecInfo {
             return ""
             
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     
@@ -1006,7 +1079,7 @@ class VideoTrackInfo: DimensionalInfo, LanguageInfo, DurationInfo, CodecInfo {
         }
         template += " [[language-flag]]"
         var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled)
+        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
         return isFilled ? title : ""
     }
     
@@ -1017,6 +1090,14 @@ class VideoTrackInfo: DimensionalInfo, LanguageInfo, DurationInfo, CodecInfo {
 
 // MARK: -
 class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
+    enum CodingKeys: String, CodingKey {
+        case chapters
+        case videoTracks
+        case audioTracks
+        case subtitles
+        case engine
+    }
+    
     let file: URL
     let fileSize: Int64
     let chapters: [Chapter]
@@ -1061,8 +1142,11 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
         var n = coder.decodeInteger(forKey: "video_count")
         var videos: [VideoTrackInfo] = []
         for i in 0 ..< n {
-            if let data = coder.decodeObject(forKey: "video_\(i)") as? Data, let coder1 = try? NSKeyedUnarchiver(forReadingFrom: data), let video = VideoTrackInfo(coder: coder1) {
-                videos.append(video)
+            if let data = coder.decodeObject(of: NSData.self, forKey: "video_\(i)") as Data?, let coder1 = try? NSKeyedUnarchiver(forReadingFrom: data) {
+                if let video = VideoTrackInfo(coder: coder1) {
+                    videos.append(video)
+                }
+                coder1.finishDecoding()
             }
         }
         self.videoTracks = videos
@@ -1070,8 +1154,11 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
         n = coder.decodeInteger(forKey: "audio_count")
         var audios: [AudioTrackInfo] = []
         for i in 0 ..< n {
-            if let data = coder.decodeObject(forKey: "audio_\(i)") as? Data, let coder1 = try? NSKeyedUnarchiver(forReadingFrom: data), let audio = AudioTrackInfo(coder: coder1) {
-                audios.append(audio)
+            if let data = coder.decodeObject(of: NSData.self, forKey: "audio_\(i)") as Data?, let coder1 = try? NSKeyedUnarchiver(forReadingFrom: data) {
+                if let audio = AudioTrackInfo(coder: coder1) {
+                    audios.append(audio)
+                }
+                coder1.finishDecoding()
             }
         }
         self.audioTracks = audios
@@ -1079,8 +1166,11 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
         n = coder.decodeInteger(forKey: "subtitles_count")
         var titles: [SubtitleTrackInfo] = []
         for i in 0 ..< n {
-            if let data = coder.decodeObject(forKey: "subtitle_\(i)") as? Data, let coder1 = try? NSKeyedUnarchiver(forReadingFrom: data), let title = SubtitleTrackInfo(coder: coder1) {
-                titles.append(title)
+            if let data = coder.decodeObject(of: NSData.self, forKey: "subtitle_\(i)") as Data?, let coder1 = try? NSKeyedUnarchiver(forReadingFrom: data) {
+                if let title = SubtitleTrackInfo(coder: coder1) {
+                    titles.append(title)
+                }
+                coder1.finishDecoding()
             }
         }
         self.subtitles = titles
@@ -1114,7 +1204,20 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
         super.encode(with: coder)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool) -> String {
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        try self.encodeFileInfo(to: encoder)
+        
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.engine.label, forKey: .engine)
+        
+        try container.encode(self.chapters, forKey: .chapters)
+        try container.encode(self.videoTracks, forKey: .videoTracks)
+        try container.encode(self.audioTracks, forKey: .audioTracks)
+        try container.encode(self.subtitles, forKey: .subtitles)
+    }
+    
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         let useEmptyData = false
         switch placeholder {
         case "[[languages]]", "[[languages-flag]]", "[[language-count]]":
@@ -1197,7 +1300,7 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
             isFilled = true
             return engine.label
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     
@@ -1211,11 +1314,11 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
         }
         template += " [[languages-flag]]"
         var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled)
+        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
         return isFilled ? title : ""
     }
     
-    override internal func processSpecialMenuItem(_ item: Settings.MenuItem, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+    override internal func processSpecialMenuItem(_ item: Settings.MenuItem, atIndex itemIndex: Int, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
         switch item.template {
         case "[[chapters]]":
             guard !self.chapters.isEmpty else {
@@ -1223,7 +1326,7 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
             }
             
             var isFilled = false
-            let s = self.replacePlaceholders(in: "[[chapters-count]]", settings: settings, isFilled: &isFilled)
+            let s = self.replacePlaceholders(in: "[[chapters-count]]", settings: settings, isFilled: &isFilled, forItem: itemIndex)
             let chapters_menu = NSMenu(title: "Chapters")
             for (i, chapter) in self.chapters.enumerated() {
                 chapters_menu.addItem(self.createMenuItem(title: chapter.getTitle(index: i), image: "-", settings: settings))
@@ -1243,7 +1346,7 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
             var title = ""
             if group_tracks {
                 var filled = false
-                title = self.replacePlaceholders(in: "[[video-count]]", settings: settings, isFilled: &filled)
+                title = self.replacePlaceholders(in: "[[video-count]]", settings: settings, isFilled: &filled, forItem: itemIndex)
                 if !filled || title.isEmpty {
                     title = NSLocalizedString("Video", tableName: "LocalizableExt", comment: "")
                 }
@@ -1280,7 +1383,7 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
             var title = ""
             if group_tracks {
                 var filled = false
-                title = self.replacePlaceholders(in: "[[audio-count]]", settings: settings, isFilled: &filled)
+                title = self.replacePlaceholders(in: "[[audio-count]]", settings: settings, isFilled: &filled, forItem: itemIndex)
                 if !filled || title.isEmpty {
                     title = NSLocalizedString("Audio", tableName: "LocalizableExt", comment: "")
                 }
@@ -1332,7 +1435,7 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
                }
             }
         default:
-            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, atIndex: itemIndex, inMenu: destination_sub_menu, withSettings: settings)
         }
         
         return true
@@ -1345,6 +1448,13 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
 
 // MARK: -
 class ImageVideoInfo: DimensionalInfo, CodecInfo, FileInfo {
+    enum CodingKeys: String, CodingKey {
+        case codecShortName
+        case codecLongName
+        case isLossless
+        case encoder
+    }
+
     let file: URL
     let fileSize: Int64
     let codec_short_name: String
@@ -1370,38 +1480,63 @@ class ImageVideoInfo: DimensionalInfo, CodecInfo, FileInfo {
         }
         self.file = r.0
         self.fileSize = r.1 ?? -1
-        self.codec_short_name = coder.decodeObject(forKey: "codec_short_name") as? String ?? ""
-        self.codec_long_name = coder.decodeObject(forKey: "codec_long_name") as? String
-        self.encoder = coder.decodeObject(forKey: "encoder") as? String
-        self.isLossless = coder.decodeObject(forKey: "isLossless") as? Bool
+        self.codec_short_name = coder.decodeObject(of: NSString.self, forKey: "codec_short_name") as String? ?? ""
+        self.codec_long_name = coder.decodeObject(of: NSString.self, forKey: "codec_long_name") as String?
+        self.encoder = coder.decodeObject(of: NSString.self, forKey: "encoder") as String?
+        self.isLossless = coder.decodeObject(of: NSNumber.self, forKey: "isLossless")?.boolValue
         
         super.init(coder: coder)
     }
     
     override func encode(with coder: NSCoder) {
         self.encodeFileInfo(coder)
-        coder.encode(self.codec_short_name, forKey: "codec_short_name")
-        coder.encode(self.codec_long_name, forKey: "codec_long_name")
-        coder.encode(self.encoder, forKey: "encoder")
-        coder.encode(self.isLossless, forKey: "isLossless")
+        coder.encode(self.codec_short_name as NSString, forKey: "codec_short_name")
+        coder.encode(self.codec_long_name as NSString?, forKey: "codec_long_name")
+        coder.encode(self.encoder as NSString?, forKey: "encoder")
+        coder.encode(self.isLossless as NSNumber?, forKey: "isLossless")
         
         super.encode(with: coder)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool) -> String {
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        try self.encodeFileInfo(to: encoder)
+        
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.codec_short_name, forKey: .codecShortName)
+        try container.encode(self.codec_long_name, forKey: .codecLongName)
+        try container.encode(self.isLossless, forKey: .isLossless)
+        try container.encode(self.encoder, forKey: .encoder)
+    }
+    
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         switch placeholder {
         case "[[filesize]]", "[[file-name]]", "[[file-ext]]":
             return self.processFilePlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
         case "[[codec]]", "[[codec-long]]", "[[codec-short]]", "[[compression]]", "[[encoder]]":
             return self.processPlaceholderCodec(placeholder, settings: settings, values: values, isFilled: &isFilled)
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
         }
     }
 }
 
 // MARK: -
 class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
+    enum CodingKeys: String, CodingKey {
+        case duration
+        case startTime
+        case codecShortName
+        case codecLongName
+        case lang
+        case langFlag
+        case bitRate
+        case title
+        case encoder
+        case isLossless
+        case channels
+    }
+    
     let duration: Double
     let start_time: Double
     let codec_short_name: String
@@ -1436,30 +1571,52 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
     required init?(coder: NSCoder) {
         self.duration = coder.decodeDouble(forKey: "duration")
         self.start_time = coder.decodeDouble(forKey: "start_time")
-        self.codec_short_name = coder.decodeObject(forKey: "codec_short_name") as? String ?? ""
-        self.codec_long_name = coder.decodeObject(forKey: "codec_long_name") as? String
-        self.lang = coder.decodeObject(forKey: "lang") as? String
+        self.codec_short_name = coder.decodeObject(of: NSString.self, forKey: "codec_short_name") as String? ?? ""
+        self.codec_long_name = coder.decodeObject(of: NSString.self, forKey: "codec_long_name") as String?
+        self.lang = coder.decodeObject(of: NSString.self, forKey: "lang") as String?
         self.bitRate = coder.decodeInt64(forKey: "bitRate")
-        self.title = coder.decodeObject(forKey: "title") as? String
-        self.encoder = coder.decodeObject(forKey: "encoder") as? String
-        self.isLossless = coder.decodeObject(forKey: "isLossless") as? Bool
+        self.title = coder.decodeObject(of: NSString.self, forKey: "title") as String?
+        self.encoder = coder.decodeObject(of: NSString.self, forKey: "encoder") as String?
+        self.isLossless = coder.decodeObject(of: NSNumber.self, forKey: "isLossless")?.boolValue
         self.channels = coder.decodeInteger(forKey: "channels")
         
         super.init(coder: coder)
     }
+    
     override func encode(with coder: NSCoder) {
         coder.encode(self.duration, forKey: "duration")
         coder.encode(self.start_time, forKey: "start_time")
-        coder.encode(self.codec_short_name, forKey: "codec_short_name")
-        coder.encode(self.codec_long_name, forKey: "codec_long_name")
-        coder.encode(self.lang, forKey: "lang")
+        coder.encode(self.codec_short_name as NSString, forKey: "codec_short_name")
+        coder.encode(self.codec_long_name as NSString?, forKey: "codec_long_name")
+        coder.encode(self.lang as NSString?, forKey: "lang")
         coder.encode(self.bitRate, forKey: "bitRate")
-        coder.encode(self.title, forKey: "title")
+        coder.encode(self.title as NSString?, forKey: "title")
         coder.encode(self.encoder, forKey: "encoder")
-        coder.encode(self.isLossless, forKey: "isLossless")
+        coder.encode(self.isLossless as NSNumber?, forKey: "isLossless")
         coder.encode(self.channels, forKey: "channels")
         
         super.encode(with: coder)
+    }
+    
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.duration, forKey: .duration)
+        try container.encode(self.start_time, forKey: .startTime)
+        try container.encode(self.codec_short_name, forKey: .codecShortName)
+        try container.encode(self.codec_long_name, forKey: .codecLongName)
+        try container.encode(self.lang, forKey: .lang)
+        try container.encode(self.bitRate, forKey: .bitRate)
+        try container.encode(self.title, forKey: .title)
+        try container.encode(self.encoder, forKey: .encoder)
+        try container.encode(self.isLossless, forKey: .isLossless)
+        try container.encode(self.channels, forKey: .channels)
+        
+        
+        if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
+            try container.encode(self.getCountryFlag(), forKey: .langFlag)
+        }
     }
     
     override func getImage(for name: String) -> NSImage? {
@@ -1470,7 +1627,7 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         let useEmptyData = false
         switch placeholder {
         case "[[duration]]", "[[seconds]]", "[[bitrate]]", "[[start-time]]", "[[start-time-s]]":
@@ -1517,7 +1674,7 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
                 }
             }
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     
@@ -1534,7 +1691,7 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
             template += " [[language-flag]]"
         }
         var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled)
+        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
         return isFilled ? title : ""
     }
     
@@ -1544,6 +1701,11 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
 }
 
 class AudioInfo: AudioTrackInfo, MediaInfo, ChaptersInfo {
+    enum CodingKeys: String, CodingKey {
+        case chapters
+        case engine
+    }
+    
     let file: URL
     let fileSize: Int64
     let chapters: [Chapter]
@@ -1583,7 +1745,16 @@ class AudioInfo: AudioTrackInfo, MediaInfo, ChaptersInfo {
         super.encode(with: coder)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool) -> String {
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        try self.encodeFileInfo(to: encoder)
+        
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.engine.label, forKey: .engine)
+        try container.encode(self.chapters, forKey: .chapters)
+    }
+    
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         switch placeholder {
         case "[[filesize]]", "[[file-name]]", "[[file-ext]]":
             return processFilePlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
@@ -1595,11 +1766,11 @@ class AudioInfo: AudioTrackInfo, MediaInfo, ChaptersInfo {
             isFilled = true
             return engine.label
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     
-    override internal func processSpecialMenuItem(_ item: Settings.MenuItem, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+    override internal func processSpecialMenuItem(_ item: Settings.MenuItem, atIndex itemIndex: Int, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
         switch item.template {
         case "[[chapters]]":
             guard !self.chapters.isEmpty else {
@@ -1607,7 +1778,7 @@ class AudioInfo: AudioTrackInfo, MediaInfo, ChaptersInfo {
             }
             
             var isFilled = false
-            let s = self.replacePlaceholders(in: "[[chapters-count]]", settings: settings, isFilled: &isFilled)
+            let s = self.replacePlaceholders(in: "[[chapters-count]]", settings: settings, isFilled: &isFilled, forItem: itemIndex)
             let chapters_menu = NSMenu(title: "Chapters")
             for (i, chapter) in self.chapters.enumerated() {
                 chapters_menu.addItem(self.createMenuItem(title: chapter.getTitle(index: i), image: "-", settings: settings))
@@ -1617,7 +1788,7 @@ class AudioInfo: AudioTrackInfo, MediaInfo, ChaptersInfo {
             destination_sub_menu.addItem(mnu)
             destination_sub_menu.setSubmenu(chapters_menu, for: mnu)
         default:
-            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, atIndex: itemIndex, inMenu: destination_sub_menu, withSettings: settings)
         }
         
         return true
@@ -1631,6 +1802,11 @@ class AudioInfo: AudioTrackInfo, MediaInfo, ChaptersInfo {
 
 // MARK: - SubtitleTrackInfo
 class SubtitleTrackInfo: BaseInfo, LanguageInfo {
+    enum CodingKeys: String, CodingKey {
+        case title
+        case lang
+        case langFlag
+    }
     let title: String?
     let lang: String?
     
@@ -1641,19 +1817,30 @@ class SubtitleTrackInfo: BaseInfo, LanguageInfo {
     }
     
     required init?(coder: NSCoder) {
-        self.title = coder.decodeObject(forKey: "title") as? String
-        self.lang = coder.decodeObject(forKey: "lang") as? String
+        self.title = coder.decodeObject(of: NSString.self, forKey: "title") as String?
+        self.lang = coder.decodeObject(of: NSString.self, forKey: "lang") as String?
         
         super.init(coder: coder)
     }
     override func encode(with coder: NSCoder) {
-        coder.encode(self.title, forKey: "title")
-        coder.encode(self.lang, forKey: "lang")
-        
+        coder.encode(self.title as NSString?, forKey: "title")
+        coder.encode(self.lang as NSString?, forKey: "lang")
         super.encode(with: coder)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool) -> String {
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.title, forKey: .title)
+        try container.encode(self.lang, forKey: .lang)
+        
+        if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
+            try container.encode(self.getCountryFlag(), forKey: .langFlag)
+        }
+    }
+    
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         switch placeholder {
         case "[[title]]":
             let s = format(value: values?["title"] ?? title, isFilled: &isFilled)
@@ -1662,7 +1849,7 @@ class SubtitleTrackInfo: BaseInfo, LanguageInfo {
         case "[[language]]", "[[language-flag]]":
             return processLanguagePlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     
@@ -1676,7 +1863,7 @@ class SubtitleTrackInfo: BaseInfo, LanguageInfo {
         }
         if !template.isEmpty {
             var isFilled = false
-            let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled)
+            let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
             return isFilled ? title : ""
         } else {
             return ""

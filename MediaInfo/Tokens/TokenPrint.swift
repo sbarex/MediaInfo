@@ -16,7 +16,7 @@ class TokenPrint: Token {
         case print(dpi: Int, unit: PrintUnit)
         
         static var pasteboardType: NSPasteboard.PasteboardType {
-           return .MITokenColor
+           return .MITokenPrint
         }
         
         var displayString: String {
