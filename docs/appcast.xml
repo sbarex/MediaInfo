@@ -23,7 +23,7 @@
                         <li>Alpha channel</li>
                         <li>Metadata from Exif</li>
                     </ul>
-                    <li>Support to customize the menu items with a javascript code.</li>
+                    <li>Support to customize the menu items with javascript code.</li>
                     <li>Support for auto monitor external disk.</li>
                     <li>Bugfix on menu sanification.</li>
                     <li>Bugfix for open selected file.</li>
