@@ -54,7 +54,7 @@ class TraceViewController: NSViewController {
         guard let info = notification.object as? (BaseInfo, String, AnyHashable) else {
             return
         }
-        let index = info.0.jsContext?.objectForKeyedSubscript("menuItemIndex").toNumber().intValue ?? -1
+        let index = info.0.jsContext?.objectForKeyedSubscript("templateItemIndex").toNumber().intValue ?? -1
         
         let labelAttributes: [NSAttributedString.Key: AnyHashable] = [.foregroundColor: NSColor.labelColor]
         
@@ -92,7 +92,7 @@ class TraceViewController: NSViewController {
             return
         }
         
-        // let index = info.0.jsContext?.objectForKeyedSubscript("menuItemIndex").toNumber().intValue ?? -1
+        // let index = info.0.jsContext?.objectForKeyedSubscript("templateItemIndex").toNumber().intValue ?? -1
         
         appendInfoHead(info.0, level: "error", itemIndex: info.3)
         

@@ -480,7 +480,7 @@ The `image` property can be:
 
 The global variable `fileData` contain the properties of the processed file.
 
-The global variable `menuItemIndex` is set to the index (zero based) of the current processed menu item template.
+The global variable `templateItemIndex` is set to the index (zero based) of the current processed menu item template. Note that this index may not match the index of the current menu item because templates with empty results are not converted to menu items and the global script can generate multiple menu. 
 
 _You cannot change the properties of `fileData` to alter the data displayed by standard tokens._ 
 

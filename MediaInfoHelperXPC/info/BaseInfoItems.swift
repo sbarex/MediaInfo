@@ -268,7 +268,7 @@ const console = {
         defer {
             context.exceptionHandler = old_exceptionHandler
         }
-        context.setObject(itemIndex, forKeyedSubscript: "menuItemIndex" as NSString)
+        context.setObject(itemIndex, forKeyedSubscript: "templateItemIndex" as NSString)
         let result = context.evaluateScript(code)
         
         if let js_exception = js_exception {

@@ -50,7 +50,7 @@ class ScriptViewController: NSViewController {
     The inline script code must return a string (or null) value.
     
     The global `fileData` contains the current info properties.
-    The global `filemenuItemIndexData` is the zero based index of the current processed menu item.
+    The global `fileData.templateItemIndex` is the zero based index of the current processed template menu item.
     */
 
     // console.log(fileData);
@@ -82,7 +82,7 @@ class ScriptViewController: NSViewController {
       - items (Array of menu items): A list of submenu items.
 
     The global `fileData` contains the current info properties.
-    The global `filemenuItemIndexData` is the zero based index of the current processed menu item.
+    The global `fileData.templateItemIndex` is the zero based index of the current processed template menu item.
     */
 
     // console.log(fileData); // fileData contains the current info properties.
