@@ -179,15 +179,15 @@ Available information:
 |bit rate|Bit rate.|_1 Mb/s_||
 |start time|Start time.|_start at 00:00:00_, …||
 |start time (seconds)|Start time in seconds.|_start at second 0_||
-|launguage code|Language country code.|_EN_||
-|launguage flag|Language country flag.|_:it:_||
+|language code|Language country code.|_EN_||
+|language flag|Language country flag.|_:it:_||
 |codec|Codec name (full name if available, otherwise short name).|_HEVC H.265_||
 |codec short name|Codec short name.|_hevc_||
 |codec long name|Codec long name.|_HEVC H.265_||
 |chapters|Number of chapters.|_2 chapters_ If this placeholder is the only in the menu item will be added a submenu with the list of the chapters.|\*\*|
 |video tracks|Number of video tracks.|_2 video tracks_||
 |audio tracks|Number of audio tracks.|_1 audio tracks_||
-|subtitles|Number of subititles.|_3 subtitles_||
+|subtitles|Number of subtitles.|_3 subtitles_||
 |languages|Number of languages.|_2 languages_ Show the number of available languages on video and audio tracks.||
 |frames|Number of frames.|_1.500 frames_||
 |frame rates|Frame rates.|_24 fps_||
@@ -225,8 +225,8 @@ Available information:
 |bit rate|Bit rate.|_1 Mb/s_|
 |start time|Start time.|_start at 00:00:00_, …|
 |start time (seconds)|Start time in seconds.|_start at second 0_|
-|langage code|Language country code.|_EN_|
-|langage flag|Language country flag.|_:it:_|
+|language code|Language country code.|_EN_|
+|language flag|Language country flag.|_:it:_|
 |languages|Number of languages.|_2 languages_ Show the number of available languages on video and audio tracks.|
 |codec|Codec name (full name if available, otherwise short name).|_MPEG audio layer 2/3_|
 |codec short name|Codec short name.|_mp3_|
@@ -287,7 +287,7 @@ The following file formats are supported: `.docx`, `.rtfx`, `.pptx`, `.odt`, `.o
 
 ![Office settings](Assets/settings_office.png)
 
-Extracting some metadata requires a deep scan of the main file. This can cause a delay in the display of the context menu of office files. For this reason the deep scan is enabled only when requested by the chosen tokens or when script tokens are present. If the script code does not require access to the metadata, you can avoid its extraction by  placing this comment at the beginning of the code: `/* no-deep-scan */`
+Extracting some metadata requires a deep scan of the main file. This can cause a delay in the display of the context menu of office files. For this reason, the deep scan is enabled only when requested by the chosen tokens or when script tokens are present. If the script code does not require access to the metadata, you can avoid its extraction by  placing this comment at the beginning of the code: `/* no-deep-scan */`
 
 Available information:
 |**placeholder**|**description**|**example**|**require deep scan**|
@@ -323,9 +323,9 @@ The following file formats are supported: `.zip`, `.rar`, `.7z`, `.tar`, `.pax`,
 You can limit the processed data with these options:
 |**option**|**description**|
 |:----|:----|
-|Max files|Globally maximun number of file to processe from the compressed file.|
-|Max depth|Maximun number of subfolder depth.|
-|Max files per depth|Maximun number of files processed inside a depth level.|
+|Max files|Overall maximum number of files to process from the compressed file.|
+|Max depth|Maximum depth number of subfolders.|
+|Max files per depth|Maximum number of files processed within a depth level.|
 
 You can set to zero these option to disable the limit.
 
@@ -374,8 +374,8 @@ There are two script tokes: inline and global.
 
 The inline script token allows you to place the result of the script evaluation inside a menu item with any other tokens. 
 
-The result of the script corresponds to the last statment executed in the code.
-The last statment must return a string value (or null).
+The result of the script corresponds to the last statement executed in the code.
+The last statement must return a string value (or null).
 
 ```javascript
 (function() {
@@ -387,7 +387,7 @@ The last statment must return a string value (or null).
 
 ### Global scripts
 
-The global token script allow to create multiple menu items in one time.
+The global token script allows you to create multiple menu items at once.
 
 ```javascript
 (function() {
@@ -413,7 +413,7 @@ Each item in the returned array can be:
 - A string that will be used as a title.
 - An object with these properties:
   - `title` (string, required) The title of the menu item. 
-  - `image` (string, roptional) The name of the image for the menu item.
+  - `image` (string, optional) The name of the image for the menu item.
   - `checked` (bool, optional) Set to `true` to add the checkmark to the menu item.
   - `indent` (int, optional) Indentation level.
   - `tag` (int, optional)
@@ -484,7 +484,10 @@ The global variable `menuItemIndex` is set to the index (zero based) of the curr
 
 _You cannot change the properties of `fileData` to alter the data displayed by standard tokens._ 
 
-In the javascript environment, the `console.log()` function is available to allow a rudimentary tracing function in the Javascript Console Window (available from the Window menu). Also there are availabel `console.error()`, `console.warn()` `console.info()`,  `console.debug()`, `console.assert()`.
+In the javascript environment, the `console.log()` function is available to allow a rudimentary tracing function in the Javascript Console Window (available from the Window menu). Also, there are available `console.error()`, `console.warn()` `console.info()`,  `console.debug()`, `console.assert()`.
+
+![Log console](Assets/script_log.png)
+
 
 #### Common properties
 
@@ -510,7 +513,7 @@ In the javascript environment, the `console.log()` function is available to allo
 |`fileData`.`colorMode`|string||_"RGB"_|
 |`fileData`.`profileName`|string||_"Color LCD"_|
 |`fileData`.`metadata`|Object|All extracted metadata.||
-|`fileData`.`metadata`.`Exif`|Array|Exif metadat.a||
+|`fileData`.`metadata`.`Exif`|Array|Exif metadata.||
 |`fileData`.`metadata`.`ExifAux`|Array|Auxiliary Exif metadata.||
 |`fileData`.`metadata`.`TIFF`|Array|TIFF metadata.||
 |`fileData`.`metadata`.`JFIF`|Array|JFIF metadata.||
@@ -535,7 +538,7 @@ In the javascript environment, the `console.log()` function is available to allo
 |`fileData`.`metadata`.`TGA`|Array|TGA metadata.||
 |`fileData`.`metadataRaw`|Object|An object with the same properties of `fileData`.`metadata` with a JSON representation of the original metadata array. _Only dictionaries that can be converted to JSON are exported._ ||
 
-If no metadatata token are used and all the script code begin with the comment `/* no-metadata */` the metadata will not be extracted.
+If no metadata token are used and all the script code begin with the comment `/* no-metadata */` the metadata will not be extracted.
 Depending on the image type, not all metadata properties will be populated. 
 
 Every metadata group is an array of objects. Each object has three string properties: `code`, `value` and `label`. For a list of metadata codes see ImageIO - `CGImageProperties.h` on the Apple documentation.
@@ -552,7 +555,7 @@ Every metadata group is an array of objects. Each object has three string proper
 |`fileData`.`codecShortName`|string||_"hevc"_|
 |`fileData`.`colorSpace`|int\|null||_7_|
 |`fileData`.`colorSpaceLabel`|strin\|null||_"smpte240m"_|
-|`fileData`.`duration`|int|Number of secods.|_3600_|
+|`fileData`.`duration`|int|Number of seconds.|_3600_|
 |`fileData`.`encoder`|string\|null|||
 |`fileData`.`engine`|string|Engine used to decode the file.|_"Core Media engine"_|
 |`fileData`.`fieldOrder`|int\|null|`0`: topFirst. `1`: bottomFirst. `2`: topFirstSwapped. `3`: bottomFirstSwapped. `4`: unknown. `5`: progressive.|_0_|
@@ -578,7 +581,7 @@ Every item in the `fileData`.`audioTracks` is an object with these properties:
 |`codecShortName`|string||_"mp3"_|
 |`bitRate`|int||_524800_|
 |`channels`|int||_2_|
-|`duration`|int|Number of secods.|_3600_|
+|`duration`|int|Number of seconds.|_3600_|
 |`encoder`|string\|null|||
 |`isLossless`|bool\|null||_false_|
 |`lang`|string\|null||_EN_|
@@ -671,7 +674,7 @@ Every item in the `fileData`.`subtitles` is an object with these properties:
 
 |property|type|description|example|
 |:-------|:---|:----|:------|
-|`fileData`.files|Array|Array of files. The list is limited accoring to the user settings.||
+|`fileData`.files|Array|Array of files. The list is limited according to the user settings.||
 |`fileData`.unlimitedFileCount|int|Total files inside the archive.|_44_|
 |`fileData`.unlimitedFileSize|int|Uncompressed size of all files, in bytes.|_1153761_|
 
@@ -682,7 +685,7 @@ Every item in the `fileData`.`files` array has these properties:
 |accessDate|int|Unix timestamp. Zero if the info is not available.||
 |acl|string\|null||_"user::rwx\ngroup::rwx\nother::r-x"_|
 |creationDate|int|Unix timestamp. Zero if the info is not available.||
-|files|Array|If the item is a directoty, this property has the file list.||
+|files|Array|If the item is a directory, this property has the file list.||
 |flags|int|||
 |format|string||"ZIP 1.0 (uncompressed)"|
 |gid|int|Group user id.|_0_|
@@ -692,7 +695,7 @@ Every item in the `fileData`.`files` array has these properties:
 |isBundle|bool|Check if the file is a macOS generic bundle.|_false_|
 |isEncrypted|bool||_false_|
 |isHidden|bool|Check if the file is hidden (file name start with a dot).|_false_|
-|link|string\!null|||
+|link|string\|null|||
 |mode|string||_"drwxrwxr-x "_|
 |modificationDate|int|Unix timestamp. Zero if the info is not available.|_1552232126_|
 |originalPath|string|Full path as saved in the archive.|_"folder/file.ext"_|
@@ -711,7 +714,7 @@ This only happens for directly managed folders, not for subfolders. This is a co
 - Menu item separators are not rendered as usual.
 This is a limitation of the Apple API. The separators are rendered as a disabled empty menu items.
 
-- The Apple API allow to set only few option for each menu items: `title`, `tag`, `image` (automatically resized to 16x16 px), `intentationLevel`, `enabled`, `state`, `action` (the target is always the `FIFinderSync` object). When the image is passed from the code to the System it will be reprocessed ad lose the template attribute. This prevent the B/W image to change the color from black to white when the menu item is selected.
+- The Apple API allow to set only few option for each menu items: `title`, `tag`, `image` (automatically resized to 16x16 px), `indentationLevel`, `enabled`, `state`, `action` (the target is always the `FIFinderSync` object). When the image is passed from the code to the System it will be reprocessed ad lose the template attribute. This prevent the B/W image to change the color from black to white when the menu item is selected.
 
 
 ## Build from source
@@ -724,7 +727,7 @@ git clone https://github.com/sbarex/MediaInfo.git
 
 Then open the Xcode project, change the signing team and build. First time the build process can be slow due to the compilation of the dependencies libraries.
 
-The required libraries are linked inside the extension and compiled within Xcode, so no others external dependency are required.
+The required libraries are linked inside the extension and compiled within Xcode, so no others external dependencies are required.
 
 
 ### Dependencies

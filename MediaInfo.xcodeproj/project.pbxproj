@@ -533,6 +533,7 @@
 		833177DE26447A97007DB60C /* dv_profile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dv_profile.h; sourceTree = "<group>"; };
 		833177E026447A97007DB60C /* version.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = version.h; sourceTree = "<group>"; };
 		833177E126447A97007DB60C /* swresample.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = swresample.h; sourceTree = "<group>"; };
+		83341B1427BA3B1B008AE933 /* script_log.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = script_log.png; sourceTree = "<group>"; };
 		833420332792FECE00FF3C12 /* libb2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libb2.a; sourceTree = "<group>"; };
 		833420352792FECE00FF3C12 /* blake2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = blake2.h; sourceTree = "<group>"; };
 		833420BC2792FEED00FF3C12 /* include */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = include; sourceTree = "<group>"; };
@@ -2171,6 +2172,7 @@
 				83AAAAEE2659378700A6AAA9 /* settings_menu_item.png */,
 				836AC3ED27B17B370029CDA7 /* settings_compressed.png */,
 				834C321427B9332200FCF528 /* script_editor.png */,
+				83341B1427BA3B1B008AE933 /* script_log.png */,
 				832518432659419A007466A9 /* grant_access.png */,
 				83DD11C726458AD90063FCCA /* menu.png */,
 				8373E77C2500210200793F70 /* menu_image.png */,
