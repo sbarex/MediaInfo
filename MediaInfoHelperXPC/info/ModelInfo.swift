@@ -238,86 +238,44 @@ class ModelInfo: BaseInfo, FileInfo {
         return isFilled ? title : ""
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        let useEmptyData = false
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
             
         case "[[mesh-count]]":
-            return format(value: values?["meshes"] ?? self.meshes, isFilled: &isFilled) { v, isFilled in
-                guard let mesh = v as? [Mesh] else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                let n = mesh.count
-                isFilled = n > 0
-                if n == 0 && !useEmptyData {
-                    return ""
-                }
-                if n == 1 {
-                    return NSLocalizedString("1 Mesh", tableName: "LocalizableExt", comment: "")
-                } else {
-                    return String(format: NSLocalizedString("%d Meshes", tableName: "LocalizableExt", comment: ""), n)
-                }
+            let n = self.meshes.count
+            isFilled = n > 0
+            if n == 0 && !useEmptyData {
+                return ""
+            }
+            if n == 1 {
+                return NSLocalizedString("1 Mesh", tableName: "LocalizableExt", comment: "")
+            } else {
+                return String(format: NSLocalizedString("%d Meshes", tableName: "LocalizableExt", comment: ""), n)
             }
         case "[[vertex]]":
-            return format(value: values?["vertex"] ?? self.vertexCount, isFilled: &isFilled) { v, isFilled in
-                guard let vertex = v as? Int else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = vertex > 0
-                if vertex == 0 && !useEmptyData {
-                    return ""
-                }
-                return String(format: NSLocalizedString("%@ Vertices", tableName: "LocalizableExt", comment: ""), Self.numberFormatter.string(from: NSNumber(value: vertex)) ?? "\(vertex)")
+            isFilled = self.vertexCount > 0
+            if self.vertexCount == 0 && !useEmptyData {
+                return ""
             }
+            return String(format: NSLocalizedString("%@ Vertices", tableName: "LocalizableExt", comment: ""), Self.numberFormatter.string(from: NSNumber(value: self.vertexCount)) ?? "\(self.vertexCount)")
         case "[[normals]]":
-            return format(value: values?["normals"] ?? self.hasNormals, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? Bool else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = v
-                return NSLocalizedString(v ? "with normals" : "without normals", tableName: "LocalizableExt", comment: "")
-            }
+            isFilled = self.hasNormals
+            return NSLocalizedString(self.hasNormals ? "with normals" : "without normals", tableName: "LocalizableExt", comment: "")
         case "[[tangents]]":
-            return format(value: values?["tangents"] ?? self.hasTangent, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? Bool else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = v
-                return NSLocalizedString(v ? "with tangents" : "without tangents", tableName: "LocalizableExt", comment: "")
-            }
+            isFilled = self.hasTangent
+            return NSLocalizedString(self.hasTangent ? "with tangents" : "without tangents", tableName: "LocalizableExt", comment: "")
         case "[[tex-coords]]":
-            return format(value: values?["tex-coords"] ?? self.hasTextureCoordinate, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? Bool else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = v
-                return NSLocalizedString(v ? "with texture coordinates" : "without texture coordinates", tableName: "LocalizableExt", comment: "")
-            }
+            isFilled = self.hasTextureCoordinate
+            return NSLocalizedString(self.hasTextureCoordinate ? "with texture coordinates" : "without texture coordinates", tableName: "LocalizableExt", comment: "")
         case "[[vertex-color]]":
-            return format(value: values?["vertex-color"] ?? self.hasVertexColor, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? Bool else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = v
-                return NSLocalizedString(v ? "with vertex colors" : "without vertex colors", tableName: "LocalizableExt", comment: "")
-            }
+            isFilled = self.hasVertexColor
+            return NSLocalizedString(self.hasVertexColor ? "with vertex colors" : "without vertex colors", tableName: "LocalizableExt", comment: "")
         case "[[occlusion]]":
-            return format(value: values?["occlusion"] ?? self.hasOcclusion, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? Bool else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = v
-                return NSLocalizedString(v ? "with occlusion" : "without occlusion", tableName: "LocalizableExt", comment: "")
-            }
+            isFilled = self.hasOcclusion
+            return NSLocalizedString(self.hasOcclusion ? "with occlusion" : "without occlusion", tableName: "LocalizableExt", comment: "")
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     

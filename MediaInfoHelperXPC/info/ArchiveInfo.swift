@@ -703,42 +703,23 @@ class ArchiveInfo: BaseInfo, FileInfo {
         return isFilled ? title : ""
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        let useEmptyData = false
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[filesize]]", "[[file-name]]", "[[file-ext]]":
-            return self.processFilePlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return self.processFilePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         case "[[compression-method]]":
-            return format(value: values?["compression-method"] ?? self.compressionName, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? String else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = !v.isEmpty
-                return v
-            }
+            isFilled = !self.compressionName.isEmpty
+            return self.compressionName
         case "[[n-files]]":
-            return format(value: values?["n-files"] ?? self.unlimitedFileCount, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? Int else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = v > 0
-                return String(format: NSLocalizedString("%@ files", tableName: "LocalizableExt", comment: ""), Self.numberFormatter.string(from: NSNumber(value: v)) ?? "\(v)")
-            }
+            isFilled = self.unlimitedFileCount > 0
+            return String(format: NSLocalizedString("%@ files", tableName: "LocalizableExt", comment: ""), Self.numberFormatter.string(from: NSNumber(value: self.unlimitedFileCount)) ?? "\(self.unlimitedFileCount)")
         case "[[uncompressed-size]]":
-            return format(value: values?["uncompressed-size"] ?? self.totalSize, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? Int64 else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = v > 0
-                
-                return Self.byteCountFormatter.string(fromByteCount: v)
-            }
+            isFilled = self.unlimitedFileSize > 0
+            return Self.byteCountFormatter.string(fromByteCount: self.unlimitedFileSize)
             
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     

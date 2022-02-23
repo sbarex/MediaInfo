@@ -212,124 +212,81 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
         try container.encode(self.metadataRaw, forKey: .metadataRaw)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String: Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        let useEmptyData = false
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[animated]]":
-            return self.format(value: values?["is-animated"] ?? isAnimated, isFilled: &isFilled) { v, isFilled in
-                if let animated = v as? Bool {
-                    isFilled = true
-                    return NSLocalizedString(animated ? "animated" : "static", tableName: "LocalizableExt", comment: "")
-                } else {
-                    isFilled = false
-                    return useEmptyData ? "N/D" : ""
-                }
-            }
+            isFilled = true
+            return NSLocalizedString(isAnimated ? "animated" : "static", tableName: "LocalizableExt", comment: "")
         case "[[is-animated]]":
-            return self.format(value: values?["is-animated"] ?? isAnimated, isFilled: &isFilled) { v, isFilled in
-                if let animated = v as? Bool, animated {
-                    isFilled = true
-                    return NSLocalizedString("animated", tableName: "LocalizableExt", comment: "")
-                } else {
-                    isFilled = false
-                    return ""
-                }
+            if isAnimated {
+                isFilled = true
+                return NSLocalizedString("animated", tableName: "LocalizableExt", comment: "")
+            } else {
+                isFilled = false
+                return ""
             }
         case "[[alpha]]":
-            return self.format(value: values?["is-alpha"] ?? withAlpha, isFilled: &isFilled) { v, isFilled in
-                if let animated = v as? Bool {
-                    isFilled = true
-                    return NSLocalizedString(animated ? "transparent" : "opaque", tableName: "LocalizableExt", comment: "")
-                } else {
-                    isFilled = false
-                    return useEmptyData ? "N/D" : ""
-                }
-            }
+            isFilled = true
+            return NSLocalizedString(withAlpha ? "transparent" : "opaque", tableName: "LocalizableExt", comment: "")
         case "[[is-alpha]]":
-            return self.format(value: values?["is-alpha"] ?? withAlpha, isFilled: &isFilled) { v, isFilled in
-                if let withAlpha = v as? Bool, withAlpha {
-                    isFilled = true
-                    return NSLocalizedString("with alpha channel", tableName: "LocalizableExt", comment: "")
-                } else {
-                    isFilled = false
-                    return ""
-                }
+            if withAlpha {
+                isFilled = true
+                return NSLocalizedString("with alpha channel", tableName: "LocalizableExt", comment: "")
+            } else {
+                isFilled = false
+                return ""
             }
         case "[[color]]":
-            return self.format(value: values?["color"] ?? self.colorMode, isFilled: &isFilled) { v, isFilled in
-                guard let color = v as? String else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = true
-                return color
-            }
+            isFilled = !colorMode.isEmpty
+            return colorMode
         case "[[color-depth]]":
-            return self.format(value: [values?["color"] ?? self.colorMode, values?["depth"] ?? self.depth], isFilled: &isFilled) { v, isFilled in
-                guard let i = v as? [Any], let color = i[0] as? String, let depth = i[1] as? Int else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = true
-                return "\(color) \(depth) "+NSLocalizedString("bit", comment: "")
-            }
+            isFilled = true
+            return "\(colorMode) \(depth) "+NSLocalizedString("bit", comment: "")
         case "[[depth]]":
-            return self.format(value: values?["depth"] ?? depth, isFilled: &isFilled) { v, isFilled in
-                if let depth = v as? Int, depth > 0 {
-                    isFilled = true
-                    return "\(depth) "+NSLocalizedString("bit", comment: "")
-                } else {
-                    isFilled = false
-                    return self.formatND(useEmptyData: useEmptyData)
-                }
+            if depth > 0 {
+                isFilled = true
+                return "\(depth) "+NSLocalizedString("bit", comment: "")
+            } else {
+                isFilled = false
+                return self.formatND(useEmptyData: useEmptyData)
             }
         case "[[color-table]]":
-            return self.format(value: values?["color-table"] ?? self.colorTable.rawValue, isFilled: &isFilled) { v, isFilled in
-                guard let n = v as? Int, let colorTable = ColorTable(rawValue: n) else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = colorTable != .unknown
-                switch colorTable {
-                case .unknown:
-                    return ""
-                case .regular:
-                    return NSLocalizedString("normal", tableName: "LocalizableExt", comment: "")
-                case .indexed:
-                    return NSLocalizedString("indexed", tableName: "LocalizableExt", comment: "")
-                case .float:
-                    return NSLocalizedString("float", tableName: "LocalizableExt", comment: "")
-                }
+            isFilled = colorTable != .unknown
+            switch colorTable {
+            case .unknown:
+                return ""
+            case .regular:
+                return NSLocalizedString("normal", tableName: "LocalizableExt", comment: "")
+            case .indexed:
+                return NSLocalizedString("indexed", tableName: "LocalizableExt", comment: "")
+            case .float:
+                return NSLocalizedString("float", tableName: "LocalizableExt", comment: "")
             }
         case "[[profile-name]]":
-            return self.format(value: values?["profile-name"] ?? self.profileName, isFilled: &isFilled) { v, isFilled in
-                guard let profile = v as? String, !profile.isEmpty else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = true
-                return profile
+            guard !profileName.isEmpty else {
+                isFilled = false
+                return self.formatERR(useEmptyData: useEmptyData)
             }
+            isFilled = true
+            return profileName
         case "[[dpi]]":
-            return self.format(value: values?["dpi"] ?? dpi, isFilled: &isFilled) { v, isFilled in
-                if let dpi = v as? Int, dpi > 0 {
-                    isFilled = true
-                    return "\(dpi) "+NSLocalizedString("dpi", comment: "")
-                } else {
-                    isFilled = false
-                    return self.formatND(useEmptyData: useEmptyData)
-                }
+            isFilled = dpi > 0
+            if dpi > 0 {
+                return "\(dpi) "+NSLocalizedString("dpi", comment: "")
+            } else {
+                return self.formatND(useEmptyData: useEmptyData)
             }
         
         case "[[print:cm]]", "[[print:mm]]", "[[print:in]]":
             if dpi > 0 {
-                return processPlaceholder(placeholder[placeholder.startIndex..<placeholder.index(placeholder.endIndex, offsetBy: -2)]+":\(dpi)]]", settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+                return processPlaceholder(placeholder[placeholder.startIndex..<placeholder.index(placeholder.endIndex, offsetBy: -2)]+":\(dpi)]]", settings: settings, isFilled: &isFilled, forItem: itemIndex)
             } else {
                 isFilled = false
                 return self.formatND(useEmptyData: useEmptyData)
             }
         case "[[filesize]]", "[[file-name]]", "[[file-ext]]":
-            return self.processFilePlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return self.processFilePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         case "[[paper]]":
             if self.dpi <= 0 {
                 isFilled = false
@@ -357,25 +314,16 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
                     return self.formatERR(useEmptyData: useEmptyData)
                 }
                 
-                return format(value: [values?["width"] ?? width, values?["height"] ?? height], isFilled: &isFilled) { v, isFilled in
-                    guard let dim = v as? [Int] else {
-                        isFilled = false
-                        return self.formatERR(useEmptyData: useEmptyData)
-                    }
-                    let width = dim[0]
-                    let height = dim[1]
-                    
-                    if let w_print = Self.numberFormatter.string(from: NSNumber(value: Double(width) / Double(dpi) * unit.scale)), let h_print = Self.numberFormatter.string(from: NSNumber(value: Double(height) / Double(dpi) * unit.scale)) {
-                            
-                        isFilled = true
-                        return "\(w_print) × \(h_print) \(unit.label) (\(dpi) "+NSLocalizedString("dpi", tableName: "LocalizableExt", comment: "")+")"
-                    } else {
-                        isFilled = false
-                        return self.formatND(useEmptyData: useEmptyData)
-                    }
+                if let w_print = Self.numberFormatter.string(from: NSNumber(value: Double(width) / Double(dpi) * unit.scale)), let h_print = Self.numberFormatter.string(from: NSNumber(value: Double(height) / Double(dpi) * unit.scale)) {
+                        
+                    isFilled = true
+                    return "\(w_print) × \(h_print) \(unit.label) (\(dpi) "+NSLocalizedString("dpi", tableName: "LocalizableExt", comment: "")+")"
+                } else {
+                    isFilled = false
+                    return self.formatND(useEmptyData: useEmptyData)
                 }
             } else {
-                return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+                return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
             }
         }
     }

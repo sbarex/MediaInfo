@@ -382,7 +382,7 @@ protocol LanguageInfo: BaseInfo {
     var lang: String? { get }
     
     func getCountryFlag() -> String?
-    func processLanguagePlaceholder(_ placeholder: String, settings: Settings, values: [String: Any]?, isFilled: inout Bool) -> String
+    func processLanguagePlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String
 }
 
 extension LanguageInfo {
@@ -406,96 +406,45 @@ extension LanguageInfo {
         return Self.getCountryFlag(lang: self.lang)
     }
     
-    func processLanguagePlaceholder(_ placeholder: String, settings: Settings, values: [String: Any]?, isFilled: inout Bool) -> String {
-        let useEmptyData = false
+    func processLanguagePlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[language-count]]":
-            return format(value: values?["language"] ?? self.lang, isFilled: &isFilled) { v, isFilled in
-                if let v = v as? [String] {
-                    let langs = v.filter({ !$0.isEmpty })
-                    let n = langs.count
-                    isFilled = n > 0
-                    if n == 1 {
-                        return "1 "+NSLocalizedString("language", tableName: "LocalizableExt", comment: "")
-                    } else {
-                        if n == 0 && !useEmptyData {
-                            return ""
-                        }
-                        return "\(n) "+NSLocalizedString("languages", tableName: "LocalizableExt", comment: "")
-                    }
-                } else if let lang = v as? String {
-                    isFilled = !lang.isEmpty
-                    if isFilled {
-                        return "1 "+NSLocalizedString("language", tableName: "LocalizableExt", comment: "")
-                    } else if useEmptyData {
-                        return "0 "+NSLocalizedString("languages", tableName: "LocalizableExt", comment: "")
-                    } else {
-                        return ""
-                    }
+            if let lang = self.lang {
+                isFilled = !lang.isEmpty
+                if isFilled {
+                    return "1 "+NSLocalizedString("language", tableName: "LocalizableExt", comment: "")
+                } else if useEmptyData {
+                    return "0 "+NSLocalizedString("languages", tableName: "LocalizableExt", comment: "")
                 } else {
-                    isFilled = false
-                    return self.formatND(useEmptyData: useEmptyData)
+                    return ""
                 }
+            } else {
+                isFilled = false
+                return self.formatND(useEmptyData: useEmptyData)
             }
         case "[[language]]", "[[languages]]":
-            return format(value: values?["language"] ?? self.lang, isFilled: &isFilled) { v, isFilled in
-                if let v = v as? [String] {
-                    let langs = v.filter({ !$0.isEmpty })
-                    guard !langs.isEmpty else {
-                        isFilled = false
-                        return self.formatND(useEmptyData: useEmptyData)
-                    }
-                    isFilled = true
-                    return langs.joined(separator: " ")
-                } else if let lang = v as? String, !lang.isEmpty {
-                    isFilled = true
-                    return lang
-                } else {
-                    isFilled = false
-                    return self.formatND(useEmptyData: useEmptyData)
-                }
+            if let lang = self.lang, !lang.isEmpty {
+                isFilled = true
+                return lang
+            } else {
+                isFilled = false
+                return self.formatND(useEmptyData: useEmptyData)
             }
         case "[[language-flag]]", "[[languages-flag]]":
-            return format(value: values?["language"] ?? self.lang, isFilled: &isFilled) { v, isFilled in
-                if let langs = v as? [String] {
-                    guard !langs.isEmpty else {
-                        isFilled = false
-                        return useEmptyData ? NSLocalizedString("🏳", tableName: "LocalizableExt", comment: "") : ""
-                    }
-                    var s: [String] = []
-                    for lang in langs {
-                        guard !lang.isEmpty else {
-                            continue
-                        }
-                        if let flag = Self.getCountryFlag(lang: lang) {
-                            s.append(flag)
-                        } else {
-                            s.append(lang)
-                        }
-                    }
-                    if s.isEmpty {
-                        isFilled = false
-                        return useEmptyData ? NSLocalizedString("🏳", tableName: "LocalizableExt", comment: "") : ""
-                    } else {
-                        isFilled = true
-                        return s.joined(separator: " ")
-                    }
-                } else {
-                    guard let lang = v as? String else {
-                        isFilled = false
-                        return self.formatND(useEmptyData: useEmptyData)
-                    }
-                    guard !lang.isEmpty else {
-                        isFilled = false
-                        return useEmptyData ? NSLocalizedString("🏳", tableName: "LocalizableExt", comment: "") : ""
-                    }
-                    isFilled = true
-                    if let flag = Self.getCountryFlag(lang: lang) {
-                        return flag
-                    } else {
-                        return lang
-                    }
-                }
+            guard let lang = self.lang else {
+                isFilled = false
+                return self.formatND(useEmptyData: useEmptyData)
+            }
+            guard !lang.isEmpty else {
+                isFilled = false
+                return useEmptyData ? NSLocalizedString("🏳", tableName: "LocalizableExt", comment: "") : ""
+            }
+            isFilled = true
+            if let flag = Self.getCountryFlag(lang: lang) {
+                return flag
+            } else {
+                return lang
             }
         default:
             return placeholder
@@ -518,68 +467,35 @@ protocol DurationInfo: BaseInfo {
 }
 
 extension DurationInfo {
-    func processDurationPlaceholder(_ placeholder: String, values: [String: Any]?, isFilled: inout Bool) -> String {
-        let useEmptyData = false
+    func processDurationPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[duration]]":
-            return format(value: values?["duration"] ?? self.duration, isFilled: &isFilled) { v, isFilled in
-                if let duration = v as? Double {
-                    isFilled = true
-                    return TimeInterval(duration).formatTime()
-                } else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-            }
+            isFilled = self.duration > 0
+            return TimeInterval(duration).formatTime()
         case "[[seconds]]":
-            return format(value: values?["duration"] ?? self.duration, isFilled: &isFilled) { (v, isFilled) in
-                guard let s = v as? Double else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = s > 0
-                return (Self.numberFormatter.string(from: NSNumber(floatLiteral: s)) ?? "\(s)") + " s"
-            }
+            isFilled = self.duration > 0
+            return (Self.numberFormatter.string(from: NSNumber(floatLiteral: self.duration)) ?? "\(self.duration)") + " s"
         case "[[start-time]]":
-            return format(value: values?["start-time"] ?? self.start_time, isFilled: &isFilled) { (v, isFilled) in
-                guard let s = v as? Double else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = s > 0
-                if s < 0 {
-                    return self.formatND(useEmptyData: useEmptyData)
-                } else {
-                    return (Self.numberFormatter.string(from: NSNumber(floatLiteral: s)) ?? "\(s)") + " s"
-                }
+            isFilled = self.start_time > 0
+            if self.start_time < 0 {
+                return self.formatND(useEmptyData: useEmptyData)
+            } else {
+                return (Self.numberFormatter.string(from: NSNumber(floatLiteral: self.start_time)) ?? "\(self.start_time)") + " s"
             }
         case "[[start-time-s]]":
-            return format(value: values?["duration"] ?? self.start_time, isFilled: &isFilled) { v, isFilled in
-                if let start_time = v as? Int64 {
-                    isFilled = start_time > 0
-                    if start_time < 0 {
-                        return self.formatND(useEmptyData: useEmptyData)
-                    } else {
-                        return TimeInterval(Double(start_time)).formatTime()
-                    }
-                } else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
+            isFilled = start_time > 0
+            if start_time < 0 {
+                return self.formatND(useEmptyData: useEmptyData)
+            } else {
+                return TimeInterval(Double(start_time)).formatTime()
             }
-        
         case "[[bitrate]]":
-            return format(value: values?["bitrate"] ?? self.bitRate, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? Int64 else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = v > 0
-                if v > 0 {
-                    return Self.byteCountFormatter.string(fromByteCount: v) + "/s"
-                } else {
-                    return self.formatND(useEmptyData: useEmptyData)
-                }
+            isFilled = self.bitRate > 0
+            if self.bitRate > 0 {
+                return Self.byteCountFormatter.string(fromByteCount: self.bitRate) + "/s"
+            } else {
+                return self.formatND(useEmptyData: useEmptyData)
             }
         default:
             return placeholder
@@ -603,80 +519,45 @@ protocol CodecInfo: BaseInfo {
     var encoder: String? { get }
     var isLossless: Bool? { get }
     
-    func processPlaceholderCodec(_ placeholder: String, settings: Settings, values: [String : Any]?, isFilled: inout Bool) -> String
+    func processPlaceholderCodec(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String
 }
 
 extension CodecInfo {
-    func processPlaceholderCodec(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool) -> String {
-        let useEmptyData = false
+    func processPlaceholderCodec(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[codec-short]]":
-            let s = format(value: values?["codec-short-name"] ?? self.codec_short_name, isFilled: &isFilled) { v, isFilled in
-                guard let s = v as? String else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = !s.isEmpty
-                return s
-            }
-            return s
+            isFilled = !self.codec_short_name.isEmpty
+            return self.codec_short_name
             
         case "[[codec-long]]":
-            let s = format(value: values?["codec-long-name"] ?? self.codec_long_name ?? self.codec_short_name, isFilled: &isFilled) { v, isFilled in
-                guard let s = v as? String else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = !s.isEmpty
-                return s
-            }
-            
-            if values?["codec-long-name"] == nil && self.codec_long_name == nil {
+            guard let s = self.codec_long_name else {
                 isFilled = false
+                return self.formatERR(useEmptyData: useEmptyData)
             }
+            isFilled = !s.isEmpty
             return s
             
         case "[[codec]]":
-            let s = format(value: values?["codec"] ?? self.codec_long_name ?? self.codec_short_name, isFilled: &isFilled) { v, isFilled in
-                guard let s = v as? String else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = !s.isEmpty
-                return s
-            }
+            let s = self.codec_long_name ?? self.codec_short_name
+            isFilled = !s.isEmpty
             return s
         
         case "[[encoder]]":
-            let s = format(value: values?["encoder"] ?? self.encoder, isFilled: &isFilled) { v, isFilled in
-                guard let s = v as? String? else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                if let s = s {
-                    isFilled = !s.isEmpty
-                    return s
-                } else {
-                    isFilled = false
-                    return self.formatND(useEmptyData: useEmptyData)
-                }
+            guard let s = self.encoder else {
+                isFilled = false
+                return self.formatERR(useEmptyData: useEmptyData)
             }
+            isFilled = !s.isEmpty
             return s
         case "[[compression]]":
-            let s = format(value: values?["is-lossless"] ?? self.isLossless, isFilled: &isFilled) { v, isFilled in
-                guard let b = v as? Bool? else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                if let b = b {
-                    isFilled = true
-                    return NSLocalizedString(b ? "lossless" : "lossy", tableName: "LocalizableExt", comment: "")
-                } else {
-                    isFilled = false
-                    return self.formatND(useEmptyData: useEmptyData)
-                }
+            if let b = self.isLossless {
+                isFilled = true
+                return NSLocalizedString(b ? "lossless" : "lossy", tableName: "LocalizableExt", comment: "")
+            } else {
+                isFilled = false
+                return self.formatND(useEmptyData: useEmptyData)
             }
-            return s
         default:
             return placeholder
         }
@@ -750,7 +631,7 @@ class Chapter: NSCoding, Encodable {
 
 protocol ChaptersInfo: BaseInfo {
     var chapters: [Chapter] { get }
-    func processPlaceholderChapters(_ placeholder: String, settings: Settings, values: [String : Any]?, isFilled: inout Bool) -> String
+    func processPlaceholderChapters(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String
     
     static func decodeChapters(from coder: NSCoder) -> [Chapter]
     func encodeChapters(in coder: NSCoder)
@@ -788,28 +669,21 @@ extension ChaptersInfo {
         }
     }
     
-    func processPlaceholderChapters(_ placeholder: String, settings: Settings, values: [String : Any]?, isFilled: inout Bool) -> String {
-        let useEmptyData = false
+    func processPlaceholderChapters(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[chapters-count]]":
-            let s = format(value: values?["chapters"] ?? self.chapters, isFilled: &isFilled) { v, isFilled in
-                guard let chapters = v as? [Chapter] else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                let n = chapters.count
-                isFilled = n > 0
-                if n > 0 || useEmptyData {
-                    if n == 1 {
-                        return NSLocalizedString("1 Chapter", tableName: "LocalizableExt", comment: "")
-                    } else {
-                        return String(format: NSLocalizedString("%d Chapters", tableName: "LocalizableExt", comment: ""), n)
-                    }
+            let n = chapters.count
+            isFilled = n > 0
+            if n > 0 || useEmptyData {
+                if n == 1 {
+                    return NSLocalizedString("1 Chapter", tableName: "LocalizableExt", comment: "")
                 } else {
-                    return ""
+                    return String(format: NSLocalizedString("%d Chapters", tableName: "LocalizableExt", comment: ""), n)
                 }
+            } else {
+                return ""
             }
-            return s
         default:
             return placeholder
         }
@@ -967,94 +841,45 @@ class VideoTrackInfo: DimensionalInfo, LanguageInfo, DurationInfo, CodecInfo {
         
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        let useEmptyData = false
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[duration]]", "[[seconds]]", "[[bitrate]]", "[[start-time]]", "[[start-time-s]]":
-            return processDurationPlaceholder(placeholder, values: values, isFilled: &isFilled)
+            return processDurationPlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         case "[[frames]]":
-            return format(value: values?["frames"] ?? self.frames, isFilled: &isFilled) { v, isFilled in
-                guard let frames = v as? Int else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = true
-                
-                if let s = Self.numberFormatter.string(from: NSNumber(value: frames)) {
-                    return s + " " + NSLocalizedString("frames", tableName: "LocalizableExt", comment: "")
-                } else {
-                    return "\(frames) " + NSLocalizedString("frames", tableName: "LocalizableExt", comment: "")
-                }
+            isFilled = true
+            if let s = Self.numberFormatter.string(from: NSNumber(value: frames)) {
+                return s + " " + NSLocalizedString("frames", tableName: "LocalizableExt", comment: "")
+            } else {
+                return "\(frames) " + NSLocalizedString("frames", tableName: "LocalizableExt", comment: "")
             }
         case "[[fps]]":
-            return format(value: values?["fps"] ?? self.fps, isFilled: &isFilled) { v, isFilled in
-                guard let fps = v as? Double, fps >= 0 else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = fps > 0
-                
-                if fps > 0 || useEmptyData {
-                    return Self.numberFormatter.string(from: NSNumber(floatLiteral: fps))! + " " + NSLocalizedString("fps", tableName: "LocalizableExt", comment: "")
-                } else {
-                    return ""
-                }
+            isFilled = fps > 0
+            if fps > 0 || useEmptyData {
+                return Self.numberFormatter.string(from: NSNumber(floatLiteral: fps))! + " " + NSLocalizedString("fps", tableName: "LocalizableExt", comment: "")
+            } else {
+                return ""
             }
         case "[[profile]]":
-            return format(value: values?["profile"] ?? self.profile, isFilled: &isFilled) { v, isFilled in
-                guard let profile = v as? String else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = !profile.isEmpty
-                return profile
-            }
+            isFilled = !(self.profile?.isEmpty ?? true)
+            return self.profile ?? self.formatND(useEmptyData: useEmptyData)
         case "[[field-order]]":
-            return format(value: values?["field-order"] ?? self.field_order?.rawValue, isFilled: &isFilled) { v, isFilled in
-                guard let n = v as? Int, let field_order = VideoFieldOrder(rawValue: n) else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = true
-                return field_order.label
-            }
+            isFilled = self.field_order != nil
+            return self.field_order?.label ?? self.formatND(useEmptyData: useEmptyData)
         case "[[pixel-format]]":
-            return format(value: values?["pixel-format"] ?? self.pixel_format?.rawValue, isFilled: &isFilled) { v, isFilled in
-                guard let n = v as? Int, let pixel_format = VideoPixelFormat(rawValue: n) else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = true
-                return pixel_format.label
-            }
+            isFilled = self.pixel_format != nil
+            return self.pixel_format?.label ?? self.formatND(useEmptyData: useEmptyData)
         case "[[color-space]]":
-            return format(value: values?["color-space"] ?? self.color_space?.rawValue, isFilled: &isFilled) { v, isFilled in
-                guard let n = v as? Int, let color_space = VideoColorSpace(rawValue: n) else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = true
-                return color_space.label
-            }
+            isFilled = self.color_space != nil
+            return self.color_space?.label ?? self.formatND(useEmptyData: useEmptyData)
         case "[[title]]":
-            return format(value: values?["title"] ?? self.title, isFilled: &isFilled) { v, isFilled in
-                guard let title = v as? String? else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                if let title = title {
-                    isFilled = !title.isEmpty
-                    return title
-                } else {
-                    isFilled = false
-                    return self.formatND(useEmptyData: useEmptyData)
-                }
-            }
+            isFilled = !(self.title?.isEmpty ?? true)
+            return self.title ?? self.formatND(useEmptyData: useEmptyData)
         case "[[codec]]", "[[codec-long]]", "[[codec-short]]", "[[compression]]", "[[encoder]]":
-            return self.processPlaceholderCodec(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return self.processPlaceholderCodec(placeholder, settings: settings, isFilled: &isFilled)
         case "[[languages]]", "[[languages-flag]]", "[[language-count]]",
              "[[language]]", "[[language-flag]]":
-            return processLanguagePlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         case "[[subtitles-count]]", "[[audio-count]]", "[[video-count]]", "[[video]]", "[[audio]]", "[[subtitles]]", "[[chapters]]",
              "[[chapters-count]]",
              "[[filesize]]", "[[file-name]]", "[[file-ext]]", "[[engine]]":
@@ -1062,7 +887,7 @@ class VideoTrackInfo: DimensionalInfo, LanguageInfo, DurationInfo, CodecInfo {
             return ""
             
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     
@@ -1217,85 +1042,51 @@ class VideoInfo: VideoTrackInfo, MediaInfo, ChaptersInfo {
         try container.encode(self.subtitles, forKey: .subtitles)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        let useEmptyData = false
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[languages]]", "[[languages-flag]]", "[[language-count]]":
-            var v = values ?? [:]
-            if v["language"] as? [String] == nil {
-                var languages: [String] = []
-                if let lang = v["language"] as? String {
-                    if !lang.isEmpty {
-                        languages.append(lang)
-                    }
-                } else if let lang = self.lang, !lang.isEmpty {
-                    languages.append(lang)
-                }
-                v["language"] = languages
-            }
-            
-            return processLanguagePlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         case "[[subtitles-count]]":
-            let s = format(value: values?["subtitles"] ?? self.subtitles, isFilled: &isFilled) { v, isFilled in
-                guard let subtitles = v as? [SubtitleTrackInfo] else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
+            let n = subtitles.count
+            isFilled = n > 0
+            
+            if n == 1 {
+                return NSLocalizedString("1 Subtitle", tableName: "LocalizableExt", comment: "")
+            } else {
+                if n == 0 && !useEmptyData {
+                    return ""
                 }
-                let n = subtitles.count
-                isFilled = n > 0
-                
-                if n == 1 {
-                    return NSLocalizedString("1 Subtitle", tableName: "LocalizableExt", comment: "")
-                } else {
-                    if n == 0 && !useEmptyData {
-                        return ""
-                    }
-                    return String(format: NSLocalizedString("%s Subtitles", tableName: "LocalizableExt", comment: ""), n)
-                }
+                return String(format: NSLocalizedString("%s Subtitles", tableName: "LocalizableExt", comment: ""), n)
             }
-            return s
         case "[[audio-count]]":
-            let s = format(value: values?["audio"] ?? self.audioTracks, isFilled: &isFilled) { v, isFilled in
-                guard let audio = v as? [AudioTrackInfo] else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
+            let n = audioTracks.count
+            isFilled = n > 0
+            
+            if n == 1 {
+                return NSLocalizedString("1 Audio track", tableName: "LocalizableExt", comment: "")
+            } else {
+                if n == 0 && !useEmptyData {
+                    return ""
                 }
-                let n = audio.count
-                isFilled = n > 0
-                
-                if n == 1 {
-                    return NSLocalizedString("1 Audio track", tableName: "LocalizableExt", comment: "")
-                } else {
-                    if n == 0 && !useEmptyData {
-                        return ""
-                    }
-                    return String(format: NSLocalizedString("%d Audio tracks", tableName: "LocalizableExt", comment: ""), n)
-                }
+                return String(format: NSLocalizedString("%d Audio tracks", tableName: "LocalizableExt", comment: ""), n)
             }
-            return s
         case "[[video-count]]":
-            let s = format(value: values?["video"] ?? self.videoTracks, isFilled: &isFilled) { v, isFilled in
-                guard let video = v as? [VideoTrackInfo] else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
+            let n = videoTracks.count
+            isFilled = n > 0
+            
+            if n == 1 {
+                return NSLocalizedString("1 Video track", tableName: "LocalizableExt", comment: "")
+            } else {
+                if n == 0 && !useEmptyData {
+                    return ""
                 }
-                let n = video.count
-                isFilled = n > 0
-                
-                if n == 1 {
-                    return NSLocalizedString("1 Video track", tableName: "LocalizableExt", comment: "")
-                } else {
-                    if n == 0 && !useEmptyData {
-                        return ""
-                    }
-                    return String(format: NSLocalizedString("%d Video tracks", tableName: "LocalizableExt", comment: ""), n)
-                }
+                return String(format: NSLocalizedString("%d Video tracks", tableName: "LocalizableExt", comment: ""), n)
             }
-            return s
         case "[[chapters-count]]":
-            return self.processPlaceholderChapters(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return self.processPlaceholderChapters(placeholder, settings: settings, isFilled: &isFilled)
         case "[[filesize]]", "[[file-name]]", "[[file-ext]]":
-            return self.processFilePlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return self.processFilePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         case "[[engine]]":
             isFilled = true
             return engine.label
@@ -1509,14 +1300,14 @@ class ImageVideoInfo: DimensionalInfo, CodecInfo, FileInfo {
         try container.encode(self.encoder, forKey: .encoder)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         switch placeholder {
         case "[[filesize]]", "[[file-name]]", "[[file-ext]]":
-            return self.processFilePlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return self.processFilePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         case "[[codec]]", "[[codec-long]]", "[[codec-short]]", "[[compression]]", "[[encoder]]":
-            return self.processPlaceholderCodec(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return self.processPlaceholderCodec(placeholder, settings: settings, isFilled: &isFilled)
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         }
     }
 }
@@ -1627,54 +1418,42 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        let useEmptyData = false
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[duration]]", "[[seconds]]", "[[bitrate]]", "[[start-time]]", "[[start-time-s]]":
-            return processDurationPlaceholder(placeholder, values: values, isFilled: &isFilled)
+            return processDurationPlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         case "[[codec]]", "[[codec-long]]", "[[codec-short]]":
-            return self.processPlaceholderCodec(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return self.processPlaceholderCodec(placeholder, settings: settings, isFilled: &isFilled)
         case "[[language]]", "[[language-flag]]":
-            return processLanguagePlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         case "[[filesize]]", "[[file-name]]", "[[file-ext]]",
              "[[chapters-count]]", "[[engine]]":
             isFilled = false
             return ""
         case "[[channels]]":
-            return format(value: values?["channels"] ?? self.channels, isFilled: &isFilled) { v, isFilled in
-                guard let channels = v as? Int else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = channels > 0
-                if channels <= 0 {
-                    return self.formatND(useEmptyData: useEmptyData)
-                } else if channels == 1 {
-                    return NSLocalizedString("1 channel", tableName: "LocalizableExt", comment: "")
-                } else {
-                    return String(format: NSLocalizedString("%d channels", tableName: "LocalizableExt", comment: ""), channels)
-                }
+            isFilled = channels > 0
+            if channels <= 0 {
+                return self.formatND(useEmptyData: useEmptyData)
+            } else if channels == 1 {
+                return NSLocalizedString("1 channel", tableName: "LocalizableExt", comment: "")
+            } else {
+                return String(format: NSLocalizedString("%d channels", tableName: "LocalizableExt", comment: ""), channels)
             }
             
         case "[[channels-name]]":
-            return format(value: values?["channels"] ?? self.channels, isFilled: &isFilled) { v, isFilled in
-                guard let channels = v as? Int else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = channels > 0
-                if channels <= 0 {
-                    return self.formatND(useEmptyData: useEmptyData)
-                } else if channels == 1 {
-                    return NSLocalizedString("mono", tableName: "LocalizableExt", comment: "")
-                } else if channels == 2 {
-                    return NSLocalizedString("stereo", tableName: "LocalizableExt", comment: "")
-                } else {
-                    return String(format: NSLocalizedString("%d channels", tableName: "LocalizableExt", comment: ""), channels)
-                }
+            isFilled = channels > 0
+            if channels <= 0 {
+                return self.formatND(useEmptyData: useEmptyData)
+            } else if channels == 1 {
+                return NSLocalizedString("mono", tableName: "LocalizableExt", comment: "")
+            } else if channels == 2 {
+                return NSLocalizedString("stereo", tableName: "LocalizableExt", comment: "")
+            } else {
+                return String(format: NSLocalizedString("%d channels", tableName: "LocalizableExt", comment: ""), channels)
             }
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     
@@ -1754,19 +1533,19 @@ class AudioInfo: AudioTrackInfo, MediaInfo, ChaptersInfo {
         try container.encode(self.chapters, forKey: .chapters)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         switch placeholder {
         case "[[filesize]]", "[[file-name]]", "[[file-ext]]":
-            return processFilePlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return processFilePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         case "[[codec]]", "[[codec-long]]", "[[codec-short]]":
-            return self.processPlaceholderCodec(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return self.processPlaceholderCodec(placeholder, settings: settings, isFilled: &isFilled)
         case "[[chapters-count]]":
-            return self.processPlaceholderChapters(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return self.processPlaceholderChapters(placeholder, settings: settings, isFilled: &isFilled)
         case "[[engine]]":
             isFilled = true
             return engine.label
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     
@@ -1840,16 +1619,15 @@ class SubtitleTrackInfo: BaseInfo, LanguageInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         switch placeholder {
         case "[[title]]":
-            let s = format(value: values?["title"] ?? title, isFilled: &isFilled)
-            isFilled = title != nil && !title!.isEmpty
-            return s
+            isFilled = !(title?.isEmpty ?? true)
+            return title ?? ""
         case "[[language]]", "[[language-flag]]":
-            return processLanguagePlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     

@@ -150,25 +150,6 @@ class BaseInfo: NSCoding, Encodable {
         
     }
     
-    internal func format(value: Any?, isFilled: inout Bool, convert: ((Any?, inout Bool)->String)? = nil) -> String {
-        let v = value
-        let s: String
-        if let convert = convert {
-            s = convert(v, &isFilled)
-        } else if let t = v as? String {
-            isFilled = !t.isEmpty
-            s = t
-        } else if let t = v {
-            isFilled = true
-            s = "\(t)"
-        } else {
-            isFilled = false
-            s = self.formatND(useEmptyData: false)
-        }
-        
-        return s
-    }
-    
     func initJSContext() -> JSContext? {
         guard let context = JSContext() else {
             return nil
@@ -278,7 +259,7 @@ const console = {
         return result
     }
     
-    internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String: Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         isFilled = false
         if placeholder.hasPrefix("[[script-inline:") {
             guard let code = String(placeholder.dropFirst(16).dropLast(2)).fromBase64(), !code.isEmpty else {
@@ -334,7 +315,7 @@ const console = {
     ///   - values: Values that override the standard value.
     ///   - isFilled: Set to `true` when at least one placeholder is replaced.
     ///   - itemIndex: Index of the menu item.
-    func replacePlaceholders(in template: String, settings: Settings, values: [String: Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    func replacePlaceholders(in template: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         let results = Self.splitTokens(in: template)
         
         var text = template
@@ -343,7 +324,7 @@ const console = {
         var isPlaceholderFilled = false
         for result in results {
             let placeholder = String(template[Range(result.range, in: template)!])
-            let r = processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isPlaceholderFilled, forItem: itemIndex)
+            let r = processPlaceholder(placeholder, settings: settings, isFilled: &isPlaceholderFilled, forItem: itemIndex)
             if isPlaceholderFilled {
                 isFilled = true
             }
@@ -363,7 +344,7 @@ const console = {
     ///   - values: Values that override the standard value.
     ///   - isFilled: Set to `true` when at least one placeholder is replaced.
     ///   - itemIndex: Index of the menu item.
-    func replacePlaceholders(in template: String, settings: Settings, values: [String: Any]? = nil, attributes: [NSAttributedString.Key: Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> NSMutableAttributedString {
+    func replacePlaceholders(in template: String, settings: Settings, attributes: [NSAttributedString.Key: Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> NSMutableAttributedString {
         guard let regex = try? NSRegularExpression(pattern: #"\[\[([^]]+)\]\]"#) else {
             return NSMutableAttributedString(string: template)
         }
@@ -375,7 +356,7 @@ const console = {
         var isPlaceholderFilled = false
         for result in results {
             let placeholder = String(template[Range(result.range, in: template)!])
-            let r = processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isPlaceholderFilled, forItem: itemIndex)
+            let r = processPlaceholder(placeholder, settings: settings, isFilled: &isPlaceholderFilled, forItem: itemIndex)
             if isPlaceholderFilled {
                 isFilled = true
             }
@@ -612,7 +593,7 @@ protocol FileInfo: BaseInfo {
     
     var file: URL { get }
     var fileSize: Int64 { get }
-    func processFilePlaceholder(_ placeholder: String, settings: Settings, values: [String: Any]?, isFilled: inout Bool) -> String
+    func processFilePlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String
     
     func encodeFileInfo(_ encoder: NSCoder)
     static func decodeFileInfo(_ coder: NSCoder) -> (URL, Int64?)?
@@ -654,37 +635,19 @@ extension FileInfo {
         }
     }
     
-    func processFilePlaceholder(_ placeholder: String, settings: Settings, values: [String: Any]?, isFilled: inout Bool) -> String {
-        let useEmptyData = false
+    func processFilePlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         
         switch placeholder {
         case "[[filesize]]":
-            return format(value: fileSize, isFilled: &isFilled) { v, isFilled in
-                guard let fileSize = v as? Int64 else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = fileSize > 0
-                return fileSize >= 0 ? Self.byteCountFormatter.string(fromByteCount: fileSize) : self.formatND(useEmptyData: useEmptyData)
-            }
+            isFilled = self.fileSize > 0
+            return self.fileSize >= 0 ? Self.byteCountFormatter.string(fromByteCount: fileSize) : self.formatND(useEmptyData: useEmptyData)
         case "[[file-name]]":
-            return format(value: values?["file"] ?? self.file, isFilled: &isFilled) { v, isFilled in
-                guard let file = v as? URL else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = true
-                return file.lastPathComponent
-            }
+            isFilled = true
+            return self.file.lastPathComponent
         case "[[file-ext]]":
-            return format(value: values?["file"] ?? self.file, isFilled: &isFilled) { v, isFilled in
-                guard let file = v as? URL else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = true
-                return file.pathExtension
-            }
+            isFilled = true
+            return self.file.pathExtension
         default:
             isFilled = false
             return placeholder
@@ -931,70 +894,39 @@ class DimensionalInfo: BaseInfo {
         return Self.getRatio(width: width, height: height, approximate: approximate)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String: Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        let useEmptyData = false
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         switch placeholder {
         case "[[size]]":
-            return format(value: [values?["width"] ?? width, values?["height"] ?? height], isFilled: &isFilled) { v, isFilled in
-                guard let dim = v as? [Int], dim.count == 2, let w = Self.numberFormatter.string(from: NSNumber(integerLiteral: dim[0])), let h = Self.numberFormatter.string(from: NSNumber(integerLiteral: dim[1])) else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = true
-                return "\(w) × \(h) \(self.unit)"
-            }
+            isFilled = true
+            if let w = Self.numberFormatter.string(from: NSNumber(integerLiteral: width)), let h = Self.numberFormatter.string(from: NSNumber(integerLiteral: height)) {
+               return "\(w) × \(h) \(self.unit)"
+           } else {
+               return "\(width) × \(height) \(self.unit)"
+           }
         case "[[width]]":
-            return format(value: values?["width"] ?? width, isFilled: &isFilled) { v, isFilled in
-                isFilled = true
-                if let size = v as? Int, let w = Self.numberFormatter.string(from: NSNumber(integerLiteral: size)) {
-                    return "\(w) \(self.unit)"
-                } else if let size = v {
-                    return "\(size)"
-                } else {
-                    isFilled = false
-                    return self.formatND(useEmptyData: useEmptyData)
-                }
+            if let w = Self.numberFormatter.string(from: NSNumber(integerLiteral: width)) {
+                return "\(w) \(self.unit)"
+            } else {
+                return "\(width)"
             }
         case "[[height]]":
-            return format(value: values?["height"] ?? height, isFilled: &isFilled) { v, isFilled in
-                isFilled = true
-                if let size = v as? Int, let h = Self.numberFormatter.string(from: NSNumber(integerLiteral: size)) {
+            if let h = Self.numberFormatter.string(from: NSNumber(integerLiteral: height)) {
                     return "\(h) \(self.unit)"
-                } else if let size = v {
-                    return "\(size)"
-                } else {
-                    isFilled = false
-                    return self.formatND(useEmptyData: useEmptyData)
-                }
+            } else {
+                return "\(width)"
             }
         case "[[ratio]]":
-            return format(value: [values?["width"] ?? width, values?["height"] ?? height], isFilled: &isFilled) { v, isFilled in
-                guard let dim = v as? [Int], dim.count == 2 else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                let width = dim[0]
-                let height = dim[1]
-                guard let ratio = Self.getRatio(width: width, height: height, approximate: !settings.isRatioPrecise) else {
-                    isFilled = false
-                    return ""
-                }
-                isFilled = true
-                return ratio
+            guard let ratio = Self.getRatio(width: width, height: height, approximate: !settings.isRatioPrecise) else {
+                isFilled = false
+                return ""
             }
+            isFilled = true
+            return ratio
         case "[[resolution]]":
-            return format(value: [values?["width"] ?? width, values?["height"] ?? height], isFilled: &isFilled) { v, isFilled in
-                guard let dim = v as? [Int], dim.count == 2 else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = true
-                let width = dim[0]
-                let height = dim[1]
-                return Self.getResolutioName(width: width, height: height) ?? ""
-            }
+            isFilled = true
+            return Self.getResolutioName(width: width, height: height) ?? ""
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     

@@ -88,8 +88,8 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
         return Self.getImage(for: name)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        let useEmptyData = false
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         let formatCount: (Any?, String, String, inout Bool) -> String = { v, single, plural, isFilled in
             guard let n = v as? Int else {
                 isFilled = false
@@ -108,13 +108,13 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
         
         switch placeholder {
         case "[[pages]]":
-            return formatCount(values?["pages"] ?? self.pagesCount, "page", "pages", &isFilled)
+            return formatCount(self.pagesCount, "page", "pages", &isFilled)
         case "[[characters]]":
-            return formatCount(values?["characters"] ?? self.charactersCount, "character", "characters", &isFilled)
+            return formatCount(self.charactersCount, "character", "characters", &isFilled)
         case "[[characters-space]]":
-            return formatCount(values?["characters-space"] ?? self.charactersWithSpacesCount, "character (spaces included)", "characters (spaces included)", &isFilled)
+            return formatCount(self.charactersWithSpacesCount, "character (spaces included)", "characters (spaces included)", &isFilled)
         case "[[words]]":
-            return formatCount(values?["words"] ?? self.wordsCount, "word", "words", &isFilled)
+            return formatCount(self.wordsCount, "word", "words", &isFilled)
     
         case "[[size:paper]]":
             if let s = Self.getPaperSize(width: width * 25.4, height: height * 25.4) {
@@ -132,26 +132,24 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
                 return self.processPlaceholder("[[size:"+placeholder.suffix(4), settings: settings, isFilled: &isFilled, forItem: itemIndex)
             }
         case "[[size:cm]]", "[[size:mm]]", "[[size:in]]":
-            return format(value: [values?["width"] ?? width, values?["height"] ?? height], isFilled: &isFilled) { v, isFilled in
-                guard let dim = v as? [Double], dim.count == 2, dim[0] > 0 && dim[1] > 0 else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                let um = placeholder.suffix(4).prefix(2)
-                guard let unit = PrintUnit(placeholder: String(um)) else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                
-                guard let w = Self.numberFormatter.string(from: NSNumber(floatLiteral: dim[0] * unit.scale)), let h = Self.numberFormatter.string(from: NSNumber(floatLiteral: dim[1] * unit.scale)) else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = true
-                return "\(w) × \(h) \(unit.label)"
+            guard width > 0 && height > 0 else {
+                isFilled = false
+                return self.formatERR(useEmptyData: useEmptyData)
             }
+            let um = placeholder.suffix(4).prefix(2)
+            guard let unit = PrintUnit(placeholder: String(um)) else {
+                isFilled = false
+                return self.formatERR(useEmptyData: useEmptyData)
+            }
+            
+            guard let w = Self.numberFormatter.string(from: NSNumber(floatLiteral: width * unit.scale)), let h = Self.numberFormatter.string(from: NSNumber(floatLiteral: height * unit.scale)) else {
+                isFilled = false
+                return self.formatERR(useEmptyData: useEmptyData)
+            }
+            isFilled = true
+            return "\(w) × \(h) \(unit.label)"
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     
@@ -203,29 +201,23 @@ class ExcelInfo: BaseOfficeInfo {
         return Self.getImage(for: name)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIdex: Int) -> String {
-        let useEmptyData = false
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIdex: Int) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         
         switch placeholder {
         case "[[pages]]":
-            return format(value: values?["sheets"] ?? self.sheets, isFilled: &isFilled) { v, isFilled in
-                guard let sheets = v as? [String] else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
+            let n = sheets.count
+            isFilled = n > 0
+            if n == 1 {
+                return "1 " + NSLocalizedString("sheet", tableName: "LocalizableExt", comment: "")
+            } else {
+                if n == 0 && !useEmptyData {
+                    return ""
                 }
-                let n = sheets.count
-                isFilled = n > 0
-                if n == 1 {
-                    return "1 " + NSLocalizedString("sheet", tableName: "LocalizableExt", comment: "")
-                } else {
-                    if n == 0 && !useEmptyData {
-                        return ""
-                    }
-                    return "\(n) " +  NSLocalizedString("sheets", tableName: "LocalizableExt", comment: "")
-                }
+                return "\(n) " +  NSLocalizedString("sheets", tableName: "LocalizableExt", comment: "")
             }
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIdex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIdex)
         }
     }
     
@@ -297,30 +289,25 @@ class PowerpointInfo: BaseOfficeInfo {
         return Self.getImage(for: name)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        let useEmptyData = false
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         
         switch placeholder {
         case "[[pages]]":
-            return format(value: values?["slides"] ?? self.slidesCount, isFilled: &isFilled) { v, isFilled in
-                guard let n = v as? Int else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
+            isFilled = self.slidesCount > 0
+            if self.slidesCount == 1 {
+                return "1 " + NSLocalizedString("slide", tableName: "LocalizableExt", comment: "")
+            } else {
+                if self.slidesCount == 0 && !useEmptyData {
+                    return ""
                 }
-                isFilled = n > 0
-                if n == 1 {
-                    return "1 " + NSLocalizedString("slide", tableName: "LocalizableExt", comment: "")
-                } else {
-                    if n == 0 && !useEmptyData {
-                        return ""
-                    }
-                    return "\(n) " +  NSLocalizedString("slides", tableName: "LocalizableExt", comment: "")
-                }
+                return "\(self.slidesCount) " +  NSLocalizedString("slides", tableName: "LocalizableExt", comment: "")
             }
         case "[[presentation-format]]":
-            return format(value: values?["presentation-format"] ?? self.presentationFormat, isFilled: &isFilled)
+            isFilled = !self.presentationFormat.isEmpty
+            return self.presentationFormat
         default:
-            return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         }
     }
     

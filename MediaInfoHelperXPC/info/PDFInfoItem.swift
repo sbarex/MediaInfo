@@ -485,135 +485,69 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        let useEmptyData = false
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[pages]]":
-            return format(value: values?["pages"] ?? self.pagesCount, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? Int else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
+            isFilled = true
+            if self.pagesCount == 1 {
+                return "1 " + NSLocalizedString("page", tableName: "LocalizableExt", comment: "")
+            } else {
+                if self.pagesCount == 0 && !useEmptyData {
+                    return ""
                 }
-                isFilled = true
-                if v == 1 {
-                    return "1 " + NSLocalizedString("page", tableName: "LocalizableExt", comment: "")
-                } else {
-                    if v == 0 && !useEmptyData {
-                        return ""
-                    }
-                    return "\(v) " +  NSLocalizedString("pages", tableName: "LocalizableExt", comment: "")
-                }
+                return "\(self.pagesCount) " +  NSLocalizedString("pages", tableName: "LocalizableExt", comment: "")
             }
         case "[[locked]]":
-            return format(value: values?["locked"] ?? self.isLocked, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? Bool else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = v
-                return v ? "🔒" : ""
-            }
+            isFilled = self.isLocked
+            return self.isLocked ? "🔒" : ""
         case "[[encrypted]]":
-            return format(value: values?["encrypted"] ?? self.isEncrypted, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? Bool else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = v
-                return v ? "🔑" : ""
-            }
+            isFilled = self.isEncrypted
+            return self.isEncrypted ? "🔑" : ""
         case "[[version]]":
-            return format(value: values?["version"] ?? self.version, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? String else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = !v.isEmpty
-                return NSLocalizedString("version", tableName: "LocalizableExt", comment: "") + " \(v)"
-            }
-            
+            isFilled = !self.version.isEmpty
+            return NSLocalizedString("version", tableName: "LocalizableExt", comment: "") + " \(self.version)"
         case "[[author]]":
-            return format(value: values?["author"] ?? self.author, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? String else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = !v.isEmpty
-                return v
-            }
+            isFilled = !(self.author?.isEmpty ?? true)
+            return self.author ?? self.formatND(useEmptyData: useEmptyData)
         case "[[subject]]":
-            return format(value: values?["subject"] ?? self.subject, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? String else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = !v.isEmpty
-                return v
-            }
+            isFilled = !(self.subject?.isEmpty ?? true)
+            return self.subject ?? self.formatND(useEmptyData: useEmptyData)
         case "[[title]]":
-            return format(value: values?["title"] ?? self.title, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? String else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = !v.isEmpty
-                return v
-            }
-            
+            isFilled = !(self.title?.isEmpty ?? true)
+            return self.title ?? self.formatND(useEmptyData: useEmptyData)
         case "[[producer]]":
-            return format(value: values?["producer"] ?? self.producer, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? String else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = !v.isEmpty
-                return v
-            }
+            isFilled = !(self.producer?.isEmpty ?? true)
+            return self.producer ?? self.formatND(useEmptyData: useEmptyData)
         case "[[creator]]":
-            return format(value: values?["creator"] ?? self.creator, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? String else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = !v.isEmpty
-                return v
-            }
+            isFilled = !(self.creator?.isEmpty ?? true)
+            return self.creator ?? self.formatND(useEmptyData: useEmptyData)
         case "[[creation-date]]":
-            return format(value: values?["creation-date"] ?? self.creationDate, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? Date else {
-                    isFilled = false
-                    return self.formatND(useEmptyData: useEmptyData)
-                }
-                isFilled = true
-                return Self.dateFormatter.string(from: v)
+            guard let v = self.creationDate else {
+                isFilled = false
+                return self.formatND(useEmptyData: useEmptyData)
             }
+            isFilled = true
+            return Self.dateFormatter.string(from: v)
         case "[[modification-date]]":
-            return format(value: values?["modification-date"] ?? self.modificationDate, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? Date else {
-                    isFilled = false
-                    return self.formatND(useEmptyData: useEmptyData)
-                }
-                isFilled = true
-                return Self.dateFormatter.string(from: v)
+            guard let v = self.modificationDate else {
+                isFilled = false
+                return self.formatND(useEmptyData: useEmptyData)
             }
+            isFilled = true
+            return Self.dateFormatter.string(from: v)
             
         case "[[keywords]]":
-            return format(value: values?["keywords"] ?? self.keywords, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? [String] else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = v.isEmpty
-                return v.joined(separator: " ")
-            }
+            isFilled = !self.keywords.isEmpty
+            return self.keywords.joined(separator: " ")
         case "[[mediabox]]":
-            return self.processPlaceholder("[[mediabox:pt]]", settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+            return self.processPlaceholder("[[mediabox:pt]]", settings: settings, isFilled: &isFilled, forItem: itemIndex)
         case "[[bleedbox]]":
-            return self.processPlaceholder("[[bleedbox:pt]]", settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+            return self.processPlaceholder("[[bleedbox:pt]]", settings: settings, isFilled: &isFilled, forItem: itemIndex)
         case "[[cropbox]]":
-            return self.processPlaceholder("[[cropbox:pt]]", settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+            return self.processPlaceholder("[[cropbox:pt]]", settings: settings, isFilled: &isFilled, forItem: itemIndex)
         case "[[artbox]]":
-            return self.processPlaceholder("[[artbox:pt]]", settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+            return self.processPlaceholder("[[artbox:pt]]", settings: settings, isFilled: &isFilled, forItem: itemIndex)
         case "[[security]]":
             var s: [String] = []
             if isLocked {
@@ -635,30 +569,23 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
         case "[[allows-print]]":
             return NSLocalizedString(self.allowsPrinting ? "Yes" : "No", comment: "")
         case "[[filesize]]", "[[file-name]]", "[[file-ext]]":
-            return self.processFilePlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return self.processFilePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         default:
             if placeholder.hasPrefix("[[mediabox:") {
-                return format(value: values?["mediabox"] ?? self.bounds(for:.mediaBox), isFilled: &isFilled) { v, isFilled in
-                    isFilled = true
-                    return Self.formatBox(v as? CGRect, placeholder: placeholder) ?? self.formatND(useEmptyData: useEmptyData)
-                }
+                let v = self.bounds(for: .mediaBox)
+                isFilled = true
+                return Self.formatBox(v, placeholder: placeholder) ?? self.formatND(useEmptyData: useEmptyData)
             } else if placeholder.hasPrefix("[[bleedbox:") {
-                isFilled = !self.bleedBox.isEmpty || !(values?["bleedbox"] as? CGRect ?? .zero).isEmpty
-                return format(value: values?["bleedbox"] ?? self.bounds(for:.bleedBox), isFilled: &isFilled) { v, isFilled in
-                    return Self.formatBox(v as? CGRect, placeholder: placeholder) ?? self.formatND(useEmptyData: useEmptyData)
-                }
+                isFilled = !self.bleedBox.isEmpty
+                return Self.formatBox(self.bounds(for: .bleedBox), placeholder: placeholder) ?? self.formatND(useEmptyData: useEmptyData)
             } else if placeholder.hasPrefix("[[cropbox:") {
-                isFilled = !self.cropBox.isEmpty || !(values?["cropbox"] as? CGRect ?? .zero).isEmpty
-                return format(value: values?["cropbox"] ?? self.bounds(for:.cropBox), isFilled: &isFilled) { v, isFilled in
-                    return Self.formatBox(v as? CGRect, placeholder: placeholder) ?? self.formatND(useEmptyData: useEmptyData)
-                }
+                isFilled = !self.cropBox.isEmpty
+                return Self.formatBox(self.bounds(for: .cropBox), placeholder: placeholder) ?? self.formatND(useEmptyData: useEmptyData)
             } else if placeholder.hasPrefix("[[artbox:") {
-                isFilled = !self.artBox.isEmpty || !(values?["artbox"] as? CGRect ?? .zero).isEmpty
-                return format(value: values?["artbox"] ?? self.bounds(for:.artBox), isFilled: &isFilled) { v, isFilled in
-                    return Self.formatBox(v as? CGRect, placeholder: placeholder) ?? self.formatND(useEmptyData: useEmptyData)
-                }
+                isFilled = !self.artBox.isEmpty
+                return Self.formatBox(self.bounds(for: .artBox), placeholder: placeholder) ?? self.formatND(useEmptyData: useEmptyData)
             } else {
-                return super.processPlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled, forItem: itemIndex)
+                return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
             }
         }
     }

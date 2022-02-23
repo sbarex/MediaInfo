@@ -18,7 +18,7 @@ extension Settings {
                 let r = BaseInfo.splitTokens(in: item.template)
                 for result in r {
                     let placeholder = String(item.template[Range(result.range, in: item.template)!])
-                    guard placeholder.hasPrefix("[[script-") else {
+                    guard placeholder.hasPrefix("[[script-") && !placeholder.hasPrefix("[[script-action:") else {
                         continue
                     }
                     guard let code = String(placeholder.dropFirst(16).dropLast(2)).fromBase64() else {
@@ -43,7 +43,7 @@ extension Settings {
                 let r = BaseInfo.splitTokens(in: item.template)
                 for result in r {
                     let placeholder = String(item.template[Range(result.range, in: item.template)!])
-                    guard placeholder.hasPrefix("[[script-") else {
+                    guard placeholder.hasPrefix("[[script-") && !placeholder.hasPrefix("[[script-action:") else {
                         continue
                     }
                     guard let code = String(placeholder.dropFirst(16).dropLast(2)).fromBase64() else {

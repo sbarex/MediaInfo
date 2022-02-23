@@ -141,14 +141,15 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
         try container.encode(self.application, forKey: .application)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, values: [String : Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        let useEmptyData = false
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+        let useEmptyData = !settings.isEmptyItemsSkipped
         
         switch placeholder {
         case "[[filesize]]", "[[file-name]]", "[[file-ext]]":
-            return self.processFilePlaceholder(placeholder, settings: settings, values: values, isFilled: &isFilled)
+            return self.processFilePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         case "[[creator]]":
-            return format(value: values?["creator"] ?? self.creator, isFilled: &isFilled)
+            isFilled = !self.creator.isEmpty
+            return self.creator
         case "[[creation]]":
             var template = ""
             if !self.creator.isEmpty {
@@ -163,7 +164,8 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
             }
             return self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         case "[[last-author]]":
-            return format(value: values?["modified"] ?? self.modified, isFilled: &isFilled)
+            isFilled = !self.modified.isEmpty
+            return self.modified
         case "[[last-modification]]":
             var template = ""
             if !self.modified.isEmpty {
@@ -178,38 +180,29 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
             }
             return self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         case "[[title]]":
-            return format(value: values?["title"] ?? self.title, isFilled: &isFilled)
+            isFilled = !self.title.isEmpty
+            return self.title
         case "[[subject]]":
-            return format(value: values?["subject"] ?? self.subject, isFilled: &isFilled)
+            isFilled = !self.subject.isEmpty
+            return self.subject
         case "[[description]]":
-            return format(value: values?["description"] ?? self.description, isFilled: &isFilled)
+            isFilled = !self.description.isEmpty
+            return self.description
         case "[[keywords]]":
-            return format(value: values?["keywords"] ?? self.keywords, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? [String] else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                isFilled = !v.isEmpty
-                return v.joined(separator: ", ")
-            }
+            isFilled = !self.keywords.isEmpty
+            return self.keywords.joined(separator: ", ")
     
         case "[[creation-date]]", "[[modification-date]]":
-            let d: Any? = placeholder == "[[creation-date]]" ? (values?["creation-date"] ?? self.creationDate) : (values?["modification-date"] ?? self.modificationDate)
-            return format(value: d, isFilled: &isFilled) { v, isFilled in
-                guard let v = v as? Date? else {
-                    isFilled = false
-                    return self.formatERR(useEmptyData: useEmptyData)
-                }
-                if let v = v {
-                    isFilled = true
-                    return PDFInfo.dateFormatter.string(from: v)
-                } else {
-                    isFilled = false
-                    return self.formatND(useEmptyData: useEmptyData)
-                }
+            let d = placeholder == "[[creation-date]]" ? self.creationDate : self.modificationDate
+            guard let v = d else {
+                isFilled = false
+                return self.formatERR(useEmptyData: useEmptyData)
             }
+            isFilled = true
+            return PDFInfo.dateFormatter.string(from: v)
         case "[[application]]":
-            return format(value: values?["application"] ?? self.application, isFilled: &isFilled)
+            isFilled = !self.application.isEmpty
+            return self.application
         
         case "[[sheets]]",
              "[[size:paper]]",
