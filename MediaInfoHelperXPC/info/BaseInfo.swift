@@ -660,14 +660,14 @@ delete fileJSONData;
             guard let path = String(item.template.dropFirst(12).dropLast(2)).fromBase64(), !path.isEmpty else {
                 return true
             }
-            let url = URL(fileURLWithPath: path)
-            let title = String(format: NSLocalizedString("Open with %@…", tableName: "LocalizableExt", comment: ""), url.deletingPathExtension().lastPathComponent)
+                let title = String(format: NSLocalizedString("Open with %@…", tableName: "LocalizableExt", comment: ""),
+                               FileManager.default.displayName(atPath: path))
             let mnu = self.createMenuItem(title: title, image: item.image, settings: settings, tag: itemIndex)
             if item.image.isEmpty {
-                let img = NSWorkspace.shared.icon(forFile: url.path).resized(to: NSSize(width: 16, height: 16))
-                mnu.toolTip = url.path
+                let img = NSWorkspace.shared.icon(forFile: path).resized(to: NSSize(width: 16, height: 16))
                 mnu.image = img
             }
+            mnu.toolTip = path
             destination_sub_menu.addItem(mnu)
             return true
         }  else {
