@@ -97,8 +97,8 @@ func getCGImageInfo(forFile url: URL, processMetadata: Bool) -> ImageInfo? {
     
     let images = CGImageSourceGetCount(img_src)
     
-    // Get the color space
-    let cp:CFString = getKey(kCGImagePropertyProfileName, inDictionary: img_properties) ?? "-" as CFString
+    // Get the profile name
+    let cp:CFString = getKey(kCGImagePropertyProfileName, inDictionary: img_properties) ?? "" as CFString
     
     var b: CFBoolean = getKey(kCGImagePropertyIsFloat, inDictionary: img_properties) ?? kCFBooleanFalse
     let isFloat = b == kCFBooleanTrue
