@@ -19,28 +19,33 @@ class TokenModelMetadata: Token {
         case vertexColor
         case occlusion
         
-        case filesize
-        case fileName
-        case fileExtension
-        
         static var pasteboardType: NSPasteboard.PasteboardType {
             return .MITokenModelMetadata
+        }
+        
+        var title: String {
+            switch self {
+            case .meshCount: return String(format: NSLocalizedString("Number of meshes", comment: ""), 3)
+            case .meshes: return NSLocalizedString("Meshes submenu", comment: "")
+            case .vertex: return NSLocalizedString("Number of vertices", comment: "")
+            case .normals: return NSLocalizedString("Normals availability", comment: "")
+            case .tangents: return NSLocalizedString("Tangents availability", comment: "")
+            case .textureCoordinates: return NSLocalizedString("Texture coords availability", comment: "")
+            case .vertexColor: return NSLocalizedString("Vertex color availability", comment: "")
+            case .occlusion: return NSLocalizedString("Occlusion availability", comment: "")
+            }
         }
         
         var displayString: String {
             switch self {
             case .meshCount: return String(format: NSLocalizedString("%d Meshes", tableName: "LocalizableExt", comment: ""), 3)
-            case .meshes: return NSLocalizedString("Meshes submenu", comment: "")
             case .vertex: return String(format: NSLocalizedString("%d vertices", tableName: "LocalizableExt", comment: ""), 2400)
             case .normals: return NSLocalizedString("with normals", tableName: "LocalizableExt", comment: "")
             case .tangents: return NSLocalizedString("with tangents", tableName: "LocalizableExt", comment: "")
             case .textureCoordinates: return NSLocalizedString("with texture coords", tableName: "LocalizableExt", comment: "")
             case .vertexColor: return NSLocalizedString("with vertex color", tableName: "LocalizableExt", comment: "")
-            case .occlusion: return NSLocalizedString("with vertex occlusion", tableName: "LocalizableExt", comment: "")
-            
-            case .filesize: return "2.5 Mb"
-            case .fileName: return "filename.ext"
-            case .fileExtension: return "ext"
+            case .occlusion: return NSLocalizedString("with occlusion", tableName: "LocalizableExt", comment: "")
+            default: return self.title
             }
         }
         
@@ -54,27 +59,6 @@ class TokenModelMetadata: Token {
             case .textureCoordinates: return "[[tex-coords]]"
             case .vertexColor: return "[[vertex-color]]"
             case .occlusion: return "[[occlusion]]"
-            
-            case .filesize: return "[[filesize]]"
-            case .fileName: return "[[file-name]]"
-            case .fileExtension: return "[[file-ext]]"
-            }
-        }
-        
-        var tooltip: String? {
-            switch self {
-            case .meshCount: return NSLocalizedString("Number of meshes.", comment: "")
-            case .meshes: return NSLocalizedString("Meshes submenu.", comment: "")
-            case .vertex: return NSLocalizedString("Number of vertices.", comment: "")
-            case .normals: return NSLocalizedString("Normal vectors availability.", comment: "")
-            case .tangents: return NSLocalizedString("Tangent vectors availability.", comment: "")
-            case .textureCoordinates: return NSLocalizedString("Texture coordinates availability.", comment: "")
-            case .vertexColor: return NSLocalizedString("Vertex color availability.", comment: "")
-            case .occlusion: return NSLocalizedString("Vertex occlusion availability.", comment: "")
-            
-            case .filesize: return NSLocalizedString("File size.", comment: "")
-            case .fileName: return NSLocalizedString("File name.", comment: "")
-            case .fileExtension: return NSLocalizedString("File extension.", comment: "")
             }
         }
         
@@ -89,10 +73,6 @@ class TokenModelMetadata: Token {
             case "[[vertex-color]]": self = .vertexColor
             case "[[occlusion]]": self = .occlusion
             
-            case "[[filesize]]": self = .filesize
-            case "[[file-name]]": self = .fileName
-            case "[[file-ext]]": self = .fileExtension
-                
             default: return nil
             }
         }
@@ -113,6 +93,10 @@ class TokenModelMetadata: Token {
         }
     }
     
+    override var title: String {
+        return "3D info"
+    }
+    
     required convenience init?(mode: BaseMode) {
         guard let m = mode as? Mode else { return nil }
         self.init(mode: m)
@@ -131,17 +115,16 @@ class TokenModelMetadata: Token {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
     }
     
-    override func getMenu(extra: [String : AnyHashable] = [:], callback: @escaping ((Token, NSMenuItem)->Void)) -> NSMenu? {
+    override func createMenu() -> NSMenu? {
         let menu = NSMenu()
         
         menu.addItem(withTitle: NSLocalizedString("Metadata", comment: ""), action: nil, keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
         
         for mode in Mode.allCases {
-            menu.addItem(self.createMenuItem(title: mode.displayString, state: self.mode as! TokenModelMetadata.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
+            menu.addItem(self.createMenuItem(title: mode.title, state: self.mode as! TokenModelMetadata.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
         }
         
-        self.callbackMenu = callback
         return menu
     }
 }

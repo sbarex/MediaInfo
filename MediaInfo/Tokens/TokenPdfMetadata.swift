@@ -25,34 +25,35 @@ class TokenPdfMetadata: Token {
         case allowPrint
         case version
         case pages
-        case filesize
-        case fileName
-        case fileExtension
         
         static var pasteboardType: NSPasteboard.PasteboardType {
             return .MITokenPDFMetadata
         }
         
-        var displayString: String {
+        var title: String {
             switch self {
             case .author: return NSLocalizedString("Author", comment: "")
             case .producer: return NSLocalizedString("Producer", comment: "")
             case .creator: return NSLocalizedString("Creator", comment: "")
-            case .creationDate: return NSLocalizedString("Creation Date", comment: "")
-            case .modificationDate: return NSLocalizedString("Modification Date", comment: "")
-            case .keywords: return NSLocalizedString("Keywords", comment: "")
+            case .creationDate: return NSLocalizedString("Creation date", comment: "")
+            case .modificationDate: return NSLocalizedString("Modification date", comment: "")
+            case .keywords: return NSLocalizedString("Keywords list", comment: "")
             case .subject: return NSLocalizedString("Subject", comment: "")
             case .title: return NSLocalizedString("Title", comment: "")
-            case .locked: return NSLocalizedString("Locked", comment: "")
-            case .encrypted: return NSLocalizedString("Encrypted", comment: "")
+            case .locked: return NSLocalizedString("Locked status", comment: "")
+            case .encrypted: return NSLocalizedString("Encrypted status", comment: "")
             case .security: return NSLocalizedString("Security", comment: "")
             case .allowCopy: return NSLocalizedString("Allow copy", comment: "")
             case .allowPrint: return NSLocalizedString("Allow print", comment: "")
             case .version: return NSLocalizedString("PDF Version", comment: "")
-            case .pages: return "10 " + NSLocalizedString("pages", tableName: "LocalizableExt", comment: "")
-            case .filesize: return "2.5 Mb"
-            case .fileName: return "filename.ext"
-            case .fileExtension: return "ext"
+            case .pages: return NSLocalizedString("Number of pages", comment: "")
+            }
+        }
+        
+        var displayString: String {
+            switch self {
+            case .pages: return String(format: NSLocalizedString("%d Pages", tableName: "LocalizableExt", comment: ""), 10)
+            default: return self.title
             }
         }
         
@@ -73,32 +74,14 @@ class TokenPdfMetadata: Token {
             case .allowPrint: return "[[allows-print]]"
             case .version: return "[[version]]"
             case .pages: return "[[pages]]"
-            case .filesize: return "[[filesize]]"
-            case .fileName: return "[[file-name]]"
-            case .fileExtension: return "[[file-ext]]"
             }
         }
         
         var tooltip: String? {
             switch self {
-            case .author: return ""
-            case .producer: return ""
-            case .creator: return ""
-            case .creationDate: return ""
-            case .modificationDate: return ""
-            case .keywords: return ""
-            case .subject: return ""
-            case .title: return ""
-            case .locked: return ""
-            case .encrypted: return ""
-            case .security: return ""
             case .allowCopy: return NSLocalizedString("Allow copy status (Yes/No).", comment: "")
             case .allowPrint: return NSLocalizedString("Allow print status (Yes/No).", comment: "")
-            case .version: return ""
-            case .pages: return NSLocalizedString("Number of pages.", comment: "")
-            case .filesize: return NSLocalizedString("File size.", comment: "")
-            case .fileName: return NSLocalizedString("File name.", comment: "")
-            case .fileExtension: return NSLocalizedString("File extension.", comment: "")
+            default: return nil
             }
         }
         
@@ -119,9 +102,6 @@ class TokenPdfMetadata: Token {
             case "[[allows-print]]": self = .allowPrint
             case "[[version]]": self = .version
             case "[[pages]]": self = .pages
-            case "[[filesize]]": self = .filesize
-            case "[[file-name]]": self = .fileName
-            case "[[file-ext]]": self = .fileExtension
             default: return nil
             }
         }
@@ -131,6 +111,10 @@ class TokenPdfMetadata: Token {
     
     override class var supportedTypes: [SupportedType] {
         return [.pdf]
+    }
+    
+    override var title: String {
+        return NSLocalizedString("PDF metadata", comment: "")
     }
     
     required convenience init?(mode: BaseMode) {
@@ -151,17 +135,16 @@ class TokenPdfMetadata: Token {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
     }
     
-    override func getMenu(extra: [String : AnyHashable] = [:], callback: @escaping ((Token, NSMenuItem)->Void)) -> NSMenu? {
+    override func createMenu() -> NSMenu? {
         let menu = NSMenu()
         
         menu.addItem(withTitle: NSLocalizedString("Metadata", comment: ""), action: nil, keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
         
         for mode in Mode.allCases {
-            menu.addItem(self.createMenuItem(title: mode.displayString, state: self.mode as! TokenPdfMetadata.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
+            menu.addItem(self.createMenuItem(title: mode.title, state: self.mode as! TokenPdfMetadata.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
         }
         
-        self.callbackMenu = callback
         return menu
     }
 }

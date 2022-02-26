@@ -32,4 +32,6 @@ import Foundation
     func getWebPVersion(reply: @escaping (String)->Void)
     
     func openFile(url: URL)
+    func openFile(url: URL, withApp path: String)
+    func systemExec(command: String, arguments: [String])
 }

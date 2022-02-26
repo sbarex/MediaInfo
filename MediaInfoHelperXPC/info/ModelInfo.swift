@@ -8,8 +8,8 @@
 
 import Cocoa
 
-class ModelInfo: BaseInfo, FileInfo {
-    class SubMesh: Encodable {
+class ModelInfo: FileInfo {
+    class SubMesh: Codable {
         enum CodingKeys: String, CodingKey {
             case name
             case material
@@ -40,6 +40,13 @@ class ModelInfo: BaseInfo, FileInfo {
             coder.encode(self.geometryType, forKey: "geometryType")
         }
         
+        required init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.name = try container.decode(String.self, forKey: .name)
+            self.material = try container.decode(String?.self, forKey: .material)
+            self.geometryType = try container.decode(Int.self, forKey: .geometryType)
+        }
+        
         func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.name, forKey: .name)
@@ -61,7 +68,7 @@ class ModelInfo: BaseInfo, FileInfo {
         }
     }
     
-    class Mesh: Encodable {
+    class Mesh: Codable {
         enum CodingKeys: String, CodingKey {
             case name
             case vertexCount
@@ -138,6 +145,18 @@ class ModelInfo: BaseInfo, FileInfo {
             }
         }
         
+        required init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.name = try container.decode(String.self, forKey: .name)
+            self.vertexCount = try container.decode(Int.self, forKey: .vertexCount)
+            self.hasNormals = try container.decode(Bool.self, forKey: .hasNormals)
+            self.hasTangent = try container.decode(Bool.self, forKey: .hasTangent)
+            self.hasTextureCoordinate = try container.decode(Bool.self, forKey: .hasTextureCoordinate)
+            self.hasVertexColor = try container.decode(Bool.self, forKey: .hasVertexColor)
+            self.hasOcclusion = try container.decode(Bool.self, forKey: .hasOcclusion)
+            self.meshes = try container.decode([SubMesh].self, forKey: .meshes)
+        }
+        
         func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             try container.encode(self.name, forKey: .name)
@@ -154,9 +173,6 @@ class ModelInfo: BaseInfo, FileInfo {
     enum CodingKeys: String, CodingKey {
         case meshes
     }
-    
-    let file: URL
-    let fileSize: Int64
     
     var meshes: [Mesh]
     var vertexCount: Int {
@@ -180,20 +196,11 @@ class ModelInfo: BaseInfo, FileInfo {
     }
     
     init(file: URL, meshes: [Mesh]) {
-        self.file = file
-        self.fileSize = Self.getFileSize(file) ?? -1
-        
         self.meshes = meshes
-        super.init()
+        super.init(file: file)
     }
     
     required init?(coder: NSCoder) {
-        guard let r = Self.decodeFileInfo(coder) else {
-            return nil
-        }
-        self.file = r.0
-        self.fileSize = r.1 ?? -1
-        
         self.meshes = []
         let n = coder.decodeInteger(forKey: "meshCount")
         for i in 0 ..< n {
@@ -209,7 +216,6 @@ class ModelInfo: BaseInfo, FileInfo {
     }
     
     override func encode(with coder: NSCoder) {
-        self.encodeFileInfo(coder)
         coder.encode(self.meshes.count, forKey: "meshCount")
         for (i, m) in self.meshes.enumerated() {
             let c = NSKeyedArchiver(requiringSecureCoding: coder.requiresSecureCoding)
@@ -220,9 +226,14 @@ class ModelInfo: BaseInfo, FileInfo {
         super.encode(with: coder)
     }
     
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.meshes = try container.decode([Mesh].self, forKey: .meshes)
+        
+        try super.init(from: decoder)
+    }
     override func encode(to encoder: Encoder) throws {
         try super.encode(to: encoder)
-        try self.encodeFileInfo(to: encoder)
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.meshes, forKey: .meshes)
     }
@@ -243,37 +254,24 @@ class ModelInfo: BaseInfo, FileInfo {
         switch placeholder {
             
         case "[[mesh-count]]":
-            let n = self.meshes.count
-            isFilled = n > 0
-            if n == 0 && !useEmptyData {
-                return ""
-            }
-            if n == 1 {
-                return NSLocalizedString("1 Mesh", tableName: "LocalizableExt", comment: "")
-            } else {
-                return String(format: NSLocalizedString("%d Meshes", tableName: "LocalizableExt", comment: ""), n)
-            }
+            return self.formatCount(meshes.count, noneLabel: "No Mesh", singleLabel: "1 Mesh", manyLabel: "%@ Meshs", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[vertex]]":
-            isFilled = self.vertexCount > 0
-            if self.vertexCount == 0 && !useEmptyData {
-                return ""
-            }
-            return String(format: NSLocalizedString("%@ Vertices", tableName: "LocalizableExt", comment: ""), Self.numberFormatter.string(from: NSNumber(value: self.vertexCount)) ?? "\(self.vertexCount)")
+            return self.formatCount(vertexCount, noneLabel: "No Vertex", singleLabel: "1 Vertex", manyLabel: "%@ Vertices", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[normals]]":
             isFilled = self.hasNormals
-            return NSLocalizedString(self.hasNormals ? "with normals" : "without normals", tableName: "LocalizableExt", comment: "")
+            return NSLocalizedString(self.hasNormals ? "With normals" : "Without normals", tableName: "LocalizableExt", comment: "")
         case "[[tangents]]":
             isFilled = self.hasTangent
-            return NSLocalizedString(self.hasTangent ? "with tangents" : "without tangents", tableName: "LocalizableExt", comment: "")
+            return NSLocalizedString(self.hasTangent ? "With tangents" : "Without tangents", tableName: "LocalizableExt", comment: "")
         case "[[tex-coords]]":
             isFilled = self.hasTextureCoordinate
-            return NSLocalizedString(self.hasTextureCoordinate ? "with texture coordinates" : "without texture coordinates", tableName: "LocalizableExt", comment: "")
+            return NSLocalizedString(self.hasTextureCoordinate ? "With texture coordinates" : "Without texture coordinates", tableName: "LocalizableExt", comment: "")
         case "[[vertex-color]]":
             isFilled = self.hasVertexColor
-            return NSLocalizedString(self.hasVertexColor ? "with vertex colors" : "without vertex colors", tableName: "LocalizableExt", comment: "")
+            return NSLocalizedString(self.hasVertexColor ? "With vertex colors" : "Without vertex colors", tableName: "LocalizableExt", comment: "")
         case "[[occlusion]]":
             isFilled = self.hasOcclusion
-            return NSLocalizedString(self.hasOcclusion ? "with occlusion" : "without occlusion", tableName: "LocalizableExt", comment: "")
+            return NSLocalizedString(self.hasOcclusion ? "With occlusion" : "Without occlusion", tableName: "LocalizableExt", comment: "")
         default:
             return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         }
@@ -285,32 +283,32 @@ class ModelInfo: BaseInfo, FileInfo {
                 return true
             }
             let n = self.meshes.count
-            let title = n == 1 ? NSLocalizedString("1 Mesh", tableName: "LocalizableExt", comment: "") : String(format: NSLocalizedString("%d Meshes", comment: ""), n)
-            let mnu = self.createMenuItem(title: title, image: "3D", settings: settings)
+            let title = self.formatCount(n, noneLabel: "No Mesh", singleLabel: "1 Mesh", manyLabel: "%@ Meshes", useEmptyData: true)
+            let mnu = self.createMenuItem(title: title, image: "3D", settings: settings, tag: itemIndex)
             let submenu = NSMenu(title: title)
             for mesh in self.meshes {
                 let mesh_menu = n > 1 ? NSMenu() : submenu
                 
-                let m = createMenuItem(title: mesh.name.isEmpty ? mesh.name : "Mesh", image: mesh.meshes.first?.imageName, settings: settings)
+                let m = createMenuItem(title: mesh.name.isEmpty ? mesh.name : "Mesh", image: mesh.meshes.first?.imageName, settings: settings, tag: itemIndex)
                 submenu.addItem(m)
                 
-                let t = String(format: NSLocalizedString("%@ Vertices", tableName: "LocalizableExt", comment: ""), Self.numberFormatter.string(from: NSNumber(value: mesh.vertexCount)) ?? "\(mesh.vertexCount)")
-                mesh_menu.addItem(createMenuItem(title: t, image: nil, settings: settings))
+                let t = self.formatCount(mesh.vertexCount, noneLabel: "No Vertex", singleLabel: "1 Vertex", manyLabel: "%@ Vertices", useEmptyData: true)
+                mesh_menu.addItem(createMenuItem(title: t, image: nil, settings: settings, tag: itemIndex))
                 mesh_menu.addItem(NSMenuItem.separator())
                 if mesh.hasNormals {
-                    mesh_menu.addItem(createMenuItem(title: "with normals", image: "3d_normal", settings: settings))
+                    mesh_menu.addItem(createMenuItem(title: "With normals", image: "3d_normal", settings: settings, tag: itemIndex))
                 }
                 if mesh.hasTangent {
-                    mesh_menu.addItem(createMenuItem(title: "with tangents", image: "3d_tangent", settings: settings))
+                    mesh_menu.addItem(createMenuItem(title: "With tangents", image: "3d_tangent", settings: settings, tag: itemIndex))
                 }
                 if mesh.hasVertexColor {
-                    mesh_menu.addItem(createMenuItem(title: "with vertex colors", image: "3d_color", settings: settings))
+                    mesh_menu.addItem(createMenuItem(title: "With vertex colors", image: "3d_color", settings: settings, tag: itemIndex))
                 }
                 if mesh.hasTextureCoordinate {
-                    mesh_menu.addItem(createMenuItem(title: "with texture coordinates", image: "3d_uv", settings: settings))
+                    mesh_menu.addItem(createMenuItem(title: "With texture coordinates", image: "3d_uv", settings: settings, tag: itemIndex))
                 }
                 if mesh.hasOcclusion {
-                    mesh_menu.addItem(createMenuItem(title: "with occlusion", image: "3d_occlusion", settings: settings))
+                    mesh_menu.addItem(createMenuItem(title: "With occlusion", image: "3d_occlusion", settings: settings, tag: itemIndex))
                 }
                 
                 if n > 1 {

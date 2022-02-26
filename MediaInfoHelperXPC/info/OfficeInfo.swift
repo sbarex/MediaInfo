@@ -66,6 +66,17 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
         super.encode(with: coder)
     }
     
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.charactersCount = try container.decode(Int.self, forKey: .charactersCount)
+        self.charactersWithSpacesCount = try container.decode(Int.self, forKey: .charactersWithSpacesCount)
+        self.wordsCount = try container.decode(Int.self, forKey: .wordsCount)
+        self.pagesCount = try container.decode(Int.self, forKey: .pagesCount)
+        self.width = try container.decode(Double.self, forKey: .width)
+        self.height = try container.decode(Double.self, forKey: .height)
+        
+        try super.init(from: decoder)
+    }
     override func encode(to encoder: Encoder) throws {
         try super.encode(to: encoder)
         
@@ -90,31 +101,16 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
     
     override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
-        let formatCount: (Any?, String, String, inout Bool) -> String = { v, single, plural, isFilled in
-            guard let n = v as? Int else {
-                isFilled = false
-                return self.formatERR(useEmptyData: useEmptyData)
-            }
-            isFilled = true
-            if n == 1 {
-                return "1 " + NSLocalizedString(single, tableName: "LocalizableExt", comment: "")
-            } else {
-                if n == 0 && !useEmptyData {
-                    return ""
-                }
-                return "\(n) " +  NSLocalizedString(plural, tableName: "LocalizableExt", comment: "")
-            }
-        }
         
         switch placeholder {
         case "[[pages]]":
-            return formatCount(self.pagesCount, "page", "pages", &isFilled)
+            return self.formatCount(self.pagesCount, noneLabel: "No Page", singleLabel: "1 Page", manyLabel: "%@ Pages", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[characters]]":
-            return formatCount(self.charactersCount, "character", "characters", &isFilled)
+            return self.formatCount(self.charactersCount, noneLabel: "Character", singleLabel: "1 Character", manyLabel: "%@ Characters", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[characters-space]]":
-            return formatCount(self.charactersWithSpacesCount, "character (spaces included)", "characters (spaces included)", &isFilled)
+            return self.formatCount(self.charactersWithSpacesCount, noneLabel: "No Character (spaces included)", singleLabel: "1 Character (spaces included)", manyLabel: "%@ Characters (spaces included)", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[words]]":
-            return formatCount(self.wordsCount, "word", "words", &isFilled)
+            return self.formatCount(self.wordsCount, noneLabel: "No Word", singleLabel: "1 Word", manyLabel: "%@ Words", isFilled: &isFilled, useEmptyData: useEmptyData)
     
         case "[[size:paper]]":
             if let s = Self.getPaperSize(width: width * 25.4, height: height * 25.4) {
@@ -163,6 +159,9 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
 
 // MARK: - Excel
 class ExcelInfo: BaseOfficeInfo {
+    enum CodingKeys: String, CodingKey {
+        case sheets
+    }
     let sheets: [String]
     
     init(file: URL, creator: String, creationDate: Date?, modified: String, modificationDate: Date?, title: String, subject: String, keywords: [String], description: String, application: String, sheets: [String]) {
@@ -193,6 +192,18 @@ class ExcelInfo: BaseOfficeInfo {
         super.encode(with: coder)
     }
     
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.sheets = try container.decode([String].self, forKey: .sheets)
+        try super.init(from: decoder)
+    }
+    
+    override func encode(to encoder: Encoder) throws {
+        try super.encode(to: encoder)
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.sheets, forKey: .sheets)
+    }
+    
     override func getImage(for name: String) -> NSImage? {
         if name == "office" {
             return Self.getImage(for: "xls")
@@ -206,16 +217,7 @@ class ExcelInfo: BaseOfficeInfo {
         
         switch placeholder {
         case "[[pages]]":
-            let n = sheets.count
-            isFilled = n > 0
-            if n == 1 {
-                return "1 " + NSLocalizedString("sheet", tableName: "LocalizableExt", comment: "")
-            } else {
-                if n == 0 && !useEmptyData {
-                    return ""
-                }
-                return "\(n) " +  NSLocalizedString("sheets", tableName: "LocalizableExt", comment: "")
-            }
+            return self.formatCount(sheets.count, noneLabel: "No Sheet", singleLabel: "1 Sheet", manyLabel: "%d Sheets", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
         default:
             return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIdex)
         }
@@ -240,10 +242,10 @@ class ExcelInfo: BaseOfficeInfo {
             } else {
                 title = String(format: NSLocalizedString("%d Sheets", tableName: "LocalizableExt", comment: ""), n)
             }
-            let mnu = self.createMenuItem(title: title, image: "no-image", settings: settings)
+            let mnu = self.createMenuItem(title: title, image: "no-image", settings: settings, tag: itemIndex)
             let submenu = NSMenu(title: title)
             for sheet in self.sheets {
-                submenu.addItem(createMenuItem(title: sheet, image: "-", settings: settings))
+                submenu.addItem(createMenuItem(title: sheet, image: "-", settings: settings, tag: itemIndex))
             }
             destination_sub_menu.addItem(mnu)
             destination_sub_menu.setSubmenu(submenu, for: mnu)
@@ -257,6 +259,11 @@ class ExcelInfo: BaseOfficeInfo {
 
 // MARK: - Powerpoint
 class PowerpointInfo: BaseOfficeInfo {
+    enum CodingKeys: String, CodingKey {
+        case slidesCount
+        case presentationFormat
+    }
+    
     let slidesCount: Int
     let presentationFormat: String
     
@@ -281,6 +288,20 @@ class PowerpointInfo: BaseOfficeInfo {
         super.encode(with: coder)
     }
     
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.slidesCount = try container.decode(Int.self, forKey: .slidesCount)
+        self.presentationFormat = try container.decode(String.self, forKey: .presentationFormat)
+        try super.init(from: decoder)
+    }
+    
+    override func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.slidesCount, forKey: .slidesCount)
+        try container.encode(self.presentationFormat, forKey: .presentationFormat)
+        try super.encode(to: encoder)
+    }
+    
     override func getImage(for name: String) -> NSImage? {
         if name == "office" {
             return Self.getImage(for: "ppt")
@@ -294,15 +315,7 @@ class PowerpointInfo: BaseOfficeInfo {
         
         switch placeholder {
         case "[[pages]]":
-            isFilled = self.slidesCount > 0
-            if self.slidesCount == 1 {
-                return "1 " + NSLocalizedString("slide", tableName: "LocalizableExt", comment: "")
-            } else {
-                if self.slidesCount == 0 && !useEmptyData {
-                    return ""
-                }
-                return "\(self.slidesCount) " +  NSLocalizedString("slides", tableName: "LocalizableExt", comment: "")
-            }
+            return self.formatCount(slidesCount, noneLabel: "No Slide", singleLabel: "1 Slide", manyLabel: "%d Slides", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
         case "[[presentation-format]]":
             isFilled = !self.presentationFormat.isEmpty
             return self.presentationFormat

@@ -9,7 +9,7 @@
 import AppKit
 
 class TokenPrint: Token {
-    static let dpiView = DPIView(frame: CGRect(x: 0, y: 0, width: 200, height: 25))
+    static let dpiView = DPIView(frame: CGRect(x: 0, y: 0, width: 300, height: 25))
     
     enum Mode: Equatable, BaseMode {
         case dpi
@@ -19,16 +19,29 @@ class TokenPrint: Token {
            return .MITokenPrint
         }
         
+        var title: String {
+            switch self {
+            case .dpi: return NSLocalizedString("Resolution (dpi)", comment: "")
+            case .print(let dpi, let unit):
+                if dpi <= 0 {
+                    return String(format: NSLocalizedString("Printed size at current resolution (%@)", comment: ""), unit.label)
+                } else {
+                    return String(format: NSLocalizedString("Printed size at %d dpi (%@)", comment: ""), dpi, unit.label)
+                }
+            }
+        }
+        
         var displayString: String {
            switch self {
-           case .dpi: return "150 dpi"
+           case .dpi: return String(format: NSLocalizedString("%d dpi", tableName: "LocalizableExt", comment: ""), 150)
            case .print(let d, let unit):
                let dpi = d <= 0 ? 150 : d
                let w = (1920.0 / Double(dpi)) * unit.scale
                let h = (1080.0 / Double(dpi)) * unit.scale
                let w1 = BaseInfo.numberFormatter.string(from: NSNumber(value: w)) ?? "\(w)"
                let h1 = BaseInfo.numberFormatter.string(from: NSNumber(value: h)) ?? "\(h)"
-               return "\(w1) × \(h1) \(unit.label)"+(dpi != 150 ? " (\(dpi) dpi)" : "")
+               let res = dpi != 150 ? String(format: NSLocalizedString("%d dpi", tableName: "LocalizableExt", comment: ""), dpi) : ""
+               return "\(w1) × \(h1) \(unit.label) "+res
            }
         }
         
@@ -41,13 +54,6 @@ class TokenPrint: Token {
                 } else {
                     return "[[print:\(unit.label):\(dpi)]]"
                 }
-            }
-        }
-        
-        var tooltip: String? {
-            switch self {
-            case .dpi: return NSLocalizedString("Resolution.", comment: "")
-            case .print(_, let unit): return NSLocalizedString("Printed size", comment: "")+" ("+NSLocalizedString(unit.label, tableName: "LocalizableExt", comment: "")+")."
             }
         }
         
@@ -122,6 +128,10 @@ class TokenPrint: Token {
         return [.image]
     }
     
+    override var title: String {
+        return NSLocalizedString("Resolution & Print", comment: "")
+    }
+    
     init(mode: Mode) {
         super.init()
         self.mode = mode
@@ -144,7 +154,7 @@ class TokenPrint: Token {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
     }
     
-    override func getMenu(extra: [String : AnyHashable] = [:], callback: @escaping ((Token, NSMenuItem)->Void)) -> NSMenu? {
+    override func createMenu() -> NSMenu? {
         let mode = self.mode as! Mode
         let dpi: Int
         let unit: PrintUnit?
@@ -161,14 +171,14 @@ class TokenPrint: Token {
         menu.addItem(withTitle: NSLocalizedString("Resolution", comment: ""), action: nil, keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
         
-        menu.addItem(self.createMenuItem(title: Mode.dpi.displayString, state: mode == .dpi, tag: 0, tooltip: Mode.dpi.tooltip))
+        menu.addItem(self.createMenuItem(title: Mode.dpi.title, state: mode == .dpi, tag: 0, tooltip: Mode.dpi.tooltip))
         menu.addItem(NSMenuItem.separator())
 
         for mode_unit in PrintUnit.allCases {
-            let mode = Mode.print(dpi: 150, unit: mode_unit)
-            menu.addItem(self.createMenuItem(title: mode.displayString, state: unit == mode_unit, tag: mode_unit.rawValue, tooltip: mode.tooltip))
+            let mode = Mode.print(dpi: -1, unit: mode_unit)
+            let mnu = self.createMenuItem(title: mode.title, state: unit == mode_unit, tag: mode_unit.rawValue, tooltip: mode.tooltip)
+            menu.addItem(mnu)
         }
-        
     
         let item = menu.addItem(withTitle: "", action: nil, keyEquivalent: "")
         Self.dpiView.isEnabled = dpi > 0
@@ -176,28 +186,24 @@ class TokenPrint: Token {
         Self.dpiView.token = self
         item.view = Self.dpiView
         
-        self.callbackMenu = callback
         return menu
     }
     
-    @IBAction override func handleTokenMenu(_ sender: NSMenuItem) {
-        if let token = sender.representedObject as? TokenPrint {
-            switch sender.tag {
-            case 0:
-                token.mode = Mode.dpi
-            case 1:
-                token.mode = Mode.print(dpi: Self.dpiView.isEnabled ? Self.dpiView.dpi : -1, unit: .cm)
-            case 2:
-                token.mode = Mode.print(dpi: Self.dpiView.isEnabled ? Self.dpiView.dpi : -1, unit: .mm)
-            case 3:
-                token.mode = Mode.print(dpi: Self.dpiView.isEnabled ? Self.dpiView.dpi : -1, unit: .inch)
-            default:
-                return
-            }
-        } else {
-            return
+    override func getTokenFromSender(_ sender: NSMenuItem) -> BaseMode? {
+        guard let _ = sender.representedObject as? TokenPrint else {
+            return nil
         }
-        
-        super.handleTokenMenu(sender)
+        switch sender.tag {
+        case 0:
+            return Mode.dpi
+        case 1:
+            return Mode.print(dpi: Self.dpiView.isEnabled ? Self.dpiView.dpi : -1, unit: .cm)
+        case 2:
+            return Mode.print(dpi: Self.dpiView.isEnabled ? Self.dpiView.dpi : -1, unit: .mm)
+        case 3:
+            return Mode.print(dpi: Self.dpiView.isEnabled ? Self.dpiView.dpi : -1, unit: .inch)
+        default:
+            return nil
+        }
     }
 }

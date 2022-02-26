@@ -9,7 +9,7 @@
 import Cocoa
 import UniformTypeIdentifiers
 
-class ArchivedFile: NSCoding, Encodable {
+class ArchivedFile: NSCoding, Codable {
     public enum ArchiveSortEnum: String {
         case name = "name"
         case creationDate = "cDate"
@@ -395,6 +395,27 @@ class ArchivedFile: NSCoding, Encodable {
         }
     }
     
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.url = try container.decode(URL.self, forKey: .url)
+        self.originalPath = try container.decode(String.self, forKey: .originalPath)
+        self.type = ArchivedFileTypeEnum(rawValue: try container.decode(Int.self, forKey: .type))!
+        self.cDate = try container.decode(time_t.self, forKey: .creationDate)
+        self.mDate = try container.decode(time_t.self, forKey: .modificationDate)
+        self.aDate = try container.decode(time_t.self, forKey: .accessDate)
+        self.size = try container.decode(Int64.self, forKey: .size)
+        self.format = try container.decode(String.self, forKey: .format)
+        self.uid = try container.decode(Int64.self, forKey: .uid)
+        self.uidName = try container.decode(String?.self, forKey: .uidName)
+        self.gid = try container.decode(Int64.self, forKey: .gid)
+        self.gidName = try container.decode(String.self, forKey: .gidName)
+        self.mode = try container.decode(String.self, forKey: .mode)
+        self.acl = try container.decode(String?.self, forKey: .acl)
+        self.flags = try container.decode(String.self, forKey: .flags)
+        self.link = try container.decode(String?.self, forKey: .link)
+        self.isEncrypted = try container.decode(Bool.self, forKey: .isEncrypted)
+        self.files = try container.decode([ArchivedFile].self, forKey: .files)
+    }
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.url, forKey: .url)
@@ -576,17 +597,14 @@ class ArchivedFile: NSCoding, Encodable {
 }
 
 // MARK: -
-class ArchiveInfo: BaseInfo, FileInfo {
+class ArchiveInfo: FileInfo {
     enum CodingKeys: String, CodingKey {
         case compressionName
         case files
         case unlimitedFileCount
         case unlimitedFileSize
     }
-    let file: URL
-    /// Compressed file size.
-    let fileSize: Int64
-    
+     
     let compressionName: String
     let files: [ArchivedFile]
     
@@ -611,9 +629,6 @@ class ArchiveInfo: BaseInfo, FileInfo {
     let unlimitedFileSize: Int64
     
     init(file: URL, compressionName: String, files: [ArchivedFile], unlimitedFileCount: Int?, unlimitedFileSize: Int64?) {
-        self.file = file
-        self.fileSize = Self.getFileSize(file) ?? -1
-        
         self.compressionName = compressionName
         self.files = files
         self.unlimitedFileCount = unlimitedFileCount ?? files.count
@@ -624,16 +639,10 @@ class ArchiveInfo: BaseInfo, FileInfo {
             self.files.forEach({ s += $0.totalSize })
             self.unlimitedFileSize = s
         }
-        super.init()
+        super.init(file: file)
     }
     
     required init?(coder: NSCoder) {
-        guard let r = Self.decodeFileInfo(coder) else {
-            return nil
-        }
-        self.file = r.0
-        self.fileSize = r.1 ?? -1
-        
         self.compressionName = coder.decodeObject(of: NSString.self, forKey: "compressionName") as String? ?? ""
         self.unlimitedFileCount = coder.decodeInteger(forKey: "unlimitedFileCount")
         self.unlimitedFileSize = coder.decodeInt64(forKey: "unlimitedFileSize")
@@ -654,8 +663,6 @@ class ArchiveInfo: BaseInfo, FileInfo {
     }
     
     override func encode(with coder: NSCoder) {
-        self.encodeFileInfo(coder)
-        
         coder.encode(self.compressionName as NSString, forKey: "compressionName")
         coder.encode(self.unlimitedFileCount, forKey: "unlimitedFileCount")
         coder.encode(self.unlimitedFileSize, forKey: "unlimitedFileSize")
@@ -669,9 +676,19 @@ class ArchiveInfo: BaseInfo, FileInfo {
         super.encode(with: coder)
     }
     
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        self.compressionName = try container.decode(String.self, forKey: .compressionName)
+        self.unlimitedFileCount = try container.decode(Int.self, forKey: .unlimitedFileCount)
+        self.unlimitedFileSize = try container.decode(Int64.self, forKey: .unlimitedFileSize)
+        self.files = try container.decode([ArchivedFile].self, forKey: .files)
+        
+        try super.init(from: decoder)
+    }
     override func encode(to encoder: Encoder) throws {
         try super.encode(to: encoder)
-        try self.encodeFileInfo(to: encoder)
+        
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.compressionName, forKey: .compressionName)
         try container.encode(self.unlimitedFileCount, forKey: .unlimitedFileCount)
@@ -704,16 +721,14 @@ class ArchiveInfo: BaseInfo, FileInfo {
     }
     
     override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
-        case "[[filesize]]", "[[file-name]]", "[[file-ext]]":
-            return self.processFilePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         case "[[compression-method]]":
             isFilled = !self.compressionName.isEmpty
             return self.compressionName
         case "[[n-files]]":
             isFilled = self.unlimitedFileCount > 0
-            return String(format: NSLocalizedString("%@ files", tableName: "LocalizableExt", comment: ""), Self.numberFormatter.string(from: NSNumber(value: self.unlimitedFileCount)) ?? "\(self.unlimitedFileCount)")
+            return self.formatCount(self.unlimitedFileCount, noneLabel: "No file", singleLabel: "1 File", manyLabel: "%@ Files", isFilled: &isFilled, useEmptyData: !settings.isEmptyItemsSkipped, formatAsString: true)
+            
         case "[[uncompressed-size]]":
             isFilled = self.unlimitedFileSize > 0
             return Self.byteCountFormatter.string(fromByteCount: self.unlimitedFileSize)
@@ -730,7 +745,7 @@ class ArchiveInfo: BaseInfo, FileInfo {
             var n = 0
             for file in files {
                 if settings.maxFilesInDepth > 0 && n >= settings.maxFilesInDepth {
-                    let mnu = self.createMenuItem(title: "…", image: nil, settings: settings)
+                    let mnu = self.createMenuItem(title: "…", image: nil, settings: settings, tag: itemIndex)
                     mnu.isEnabled = false
                     mnu.action = nil
                     mnu.target = nil
@@ -741,7 +756,7 @@ class ArchiveInfo: BaseInfo, FileInfo {
                     break
                 }
                 
-                let m = self.createMenuItem(title: file.name, image: nil, settings: settings)
+                let m = self.createMenuItem(title: file.name, image: nil, settings: settings, tag: itemIndex)
                 if show_icons {
                     m.image = file.getIcon(size: NSSize(width: 16, height: 16))
                 }
@@ -767,10 +782,6 @@ class ArchiveInfo: BaseInfo, FileInfo {
             return submenu
         }
         
-        let format_files_title = { (n: Int) -> String in
-            let title = n == 1 ? NSLocalizedString("1 file", tableName: "LocalizableExt", comment: "") : String(format: NSLocalizedString("%d files", comment: ""), n)
-            return title
-        }
         switch item.template {
         case "[[files]]", "[[files-with-icon]]", "[[files-plain]]", "[[files-plain-with-icon]]":
             guard !self.files.isEmpty else {
@@ -781,14 +792,14 @@ class ArchiveInfo: BaseInfo, FileInfo {
             let plain = item.template == "[[files-plain]]" || item.template == "[[files-plain-with-icon]]"
             
             let n = self.unlimitedFileCount
-            let title = format_files_title(n)
+            let title = self.formatCount(n, noneLabel: "No File", singleLabel: "1 File", manyLabel: "%@ Files", useEmptyData: !settings.isEmptyItemsSkipped, formatAsString: true)
             
             let submenu = format_files(title, files, show_icons, plain, 0, settings)
             if self.files.count == 1 && !plain {
                 let mnu = submenu.items.first!.copy(with: .none) as! NSMenuItem
                 destination_sub_menu.addItem(mnu)
             } else {
-                let mnu = self.createMenuItem(title: title, image: "zip", settings: settings)
+                let mnu = self.createMenuItem(title: title, image: "zip", settings: settings, tag: itemIndex)
                 destination_sub_menu.addItem(mnu)
                 destination_sub_menu.setSubmenu(submenu, for: mnu)
             }

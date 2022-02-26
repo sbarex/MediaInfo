@@ -22,6 +22,18 @@ class TokenOfficeSize: Token {
             return .MITokenOfficeSize
         }
         
+        var title: String {
+            switch self {
+            case .print_cm: return NSLocalizedString("Printed size (cm)", comment: "")
+            case .print_mm: return NSLocalizedString("Printed size (mm)", comment: "")
+            case .print_inch: return NSLocalizedString("Printed size (inch)", comment: "")
+            case .print_paper: return NSLocalizedString("Printed paper format", comment: "")
+            case .print_paper_cm: return NSLocalizedString("Printed paper format or size (cm)", comment: "")
+            case .print_paper_mm: return NSLocalizedString("Printed paper format or size (mm)", comment: "")
+            case .print_paper_inch: return NSLocalizedString("Printed paper format or size (inch)", comment: "")
+            }
+        }
+        
         var displayString: String {
             switch self {
             case .print_cm: return "21 × 29.7 cm"
@@ -31,7 +43,6 @@ class TokenOfficeSize: Token {
             case .print_paper_cm: return "A4 / 21 × 29.7 cm"
             case .print_paper_mm: return "A4 / 210 × 297 mm"
             case .print_paper_inch: return "A4 / 8.26 × 11,69 inch"
-                
             }
         }
         
@@ -81,6 +92,10 @@ class TokenOfficeSize: Token {
         return String(format: NSLocalizedString("The token '%@' require the deep scan of the file and can slow down menu generation.", comment: ""), mode.displayString)
     }
     
+    override var title: String {
+        return NSLocalizedString("Printed size", comment: "")
+    }
+    
     required convenience init?(mode: BaseMode) {
         guard let m = mode as? Mode else { return nil }
         self.init(mode: m)
@@ -99,17 +114,16 @@ class TokenOfficeSize: Token {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
     }
     
-    override func getMenu(extra: [String : AnyHashable] = [:], callback: @escaping ((Token, NSMenuItem)->Void)) -> NSMenu? {
+    override func createMenu() -> NSMenu? {
         let menu = NSMenu()
         
         menu.addItem(withTitle: NSLocalizedString("Dimensions", comment: ""), action: nil, keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
         
         for mode in Mode.allCases {
-            menu.addItem(self.createMenuItem(title: mode.displayString, state: self.mode as! TokenOfficeSize.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
+            menu.addItem(self.createMenuItem(title: mode.title, state: self.mode as! TokenOfficeSize.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
         }
         
-        self.callbackMenu = callback
         return menu
     }
 }

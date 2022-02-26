@@ -20,6 +20,16 @@ class TokenColor: Token {
             return .MITokenColor
         }
         
+        var title: String {
+            switch self {
+            case .colorSpaceDepth: return NSLocalizedString("Color space and depth", comment: "")
+            case .colorSpace: return NSLocalizedString("Color space", comment: "")
+            case .depth: return NSLocalizedString("Color depth", comment: "")
+            case .profileName: return NSLocalizedString("Profile name", comment: "")
+            case .colorTable: return NSLocalizedString("Color table", comment: "")
+            }
+        }
+        
         var displayString: String {
             switch self {
             case .colorSpaceDepth: return "RGB 8 bit"
@@ -37,16 +47,6 @@ class TokenColor: Token {
             case .depth: return "[[depth]]"
             case .profileName: return "[[profile-name]]"
             case .colorTable: return "[[color-table]]"
-            }
-        }
-        
-        var tooltip: String? {
-            switch self {
-            case .colorSpaceDepth: return NSLocalizedString("Color space and depth.", comment: "")
-            case .colorSpace: return NSLocalizedString("Color space.", comment: "")
-            case .depth: return NSLocalizedString("Color depth.", comment: "")
-            case .profileName: return NSLocalizedString("Profile name.", comment: "")
-            case .colorTable: return NSLocalizedString("Color table.", comment: "")
             }
         }
         
@@ -68,6 +68,10 @@ class TokenColor: Token {
         return [.image]
     }
     
+    override var title: String {
+        return NSLocalizedString("Color info", comment: "")
+    }
+    
     required convenience init?(mode: BaseMode) {
         guard let m = mode as? Mode else { return nil }
         self.init(mode: m)
@@ -86,15 +90,14 @@ class TokenColor: Token {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
     }
     
-    override func getMenu(extra: [String : AnyHashable] = [:], callback: @escaping ((Token, NSMenuItem)->Void)) -> NSMenu? {
+    override func createMenu() -> NSMenu? {
         let menu = NSMenu()
-        menu.addItem(withTitle: NSLocalizedString("Color space", comment: ""), action: nil, keyEquivalent: "")
+        menu.addItem(withTitle: NSLocalizedString("Color info", comment: ""), action: nil, keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
         for mode in Mode.allCases {
-            menu.addItem(self.createMenuItem(title: mode.displayString, state: self.mode as! TokenColor.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
+            menu.addItem(self.createMenuItem(title: mode.title, state: self.mode as! TokenColor.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
         }
         
-        self.callbackMenu = callback
         return menu
     }
 }

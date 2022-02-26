@@ -104,6 +104,9 @@ class MenuItemEditor: NSViewController {
         Image.separator(),
         Image(name: "tag", title: NSLocalizedString("Tag", comment: "")),
         Image(name: "pencil", title: NSLocalizedString("Pencil", comment: "")),
+        Image(name: "gearshape", title: NSLocalizedString("Gear", comment: "")),
+        Image(name: "script", title: NSLocalizedString("Script", comment: "")),
+        Image(name: "calendar", title: NSLocalizedString("Calendar", comment: "")),
         Image(name: "abc", title: NSLocalizedString("ABC", comment: "")),
     ]
     
@@ -134,6 +137,11 @@ class MenuItemEditor: NSViewController {
     internal var tokens: [Token] = [] {
         didSet {
             tokenField?.objectValue = tokens
+            DispatchQueue.main.async {
+                self.tokenField?.becomeFirstResponder()
+                self.tokenField?.currentEditor()?.moveToEndOfLine(nil)
+            }
+            
         }
     }
     internal var imageName: String = "" {
@@ -166,6 +174,7 @@ class MenuItemEditor: NSViewController {
         tokenField.tokenizingCharacterSet = CharacterSet(charactersIn: "\t")
         
         tokenField.objectValue = tokens
+        
         self.imagePopupButton?.selectItem(at: Self.images.firstIndex(where: {$0.name == self.imageName}) ?? 0)
     }
     
@@ -235,16 +244,20 @@ extension MenuItemEditor: NSTableViewDelegate {
     }
 }
 
+// MARK: - NSTokenFieldDelegate
 extension MenuItemEditor: NSTokenFieldDelegate {
     func tokenField(_ tokenField: NSTokenField, shouldAdd tokens: [Any], at index: Int) -> [Any] {
         var result: [Token] = []
         for token in tokens {
             if let t = token as? Token {
                 if t.isValidFor(type: self.supportedType) && self.validTokens.contains(where: { type(of: t) == $0 }) {
+                    t.isReadOnly = tokenField != self.tokenField
                     result.append(t)
                 }
-            } else if let t = token as? String {
-                result.append(TokenText(text: t))
+            } else if let text = token as? String {
+                let t = TokenText(text: text)
+                t.isReadOnly = tokenField != self.tokenField
+                result.append(t)
             } else {
                 print(token)
             }
@@ -256,7 +269,7 @@ extension MenuItemEditor: NSTokenFieldDelegate {
         if let txt = representedObject as? TokenText {
             return txt.text
         } else if let token = representedObject as? Token {
-            return token.displayString
+            return self.tokenField == tokenField ? token.displayString : token.title
         } else {
             return nil
         }
@@ -294,7 +307,14 @@ extension MenuItemEditor: NSTokenFieldDelegate {
             return nil
         }
         
-        return token.getMenu() { _, _ in
+        token.isReadOnly = tokenField != self.tokenField
+        return token.getMenu() { token, _ in
+            if tokenField != self.tokenField {
+                var tokens = self.tokenField.objectValue as? [Token] ?? []
+                tokens.append(token)
+                self.tokens = tokens
+            }
+            
             self.view.window?.makeFirstResponder(nil) // Force tokens update.
         }
     }

@@ -12,12 +12,15 @@ extension NSPasteboard.PasteboardType {
     static let MIToken = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token")
     static let MITokenDimensional = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-dim")
     static let MITokenDuration = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-time")
+    static let MITokenFile = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-file")
+    static let MITokenOpenWith = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-open-with")
     static let MITokenImageExtra = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-image-extra")
     static let MITokenVideoExtra = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-video-extra")
     static let MITokenMediaTrack = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-media-track")
     static let MITokenColor = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-color")
     static let MITokenPrint = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-print")
     static let MITokenLanguage = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-language")
+    static let MITokenLanguages = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-languages")
     static let MIText = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-text")
     static let MITokenPDFBox = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-pdfbox")
     static let MITokenPDFMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-pdf-metadata")
@@ -36,6 +39,7 @@ protocol BaseMode {
     var displayString: String { get }
     var placeholder: String { get }
     var tooltip: String? { get }
+    var title: String { get }
     
     init?(placeholder: String)
     init?(integer: Int)
@@ -48,6 +52,7 @@ extension BaseMode {
     var displayString: String { return "TOKEN" }
     var placeholder: String { return "" }
     var tooltip: String? { return nil }
+    var title: String { return displayString }
     
     init?(placeholder: String) { return nil }
 }
@@ -112,12 +117,18 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
     var displayString: String {
         return mode.displayString
     }
+    var title: String {
+        return "Token"
+    }
+    
     var informativeMessage: String {
         return ""
     }
     
     var hasMenu: Bool { return true }
     var callbackMenu: ((Token, NSMenuItem)->Void)?
+    
+    var isReadOnly: Bool = true
     
     override init() {
         super.init()
@@ -173,8 +184,9 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
             TokenDimensional.self,
             TokenDuration.self,
             TokenColor.self,
-            TokenLanguage.self,
+            TokenLanguage.self, TokenLanguages.self,
             TokenImageExtra.self, TokenMediaExtra.self,
+            TokenFile.self,
             TokenPrint.self,
             TokenPdfBox.self, TokenPdfMetadata.self,
             TokenVideoMetadata.self,
@@ -183,7 +195,7 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
             TokenOfficeSize.self,
             TokenOfficeMetadata.self,
             TokenArchive.self,
-            TokenScript.self
+            TokenScript.self, TokenOpenWith.self
         ]
         var tokens: [Token] = []
         
@@ -226,23 +238,44 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
         return mnu
     }
     
-    func getMenu(extra: [String: AnyHashable] = [:], callback: @escaping ((Token, NSMenuItem)->Void)) -> NSMenu? {
-        self.callbackMenu = callback
+    func createMenu() -> NSMenu? {
         return nil
+    }
+    
+    func getMenu(callback: @escaping ((Token, NSMenuItem)->Void)) -> NSMenu? {
+        let menu = self.createMenu()
+        menu?.showsStateColumn = !self.isReadOnly
+        
+        self.callbackMenu = callback
+        
+        return menu
     }
     
     func isValidFor(type supportedType: SupportedType) -> Bool {
         return Self.supportedTypes.contains(supportedType)
     }
     
+    func getTokenFromSender(_ sender: NSMenuItem) -> BaseMode? {
+        return Self.ModeClass.init(integer: sender.tag)
+    }
+    
     @IBAction func handleTokenMenu(_ sender: NSMenuItem) {
-        if let token = sender.representedObject as? Self, let mode = Self.ModeClass.init(integer: sender.tag) {
-            token.mode = mode
+        guard let token = sender.representedObject as? Self, let mode = self.getTokenFromSender(sender), type(of: mode) == type(of: self).ModeClass else {
+            return
         }
-        self.callbackMenu?(self, sender)
+        
+        if self.isReadOnly {
+            if let t = Self.init(mode: mode) {
+                self.callbackMenu?(t, sender)
+            }
+        } else {
+            token.mode = mode
+            self.callbackMenu?(self, sender)
+        }
     }
 }
 
+// MARK: - TokenText
 class TokenText: Token {
     enum Mode: Int, BaseMode {
         case text = 0
@@ -265,6 +298,7 @@ class TokenText: Token {
     override var placeholder: String {
         return text
     }
+    override var title: String { return self.text }
     
     init(text: String) {
         self.text = text

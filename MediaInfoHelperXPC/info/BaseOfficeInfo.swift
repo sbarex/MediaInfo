@@ -8,7 +8,7 @@
 
 import Cocoa
 
-class BaseOfficeInfo: BaseInfo, FileInfo {
+class BaseOfficeInfo: FileInfo {
     enum CodingKeys: String, CodingKey {
         case creator
         case title
@@ -17,12 +17,11 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
         case description
         case creationDate
         case modificationDate
+        case creationDateTimestamp
+        case modificationDateTimestamp
         case modified
         case application
     }
-    
-    let file: URL
-    let fileSize: Int64
     
     // Dublin Core properties
     let creator: String
@@ -40,9 +39,6 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
     let application: String
     
     init(file: URL, creator: String, creationDate: Date?, modified: String, modificationDate: Date?, title: String, subject: String, keywords: [String], description: String, application: String) {
-        self.file = file
-        self.fileSize = Self.getFileSize(file) ?? -1
-        
         self.creator = creator
         self.title = title
         self.subject = subject
@@ -55,16 +51,10 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
         self.modified = modified
         
         self.application = application
-        super.init()
+        super.init(file: file)
     }
     
     required init?(coder: NSCoder) {
-        guard let r = Self.decodeFileInfo(coder) else {
-            return nil
-        }
-        self.file = r.0
-        self.fileSize = r.1 ?? -1
-        
         self.creator = coder.decodeObject(of: NSString.self, forKey: "creator") as String? ?? ""
         self.title = coder.decodeObject(of: NSString.self, forKey: "title") as String? ?? ""
         self.subject = coder.decodeObject(of: NSString.self, forKey: "subject") as String? ?? ""
@@ -98,8 +88,6 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
     }
     
     override func encode(with coder: NSCoder) {
-        self.encodeFileInfo(coder)
-        
         coder.encode(self.creator as NSString, forKey: "creator")
         coder.encode(self.title as NSString, forKey: "title")
         coder.encode(self.subject as NSString, forKey: "subject")
@@ -120,9 +108,22 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
         super.encode(with: coder)
     }
     
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.creator = try container.decode(String.self, forKey: .creator)
+        self.title = try container.decode(String.self, forKey: .title)
+        self.subject = try container.decode(String.self, forKey: .subject)
+        self.description = try container.decode(String.self, forKey: .description)
+        self.keywords = try container.decode([String].self, forKey: .keywords)
+        self.creationDate = try container.decode(Date?.self, forKey: .creationDate)
+        self.modificationDate = try container.decode(Date?.self, forKey: .modificationDate)
+        self.modified = try container.decode(String.self, forKey: .modified)
+        self.application = try container.decode(String.self, forKey: .application)
+        
+        try super.init(from: decoder)
+    }
     override func encode(to encoder: Encoder) throws {
         try super.encode(to: encoder)
-        try self.encodeFileInfo(to: encoder)
         
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.creator, forKey: .creator)
@@ -130,36 +131,34 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
         try container.encode(self.subject, forKey: .subject)
         try container.encode(self.description, forKey: .description)
         try container.encode(self.keywords, forKey: .keywords)
-        if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
-            try container.encode(self.creationDate?.timeIntervalSince1970, forKey: .creationDate)
-            try container.encode(self.modificationDate?.timeIntervalSince1970, forKey: .modificationDate)
-        } else  {
-            try container.encode(self.creationDate, forKey: .creationDate)
-            try container.encode(self.modificationDate, forKey: .modificationDate)
-        }
+        try container.encode(self.creationDate, forKey: .creationDate)
+        try container.encode(self.modificationDate, forKey: .modificationDate)
         try container.encode(self.modified, forKey: .modified)
         try container.encode(self.application, forKey: .application)
+        
+        if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
+            try container.encode(self.creationDate?.timeIntervalSince1970, forKey: .creationDateTimestamp)
+            try container.encode(self.modificationDate?.timeIntervalSince1970, forKey: .modificationDateTimestamp)
+        }
     }
     
     override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         
         switch placeholder {
-        case "[[filesize]]", "[[file-name]]", "[[file-ext]]":
-            return self.processFilePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         case "[[creator]]":
             isFilled = !self.creator.isEmpty
             return self.creator
         case "[[creation]]":
             var template = ""
             if !self.creator.isEmpty {
-                template += String(format: NSLocalizedString("created by %@", tableName: "LocalizableExt",comment: ""), "[[creator]]")
+                template += String(format: NSLocalizedString("Created by %@", tableName: "LocalizableExt",comment: ""), "[[creator]]")
             }
             if self.creationDate != nil {
                 if !self.creator.isEmpty {
                     template += " " + String(format: NSLocalizedString("on %@", tableName: "LocalizableExt",comment: ""), "[[creation-date]]")
                 } else {
-                    template += String(format: NSLocalizedString("created on %@", tableName: "LocalizableExt",comment: ""), "[[creation-date]]")
+                    template += String(format: NSLocalizedString("Created on %@", tableName: "LocalizableExt",comment: ""), "[[creation-date]]")
                 }
             }
             return self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: itemIndex)
@@ -169,13 +168,13 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
         case "[[last-modification]]":
             var template = ""
             if !self.modified.isEmpty {
-                template += String(format: NSLocalizedString("last saved by %@", tableName: "LocalizableExt", comment: ""), "[[last-author]]")
+                template += String(format: NSLocalizedString("Last saved by %@", tableName: "LocalizableExt", comment: ""), "[[last-author]]")
             }
             if self.modificationDate != nil {
                 if !self.modified.isEmpty {
                     template += " " + String(format: NSLocalizedString("on %@", tableName: "LocalizableExt",comment: ""), "[[modification-date]]")
                 } else {
-                    template += String(format: NSLocalizedString("last saved on %@", tableName: "LocalizableExt",comment: ""), "[[modification-date]]")
+                    template += String(format: NSLocalizedString("Last saved on %@", tableName: "LocalizableExt",comment: ""), "[[modification-date]]")
                 }
             }
             return self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: itemIndex)
@@ -221,22 +220,23 @@ class BaseOfficeInfo: BaseInfo, FileInfo {
     
     override internal func processSpecialMenuItem(_ item: Settings.MenuItem, atIndex itemIndex: Int, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
         if item.template == "[[keywords]]" {
-            guard !self.keywords.isEmpty else {
-                return true
-            }
-            
             let title: String
             let n = self.keywords.count
-            if n == 1 {
+            if n == 0 {
+                guard !settings.isEmptyItemsSkipped else {
+                    return true
+                }
+                title = NSLocalizedString("No Keyword", tableName: "LocalizableExt", comment: "")
+            } else if n == 1 {
                 title = NSLocalizedString("1 Keyword", tableName: "LocalizableExt", comment: "")
             } else {
                 title = String(format: NSLocalizedString("%d Keywords", tableName: "LocalizableExt", comment: ""), n)
             }
-            let mnu = self.createMenuItem(title: title, image: "no-image", settings: settings)
-            
+            let mnu = self.createMenuItem(title: title, image: "no-image", settings: settings, tag: itemIndex)
             let submenu = NSMenu(title: title)
             for k in keywords {
-                submenu.addItem(createMenuItem(title: k, image: "-", settings: settings))
+                let mnu = createMenuItem(title: k, image: "-", settings: settings, tag: itemIndex)
+                submenu.addItem(mnu)
             }
             mnu.submenu = submenu
             

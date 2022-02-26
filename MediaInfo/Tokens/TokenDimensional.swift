@@ -20,6 +20,16 @@ class TokenDimensional: Token {
             return .MITokenDimensional
         }
         
+        var title: String {
+            switch self {
+            case .widthHeight: return NSLocalizedString("Size (width × height)", comment: "")
+            case .width: return NSLocalizedString("Width", comment: "")
+            case .height: return NSLocalizedString("Height", comment: "")
+            case .ratio: return NSLocalizedString("Ratio", comment: "")
+            case .resolution: return NSLocalizedString("Resolution name", comment: "")
+            }
+        }
+        
         var displayString: String {
             switch self {
             case .widthHeight: return "1920 × 1080 px"
@@ -40,16 +50,6 @@ class TokenDimensional: Token {
             }
         }
         
-        var tooltip: String? {
-            switch self {
-            case .widthHeight: return nil
-            case .width: return NSLocalizedString("Width.", comment: "")
-            case .height: return NSLocalizedString("Height.", comment: "")
-            case .ratio: return NSLocalizedString("Ratio.", comment: "")
-            case .resolution: return NSLocalizedString("Resolution name.", comment: "")
-            }
-        }
-        
         init?(placeholder: String) {
             switch placeholder {
             case "[[size]]": self = .widthHeight
@@ -66,6 +66,10 @@ class TokenDimensional: Token {
     
     override class var supportedTypes: [SupportedType] {
         return [.image, .video]
+    }
+
+    override var title: String {
+        return NSLocalizedString("Dimensions", comment: "Token dimensional name.")
     }
     
     init(mode: Mode) {
@@ -86,15 +90,14 @@ class TokenDimensional: Token {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
     }
     
-    override func getMenu(extra: [String: AnyHashable] = [:], callback: @escaping ((Token, NSMenuItem)->Void)) -> NSMenu? {
+    override func createMenu() -> NSMenu? {
         let menu = NSMenu()
-        menu.addItem(withTitle: NSLocalizedString("Dimensions", comment: ""), action: nil, keyEquivalent: "")
+        menu.addItem(withTitle: NSLocalizedString("Dimensions", comment: "Token dimensional name."), action: nil, keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
         
         for mode in Mode.allCases {
-            menu.addItem(self.createMenuItem(title: mode.displayString, state: self.mode as! TokenDimensional.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
+            menu.addItem(self.createMenuItem(title: mode.title, state: self.mode as! TokenDimensional.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
         }
-        self.callbackMenu = callback
         return menu
     }
 }

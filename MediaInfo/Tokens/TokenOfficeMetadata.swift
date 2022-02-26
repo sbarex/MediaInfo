@@ -27,10 +27,6 @@ class TokenOfficeMetadata: Token {
         case words
         case sheets
         
-        case filesize
-        case fileName
-        case fileExtension
-        
         case application
         
         var requireDeepScan: Bool {
@@ -46,31 +42,36 @@ class TokenOfficeMetadata: Token {
             return .MITokenOfficeMetadata
         }
         
-        var displayString: String {
-            let s: String
+        var title: String {
             switch self {
-            case .creator: s = NSLocalizedString("Creator", comment: "")
-            case .creationDate: s = NSLocalizedString("Creation Date", comment: "")
-            case .creation: s = NSLocalizedString("Creator name and date", comment: "")
-            case .modified: s = NSLocalizedString("Last author", comment: "")
-            case .modificationDate: s = NSLocalizedString("Modification Date", comment: "")
-            case .modification: s = NSLocalizedString("Last author and date", comment: "")
-            case .title: s = NSLocalizedString("Title", comment: "")
-            case .subject: s = NSLocalizedString("Subject", comment: "")
-            case .keywords: s = NSLocalizedString("Keywords", comment: "")
-            case .description: s = NSLocalizedString("Description", comment: "")
+            case .creator: return NSLocalizedString("Creator", comment: "")
+            case .creationDate: return NSLocalizedString("Creation date", comment: "")
+            case .creation: return NSLocalizedString("Creator name and date", comment: "")
+            case .modified: return NSLocalizedString("Last author", comment: "")
+            case .modificationDate: return NSLocalizedString("Modification date", comment: "")
+            case .modification: return NSLocalizedString("Last author and date", comment: "")
+            case .title: return NSLocalizedString("Title", comment: "")
+            case .subject: return NSLocalizedString("Subject", comment: "")
+            case .keywords: return NSLocalizedString("Keywords list", comment: "")
+            case .description: return NSLocalizedString("Description", comment: "")
                 
-            case .pages: s = NSLocalizedString("pages/sheets/slides count", comment: "")
-            case .words: s = "235 " + NSLocalizedString("words", tableName: "LocalizableExt", comment: "")
-            case .characters: s = "1850 " + NSLocalizedString("characters", tableName: "LocalizableExt", comment: "")
-            case .charactersWithSpacesCount: s = "2000 " + NSLocalizedString("characters (spaces included)", tableName: "LocalizableExt", comment: "")
-            case .sheets: s = NSLocalizedString("sheets", tableName: "LocalizableExt", comment: "")
-            case .filesize: s = "2.5 Mb"
-            case .fileName: s = "filename.ext"
-            case .fileExtension: s = "ext"
-            case .application: s = NSLocalizedString("Application name", tableName: "LocalizableExt", comment: "")
+            case .pages: return NSLocalizedString("Number of pages/sheets/slides", comment: "")
+            case .words: return NSLocalizedString("Number of words", comment: "")
+            case .characters: return NSLocalizedString("Number of characters", comment: "")
+            case .charactersWithSpacesCount: return NSLocalizedString("Number of characters (spaces included)", comment: "")
+            case .sheets: return NSLocalizedString("Sheets list", comment: "")
+            case .application: return NSLocalizedString("Application name", tableName: "LocalizableExt", comment: "")
             }
-            return s //  + (self.requireDeepScan ? " " + NSLocalizedString("[deep scan required]", tableName: "LocalizableExt", comment: "") : "")
+        }
+        
+        var displayString: String {
+            switch self {
+            case .pages: return NSLocalizedString("pages/sheets/slides count", comment: "")
+            case .words: return String(format: NSLocalizedString("%d Words", tableName: "LocalizableExt", comment: ""), 500)
+            case .characters: return String(format: NSLocalizedString("%d characters", tableName: "LocalizableExt", comment: ""), 1850)
+            case .charactersWithSpacesCount: return String(format:  NSLocalizedString("%d characters (spaces included)", tableName: "LocalizableExt", comment: ""), 200)
+            default: return self.title
+            }
         }
         
         var placeholder: String {
@@ -92,35 +93,18 @@ class TokenOfficeMetadata: Token {
             case .charactersWithSpacesCount: return "[[characters-space]]"
             case .sheets: return "[[sheets]]"
             
-            case .filesize: return "[[filesize]]"
-            case .fileName: return "[[file-name]]"
-            case .fileExtension: return "[[file-ext]]"
             case .application: return "[[application]]"
             }
         }
         
         var tooltip: String? {
             switch self {
-            case .creator: return ""
-            case .creationDate: return ""
-            case .creation: return ""
-            case .modified: return ""
-            case .modificationDate: return ""
-            case .modification: return ""
-            case .title: return ""
-            case .subject: return ""
             case .keywords: return NSLocalizedString("Submenu with all keywords.", comment: "")
-                
-            case .description: return ""
             case .sheets: return NSLocalizedString("Submenu with sheets name (for spreadsheet files).", comment: "")
-            case .pages: return ""
             case .words: return NSLocalizedString("Number of words (for document files).", comment: "")
             case .characters: return NSLocalizedString("Number of characters (for document files).", comment: "")
             case .charactersWithSpacesCount: return NSLocalizedString("Number of characters, spaces included (for document files).", comment: "")
-            case .filesize: return NSLocalizedString("File size.", comment: "")
-            case .fileName: return NSLocalizedString("File name.", comment: "")
-            case .fileExtension: return NSLocalizedString("File extension.", comment: "")
-            case .application: return ""
+            default: return nil
             }
         }
         
@@ -143,10 +127,6 @@ class TokenOfficeMetadata: Token {
             case "[[characters-space]]": self = .charactersWithSpacesCount
             case "[[sheets]]": self = .sheets
             
-            case "[[filesize]]": self = .filesize
-            case "[[file-name]]": self = .fileName
-            case "[[file-ext]]": self = .fileExtension
-                
             case "[[application]]": self = .application
             default: return nil
             }
@@ -178,6 +158,10 @@ class TokenOfficeMetadata: Token {
         return super.informativeMessage
     }
     
+    override var title: String {
+        return NSLocalizedString("Office metadata", comment: "")
+    }
+    
     required convenience init?(mode: BaseMode) {
         guard let m = mode as? Mode else { return nil }
         self.init(mode: m)
@@ -196,17 +180,16 @@ class TokenOfficeMetadata: Token {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
     }
     
-    override func getMenu(extra: [String : AnyHashable] = [:], callback: @escaping ((Token, NSMenuItem)->Void)) -> NSMenu? {
+    override func createMenu() -> NSMenu? {
         let menu = NSMenu()
         
         menu.addItem(withTitle: NSLocalizedString("Metadata", comment: ""), action: nil, keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
         
         for mode in Mode.allCases {
-            menu.addItem(self.createMenuItem(title: mode.displayString, state: self.mode as! TokenOfficeMetadata.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
+            menu.addItem(self.createMenuItem(title: mode.title, state: self.mode as! TokenOfficeMetadata.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
         }
         
-        self.callbackMenu = callback
         return menu
     }
 }

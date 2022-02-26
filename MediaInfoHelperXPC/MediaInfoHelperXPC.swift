@@ -75,9 +75,12 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
             }
         }
         
-        let coder = NSKeyedArchiver(requiringSecureCoding: false)
-        image_info.encode(with: coder)
-        reply(coder.encodedData as NSData)
+        let encoder = JSONEncoder()
+        let data = try? encoder.encode(image_info)
+        reply(data as NSData?)
+        // let coder = NSKeyedArchiver(requiringSecureCoding: false)
+        // image_info.encode(with: coder)
+        // reply(coder.encodedData as NSData)
     }
     
     func getVideoInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -104,9 +107,17 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
             }
         }
         
-        let coder = NSKeyedArchiver(requiringSecureCoding: false)
-        video?.encode(with: coder)
-        reply(coder.encodedData as NSData)
+        guard let video = video else {
+            reply(nil)
+            return
+        }
+        let encoder = JSONEncoder()
+        let data = try? encoder.encode(video)
+        reply(data as NSData?)
+        
+        // let coder = NSKeyedArchiver(requiringSecureCoding: false)
+        // video.encode(with: coder)
+        // reply(coder.encodedData as NSData)
     }
     
     func getAudioInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -133,9 +144,18 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
             }
         }
         
-        let coder = NSKeyedArchiver(requiringSecureCoding: false)
-        audio?.encode(with: coder)
-        reply(coder.encodedData as NSData)
+        guard let audio = audio else {
+            reply(nil)
+            return
+        }
+        
+        let encoder = JSONEncoder()
+        let data = try? encoder.encode(audio)
+        reply(data as NSData?)
+        
+        // let coder = NSKeyedArchiver(requiringSecureCoding: false)
+        // audio?.encode(with: coder)
+        // reply(coder.encodedData as NSData)
     }
     
     func getPDFInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -144,9 +164,15 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
             return
         }
         let pdf_info = PDFInfo(file: item, pdf: pdf)
+        
+        let encoder = JSONEncoder()
+        let data = try? encoder.encode(pdf_info)
+        reply(data as NSData?)
+        /*
         let coder = NSKeyedArchiver(requiringSecureCoding: false)
         pdf_info.encode(with: coder)
         reply(coder.encodedData as NSData)
+         */
     }
     
     func getWordInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -156,9 +182,14 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
             return
         }
         
+        let encoder = JSONEncoder()
+        let data = try? encoder.encode(doc_info)
+        reply(data as NSData?)
+        /*
         let coder = NSKeyedArchiver(requiringSecureCoding: false)
         doc_info.encode(with: coder)
         reply(coder.encodedData as NSData)
+         */
     }
     
     func getExcelInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -168,9 +199,14 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
             return
         }
         
+        let encoder = JSONEncoder()
+        let data = try? encoder.encode(xls_info)
+        reply(data as NSData?)
+        /*
         let coder = NSKeyedArchiver(requiringSecureCoding: false)
         xls_info.encode(with: coder)
         reply(coder.encodedData as NSData)
+         */
     }
     
     func getPowerpointInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -180,9 +216,14 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
             return
         }
         
+        let encoder = JSONEncoder()
+        let data = try? encoder.encode(xppt_info)
+        reply(data as NSData?)
+        /*
         let coder = NSKeyedArchiver(requiringSecureCoding: false)
         xppt_info.encode(with: coder)
         reply(coder.encodedData as NSData)
+         */
     }
     
     func getOpenDocumentInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -192,9 +233,14 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
             return
         }
         
+        let encoder = JSONEncoder()
+        let data = try? encoder.encode(odt_info)
+        reply(data as NSData?)
+        /*
         let coder = NSKeyedArchiver(requiringSecureCoding: false)
         odt_info.encode(with: coder)
         reply(coder.encodedData as NSData)
+         */
     }
     
     func getOpenSpreadsheetInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -204,9 +250,14 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
             return
         }
         
+        let encoder = JSONEncoder()
+        let data = try? encoder.encode(ods_info)
+        reply(data as NSData?)
+        /*
         let coder = NSKeyedArchiver(requiringSecureCoding: false)
         ods_info.encode(with: coder)
         reply(coder.encodedData as NSData)
+         */
     }
     
     func getOpenPresentationInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -216,40 +267,84 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
             return
         }
         
+        let encoder = JSONEncoder()
+        let data = try? encoder.encode(odp_info)
+        reply(data as NSData?)
+        /*
         let coder = NSKeyedArchiver(requiringSecureCoding: false)
         odp_info.encode(with: coder)
         reply(coder.encodedData as NSData)
+         */
     }
     
     func getModelInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
         if #available(macOS 11.0, *) {
-            guard let model_info = ModelInfo(file: item) else {
+            guard let model_info = ModelInfo(parseModel: item) else {
                 reply(nil)
                 return
             }
             
+            let encoder = JSONEncoder()
+            let data = try? encoder.encode(model_info)
+            reply(data as NSData?)
+            /*
             let coder = NSKeyedArchiver(requiringSecureCoding: false)
             model_info.encode(with: coder)
             reply(coder.encodedData as NSData)
+             */
         } else {
             reply(nil)
         }
     }
     
     func getArchiveInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
-        guard let model_info = try? ArchiveInfo(file: item, limit: self.settings?.maxFilesInArchive ?? 0) else {
+        guard let archive_info = try? ArchiveInfo(file: item, limit: self.settings?.maxFilesInArchive ?? 0) else {
             reply(nil)
             return
         }
         
+        let encoder = JSONEncoder()
+        let data = try? encoder.encode(archive_info)
+        reply(data as NSData?)
+        /*
         let coder = NSKeyedArchiver(requiringSecureCoding: false)
-        model_info.encode(with: coder)
+         archive_info.encode(with: coder)
         reply(coder.encodedData as NSData)
+         */
     }
     
     
     func openFile(url: URL) {
         NSWorkspace.shared.open(url)
+    }
+    
+    func openFile(url: URL, withApp path: String) {
+        guard !path.isEmpty else {
+            return
+        }
+        if #available(macOS 10.15, *) {
+            let conf = NSWorkspace.OpenConfiguration()
+            conf.activates = true
+            NSWorkspace.shared.open([url], withApplicationAt: URL(fileURLWithPath: path), configuration: conf, completionHandler: nil)
+        } else {
+            systemExec(command: "/usr/bin/open", arguments: ["-a", path, url.path])
+        }
+    }
+    
+    func systemExec(command: String, arguments: [String]) {
+        let task = Process()
+        let pipe = Pipe()
+        
+        task.standardOutput = pipe
+        task.standardError = pipe
+        task.arguments = arguments
+        task.launchPath = command
+        task.launch()
+        
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: data, encoding: .utf8)!
+        
+        print(output)
     }
     
     func getWebPVersion(reply: @escaping (String)->Void) {

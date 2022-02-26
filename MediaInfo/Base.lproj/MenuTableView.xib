@@ -17,11 +17,11 @@
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <customView id="c22-O7-iKe">
-            <rect key="frame" x="0.0" y="0.0" width="373" height="277"/>
+            <rect key="frame" x="0.0" y="0.0" width="365" height="277"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="7XZ-zI-F6d">
-                    <rect key="frame" x="18" y="257" width="337" height="16"/>
+                    <rect key="frame" x="18" y="257" width="329" height="16"/>
                     <textFieldCell key="cell" lineBreakMode="clipping" title="Menu items:" id="Oe0-6g-Jhn">
                         <font key="font" usesAppearanceFont="YES"/>
                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -29,19 +29,19 @@
                     </textFieldCell>
                 </textField>
                 <scrollView autohidesScrollers="YES" horizontalLineScroll="26" horizontalPageScroll="10" verticalLineScroll="26" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7YT-6R-qDl">
-                    <rect key="frame" x="20" y="48" width="333" height="201"/>
-                    <clipView key="contentView" id="CpG-6s-ndb">
-                        <rect key="frame" x="1" y="1" width="331" height="199"/>
+                    <rect key="frame" x="20" y="48" width="325" height="201"/>
+                    <clipView key="contentView" ambiguous="YES" id="CpG-6s-ndb">
+                        <rect key="frame" x="1" y="1" width="323" height="199"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="firstColumnOnly" columnReordering="NO" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" rowHeight="26" rowSizeStyle="automatic" viewBased="YES" id="ejE-wr-2KC">
-                                <rect key="frame" x="0.0" y="0.0" width="331" height="199"/>
+                            <tableView verticalHuggingPriority="750" ambiguous="YES" allowsExpansionToolTips="YES" columnAutoresizingStyle="firstColumnOnly" columnReordering="NO" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" rowHeight="26" rowSizeStyle="automatic" viewBased="YES" id="ejE-wr-2KC">
+                                <rect key="frame" x="0.0" y="0.0" width="363" height="199"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 <size key="intercellSpacing" width="17" height="0.0"/>
                                 <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                 <tableColumns>
-                                    <tableColumn width="274" minWidth="40" maxWidth="1000" id="r0f-XL-o7e">
+                                    <tableColumn width="290" minWidth="40" maxWidth="1000" id="r0f-XL-o7e">
                                         <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border">
                                             <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -54,11 +54,11 @@
                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                         <prototypeCellViews>
                                             <tableCellView identifier="MenuTokensCell" id="lS6-TA-qt6">
-                                                <rect key="frame" x="8" y="0.0" width="272" height="26"/>
+                                                <rect key="frame" x="8" y="0.0" width="288" height="26"/>
                                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
                                                     <stackView distribution="fill" orientation="horizontal" alignment="centerY" spacing="6" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Qzi-t6-0t7">
-                                                        <rect key="frame" x="2" y="2" width="268" height="22"/>
+                                                        <rect key="frame" x="2" y="2" width="284" height="22"/>
                                                         <subviews>
                                                             <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="9rC-zB-Mau">
                                                                 <rect key="frame" x="0.0" y="0.0" width="22" height="22"/>
@@ -69,7 +69,7 @@
                                                                 <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="image" id="DzV-Xa-J0n"/>
                                                             </imageView>
                                                             <textField horizontalHuggingPriority="249" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" allowsExpansionToolTips="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3jx-ON-gL2">
-                                                                <rect key="frame" x="26" y="3" width="244" height="16"/>
+                                                                <rect key="frame" x="26" y="3" width="260" height="16"/>
                                                                 <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="PIn-kr-P3d">
                                                                     <font key="font" usesAppearanceFont="YES"/>
                                                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
@@ -100,7 +100,7 @@
                                             </tableCellView>
                                         </prototypeCellViews>
                                     </tableColumn>
-                                    <tableColumn identifier="exception" editable="NO" width="28" minWidth="28" maxWidth="28" id="p8C-JW-UfZ">
+                                    <tableColumn identifier="actions" editable="NO" width="44" minWidth="44" maxWidth="44" id="p8C-JW-UfZ">
                                         <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
                                             <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -111,14 +111,14 @@
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                         </textFieldCell>
                                         <prototypeCellViews>
-                                            <tableCellView identifier="MenuExceptionCell" id="u8M-tR-5gu" customClass="ExceptionCell" customModule="MediaInfoEx" customModuleProvider="target">
-                                                <rect key="frame" x="297" y="0.0" width="28" height="16"/>
+                                            <tableCellView identifier="InfoCell" id="u8M-tR-5gu" customClass="ScriptCell" customModule="MediaInfoEx" customModuleProvider="target">
+                                                <rect key="frame" x="313" y="0.0" width="41" height="16"/>
                                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
                                                     <stackView distribution="fill" orientation="horizontal" alignment="centerY" spacing="0.0" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YpL-B6-iJq">
-                                                        <rect key="frame" x="-2" y="0.0" width="32" height="16"/>
+                                                        <rect key="frame" x="-3" y="0.0" width="48" height="16"/>
                                                         <subviews>
-                                                            <button toolTip="Script exception." translatesAutoresizingMaskIntoConstraints="NO" id="hCb-X0-rf8">
+                                                            <button translatesAutoresizingMaskIntoConstraints="NO" id="hCb-X0-rf8">
                                                                 <rect key="frame" x="2" y="-1" width="12" height="18"/>
                                                                 <constraints>
                                                                     <constraint firstAttribute="height" constant="12" id="aAD-eK-azC"/>
@@ -142,8 +142,23 @@
                                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                                     <font key="font" metaFont="system"/>
                                                                 </buttonCell>
+                                                                <color key="contentTintColor" name="systemOrangeColor" catalog="System" colorSpace="catalog"/>
                                                                 <connections>
                                                                     <action selector="handleJSButton:" target="u8M-tR-5gu" id="8Nu-7c-f9Z"/>
+                                                                </connections>
+                                                            </button>
+                                                            <button toolTip="Edit the script code." translatesAutoresizingMaskIntoConstraints="NO" id="wbv-1G-Te5">
+                                                                <rect key="frame" x="30" y="0.0" width="16" height="16"/>
+                                                                <constraints>
+                                                                    <constraint firstAttribute="width" constant="16" id="07v-a1-q8L"/>
+                                                                    <constraint firstAttribute="height" constant="16" id="yhZ-0r-Jkl"/>
+                                                                </constraints>
+                                                                <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="applescript" imagePosition="only" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="Mpw-Pn-8Wy">
+                                                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                                    <font key="font" metaFont="system"/>
+                                                                </buttonCell>
+                                                                <connections>
+                                                                    <action selector="handleEdit:" target="u8M-tR-5gu" id="0Q5-mk-nFK"/>
                                                                 </connections>
                                                             </button>
                                                         </subviews>
@@ -151,8 +166,10 @@
                                                         <visibilityPriorities>
                                                             <integer value="1000"/>
                                                             <integer value="1000"/>
+                                                            <integer value="1000"/>
                                                         </visibilityPriorities>
                                                         <customSpacing>
+                                                            <real value="3.4028234663852886e+38"/>
                                                             <real value="3.4028234663852886e+38"/>
                                                             <real value="3.4028234663852886e+38"/>
                                                         </customSpacing>
@@ -164,7 +181,8 @@
                                                     <constraint firstAttribute="bottom" secondItem="YpL-B6-iJq" secondAttribute="bottom" id="cev-6F-mfF"/>
                                                 </constraints>
                                                 <connections>
-                                                    <outlet property="button" destination="MJE-Hj-Hwq" id="bMj-1a-yHn"/>
+                                                    <outlet property="editButton" destination="wbv-1G-Te5" id="Y8d-im-jKA"/>
+                                                    <outlet property="exceptionButton" destination="MJE-Hj-Hwq" id="r29-NP-kyF"/>
                                                     <outlet property="infoButton" destination="hCb-X0-rf8" id="J6m-hw-Ul2"/>
                                                 </connections>
                                             </tableCellView>
@@ -181,8 +199,8 @@
                     <constraints>
                         <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="270" id="MFV-pm-bB7"/>
                     </constraints>
-                    <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="KLx-qk-Bip">
-                        <rect key="frame" x="1" y="184" width="321" height="16"/>
+                    <scroller key="horizontalScroller" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="0.92500000000000004" horizontal="YES" id="KLx-qk-Bip">
+                        <rect key="frame" x="1" y="184" width="323" height="16"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
                     <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="GfP-tj-2Oc">
@@ -213,7 +231,7 @@
                     </connections>
                 </segmentedControl>
                 <button toolTip="Show / Hide the tag placeholders." verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="BIJ-Sw-mSL">
-                    <rect key="frame" x="338" y="22" width="15" height="15"/>
+                    <rect key="frame" x="330" y="22" width="15" height="15"/>
                     <buttonCell key="cell" type="inline" title="Button" bezelStyle="inline" image="tag" catalog="system" imagePosition="only" alignment="center" state="on" imageScaling="proportionallyDown" inset="2" id="ZHn-NV-jPX">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES" changeBackground="YES" changeGray="YES"/>
                         <font key="font" metaFont="smallSystemBold"/>
@@ -246,6 +264,7 @@
         <image name="NSRemoveTemplate" width="14" height="4"/>
         <image name="NSTouchBarGoDownTemplate" width="15" height="9"/>
         <image name="NSTouchBarGoUpTemplate" width="15" height="9"/>
+        <image name="applescript" width="32" height="32"/>
         <image name="exclamationmark.triangle" catalog="system" width="17" height="15"/>
         <image name="image" width="32" height="32"/>
         <image name="info.circle" catalog="system" width="15" height="15"/>

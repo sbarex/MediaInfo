@@ -1,31 +1,48 @@
 //
-//  TokenLanguage.swift
+//  TokenLanguages.swift
 //  MediaInfoEx
 //
-//  Created by Sbarex on 19/05/21.
+//  Created by Sbarex on 25/02/22.
 //  Copyright © 2021 sbarex. All rights reserved.
 //
 
 import AppKit
 
-class TokenLanguage: Token {
+class TokenLanguages: Token {
     enum Mode: Int, CaseIterable, BaseMode {
-        case name = 1
+        case names = 1
+        case flags
+        case count
+        case name
         case flag
         
         static var pasteboardType: NSPasteboard.PasteboardType {
-            return .MITokenLanguage
+            return .MITokenLanguages
         }
         
         var title: String {
             switch self {
-            case .name: return NSLocalizedString("Language ISO country code", comment: "")
-            case .flag: return NSLocalizedString("Language country flag", comment: "")
+            case .names: return NSLocalizedString("Language ISO country codes", comment: "")
+            case .flags: return NSLocalizedString("Language country flags", comment: "")
+            case .count: return NSLocalizedString("Number of available languages", comment: "")
+            case .name: return NSLocalizedString("Main language ISO country code", comment: "")
+            case .flag: return NSLocalizedString("Main language country flag", comment: "")
+            }
+        }
+        
+        var tooltip: String? {
+            switch self {
+            case .names: return NSLocalizedString("List of all available language ISO country codes.", comment: "")
+            case .flags: return NSLocalizedString("Flags  of all available languages.", comment: "")
+            default: return nil
             }
         }
         
         var displayString: String {
             switch self {
+            case .names: return "EN IT"
+            case .flags: return "🇺🇸 🇮🇹"
+            case .count: return String(format: NSLocalizedString("%d Languages", tableName: "LocalizableExt", comment: ""), 2)
             case .name: return "EN"
             case .flag: return "🇺🇸"
             }
@@ -33,6 +50,9 @@ class TokenLanguage: Token {
         
         var placeholder: String {
             switch self {
+            case .count: return "[[language-count]]"
+            case .names: return "[[languages]]"
+            case .flags: return "[[languages-flag]]"
             case .name: return "[[language]]"
             case .flag: return "[[language-flag]]"
             }
@@ -40,6 +60,9 @@ class TokenLanguage: Token {
         
         init?(placeholder: String) {
             switch placeholder {
+            case "[[language-count]]": self = .count
+            case "[[languages]]": self = .names
+            case "[[languages-flag]]": self = .flags
             case "[[language]]": self = .name
             case "[[language-flag]]": self = .flag
             default: return nil
@@ -80,7 +103,7 @@ class TokenLanguage: Token {
         menu.addItem(withTitle: NSLocalizedString("Language", comment: ""), action: nil, keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
         for mode in Mode.allCases {
-            menu.addItem(self.createMenuItem(title: mode.title, state: self.mode as! TokenLanguage.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
+            menu.addItem(self.createMenuItem(title: mode.title, state: self.mode as! TokenLanguages.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
         }
         
         return menu

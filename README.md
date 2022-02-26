@@ -98,7 +98,7 @@ The _General_ tab allow to set some common options.
 |Show info on a submenu|If enabled, on the contextual menu is added a submenu with the info items, otherwise all items are put on the main contextual menu.|
 |Show main info on the submenu title|If enabled, a submenu with file information is added to the context menu, otherwise all items are placed in the main context menu.|
 |Use first menu item as Main info|Use the first item as the main title for the submenu.|
-|Menu action open the selected file|If checked, each menu item will open the source file with the default application. |
+|Menu action|Action executed when a menu item is selected. |
 |Allow rounded aspect ratio|For images and videos, allow to round the size for a better ratio. |
 |Media engine priority|Allows you to choose the order in which the media engines are used to recognize images, videos and sounds. Not all engines can recognize all file properties. If one engine fails to process a file, the next engine is tried.  |
 
@@ -123,6 +123,22 @@ Use a single dash (`-`) to create a menu separator. Please note that for a macOS
 If you need more control over the information displayed by the menu items you can also use custom scripts (see the [Scripting support](#scripting-support) chapter).
 
 
+### Common informations.
+
+For every type o file there are some common informations:
+
+|**placeholder**|**description**|**example**|
+|:----|:----|:----|
+|file size|File size.|_5 Mb_|
+|file name|Name of the file.|_image.jpg_|
+|file extension|Extension of the file.|_jpg_|
+|file creation date|Creation date of the file.|_Yesterday 12:45_|
+|file modification date|Modification date of the file.|_Today 11:45_|
+|file access time|Last access time of the file.|_Today 12:35_|
+|open with…|A special menu item to allow open the file with a custom application.|_Open with Preview…_|
+|inline script|A [javascript code](#scripting-support) that output a text value to show in the menu item.||
+|global script|A [javascript code](#scripting-support) that can generate multiple menu items.||
+|action script|A [javascript code](#scripting-support) to handle the action associated to each menu items.||
 
 ### Images
 
@@ -146,9 +162,6 @@ Available information:
 |dpi|Printer resolution.|_150 dpi_|
 |printed size|Printer size. You can choose a custom dpi resolution and different unit (cm, mm, inch).|_21 × 29.7 cm (300 dpi)_|
 |paper format|Paper format for the printed size.|_A4_, _Letter_, …|
-|file size|File size.|_5 Mb_|
-|file name|Name of the file.|_image.jpg_|
-|file extension|Extension of the file.|_jpg_|
 |metadata|Show the metadata in a submenu.||
 
 Supported image formats:
@@ -197,9 +210,6 @@ Available information:
 |field order|Field order.|_top first_|\*|
 |pixel format|Pixel format.|_yuv420p_|\*|
 |color space|Color space.|_gbr_|\*|
-|file size|File size.|_5 Mb_||
-|file name|Name of the file.|_image.jpg_||
-|file extension|Extension of the file.|_jpg_||
 
 Not all properties are always available, depending on the type of file and the engine used to decode it.
 
@@ -236,9 +246,6 @@ Available information:
 |chapters|Number of chapters.|_2 chapters_ If this placeholder is the only in the menu item will be added a submenu with the list of the chapters.|
 |title|Title.||
 |encoder|Encoder.|_libffmpeg_|
-|file size|File size.|_5 Mb_|
-|file name|Name of the file.|_image.jpg_|
-|file extension|Extension of the file.|_jpg_|
 
 Not all properties are always available, depending on the type of file and the engine used to decode it.
 
@@ -274,9 +281,6 @@ Available information:
 |allows print|Allows print status.|_yes_ or _no_|
 |security|Security state. Compose the _locked_, _encrypted_, _copy_ and _print_ tokens.|_:lock: no copy_|
 |version|PDF version.|_version 1.6_|
-|file size|File size.|_5 Mb_|
-|file name|Name of the file.|_image.jpg_|
-|file extension|Extension of the file.|_jpg_|
 
 Adobe Illustrator `.ai` files are also supported.
 
@@ -307,9 +311,6 @@ Available information:
 |words|Number of words. _Only for text document files._|_150 words_||
 |sheets|List of the sheet names, show as a submenu. _Only for spreadsheet files._||_Yes_|
 |application|Application that generated the file.|_MicrosoftOffice/15.0 MicrosoftWord_||
-|file size|File size.|_5 Mb_||
-|file name|Name of the file.|_image.jpg_||
-|file extension|Extension of the file.|_jpg_||
 
 
 ### Compressed archive files
@@ -336,9 +337,6 @@ Available information:
 |files menu|Submenu with the structure of files inside the archive. It is possible to show also the icon of every files. _The items are limited according to the max files and depth options._||
 |plain files menu|Submenu with the list of files inside the archive. It is possible to show also the icon of every files. _The items are limited according to the max files and depth options._||
 |uncompressed size|Uncompressed size of the archived data. Is not influenced by the max files options.|_8 Mb_|
-|file size|Size of the compressed file.|_1 Mb_|
-|file name|Name of the file.|_image.jpg_|
-|file extension|Extension of the file.|_zip_|
 
 
 ## Scripting support
@@ -348,6 +346,8 @@ It is possible to customize the content of the menu items through javascript cod
 The javascript environment is shared with all scripts defined in menu items, thus allowing you to set values in the code to pass from one script to another. The scripts are executed in order of belonging in the menu. 
 
 Since the environment is shared among all the scripts, **remember to be careful not to declare the same global variables in multiple scripts using `let` and `const` statement** (If you need to redeclare a global variable you can use the `var` statement). 
+
+The javascript environment will be reset every time a new contextual menu generation in reguired. So you cannot share data between menu generate for different files.
 
 Exceptions thrown during code execution are indicated by an exclamation icon. 
 
@@ -363,11 +363,14 @@ I recommend enclosing the code inside an anonymous function:
 })()
 ```  
 
-In the javascript environment, the `fileData` variable is an object that contains the data representation of the currently processed file. _Please note that any changes made to the `fileData` properties will not affect the content of the standard token used in the other menu items._ 
+In the javascript environment, the `fileData` variable is an object that contains the data representation of the currently processed file. The variable `settings` have the current settings. 
+
+These two variables are locked and their properties cannot be changed (in strict mode, if you try to change one of their properties an exception is raised). _Any changes made to the `fileData` or` settings` will not affect the standard token process._
+
 
 ![Script editor](Assets/script_editor.png)
 
-There are two script tokes: inline and global. 
+There are three script tokes: inline, global, action. 
 
 
 ### Inline scripts
@@ -470,15 +473,27 @@ The `image` property can be:
 |`"bleed_v"`|![vertical artbox](Assets/images/bleed_v.png)|
 |`"crop"`|![crop](Assets/images/crop.png)|
 |`"zip"`|![person](Assets/images/zip.png)|
+|`"script"`|![pencil](Assets/images/script.png)|
+|`"gear", "gearshape"`|![pencil](Assets/images/gearshape.png)|
+|`"calendar"`|![pencil](Assets/images/calendar.png)|
 |`"size"`|![size](Assets/images/size.png)|
 |`"person"`|![person](Assets/images/person.png)|
 |`"shield"`|![person](Assets/images/shield.png)|
 |`"tag"`|![tag](Assets/images/tag.png)|
 |`"pencil"`|![pencil](Assets/images/pencil.png)|
 
+
+### Action scripts
+
+When in the [General settings](#general) the action for the menu is set to Execute a script, the action script contain the routine to be called when a user choose a menu item.
+For each supported file type can exists only one action script.
+
+
 ### Exposed data
 
 The global variable `fileData` contain the properties of the processed file.
+
+The global variable `settings` is set with the current settings. 
 
 The global variable `templateItemIndex` is set to the index (zero based) of the current processed menu item template. Note that this index may not match the index of the current menu item because templates with empty results are not converted to menu items and the global script can generate multiple menu. 
 
@@ -491,6 +506,41 @@ In the javascript environment, the `console.log()` function is available to allo
 
 #### Common properties
 
+
+|property|type|description|example|
+|:-------|:---|:----|:------|
+|`settings`.`folders`|Array|Array of folder monitored.||
+|`settings`.`handleExternalDisk`|bool|||
+|`settings`.`iconsHidden`|bool|||
+|`settings`.`infoOnMainItem`|bool|||
+|`settings`.`skipEmpty`|bool|||
+|`settings`.`tracksGrouped`|bool|||
+|`settings`.`useFirstItemAsMain`|bool|||
+|`settings`.`version`|double|Version settings.|_1.6_|
+|`settings`.`tracksGrouped`|bool|||
+|`settings`.`engines`|Array|Media engine priority. An array of integer. `0`: ||
+|`settings`.`isRatioPrecise`|bool|||
+|`settings`.`menuAction`|int|||
+|`settings`.`archiveHandled`|bool|||
+|`settings`.`archiveTemplates`|Array|||
+|`settings`.`maxDepthArchive`|int|||
+|`settings`.`maxFilesInArchive`|int|||
+|`settings`.`maxFilesInDepth`|int|||
+|`settings`.`audioHandled`|bool|||
+|`settings`.`audioTemplates`|Array|||
+|`settings`.`extractImageMetadata`|bool|||
+|`settings`.`imageHandled`|bool|||
+|`settings`.`imageTemplates`|Array|||
+|`settings`.`modelsHandled`|Bool|||
+|`settings`.`modelsTemplates`|Array|||
+|`settings`.`officeDeepScan`|bool|||
+|`settings`.`officeHandled`|bool|||
+|`settings`.`officeTemplates`|Array|||
+|`settings`.`pdfHandled`|bool|||
+|`settings`.`pdfTemplates`|Array|||
+|`settings`.`videoHandled`|bool|||
+|`settings`.`videoTemplates`|Array|||
+
 |property|type|description|example|
 |:-------|:---|:----|:------|
 |`fileData`.`fileUrl`|string|The url of the processed file.|_"file:///Users/Default/Documents/file.jpg"_|
@@ -498,6 +548,9 @@ In the javascript environment, the `console.log()` function is available to allo
 |`fileData`.`fileName`|string|Basename.|_"file.jpg"_|
 |`fileData`.`fileExtension`|string|File extension.|_"jpg"_|
 |`fileData`.`filePath`|string|Full path.|_"/Users/Default/Documents/file.jpg"_|
+|`fileData`.`fileCreationDate`|Date|Creation date.||
+|`fileData`.`fileModificationDate`|Date|Modification date.||
+|`fileData`.`fileAccessDate`|Date|Last access date.||
 
 
 #### Properties for the images
@@ -557,7 +610,8 @@ Every metadata group is an array of objects. Each object has three string proper
 |`fileData`.`colorSpaceLabel`|strin\|null||_"smpte240m"_|
 |`fileData`.`duration`|int|Number of seconds.|_3600_|
 |`fileData`.`encoder`|string\|null|||
-|`fileData`.`engine`|string|Engine used to decode the file.|_"Core Media engine"_|
+|`fileData`.`engine`|int|Engine used to decode the file.|_1_|
+|`fileData`.`engineName`|String|Engine used to decode the file.|_"Core Media engine"_|
 |`fileData`.`fieldOrder`|int\|null|`0`: topFirst. `1`: bottomFirst. `2`: topFirstSwapped. `3`: bottomFirstSwapped. `4`: unknown. `5`: progressive.|_0_|
 |`fileData`.`fieldOrderLabel`|string\|null||_"top first"_|
 |`fileData`.`fps`|int||_24_|
@@ -571,6 +625,7 @@ Every metadata group is an array of objects. Each object has three string proper
 |`fileData`.`startTime`|int||_-1_|
 |`fileData`.`subtitles`|Array|||
 |`fileData`.`title`|string\|null||_"Movie title"_|
+|`fileData`.`videoTrack`|Array|Main video track.||
 |`fileData`.`videoTracks`|Array|||
 
 Every item in the `fileData`.`audioTracks` is an object with these properties:
@@ -610,6 +665,7 @@ Every item in the `fileData`.`subtitles` is an object with these properties:
 
 |property|type|description|example|
 |:-------|:---|:----|:------|
+|`fileData`.`audioTrack`|Array|Main audio track.||
 |`fileData`.`bitRate`|int||_156027_|
 |`fileData`.`channels`|int||_2_|
 |`fileData`.`chapters`|Array|See the chapters of the video files.||
@@ -617,7 +673,8 @@ Every item in the `fileData`.`subtitles` is an object with these properties:
 |`fileData`.`codecShortName`|string||_"mp3"_|
 |`fileData`.`duration`|double||_2.35_|
 |`fileData`.`encoder`|string\|null|||
-|`fileData`.`engine`|string||_"Core Media engine"_|
+|`fileData`.`engine`|int||_1_|
+|`fileData`.`engineName`|String|Engine used to decode the file.|_"Core Media engine"_|
 |`fileData`.`isLossless`|bool\|null||_false_|
 |`fileData`.`lang`|string\|null||_"EN"_|
 |`fileData`.`langFlag`|string\|null||_":it:"_|
@@ -634,13 +691,16 @@ Every item in the `fileData`.`subtitles` is an object with these properties:
 |`fileData`.`artBox`|Rect Array|An array of two array. The first contains the x and y coordinate of the origin, ant the second the width and height.|_[[0, 0], [612, 792]_|
 |`fileData`.`author`|string||_"sbarex"_|
 |`fileData`.`bleedBox`|Rect Array|See `fileData`.`artBox`.||
-|`fileData`.`creationDate`|double\|null|Time interval since 1970.|_642924149_|
+|`fileData`.`creationDate`|Date\|null|||
+|`fileData`.`creationDateTimestamp`|double\|null|Time interval since 1970.|_642924149_|
 |`fileData`.`creator`\|null|string||_"Acrobat Pro DC 21.1.20155"_|
 |`fileData`.`cropBox`|Rect Array|See `fileData`.`artBox`.||
 |`fileData`.`isEncrypted`|bool||_false_|
 |`fileData`.`isLocked`|||_false_|
 |`fileData`.`keywords`|Array|Array of string.|_["key1", "key2"]_|
-|`fileData`.`modificationDate`|double\|null|Time interval since 1970.|_642924257_|
+|`fileData`.`mediaBox`|Rect Array|See `fileData`.`mediaBox`.||
+|`fileData`.`modificationDate`|Date\|null|||
+|`fileData`.`modificationDateTimestamp`|double\|null|Time interval since 1970.|_642924257_|
 |`fileData`.`pagesCount`|int||_1_|
 |`fileData`.`producer`|string\|null||_"Acrobat Pro DC 21.1.20155"_|
 |`fileData`.`subject`|string\|null||_"PDF test file"_|
@@ -656,18 +716,23 @@ Every item in the `fileData`.`subtitles` is an object with these properties:
 |`fileData`.`application`|string||_"Microsoft Word"_|
 |`fileData`.`charactersCount`|int||_1765_|
 |`fileData`.`charactersWithSpacesCount`|int||_2000_|
-|`fileData`.`creationDate`|double\|null||_666192249.77143204_|
+|`fileData`.`creationDate`|Date\|null|||
+|`fileData`.`creationDateTimestamp`|double\|null||_666192249.77143204_|
 |`fileData`.`creator`|string||_sbarex_|
 |`fileData`.`description`|string|||
 |`fileData`.`height`|double|Inch.|_11.69291338582677_|
 |`fileData`.`keywords`|Array|Array of string.|_["key1", "key2"]_|
-|`fileData`.`modificationDate`|double\|null||_666195849.771433_|
+|`fileData`.`modificationDate`|Date\|null|||
+|`fileData`.`modificationDateTimestamp`|double\|null||_666195849.771433_|
 |`fileData`.`modified`|string||_"sbarex"_|
 |`fileData`.`pagesCount`|int||_3_|
 |`fileData`.`subject`|string|||
 |`fileData`.`title`|string|||
 |`fileData`.`width`|double|Inch.|_8.2677165354330704_|
 |`fileData`.`wordsCount`|int||_123_|
+|`fileData`.`sheets`|Array|Array of the sheet names.|_["Worksheet 1", "Worksheet 2"]_|
+|`fileData`.`slidesCount`|Int|Number of slides.|_15_|
+|`fileData`.`presentationFormat`|String|||
 
 
 #### Properties for compressed archive files

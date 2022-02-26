@@ -10,6 +10,13 @@ import AppKit
 
 class MenuTableView: NSView {
     class MenuItem {
+        enum ScriptType: Int {
+            case none
+            case inline
+            case global
+            case action
+        }
+        
         var image: String
         var template: String
         
@@ -17,13 +24,15 @@ class MenuTableView: NSView {
         var line: Int?
         
         var info: Set<String>?
+        var scriptType: ScriptType
         
-        init(image: String, template: String, exception: String? = nil, line: Int? = nil, info: Set<String>? = nil) {
+        init(image: String, template: String, exception: String? = nil, line: Int? = nil, info: Set<String>? = nil, scriptType: ScriptType = .none) {
             self.image = image
             self.template = template
             self.exception = exception
             self.line = line
             self.info = info
+            self.scriptType = scriptType
         }
     }
     
@@ -122,6 +131,7 @@ class MenuTableView: NSView {
                 tableView.reloadData(forRowIndexes: IndexSet(0...1), columnIndexes: IndexSet(integer: 0))
             }
             tableView.endUpdates()
+            self.contentView.window?.isDocumentEdited = true
             updateSegmentedControl()
         case 4: // down
             guard index < items.count - 1 else {
@@ -134,6 +144,7 @@ class MenuTableView: NSView {
                 tableView.reloadData(forRowIndexes: IndexSet(0...1), columnIndexes: IndexSet(integer: 0))
             }
             tableView.endUpdates()
+            self.contentView.window?.isDocumentEdited = true
             updateSegmentedControl()
         default:
             break
@@ -172,7 +183,6 @@ class MenuTableView: NSView {
             imageName = ""
             tokens = []
         }
-        editor.initialize(tokens: tokens, image: imageName, sampleTokens: sampleTokens)
         editor.validTokens = self.validTokens
         editor.supportedType = self.supportedType
         editor.doneAction = { image, tokens in
@@ -196,6 +206,7 @@ class MenuTableView: NSView {
             }
             self.contentView.window?.isDocumentEdited = true
         }
+        editor.initialize(tokens: tokens, image: imageName, sampleTokens: sampleTokens)
         
         self.contentView.parentViewController?.presentAsSheet(editor)
     }
@@ -217,7 +228,8 @@ class MenuTableView: NSView {
 }
 
 extension MenuTableView: NSTableViewDelegate {
-    func validateTokens(in template: String)->Set<String> {
+    func validateTokens(in template: String)->(Set<String>, MenuItem.ScriptType) {
+        var isScript: MenuItem.ScriptType = .none
         let tokens = self.getTokens(from: template)
         var messages: Set<String> = []
         for token in tokens {
@@ -225,29 +237,65 @@ extension MenuTableView: NSTableViewDelegate {
             if !msg.isEmpty {
                 messages.insert(msg)
             }
-            if let token = token as? TokenScript, let example = self.example {
-                let msg = example.getScriptInfo(token: token)
-                if !msg.isEmpty {
-                    messages.insert(msg)
+            if let token = token as? TokenScript {
+                if isScript == .none {
+                    switch token.mode as! TokenScript.Mode {
+                    case .inline: isScript = .inline
+                    case .global: isScript = .global
+                    case .action: isScript = .action
+                    }
+                }
+                if isScript != .action, let example = self.example {
+                    let msg = example.getScriptInfo(token: token)
+                    if !msg.isEmpty {
+                        messages.insert(msg)
+                    }
                 }
             }
+            
         }
-        return messages
+        return (messages, isScript)
     }
     
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let item = items[row]
         
         if item.info == nil {
-            item.info = validateTokens(in: item.template)
+            let r = validateTokens(in: item.template)
+            item.info = r.0
+            item.scriptType = r.1
         }
         
-        if tableColumn?.identifier.rawValue == "exception" {
+        if tableColumn?.identifier.rawValue == "actions" {
             let exception = item.exception
-            let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "MenuExceptionCell"), owner: nil) as? ExceptionCell
+            let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "InfoCell"), owner: nil) as? ScriptCell
             cell?.exception = exception
             cell?.line = item.line
             cell?.info = item.info
+            
+            if item.scriptType == .global || item.scriptType == .action, item.template.hasPrefix("[[script-global:") || item.template.hasPrefix("[[script-action:") {
+                cell?.editAction = {
+                        let tokens = self.getTokens(from: item.template)
+                    (tokens.first as? TokenScript)?.editScript(action: { _ in
+                        item.template = self.getTemplate(fromTokens: tokens)
+                        item.info = nil
+                        self.window?.isDocumentEdited = true
+                        self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integersIn: 0...1))
+                    })
+                }
+            } else if item.template.hasPrefix("[[open-with:") {
+                cell?.editAction = {
+                        let tokens = self.getTokens(from: item.template)
+                    (tokens.first as? TokenOpenWith)?.editPath(action: { _ in
+                        item.template = self.getTemplate(fromTokens: tokens)
+                        item.info = nil
+                        self.window?.isDocumentEdited = true
+                        self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integersIn: 0...1))
+                    })
+                }
+            } else {
+                cell?.editAction = nil
+            }
             return cell
         }
         
@@ -363,11 +411,13 @@ extension MenuTableView: NSTableViewDataSource {
 
 extension MenuTableView: JSExceptionDelegate {
     func onJSException(info: BaseInfo, exception: String?, atLine line: Int, forItemAtIndex itemIndex: Int) {
-        let old = self.items[itemIndex].exception
-        self.items[itemIndex].exception = exception
-        self.items[itemIndex].line = line
-        if old == nil {
-            self.tableView.reloadData(forRowIndexes: IndexSet(integer: itemIndex), columnIndexes: IndexSet(integer: 1))
+        if itemIndex >= 0 && itemIndex < self.items.count {
+            let old = self.items[itemIndex].exception
+            self.items[itemIndex].exception = exception
+            self.items[itemIndex].line = line
+            if old == nil {
+                self.tableView.reloadData(forRowIndexes: IndexSet(integer: itemIndex), columnIndexes: IndexSet(integer: 1))
+            }
         }
         NotificationCenter.default.post(name: .JSException, object: (info, exception, line, itemIndex))
     }
@@ -405,12 +455,14 @@ extension Array {
 }
 
 // MARK: -
-class ExceptionCell: NSTableCellView {
-    @IBOutlet weak var button: NSButton!
+class ScriptCell: NSTableCellView {
+    @IBOutlet weak var editButton: NSButton!
+    @IBOutlet weak var exceptionButton: NSButton!
     @IBOutlet weak var infoButton: NSButton!
+    
     var exception: String? {
         didSet {
-            button?.isHidden = exception == nil
+            exceptionButton?.isHidden = exception == nil
         }
     }
     var line: Int?
@@ -419,11 +471,17 @@ class ExceptionCell: NSTableCellView {
             infoButton?.isHidden = info == nil || info!.isEmpty
         }
     }
+    var editAction: (()->Void)? {
+        didSet {
+            editButton.isHidden = editAction == nil
+        }
+    }
     
     override func prepareForReuse() {
         self.exception = nil
         self.line = nil
         self.info = nil
+        self.editAction = nil
         super.prepareForReuse()
     }
     
@@ -451,4 +509,9 @@ class ExceptionCell: NSTableCellView {
         alert.addButton(withTitle: NSLocalizedString("OK", comment: "")).keyEquivalent = "\r"
         alert.runModal()
     }
+    
+    @IBAction func handleEdit(_ sender: Any) {
+        self.editAction?()
+    }
 }
+

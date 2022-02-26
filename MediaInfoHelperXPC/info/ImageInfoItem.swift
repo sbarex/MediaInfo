@@ -11,7 +11,7 @@ import AVFoundation
 import JavaScriptCore
 
 // MARK: - ImageInfo
-class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
+class ImageInfo: FileInfo, DimensionalInfo, PaperInfo {
     enum ColorTable: Int {
         case unknown
         case regular
@@ -51,8 +51,11 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
     let colorMode: String
     let depth: Int
     let isAnimated: Bool
-    let file: URL
-    let fileSize: Int64
+    
+    var width: Int
+    var height: Int
+    var unit: String = "px"
+    
     let withAlpha: Bool
     let profileName: String
     let colorTable: ColorTable
@@ -77,8 +80,6 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
     }
     
     init(file: URL, width: Int, height: Int, dpi: Int, colorMode: String, depth: Int, profileName:String, animated: Bool, withAlpha: Bool, colorTable: ColorTable, metadata: [String: [MetadataInfo]], metadataRaw: [String: String]) {
-        self.file = file
-        self.fileSize = Self.getFileSize(file) ?? -1
         self.dpi = dpi
         let color = colorMode.uppercased()
         if color.contains("GRAY") && depth == 1 {
@@ -93,16 +94,12 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
         self.colorTable = colorTable
         self.metadata = metadata
         self.metadataRaw = metadataRaw
-        super.init(width: width, height: height)
+        self.width = width
+        self.height = height
+        super.init(file: file)
     }
     
     required init?(coder: NSCoder) {
-        guard let r = Self.decodeFileInfo(coder) else {
-            return nil
-        }
-        self.file = r.0
-        self.fileSize = r.1 ?? -1
-        
         self.dpi = coder.decodeInteger(forKey: "dpi")
         self.colorMode = coder.decodeObject(of: NSString.self, forKey: "colorMode") as String? ?? ""
         self.depth = coder.decodeInteger(forKey: "depth")
@@ -158,11 +155,14 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
             metadata_raw[key] = data
         }
         self.metadataRaw = metadata_raw
+        let d = Self.decodeDimension(coder: coder)
+        self.width = d.0
+        self.height = d.1
+        
         super.init(coder: coder)
     }
     
     override func encode(with coder: NSCoder) {
-        self.encodeFileInfo(coder)
         coder.encode(self.dpi, forKey: "dpi")
         coder.encode(self.colorMode as NSString, forKey: "colorMode")
         coder.encode(self.depth, forKey: "depth")
@@ -192,12 +192,39 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
             coder.encode(key as NSString, forKey: "metadata_raw_key_\(i)")
             coder.encode(data as NSString, forKey: "metadata_raw_value_\(i)")
         }
+        self.encodeDimension(with: coder)
         super.encode(with: coder)
+    }
+    
+    required init(from decoder: Decoder) throws {
+        let dim = try Self.decodeDimension(from: decoder)
+        self.width = dim.width
+        self.height = dim.height
+        
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.dpi = try container.decode(Int.self, forKey: .dpi)
+        self.colorMode = try container.decode(String.self, forKey: .colorMode)
+        self.depth = try container.decode(Int.self, forKey: .depth)
+        self.isAnimated = try container.decode(Bool.self, forKey: .isAnimated)
+        self.withAlpha = try container.decode(Bool.self, forKey: .hasAlpha)
+        self.profileName = try container.decode(String.self, forKey: .profileName)
+        if try container.decode(Bool.self, forKey: .isFloating) {
+            self.colorTable = .float
+        } else if try container.decode(Bool.self, forKey: .isIndexed) {
+            self.colorTable = .indexed
+        } else {
+            self.colorTable = .regular
+        }
+        
+        self.metadata = try container.decode([String: [MetadataBaseInfo]].self, forKey: .metadata)
+        self.metadataRaw = try container.decode([String:String].self, forKey: .metadataRaw)
+        
+        try super.init(from: decoder)
     }
     
     override func encode(to encoder: Encoder) throws {
         try super.encode(to: encoder)
-        try self.encodeFileInfo(to: encoder)
+        try self.encodeDimension(to: encoder)
         
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.dpi, forKey: .dpi)
@@ -215,6 +242,8 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
     override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
+        case "[[size]]", "[[width]]", "[[height]]", "[[ratio]]", "[[resolution]]":
+            return self.processDimensionPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         case "[[animated]]":
             isFilled = true
             return NSLocalizedString(isAnimated ? "animated" : "static", tableName: "LocalizableExt", comment: "")
@@ -228,7 +257,7 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
             }
         case "[[alpha]]":
             isFilled = true
-            return NSLocalizedString(withAlpha ? "transparent" : "opaque", tableName: "LocalizableExt", comment: "")
+            return NSLocalizedString(withAlpha ? "with alpha channel" : "opaque", tableName: "LocalizableExt", comment: "")
         case "[[is-alpha]]":
             if withAlpha {
                 isFilled = true
@@ -242,11 +271,11 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
             return colorMode
         case "[[color-depth]]":
             isFilled = true
-            return "\(colorMode) \(depth) "+NSLocalizedString("bit", comment: "")
+            return "\(colorMode) "+String(format: NSLocalizedString("%d bit", comment: ""), self.depth)
         case "[[depth]]":
             if depth > 0 {
                 isFilled = true
-                return "\(depth) "+NSLocalizedString("bit", comment: "")
+                return String(format: NSLocalizedString("%d bit", comment: ""), self.depth)
             } else {
                 isFilled = false
                 return self.formatND(useEmptyData: useEmptyData)
@@ -259,9 +288,9 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
             case .regular:
                 return NSLocalizedString("normal", tableName: "LocalizableExt", comment: "")
             case .indexed:
-                return NSLocalizedString("indexed", tableName: "LocalizableExt", comment: "")
+                return NSLocalizedString("indexed colors", tableName: "LocalizableExt", comment: "")
             case .float:
-                return NSLocalizedString("float", tableName: "LocalizableExt", comment: "")
+                return NSLocalizedString("float colors", tableName: "LocalizableExt", comment: "")
             }
         case "[[profile-name]]":
             guard !profileName.isEmpty else {
@@ -273,7 +302,7 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
         case "[[dpi]]":
             isFilled = dpi > 0
             if dpi > 0 {
-                return "\(dpi) "+NSLocalizedString("dpi", comment: "")
+                return String(format: NSLocalizedString("%d dpi", comment: ""), dpi)
             } else {
                 return self.formatND(useEmptyData: useEmptyData)
             }
@@ -285,8 +314,6 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
                 isFilled = false
                 return self.formatND(useEmptyData: useEmptyData)
             }
-        case "[[filesize]]", "[[file-name]]", "[[file-ext]]":
-            return self.processFilePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         case "[[paper]]":
             if self.dpi <= 0 {
                 isFilled = false
@@ -317,7 +344,8 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
                 if let w_print = Self.numberFormatter.string(from: NSNumber(value: Double(width) / Double(dpi) * unit.scale)), let h_print = Self.numberFormatter.string(from: NSNumber(value: Double(height) / Double(dpi) * unit.scale)) {
                         
                     isFilled = true
-                    return "\(w_print) × \(h_print) \(unit.label) (\(dpi) "+NSLocalizedString("dpi", tableName: "LocalizableExt", comment: "")+")"
+                    let s = String(format:NSLocalizedString("%d dpi", tableName: "LocalizableExt", comment: ""), dpi)
+                    return "\(w_print) × \(h_print) \(unit.label) (\(s))"
                 } else {
                     isFilled = false
                     return self.formatND(useEmptyData: useEmptyData)
@@ -362,6 +390,7 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
                 let items = self.metadata[key]!
                 let mnu_item = NSMenuItem(title: key, action: nil, keyEquivalent: "")
                 mnu_item.submenu = NSMenu(title: key)
+                mnu_item.tag = itemIndex
                 for item in items {
                     guard !item.isHidden, !item.value.isEmpty else {
                         continue
@@ -369,7 +398,7 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
                     if item.label == "-" {
                         mnu_item.submenu!.addItem(NSMenuItem.separator())
                     } else {
-                        let mnu_tag = self.createMenuItem(title: "\(item.label): \(item.value)", image: nil, settings: settings)
+                        let mnu_tag = self.createMenuItem(title: "\(item.label): \(item.value)", image: nil, settings: settings, tag: itemIndex)
                         mnu_item.submenu!.addItem(mnu_tag)
                     }
                 }
@@ -378,7 +407,7 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
                 }
             }
             settings.isIconHidden = image
-            let metadata_mnu = self.createMenuItem(title: NSLocalizedString("Metadata", tableName: "LocalizableExt", comment: ""), image: item.image, settings: settings)
+            let metadata_mnu = self.createMenuItem(title: NSLocalizedString("Metadata", tableName: "LocalizableExt", comment: ""), image: item.image, settings: settings, tag: itemIndex)
             metadata_mnu.submenu = metadata_submenu
             destination_sub_menu.addItem(metadata_mnu)
             
@@ -406,6 +435,9 @@ class ImageInfo: DimensionalInfo, FileInfo, PaperInfo {
     }
     
     override internal func getImage(for name: String) -> NSImage? {
+        if let image = self.getDimensionImage(for: name) {
+            return super.getImage(for: image)
+        }
         var image: String
         switch name {
         case "color":

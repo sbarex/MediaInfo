@@ -38,7 +38,7 @@ extension CGRect {
     }
 }
 
-class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
+class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
     enum CodingKeys: String, CodingKey {
         case version
         case author
@@ -46,8 +46,10 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
         case title
         case producer
         case creationDate
+        case creationDateTimestamp
         case creator
         case modificationDate
+        case modificationDateTimestamp
         case keywords
         case isLocked
         case isEncrypted
@@ -196,15 +198,6 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
         }
     }
     
-    static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        // formatter.setLocalizedDateFormatFromTemplate("dd MMMM YYYY HH:mm")
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        formatter.doesRelativeDateFormatting = true
-        return formatter
-    }()
-    
     internal static func formatBox(_ rect: CGRect?, unit: PrintUnit) -> String? {
         guard let v = rect, !v.isEmpty else {
             return nil
@@ -235,9 +228,11 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
         return formatBox(rect, unit: unit)
     }
     
-    let file: URL
-    let fileSize: Int64
     let version: String
+    let width: Int
+    let height: Int
+    let unit: String
+    
     let author: String?
     let subject: String?
     let title: String?
@@ -292,9 +287,6 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
     }
     
     init(file: URL, pdf: CGPDFDocument) {
-        self.file = file
-        self.fileSize = Self.getFileSize(file) ?? -1
-        
         var majorVersion: Int32 = 0
         var minorVersion: Int32 = 0
         pdf.getVersion(majorVersion: &majorVersion, minorVersion: &minorVersion)
@@ -357,17 +349,13 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
         }
         let bounds = self.mediaBox
         
-        super.init(width: Int(bounds.width), height: Int(bounds.height))
+        self.width = Int(bounds.width)
+        self.height = Int(bounds.height)
         self.unit = "pt"
+        super.init(file: file)
     }
     
     required init?(coder: NSCoder) {
-        guard let r = Self.decodeFileInfo(coder) else {
-            return nil
-        }
-        self.file = r.0
-        self.fileSize = r.1 ?? -1
-        
         self.version = coder.decodeObject(of: NSString.self, forKey: "version") as String? ?? ""
         self.author = coder.decodeObject(of: NSString.self, forKey: "author") as String?
         self.subject = coder.decodeObject(of: NSString.self, forKey: "subject") as String?
@@ -404,12 +392,15 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
         }
         self.keywords = keywords
         
+        let i = Self.decodeDimension(coder: coder)
+        self.width = i.0
+        self.height = i.1
+        self.unit = "pt"
+        
         super.init(coder: coder)
     }
     
     override func encode(with coder: NSCoder) {
-        self.encodeFileInfo(coder)
-        
         coder.encode(self.version as String, forKey: "version")
         coder.encode(self.author as String?, forKey: "author")
         coder.encode(self.subject as String?, forKey: "subject")
@@ -434,13 +425,44 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
         for (i, k) in keywords.enumerated() {
             coder.encode(k as String, forKey: "keyword_\(i)")
         }
-        
+        self.encodeDimension(with: coder)
         super.encode(with: coder)
+    }
+    
+    required init(from decoder: Decoder) throws {
+        let dim = try Self.decodeDimension(from: decoder)
+        self.width = dim.width
+        self.height = dim.height
+        
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.version = try container.decode(String.self, forKey: .version)
+        self.author = try container.decode(String?.self, forKey: .author)
+        self.subject = try container.decode(String?.self, forKey: .subject)
+        self.title = try container.decode(String?.self, forKey: .title)
+        self.producer = try container.decode(String?.self, forKey: .producer)
+        self.creator = try container.decode(String?.self, forKey: .creator)
+        
+        self.modificationDate = try container.decode(Date?.self, forKey: .modificationDate)
+        self.creationDate = try container.decode(Date?.self, forKey: .creationDate)
+        self.isLocked = try container.decode(Bool.self, forKey: .isLocked)
+        self.isEncrypted = try container.decode(Bool.self, forKey: .isEncrypted)
+        self.pagesCount = try container.decode(Int.self, forKey: .pagesCount)
+        self.allowsCopying = try container.decode(Bool.self, forKey: .allowsCopying)
+        self.allowsPrinting = try container.decode(Bool.self, forKey: .allowsPrinting)
+        self.mediaBox = try container.decode(CGRect.self, forKey: .mediaBox)
+        self.cropBox = try container.decode(CGRect.self, forKey: .cropBox)
+        self.artBox = try container.decode(CGRect.self, forKey: .artBox)
+        self.bleedBox = try container.decode(CGRect.self, forKey: .bleedBox)
+        self.trimBox = try container.decode(CGRect.self, forKey: .trimBox)
+        self.keywords = try container.decode([String].self, forKey: .keywords)
+        
+        self.unit = "pt"
+        try super.init(from: decoder)
     }
     
     override func encode(to encoder: Encoder) throws {
         try super.encode(to: encoder)
-        try self.encodeFileInfo(to: encoder)
+        try self.encodeDimension(to: encoder)
         
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.version, forKey: .version)
@@ -449,23 +471,24 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
         try container.encode(self.title, forKey: .title)
         try container.encode(self.producer, forKey: .producer)
         try container.encode(self.creator, forKey: .creator)
-        if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
-            try container.encode(self.modificationDate?.timeIntervalSince1970, forKey: .modificationDate)
-            try container.encode(self.creationDate?.timeIntervalSince1970, forKey: .creationDate)
-        } else {
-            try container.encode(self.modificationDate, forKey: .modificationDate)
-            try container.encode(self.creationDate, forKey: .creationDate)
-        }
+        try container.encode(self.modificationDate, forKey: .modificationDate)
+        try container.encode(self.creationDate, forKey: .creationDate)
         try container.encode(self.isLocked, forKey: .isLocked)
         try container.encode(self.isEncrypted, forKey: .isEncrypted)
         try container.encode(self.pagesCount, forKey: .pagesCount)
         try container.encode(self.allowsCopying, forKey: .allowsCopying)
         try container.encode(self.allowsPrinting, forKey: .allowsPrinting)
+        try container.encode(self.mediaBox, forKey: .mediaBox)
         try container.encode(self.cropBox, forKey: .cropBox)
         try container.encode(self.artBox, forKey: .artBox)
         try container.encode(self.bleedBox, forKey: .bleedBox)
         try container.encode(self.trimBox, forKey: .trimBox)
         try container.encode(self.keywords, forKey: .keywords)
+        if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
+            try container.encode(self.modificationDate?.timeIntervalSince1970, forKey: .modificationDateTimestamp)
+            try container.encode(self.creationDate?.timeIntervalSince1970, forKey: .creationDateTimestamp)
+        }
+        
     }
     
     func bounds(for box: CGPDFBox) -> CGRect {
@@ -488,15 +511,16 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
     override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
+        case "[[size]]", "[[width]]", "[[height]]", "[[ratio]]", "[[resolution]]":
+            return self.processDimensionPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         case "[[pages]]":
             isFilled = true
-            if self.pagesCount == 1 {
-                return "1 " + NSLocalizedString("page", tableName: "LocalizableExt", comment: "")
+            if pagesCount == 0 {
+                return useEmptyData ? NSLocalizedString("No Page", tableName: "LocalizableExt", comment: "") : ""
+            } else if self.pagesCount == 1 {
+                return NSLocalizedString("1 Page", tableName: "LocalizableExt", comment: "")
             } else {
-                if self.pagesCount == 0 && !useEmptyData {
-                    return ""
-                }
-                return "\(self.pagesCount) " +  NSLocalizedString("pages", tableName: "LocalizableExt", comment: "")
+                return String(format: NSLocalizedString("%@ Pages", tableName: "LocalizableExt", comment: ""), BaseInfo.numberFormatter.string(from: NSNumber(integerLiteral: self.pagesCount)) ?? "\(self.pagesCount)")
             }
         case "[[locked]]":
             isFilled = self.isLocked
@@ -506,7 +530,7 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
             return self.isEncrypted ? "🔑" : ""
         case "[[version]]":
             isFilled = !self.version.isEmpty
-            return NSLocalizedString("version", tableName: "LocalizableExt", comment: "") + " \(self.version)"
+            return String(format: NSLocalizedString("Version %@", tableName: "LocalizableExt", comment: ""), self.version)
         case "[[author]]":
             isFilled = !(self.author?.isEmpty ?? true)
             return self.author ?? self.formatND(useEmptyData: useEmptyData)
@@ -557,10 +581,10 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
                 s.append("🔑")
             }
             if !self.allowsCopying {
-                s.append(NSLocalizedString("no copy", tableName: "LocalizableExt", comment: ""))
+                s.append(NSLocalizedString("No copy", tableName: "LocalizableExt", comment: ""))
             }
             if !self.allowsPrinting {
-                s.append(NSLocalizedString("no print", tableName: "LocalizableExt", comment: ""))
+                s.append(NSLocalizedString("No print", tableName: "LocalizableExt", comment: ""))
             }
             isFilled = !s.isEmpty
             return s.joined(separator: " ")
@@ -568,8 +592,6 @@ class PDFInfo: DimensionalInfo, FileInfo, PaperInfo {
             return NSLocalizedString(self.allowsCopying ? "Yes" : "No", comment: "")
         case "[[allows-print]]":
             return NSLocalizedString(self.allowsPrinting ? "Yes" : "No", comment: "")
-        case "[[filesize]]", "[[file-name]]", "[[file-ext]]":
-            return self.processFilePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
         default:
             if placeholder.hasPrefix("[[mediabox:") {
                 let v = self.bounds(for: .mediaBox)

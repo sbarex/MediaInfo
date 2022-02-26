@@ -12,6 +12,8 @@ class ScriptViewController: NSViewController {
     @IBOutlet weak var textView: NSTextView!
     @IBOutlet weak var scrollView: NSScrollView!
     
+    var action: ((TokenScript?)->Void)? = nil
+    
     var wordWrap: Bool = true {
         didSet {
             guard oldValue != wordWrap else { return }
@@ -36,6 +38,7 @@ class ScriptViewController: NSViewController {
     
     @IBAction func handleSave(_ sender: Any) {
         token?.code = textView.string
+        self.action?(token)
         self.dismiss(self)
     }
     
@@ -49,8 +52,11 @@ class ScriptViewController: NSViewController {
     /*
     The inline script code must return a string (or null) value.
     
-    The global `fileData` contains the current info properties.
-    The global `fileData.templateItemIndex` is the zero based index of the current processed template menu item.
+    Global locked variables:
+    - `fileData`: The properties of current file.
+    - `templateItemIndex`: Zero based index of the current processed menu item template.
+    - `settings`: Application settings.
+    
     */
 
     // console.log(fileData);
@@ -81,8 +87,11 @@ class ScriptViewController: NSViewController {
       - indent (Int between 0 - 15)
       - items (Array of menu items): A list of submenu items.
 
-    The global `fileData` contains the current info properties.
-    The global `fileData.templateItemIndex` is the zero based index of the current processed template menu item.
+    Global locked variables:
+    - `fileData`: The properties of current file.
+    - `templateItemIndex`: Zero based index of the current processed menu item template.
+    - `settings`: Application settings.
+    
     */
 
     // console.log(fileData); // fileData contains the current info properties.
@@ -98,6 +107,26 @@ class ScriptViewController: NSViewController {
         }
     ];
 })();
+
+"""
+        setCode(code)
+    }
+    
+    @IBAction func addActionTemplate(_ sender: Any) {
+        let code = """
+/**
+ * Action code invoked when the user choose a menu item.
+ **/
+function onAction(filePath) {
+    /*
+    Global locked variables:
+    - `fileData`: The properties of current file.
+    - `templateItemIndex`: Zero based index of the current processed menu item template.
+    - `settings`: Application settings.
+    */
+
+    system.open(filePath);
+}
 
 """
         setCode(code)
@@ -129,6 +158,19 @@ class ScriptViewController: NSViewController {
     }
 }
 
+// MARK: - NSTextViewDelegate
+extension ScriptViewController: NSTextViewDelegate {
+    func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        if commandSelector == #selector(insertTab(_:)) {
+            textView.insertText("    ", replacementRange: textView.rangeForUserTextChange)
+            return true
+        } else {
+            return false
+        }
+    }
+}
+
+// MARK: - NSMenuDelegate
 extension ScriptViewController: NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
         menu.item(withTag: 1)?.state = wordWrap ? .on : .off

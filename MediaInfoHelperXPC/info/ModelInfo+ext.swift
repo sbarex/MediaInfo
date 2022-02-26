@@ -11,7 +11,7 @@ import Foundation
 import ModelIO
 
 extension ModelInfo {
-    convenience init?(file: URL) {
+    convenience init?(parseModel file: URL) {
         guard MDLAsset.canImportFileExtension(file.pathExtension) else {
             return nil
         }

@@ -10,43 +10,45 @@ import AppKit
 
 class TokenImageExtra: Token {
     enum Mode: Int, CaseIterable, BaseMode {
-        case filesize = 1
-        case animated
+        case animated = 1
         case is_animated
-        case metadata
         case alpha
         case is_alpha
-        case fileName
-        case fileExtension
         case paper
+        case metadata
         
         static var pasteboardType: NSPasteboard.PasteboardType {
             return .MITokenImageExtra
         }
         
+        var title: String {
+            switch self {
+            case .animated: return NSLocalizedString("Animated/Static status", comment: "")
+            case .is_animated: return NSLocalizedString("Is animated", comment: "")
+            case .alpha: return NSLocalizedString("Transparent/Opaque status", comment: "")
+            case .is_alpha: return NSLocalizedString("With alpha channel", comment: "")
+            case .paper: return NSLocalizedString("Printed format", comment: "")
+            case .metadata: return NSLocalizedString("Metadata list", comment: "")
+            }
+        }
+        
         var displayString: String {
             switch self {
-            case .filesize: return "12 MB"
             case .animated: return NSLocalizedString("animated", tableName: "LocalizableExt", comment: "") + " / " + NSLocalizedString("static", tableName: "LocalizableExt", comment: "")
             case .is_animated: return NSLocalizedString("animated", tableName: "LocalizableExt", comment: "")
             case .alpha: return NSLocalizedString("transparent", tableName: "LocalizableExt", comment: "") + " / " + NSLocalizedString("opaque", tableName: "LocalizableExt", comment: "")
             case .is_alpha: return NSLocalizedString("with alpha channel", tableName: "LocalizableExt", comment: "")
-            case .fileName: return "filename.ext"
-            case .fileExtension: return "ext"
-            case .paper: return "A4"
+             case .paper: return "A4"
             case .metadata: return "<metadata>"
             }
         }
         
         var placeholder: String {
             switch self {
-            case .filesize: return "[[filesize]]"
             case .animated: return "[[animated]]"
             case .is_animated: return "[[is-animated]]"
             case .alpha: return "[[alpha]]"
             case .is_alpha: return "[[is-alpha]]"
-            case .fileName: return "[[file-name]]"
-            case .fileExtension: return "[[file-ext]]"
             case .paper: return "[[paper]]"
             case .metadata: return "[[metadata]]"
             }
@@ -54,27 +56,18 @@ class TokenImageExtra: Token {
         
         var tooltip: String? {
             switch self {
-            case .filesize: return NSLocalizedString("File size.", comment: "")
             case .animated: return NSLocalizedString("Animated/static.", comment: "")
-            case .is_animated: return NSLocalizedString("Animated status.", comment: "")
             case .alpha: return NSLocalizedString("With/Without alpha channel.", comment: "")
-            case .is_alpha: return NSLocalizedString("With alpha channel.", comment: "")
-            case .fileName: return NSLocalizedString("File name.", comment: "")
-            case .fileExtension: return NSLocalizedString("File extension.", comment: "")
-            case .paper: return NSLocalizedString("File extension.", comment: "")
-            case .metadata: return NSLocalizedString("Submenu metadata.", comment: "")
+            default: return nil
             }
         }
         
         init?(placeholder: String) {
             switch placeholder {
-            case "[[filesize]]": self = .filesize
             case "[[animated]]": self = .animated
             case "[[is-animated]]": self = .is_animated
             case "[[alpha]]": self = .alpha
             case "[[is-alpha]]": self = .is_alpha
-            case "[[file-name]]": self = .fileName
-            case "[[file-ext]]": self = .fileExtension
             case "[[paper]]": self = .paper
             case "[[metadata]]": self = .metadata
             default: return nil
@@ -109,6 +102,10 @@ class TokenImageExtra: Token {
         }
     }
     
+    override var title: String {
+        return NSLocalizedString("Image metadata", comment: "")
+    }
+    
     init(mode: Mode) {
         super.init()
         self.mode = mode
@@ -127,12 +124,11 @@ class TokenImageExtra: Token {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
     }
     
-    override func getMenu(extra: [String : AnyHashable] = [:], callback: @escaping ((Token, NSMenuItem)->Void)) -> NSMenu? {
+    override func createMenu() -> NSMenu? {
         let menu = NSMenu()
         for mode in Mode.allCases {
-            menu.addItem(self.createMenuItem(title: mode.displayString, state: self.mode as! TokenImageExtra.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
+            menu.addItem(self.createMenuItem(title: mode.title, state: self.mode as! TokenImageExtra.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
         }
-        self.callbackMenu = callback
         return menu
     }
 }
@@ -142,13 +138,20 @@ class TokenMediaExtra: Token {
         case codec_short_name = 1
         case codec_full_name
         case codec
-        case filesize
-        case fileName
-        case fileExtension
         case engine
         
         static var pasteboardType: NSPasteboard.PasteboardType {
             return .MITokenVideoExtra
+        }
+        
+        
+        var title: String {
+            switch self {
+            case .codec_short_name: return NSLocalizedString("Codec short name", comment: "")
+            case .codec_full_name: return NSLocalizedString("Codec full name", comment: "")
+            case .codec: return NSLocalizedString("Codec name", comment: "")
+            case .engine: return NSLocalizedString("Media engine", comment: "")
+            }
         }
         
         var displayString: String {
@@ -156,9 +159,6 @@ class TokenMediaExtra: Token {
             case .codec_short_name: return "hevc"
             case .codec_full_name: return "H265 HEVC"
             case .codec: return "hevc / H265 HEVC"
-            case .filesize: return "450 MB"
-            case .fileName: return "filename.ext"
-            case .fileExtension: return "ext"
             case .engine: return NSLocalizedString("Media engine", comment: "")
             }
         }
@@ -168,22 +168,7 @@ class TokenMediaExtra: Token {
             case .codec_short_name: return "[[codec-short]]"
             case .codec_full_name: return "[[codec-long]]"
             case .codec: return "[[codec]]"
-            case .filesize: return "[[filesize]]"
-            case .fileName: return "[[file-name]]"
-            case .fileExtension: return "[[file-ext]]"
             case .engine: return "[[engine]]"
-            }
-        }
-        
-        var tooltip: String? {
-            switch self {
-            case .codec_short_name: return NSLocalizedString("Codec (short name).", comment: "")
-            case .codec_full_name: return NSLocalizedString("Codec (full name).", comment: "")
-            case .codec: return NSLocalizedString("Codec.", comment: "")
-            case .filesize: return NSLocalizedString("File size.", comment: "")
-            case .fileName: return NSLocalizedString("File name.", comment: "")
-            case .fileExtension: return NSLocalizedString("File extension.", comment: "")
-            case .engine: return NSLocalizedString("Media engine.", comment: "")
             }
         }
         
@@ -192,9 +177,6 @@ class TokenMediaExtra: Token {
             case "[[codec-short]]": self = .codec_short_name
             case "[[codec-long]]": self = .codec_full_name
             case "[[codec]]": self = .codec
-            case "[[filesize]]": self = .filesize
-            case "[[file-name]]": self = .fileName
-            case "[[file-ext]]": self = .fileExtension
             case "[[engine]]": self = .engine
             default: return nil
             }
@@ -207,6 +189,10 @@ class TokenMediaExtra: Token {
         return [.video, .audio]
     }
     
+    override var title: String {
+        return NSLocalizedString("Codec", comment: "")
+    }
+    
     init(mode: Mode) {
         super.init()
         self.mode = mode
@@ -225,12 +211,13 @@ class TokenMediaExtra: Token {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
     }
     
-    override func getMenu(extra: [String : AnyHashable] = [:], callback: @escaping ((Token, NSMenuItem)->Void)) -> NSMenu? {
+    override func createMenu() -> NSMenu? {
         let menu = NSMenu()
+        menu.addItem(withTitle: NSLocalizedString("Codec", comment: ""), action: nil, keyEquivalent: "").isEnabled = false
+        menu.addItem(NSMenuItem.separator())
         for mode in Mode.allCases {
-            menu.addItem(self.createMenuItem(title: mode.displayString, state: self.mode as! Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
+            menu.addItem(self.createMenuItem(title: mode.title, state: self.mode as! Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
         }
-        self.callbackMenu = callback
         return menu
     }
 }
@@ -248,6 +235,19 @@ class TokenMediaTrack: Token {
         
         static var pasteboardType: NSPasteboard.PasteboardType {
             return .MITokenMediaTrack
+        }
+        
+        var title: String {
+            switch self {
+            case .chaptersCount: return NSLocalizedString("Number of chapters", comment: "")
+            case .chapters: return NSLocalizedString("Chapters list", comment: "")
+            case .video: return NSLocalizedString("Video tracks", comment: "")
+            case .videoCount: return NSLocalizedString("Number of video tracks", comment: "")
+            case .audio: return NSLocalizedString("Audio tracks", comment: "")
+            case .audioCount: return NSLocalizedString("Number of audio tracks", comment: "")
+            case .subtitle: return NSLocalizedString("Subtitles", comment: "")
+            case .subtitleCount: return NSLocalizedString("Number of subtitles", comment: "")
+            }
         }
         
         var displayString: String {
@@ -274,19 +274,6 @@ class TokenMediaTrack: Token {
             case .subtitle: return "[[subtitles]]"
             case .subtitleCount: return "[[subtitles-count]]"
             
-            }
-        }
-        
-        var tooltip: String? {
-            switch self {
-            case .chapters: return NSLocalizedString("List of chapters.", comment: "")
-            case .chaptersCount: return NSLocalizedString("Number of chapters.", comment: "")
-            case .video: return NSLocalizedString("List of video tracks.", comment: "")
-            case .videoCount: return NSLocalizedString("Number of video tracks.", comment: "")
-            case .audio: return NSLocalizedString("List of audio tracks.", comment: "")
-            case .audioCount: return NSLocalizedString("Number of audio tracks.", comment: "")
-            case .subtitle: return NSLocalizedString("List of subtitles.", comment: "")
-            case .subtitleCount: return NSLocalizedString("Number of available subtitles.", comment: "")
             }
         }
         
@@ -323,6 +310,10 @@ class TokenMediaTrack: Token {
         }
     }
     
+    override var title: String {
+        return NSLocalizedString("Tracks", comment: "")
+    }
+    
     init(mode: Mode) {
         super.init()
         self.mode = mode
@@ -341,12 +332,11 @@ class TokenMediaTrack: Token {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
     }
     
-    override func getMenu(extra: [String : AnyHashable] = [:], callback: @escaping ((Token, NSMenuItem)->Void)) -> NSMenu? {
+    override func createMenu() -> NSMenu? {
         let menu = NSMenu()
         for mode in Mode.allCases {
-            menu.addItem(self.createMenuItem(title: mode.displayString, state: self.mode as! Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
+            menu.addItem(self.createMenuItem(title: mode.title, state: self.mode as! Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
         }
-        self.callbackMenu = callback
         return menu
     }
 }

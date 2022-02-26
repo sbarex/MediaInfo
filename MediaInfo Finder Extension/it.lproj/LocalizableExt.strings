@@ -5,125 +5,127 @@
   Created by Sbarex on 29/08/2020.
   Copyright © 2020 sbarex. All rights reserved.
 */
+
 "cm" = "cm";
 "mm" = "mm";
-"inch" = "\"";
+"inch" = "pollici";
 "pt" = "pt";
+
+"Yes" = "Sì";
+"No" = "No";
 
 // MARK: -
 "N/D" = "N/D";
 "ERR" = "ERR";
 
-// MARK: -
-"Audio" = "Audio";
-"Audio tracks" = "Tracce audio";
-"Subtitles" = "Sotto tiloli";
+// MARK: - Base Info
+"Open with %@…" = "Apri con %@…";
 
-// MARK: -
+// MARK: - Image info
 "B/W" = "B/N";
-"bit" = "bit";
-"dpi" = "dpi";
-
-// MARK: -
 "animated" = "animata";
 "static" = "statica";
 "with alpha channel" = "con trasparenza";
-"transparent" = "trasparente";
 "opaque" = "opaca";
+"%d bit" = "%d bit";
+"normal" = "normale";
+"indexed colors" = "tabella di colori";
+"float colors" = "colori decimali";
+"%d dpi" = "%d dpi";
+"Metadata" = "Metadati";
 
-"frames" = "fotogrammi";
-"language" = "lingua";
-"languages" = "lingue";
+// MZRK: - LanguageInfo
 
-"subtitle" = "sottotilo";
-"subtitles" = "sottotitoli";
+"No Language" = "nessuna lingua";
+"1 Language" = "una lingua";
+"%d Languages" = "%d lingue";
 
-"1 Subtitle" = "1 sottotitolo";
-"%d Subtitles" = "%d sottotitoli";
-
-"audio track" = "traccia audio";
-"audio tracks" = "tracce audio";
-
-"1 Audio track" = "1 traccia audio";
-"%d Audio tracks" = "%d tracce audio";
-
-"video track" = "traccia video";
-"video tracks" = "tracce video";
-"1 Video track" = "1 traccia video";
-"%d Video tracks" = "%d tracce video";
-
-"page" = "pagina";
-"pages" = "pagine";
-
-"version" = "versione";
-"no copy" = "copia vietata";
-"no print" = "stampa vietata";
-
-"Yes" = "Sì";
-"No" = "No";
-
+// MARK: -
 "lossless" = "lossless";
 "lossy" = "lossy";
 
-"chapter" = "capitolo";
-"chapters" = "capitoli";
-
-"1 Chapter" = "1 capitolo";
-"%d Chapters" = "%d capitoli";
-
 "Chapter" = "Capitolo";
 "Chapters" = "Capitoli";
+"No Chapter" = "nessun capitolo";
+"1 Chapter" = "1 capitolo";
+"%d Chapters" = "%d capitoli";
+"%@ frames" = "%@ fotogrammi";
+"%@ fps" = "%@ fps";
 
-"character" = "carattere";
-"characters" = "caratteri";
-"character (spaces included)" = "carattere (spazi inclusi)";
-"characters (spaces included)" = "caratteri (spazi inclusi)";
-"word" = "parola";
-"words" = "parole";
+"Subtitles" = "Sottotitoli";
+"No Subtitle" = "nessun sottotilo";
+"1 Subtitle" = "1 sottotitolo";
+"%d Subtitles" = "%d sottotitoli";
 
-"sheet" = "foglio";
-"sheets" = "fogli";
-"1 Sheet" = "1 foglio";
-"%d Sheets" = "%d fogli";
+"Audio traks" = "Tracce audio";
+"No Audio track" = "nessuna traccia audio";
+"1 Audio track" = "1 traccia audio";
+"%d Audio tracks" = "%d tracce audio";
 
-"slide" = "diapositiva";
-"slides" = "diapositive";
+"Video traks" = "Tracce video";
+"No Video track" = "nessuna traccia video";
+"1 Video track" = "1 traccia video";
+"%d Video tracks" = "%d tracce video";
 
-"Keywords" = "Parole chiave";
+"Mono" = "mono";
+"Stereo" = "stereo";
+"1 Channel" = "1 canale";
+"%d Channels" = "%d canali";
+
+// MARK: - PDF Info
+"No Page" = "nessuna pagina";
+"1 Page" = "1 pagina";
+"%@ Pages" = "%@ pagine";
+"Version %@" = "versione %@";
+"No copy" = "copia vietata";
+"No print" = "stampa vietata";
+
+// MARK: - OfficeInfo
+"Created by %@" = "creato da %@";
+"on %@" = "il %@";
+"Created on %@" = "creato il %@";
+"Last saved by %@" = "ultimo salvataggio di %@";
+"Last saved on %@" = "ultimo salvataggio il %@";
+"No Keyword" = "nessuna parola chiave";
 "1 Keyword" = "1 parola chiave";
 "%d Keywords" = "%d parole chiave";
-
-"created by %@" = "creato da %@";
-"created on %@" = "creato il %@";
-"last saved by %@" = "ultimo salvataggio di %@";
-"last saved on %@" = "ultimo salvataggio il %@";
-"on %@" = "il %@";
+"No Character" = "Newssun carattere";
+"1 Character" = "1 carattere";
+"%@ Characters" = "%@ caratteri";
+"No Character (spaces included)" = "newssun carattere o spazio";
+"1 Character (spaces included)" = "1 carattere (spazi inclusi)";
+"%@ Characters (spaces included)" = "%@ caratteri (spazi inclusi)";
+"No Word" = "nessuna parola";
+"1 Word" = "1 parola";
+"%@ Words" = "%@ parole";
+"No sheet" = "nessun foglio";
+"1 Sheet" = "1 foglio";
+"%d Sheets" = "%d fogli";
+"No Slide" = "nessuna diapositiva";
+"1 Slide" = "1 diapositiva";
+"%d Slides" = "%d diapositive";
 "Application name" = "Nome dell'applicazione";
-"[deep scan required]" = "[richiede scansione approfondita]";
 
-"mono" = "mono";
-"stereo" = "stereo";
-"1 channel" = "1 canale";
-"%d channels" = "%d canali";
-
+// MARK: - 3D Model
+"No Mesh" = "nessuna mesh";
 "1 Mesh" = "1 mesh";
-"%d Meshes" = "%d mesh";
+"%@ Meshs" = "%@ mesh";
+"No Vertex" = "nessun vertice";
+"No Vertex" = "1 vertice";
 "%@ Vertices" = "%@ vertici";
-"with normals" = "normali presenti";
-"without normals" = "normali assenti";
-"with tangents" = "tangenti presenti";
-"without tangents" = "tangenti assenti";
-"with texture coordinates" = "coordinate texture presenti";
-"without texture coordinates" = "coordinate texture assenti";
-"with vertex colors" = "vertici con colori";
-"without vertex colors" = "veritici privi di colore";
-"with occlusion" = "ambient occlusion per vertici";
-"without occlusion" = "ambient occlusion assente";
+"With normals" = "normali presenti";
+"Without normals" = "normali assenti";
+"With tangents" = "tangenti presenti";
+"Without tangents" = "tangenti assenti";
+"With texture coordinates" = "coordinate texture presenti";
+"Without texture coordinates" = "coordinate texture assenti";
+"With vertex colors" = "vertici con colori";
+"Without vertex colors" = "veritici privi di colore";
+"With occlusion" = "ambient occlusion per vertici";
+"Without occlusion" = "ambient occlusion assente";
 
+// MARK: - Archive
+
+"No file" = "nessun file";
 "1 file" = "1 file";
 "%@ files" = "%@ file";
-
-"normal" = "normale";
-"indexed" = "tabella di indici";
-"float" = "decimale";
-"Metadata" = "Metadati";

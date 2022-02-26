@@ -20,6 +20,17 @@ class TokenDuration: Token {
             return .MITokenDuration
         }
         
+        
+        var title: String {
+            switch self {
+            case .hours: return NSLocalizedString("Duration (hh:mm:ss)", comment: "")
+            case .seconds: return NSLocalizedString("Duration (in seconds)", comment: "")
+            case .bitRate: return NSLocalizedString("Bit rate", comment: "")
+            case .startTime: return NSLocalizedString("Start time (hh:mm:ss)", comment: "")
+            case .startTimeSeconds: return NSLocalizedString("Start time (in seconds)", comment: "")
+            }
+        }
+        
         var displayString: String {
             switch self {
             case .hours: return "01:15:23"
@@ -37,16 +48,6 @@ class TokenDuration: Token {
             case .bitRate: return "[[bitrate]]"
             case .startTime: return "[[start-time]]"
             case .startTimeSeconds: return "[[start-time-s]]"
-            }
-        }
-        
-        var tooltip: String? {
-            switch self {
-            case .hours: return NSLocalizedString("Time.", comment: "")
-            case .seconds: return NSLocalizedString("Duration.", comment: "")
-            case .bitRate: return NSLocalizedString("Bit rate.", comment: "")
-            case .startTime: return NSLocalizedString("Start time.", comment: "")
-            case .startTimeSeconds: return NSLocalizedString("Start time (in seconds).", comment: "")
             }
         }
         
@@ -68,6 +69,10 @@ class TokenDuration: Token {
         return [.audio, .video]
     }
     
+    override var title: String {
+        return NSLocalizedString("Duration", comment: "TokenDuration title")
+    }
+    
     required convenience init?(mode: BaseMode) {
         guard let m = mode as? Mode else { return nil }
         self.init(mode: m)
@@ -86,16 +91,14 @@ class TokenDuration: Token {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
     }
     
-    override func getMenu(extra: [String: AnyHashable], callback: @escaping ((Token, NSMenuItem)->Void)) -> NSMenu? {
+    override func createMenu() -> NSMenu? {
         let menu = NSMenu()
         menu.addItem(withTitle: NSLocalizedString("Duration", comment: ""), action: nil, keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
         
         for mode in Mode.allCases {
-            menu.addItem(self.createMenuItem(title: mode.displayString, state: self.mode as! TokenDuration.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
+            menu.addItem(self.createMenuItem(title: mode.title, state: self.mode as! TokenDuration.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
         }
-        
-        self.callbackMenu = callback
         return menu
     }
 }

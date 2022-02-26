@@ -9,7 +9,7 @@
 import Foundation
 import AVFoundation
 
-protocol MetadataInfo: NSSecureCoding, Encodable {
+protocol MetadataInfo: NSSecureCoding, Codable {
     static func getTags() -> [(code: CFString, label: String)]
     static func getLabel(for code: CFString) -> String
     static func getPos(of code: CFString) -> Int
@@ -154,6 +154,12 @@ class MetadataBaseInfo: NSObject, MetadataInfo {
         coder.encode(value as NSString, forKey: "value")
     }
     
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.code = try container.decode(String.self, forKey: .code) as CFString
+        self.value = try container.decode(String.self, forKey: .value)
+    }
+    
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.code as String, forKey: .code)
@@ -291,6 +297,10 @@ class MetadataExifInfo: MetadataBaseInfo {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
+    
+    required init(from decoder: Decoder) throws {
+        try super.init(from: decoder)
+    }
 }
 
 class MetadataExifAuxInfo: MetadataExifInfo {
@@ -321,6 +331,10 @@ class MetadataExifAuxInfo: MetadataExifInfo {
     }
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+    }
+    
+    required init(from decoder: Decoder) throws {
+        try super.init(from: decoder)
     }
 }
 
@@ -367,6 +381,10 @@ class MetadataTiffInfo: MetadataBaseInfo {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
+    
+    required init(from decoder: Decoder) throws {
+        try super.init(from: decoder)
+    }
 }
 
 class MetadataJfifInfo: MetadataBaseInfo {
@@ -398,6 +416,10 @@ class MetadataJfifInfo: MetadataBaseInfo {
     }
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+    }
+    
+    required init(from decoder: Decoder) throws {
+        try super.init(from: decoder)
     }
 }
 
@@ -435,6 +457,10 @@ class MetadataGifInfo: MetadataBaseInfo {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
+    
+    required init(from decoder: Decoder) throws {
+        try super.init(from: decoder)
+    }
 }
 
 class MetadataHeicsInfo: MetadataBaseInfo {
@@ -463,6 +489,10 @@ class MetadataHeicsInfo: MetadataBaseInfo {
     }
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+    }
+    
+    required init(from decoder: Decoder) throws {
+        try super.init(from: decoder)
     }
 }
 
@@ -518,6 +548,10 @@ class MetadataPngInfo: MetadataBaseInfo {
     }
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+    }
+    
+    required init(from decoder: Decoder) throws {
+        try super.init(from: decoder)
     }
 }
 
@@ -768,6 +802,10 @@ class MetadataIPTCInfo: MetadataBaseInfo {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
+    
+    required init(from decoder: Decoder) throws {
+        try super.init(from: decoder)
+    }
 }
 
 class MetadataGPSInfo: MetadataBaseInfo {
@@ -817,6 +855,10 @@ class MetadataGPSInfo: MetadataBaseInfo {
     }
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+    }
+    
+    required init(from decoder: Decoder) throws {
+        try super.init(from: decoder)
     }
 }
 
@@ -970,5 +1012,9 @@ class MetadataDNGInfo: MetadataBaseInfo {
     }
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+    }
+    
+    required init(from decoder: Decoder) throws {
+        try super.init(from: decoder)
     }
 }

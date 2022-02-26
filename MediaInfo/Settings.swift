@@ -15,7 +15,7 @@ extension Sequence where Iterator.Element: Hashable {
     }
 }
 
-enum MediaEngine: Int {
+enum MediaEngine: Int, Codable {
     case coremedia
     case ffmpeg
     case metadata
@@ -77,8 +77,65 @@ enum PrintUnit: Int, CaseIterable {
     }
 }
 
-class Settings {
-    static let Version = 1.6
+class Settings: Codable {
+    enum CodingKeys: String, CodingKey {
+        case folders
+        case handleExternalDisk
+        case version
+        case iconsHidden
+        case infoOnSubMenu
+        case infoOnMainItem
+        case useFirstItemAsMain
+        case isRatioPrecise
+        case skipEmpty
+        case imageHandled
+        case extractImageMetadata
+        case imageTemplates
+        
+        case videoHandled
+        case tracksGrouped
+        case videoTemplates
+        
+        case audioHandled
+        case audioTemplates
+        
+        case pdfHandled
+        case pdfTemplates
+        
+        case officeHandled
+        case officeDeepScan
+        case officeTemplates
+        
+        case modelsHandled
+        case modelsTemplates
+        
+        case archiveHandled
+        case maxFilesInArchive
+        case maxFilesInDepth
+        case maxDepthArchive
+        case archiveTemplates
+        
+        case menuAction
+        case engines
+    }
+    
+    enum Action: Int, Codable {
+        case none = 0
+        case open
+        case script
+    }
+    
+    enum SupportedFile: Int {
+        case image
+        case video
+        case audio
+        case office
+        case model
+        case pdf
+        case archive
+    }
+    
+    static let Version = 1.7
     static func getStandardSettings() -> Settings {
         let settings = Settings(fromDict: [:])
         settings.imageMenuItems = [
@@ -160,7 +217,12 @@ class Settings {
         return settings
     }
     
-    struct MenuItem {
+    struct MenuItem: Codable {
+        enum CodingKeys: String, CodingKey {
+            case image
+            case template
+        }
+        
         var image: String
         var template: String
     }
@@ -176,7 +238,10 @@ class Settings {
     var isRatioPrecise = false
     var isTracksGrouped = true
     
-    var menuWillOpenFile = true
+    var menuAction: Action = .open
+    var menuWillOpenFile: Bool {
+        return menuAction == .open
+    }
     
     var isUsingFirstItemAsMain: Bool {
         return isInfoOnSubMenu && isInfoOnMainItem && useFirstItemAsMain
@@ -218,6 +283,97 @@ class Settings {
     init(fromDict dict: [String: AnyHashable]) {
         self.version = 0
         refresh(fromDict: dict)
+    }
+    
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.folders = try container.decode([URL].self, forKey: .folders)
+        self.handleExternalDisk = try container.decode(Bool.self, forKey: .handleExternalDisk)
+        self.handleExternalDisk = try container.decode(Bool.self, forKey: .handleExternalDisk)
+        
+        self.version = try container.decode(Double.self, forKey: .version)
+        self.isIconHidden = try container.decode(Bool.self, forKey: .iconsHidden)
+        self.isInfoOnSubMenu = try container.decode(Bool.self, forKey: .infoOnSubMenu)
+        self.isInfoOnMainItem = try container.decode(Bool.self, forKey: .infoOnMainItem)
+        self.useFirstItemAsMain = try container.decode(Bool.self, forKey: .useFirstItemAsMain)
+        self.isEmptyItemsSkipped = try container.decode(Bool.self, forKey: .skipEmpty)
+        
+        
+        self.isRatioPrecise = try container.decode(Bool.self, forKey: .isRatioPrecise)
+        
+        self.isImagesHandled = try container.decode(Bool.self, forKey: .imageHandled)
+        self.extractImageMetadata = try container.decode(Bool.self, forKey: .extractImageMetadata)
+        self.imageMenuItems = try container.decode([MenuItem].self, forKey: .imageTemplates)
+        
+        self.isVideoHandled = try container.decode(Bool.self, forKey: .videoHandled)
+        self.isTracksGrouped = try container.decode(Bool.self, forKey: .tracksGrouped)
+        self.videoMenuItems = try container.decode([MenuItem].self, forKey: .videoTemplates)
+        
+        self.isAudioHandled = try container.decode(Bool.self, forKey: .audioHandled)
+        self.audioMenuItems = try container.decode([MenuItem].self, forKey: .audioTemplates)
+        
+        self.isPDFHandled = try container.decode(Bool.self, forKey: .pdfHandled)
+        self.pdfMenuItems = try container.decode([MenuItem].self, forKey: .pdfTemplates)
+        
+        self.isOfficeHandled = try container.decode(Bool.self, forKey: .officeHandled)
+        self.isOfficeDeepScan = try container.decode(Bool.self, forKey: .officeDeepScan)
+        self.officeMenuItems = try container.decode([MenuItem].self, forKey: .officeTemplates)
+        
+        self.isModelsHandled = try container.decode(Bool.self, forKey: .modelsHandled)
+        self.modelsMenuItems = try container.decode([MenuItem].self, forKey: .modelsTemplates)
+        
+        self.isArchiveHandled = try container.decode(Bool.self, forKey: .archiveHandled)
+        self.maxFilesInArchive = try container.decode(Int.self, forKey: .maxFilesInArchive)
+        self.maxDepthArchive = try container.decode(Int.self, forKey: .maxDepthArchive)
+        self.maxFilesInDepth = try container.decode(Int.self, forKey: .maxFilesInDepth)
+        self.archiveMenuItems = try container.decode([MenuItem].self, forKey: .archiveTemplates)
+        
+        self.menuAction = try container.decode(Action.self, forKey: .menuAction)
+        self.engines = try container.decode([MediaEngine].self, forKey: .engines)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.folders, forKey: .folders)
+        try container.encode(self.handleExternalDisk, forKey: .handleExternalDisk)
+        try container.encode(self.version, forKey: .version)
+        try container.encode(self.isIconHidden, forKey: .iconsHidden)
+        try container.encode(self.isInfoOnSubMenu, forKey: .infoOnSubMenu)
+        try container.encode(self.isInfoOnMainItem, forKey: .infoOnMainItem)
+        try container.encode(self.useFirstItemAsMain, forKey: .useFirstItemAsMain)
+        try container.encode(self.isEmptyItemsSkipped, forKey: .skipEmpty)
+        
+        try container.encode(self.isRatioPrecise, forKey: .isRatioPrecise)
+        
+        try container.encode(self.isImagesHandled, forKey: .imageHandled)
+        try container.encode(self.extractImageMetadata, forKey: .extractImageMetadata)
+        try container.encode(self.imageMenuItems, forKey: .imageTemplates)
+        
+        try container.encode(self.isVideoHandled, forKey: .videoHandled)
+        try container.encode(self.isTracksGrouped, forKey: .tracksGrouped)
+        try container.encode(self.videoMenuItems, forKey: .videoTemplates)
+        
+        try container.encode(self.isAudioHandled, forKey: .audioHandled)
+        try container.encode(self.audioMenuItems, forKey: .audioTemplates)
+        
+        try container.encode(self.isPDFHandled, forKey: .pdfHandled)
+        try container.encode(self.pdfMenuItems, forKey: .pdfTemplates)
+        
+        try container.encode(self.isOfficeHandled, forKey: .officeHandled)
+        try container.encode(self.isOfficeDeepScan, forKey: .officeDeepScan)
+        try container.encode(self.officeMenuItems, forKey: .officeTemplates)
+        
+        try container.encode(self.isModelsHandled, forKey: .modelsHandled)
+        try container.encode(self.modelsMenuItems, forKey: .modelsTemplates)
+        
+        try container.encode(self.isArchiveHandled, forKey: .archiveHandled)
+        try container.encode(self.maxFilesInArchive, forKey: .maxFilesInArchive)
+        try container.encode(self.maxDepthArchive, forKey: .maxDepthArchive)
+        try container.encode(self.maxFilesInDepth, forKey: .maxFilesInDepth)
+        try container.encode(self.archiveMenuItems, forKey: .archiveTemplates)
+        
+        try container.encode(self.menuAction, forKey: .menuAction)
+        try container.encode(self.engines, forKey: .engines)
     }
     
     func refresh(fromDict defaultsDomain: [String: AnyHashable]) {
@@ -292,7 +448,7 @@ class Settings {
             }
         }
         
-        self.menuWillOpenFile = defaultsDomain["menu-open"] as? Bool ?? true
+        self.menuAction = Action(rawValue: defaultsDomain["menu-action"] as? Int ?? -1) ?? .open
         
         if let e = defaultsDomain["engines"] as? [Int] {
             self.engines = []
@@ -363,9 +519,56 @@ class Settings {
         dict["archive_max_files_in_depth"] = self.maxFilesInDepth
         dict["archive_items"] = self.archiveMenuItems.map({ return [$0.image, $0.template]})
         
-        dict["menu-open"]   = self.menuWillOpenFile
+        dict["menu-action"] = self.menuAction.rawValue
         
         dict["engines"] = self.engines.map({ $0.rawValue })
         return dict
+    }
+    
+    func getMenuItems(for type: SupportedFile) -> [MenuItem] {
+        switch type {
+        case .image:
+            return self.imageMenuItems
+        case .video:
+            return self.videoMenuItems
+        case .audio:
+            return self.audioMenuItems
+        case .office:
+            return self.officeMenuItems
+        case .model:
+            return self.modelsMenuItems
+        case .pdf:
+            return self.pdfMenuItems
+        case .archive:
+            return self.archiveMenuItems
+        }
+    }
+    
+    func getActionCode(for type: SupportedFile) -> String? {
+        let templates: [Settings.MenuItem]
+        switch type {
+        case .image:
+            templates = imageMenuItems
+        case .video:
+            templates = videoMenuItems
+        case .audio:
+            templates = audioMenuItems
+        case .office:
+            templates = officeMenuItems
+        case .model:
+            templates = modelsMenuItems
+        case .pdf:
+            templates = pdfMenuItems
+        case .archive:
+            templates = archiveMenuItems
+        }
+        guard let template = templates.first(where: {$0.template.hasPrefix("[[script-action:")}) else {
+            return nil
+        }
+        guard let code = String(template.template.dropFirst(16).dropLast(2)).fromBase64() else {
+            return nil
+        }
+        
+        return code
     }
 }

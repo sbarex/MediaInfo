@@ -11,12 +11,17 @@ import Foundation
 extension BaseInfo {
     static func replacePlaceholderFake(_ placeholder: String, settings: Settings, forItem itemIndex: Int) -> String {
         let r: String
-        if placeholder.hasPrefix("[[script-global:") || placeholder.hasPrefix("[[script-inline:") {
-            if placeholder.hasPrefix("[[script-global:") {
-                r = "<global script>"
-            } else {
-                r = "<inline script>"
+        if placeholder.hasPrefix("[[script-global:") {
+            r = "<global script>"
+        } else if placeholder.hasPrefix("[[script-inline:") {
+            r = "<inline script>"
+        } else if placeholder.hasPrefix("[[script-action:") {
+            r = "<action script>"
+        } else if placeholder.hasPrefix("[[open-with:") {
+            guard let path = String(placeholder.dropFirst(12).dropLast(2)).fromBase64(), !path.isEmpty else {
+                return "<open with>"
             }
+            r = "<open with: \(path)>"
         } else {
             r = "<" + placeholder.trimmingCharacters(in: CharacterSet(charactersIn: "[]")) + ">"
         }
@@ -59,32 +64,41 @@ extension BaseInfo {
         for result in results {
             let placeholder = String(template[Range(result.range, in: template)!])
             let r: String
-            if placeholder.hasPrefix("[[script-global:") || placeholder.hasPrefix("[[script-inline:") {
-                
-                let isGlobal = placeholder.hasPrefix("[[script-global:")
-                if isGlobal {
+            if placeholder.hasPrefix("[[script-") {
+                var isGlobal = false
+                var isInline = false
+                var isAction = false
+                if placeholder.hasPrefix("[[script-global:") {
                     r = "<global script>"
-                } else {
+                    isGlobal = true
+                } else if placeholder.hasPrefix("[[script-action:") {
+                    r = "<action script>"
+                    isAction = true
+                } else  {
                     r = "<inline script>"
+                    isInline = true
                 }
                 if let code = String(placeholder.dropFirst(16).dropLast(2)).fromBase64(), !code.isEmpty {
                     // Evaluate the code to check execution error.
                     do {
                         if let result = try evaluateScript(code: code, forItem: itemIndex) {
-                            if isGlobal {
-                                if !result.isArray && !result.isNull {
-                                    self.jsDelegate?.onJSException(info: self, exception: "Global script token must return an array!", atLine: -1, forItemAtIndex: itemIndex)
-                                }
-                            } else {
-                                if !result.isString && !result.isNull {
-                                    self.jsDelegate?.onJSException(info: self, exception: "Inline script token must return a string value!", atLine: -1, forItemAtIndex: itemIndex)
-                                }
+                            if isGlobal && !result.isArray && !result.isNull && !result.isString {
+                                self.jsDelegate?.onJSException(info: self, exception: "Global script token must return an array!", atLine: -1, forItemAtIndex: itemIndex)
+                            }
+                            if isInline && !result.isString && !result.isNull {
+                                self.jsDelegate?.onJSException(info: self, exception: "Inline script token must return a string value!", atLine: -1, forItemAtIndex: itemIndex)
                             }
                         }
                     } catch {
                         
                     }
                 }
+            } else if placeholder.hasPrefix("[[open-with:") {
+                guard let path = String(placeholder.dropFirst(12).dropLast(2)).fromBase64(), !path.isEmpty else {
+                    return NSMutableAttributedString(string: "<open with>", attributes: attributes)
+                }
+                let name = URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
+                r = "Open with \(name)…"
             } else {
                 r = Self.replacePlaceholderFake(placeholder, settings: settings, forItem: itemIndex)
             }

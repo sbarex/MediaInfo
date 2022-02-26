@@ -45,6 +45,13 @@ class FinderSync: FIFinderSync {/*
         } catch {
             print("Failed to start updater with error: \(error)")
         }*/
+        
+        BaseInfo.jsOpen = { (file: String) in
+            HelperWrapper.openFile(url: URL(fileURLWithPath: file))
+        }
+        BaseInfo.jsExec = { (command: String, arguments: [String]) in
+            HelperWrapper.systemExec(command: command, arguments: arguments)
+        }
     }
     
     deinit {
@@ -169,10 +176,35 @@ class FinderSync: FIFinderSync {/*
     // MARK: - Menu and toolbar item support
     
     var currentFile: URL?
+    var currentFileType: Settings.SupportedFile?
+    var currentInfo: BaseInfo?
     
     @objc internal func fakeMenuAction(_ sender: NSMenuItem) {
-        if settings.menuWillOpenFile, let file = currentFile {
+        guard let file = self.currentFile, let currentFileType = self.currentFileType else {
+            return
+        }
+        
+        let menuItems = settings.getMenuItems(for: currentFileType)
+        if sender.tag >= 0 && sender.tag < menuItems.count {
+            let item = menuItems[sender.tag]
+            if item.template.hasPrefix("[[open-with:"), let path = String(item.template.dropFirst(12).dropLast(2)).fromBase64() {
+                HelperWrapper.openFile(url: file, withApp: path)
+                return
+            }
+        }
+        
+        switch settings.menuAction {
+        case .none:
+            return
+        case .open:
             HelperWrapper.openFile(url: file)
+        case .script:
+            guard let info = currentInfo, let code = settings.getActionCode(for: currentFileType) else {
+                return
+            }
+            
+            info.initActionJSContext(selectedItem: sender)
+            _ = try? info.evaluateScript(code: code, forItem: -1)
         }
     }
     
@@ -182,40 +214,64 @@ class FinderSync: FIFinderSync {/*
         }
         guard let items = FIFinderSyncController.default().selectedItemURLs(), items.count == 1, let item = items.first, let uti = try? item.resourceValues(forKeys: [.typeIdentifierKey]).typeIdentifier else {
             currentFile = nil
+            currentFileType = nil
             return nil
         }
             
         // Specific menu item properties are used: title, action, image, and enabled. Starting in 10.11: tag, state, and indentationLevel also work, and submenus are allowed.
         
         currentFile = item
-        if settings.isPDFHandled && (UTTypeConformsTo(uti as CFString, kUTTypePDF) || UTTypeConformsTo(uti as CFString, "com.adobe.illustrator.ai-image" as CFString)), let menu = getMenuForPDF(atURL: item) {
-            return menu
-        } else if settings.isImagesHandled && UTTypeConformsTo(uti as CFString, kUTTypeImage), let menu = getMenuForImage(atURL: item) {
-            return menu
-        } else if settings.isVideoHandled && UTTypeConformsTo(uti as CFString, kUTTypeMovie), let menu = getMenuForVideo(atURL: item) {
-            return menu
-        } else if settings.isAudioHandled && UTTypeConformsTo(uti as CFString, kUTTypeAudio), let menu = getMenuForAudio(atURL: item) {
-            return menu
-        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.openxmlformats.wordprocessingml.document" as CFString), let menu = getMenuForWordDocument(atURL: item) {
-            return menu
-        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.openxmlformats.spreadsheetml.sheet" as CFString), let menu = getMenuForExcelDocument(atURL: item) {
-            return menu
-        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.openxmlformats.presentationml.presentation" as CFString), let menu = getMenuForPowerpointDocument(atURL: item) {
-            return menu
-        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.oasis-open.opendocument.text" as CFString), let menu = getMenuForOpenDocument(atURL: item) {
-            return menu
-        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.oasis-open.opendocument.spreadsheet" as CFString), let menu = getMenuForOpenSpreadsheet(atURL: item) {
-            return menu
-        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.oasis-open.opendocument.presentation" as CFString), let menu = getMenuForOpenPresentation(atURL: item) {
-            return menu
-        } else if settings.isModelsHandled && UTTypeConformsTo(uti as CFString, "public.3d-content" as CFString), let menu = getMenuForModel(atURL: item) {
-            return menu
-        } else if settings.isArchiveHandled && (UTTypeConformsTo(uti as CFString, "public.zip-archive" as CFString) || UTTypeConformsTo(uti as CFString, "com.rarlab.rar-archive" as CFString)), let menu = getMenuForArchive(atURL: item) {
-            return menu
+        if settings.isPDFHandled && (UTTypeConformsTo(uti as CFString, kUTTypePDF) || UTTypeConformsTo(uti as CFString, "com.adobe.illustrator.ai-image" as CFString)) {
+            currentFileType = .pdf
+            self.currentInfo = getInfoForPDF(atURL: item)
+        } else if settings.isImagesHandled && UTTypeConformsTo(uti as CFString, kUTTypeImage) {
+            currentFileType = .image
+            currentInfo = getInfoForImage(atURL: item)
+        } else if settings.isVideoHandled && UTTypeConformsTo(uti as CFString, kUTTypeMovie) {
+            currentFileType = .video
+            currentInfo = getInfoForVideo(atURL: item)
+        } else if settings.isAudioHandled && UTTypeConformsTo(uti as CFString, kUTTypeAudio) {
+            currentFileType = .audio
+            currentInfo = getInfoForAudio(atURL: item)
+        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.openxmlformats.wordprocessingml.document" as CFString) {
+            currentFileType = .office
+            currentInfo = getInfoForWordDocument(atURL: item)
+        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.openxmlformats.spreadsheetml.sheet" as CFString) {
+            currentFileType = .office
+            currentInfo = getInfoForExcelDocument(atURL: item)
+        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.openxmlformats.presentationml.presentation" as CFString) {
+            currentFileType = .office
+            currentInfo = getInfoForPowerpointDocument(atURL: item)
+        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.oasis-open.opendocument.text" as CFString) {
+            currentFileType = .office
+            currentInfo = getInfoForOpenDocument(atURL: item)
+        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.oasis-open.opendocument.spreadsheet" as CFString) {
+            currentFileType = .office
+            currentInfo = getInfoForOpenSpreadsheet(atURL: item)
+        } else if settings.isOfficeHandled && UTTypeConformsTo(uti as CFString, "org.oasis-open.opendocument.presentation" as CFString) {
+            currentFileType = .office
+            currentInfo = getInfoForOpenPresentation(atURL: item)
+        } else if settings.isModelsHandled && UTTypeConformsTo(uti as CFString, "public.3d-content" as CFString) {
+            currentFileType = .model
+            currentInfo = getInfoForModel(atURL: item)
+        } else if settings.isArchiveHandled && (UTTypeConformsTo(uti as CFString, "public.zip-archive" as CFString) || UTTypeConformsTo(uti as CFString, "com.rarlab.rar-archive" as CFString)) {
+            currentFileType = .archive
+            currentInfo = getInfoForArchive(atURL: item)
         } else {
             currentFile = nil
+            currentInfo = nil
+            currentFileType = nil
             return nil
         }
+        
+        guard let info = self.currentInfo else {
+            currentFile = nil
+            currentInfo = nil
+            currentFileType = nil
+            return nil
+        }
+        
+        return getMenu(for: info)
     }
     
     /**
@@ -253,87 +309,58 @@ class FinderSync: FIFinderSync {/*
         }
     }
     
-    func getMenuForImage(atURL item: URL) -> NSMenu? {
-        let image_info = HelperWrapper.getImageInfo(for: item)
-        let menu = image_info?.getMenu(withSettings: settings)
+    
+    func getMenu(for info: BaseInfo) -> NSMenu? {
+        let menu = info.getMenu(withSettings: settings)
         sanitizeMenu(menu)
         return menu
     }
     
-    func getMenuForVideo(atURL item: URL) -> NSMenu? {
-        let video = HelperWrapper.getVideoInfo(for: item)
-        let menu = video?.getMenu(withSettings: settings)
-        sanitizeMenu(menu)
-        return menu
+    func getInfoForImage(atURL item: URL) -> ImageInfo? {
+        return HelperWrapper.getImageInfo(for: item)
     }
     
-    func getMenuForAudio(atURL item: URL) -> NSMenu? {
-        let audio = HelperWrapper.getAudioInfo(for: item)
-        let menu = audio?.getMenu(withSettings: settings)
-        sanitizeMenu(menu)
-        return menu
+    func getInfoForVideo(atURL item: URL) -> VideoInfo? {
+        return HelperWrapper.getVideoInfo(for: item)
     }
     
-    func getMenuForPDF(atURL item: URL) -> NSMenu? {
-        let pdf_info = HelperWrapper.getPDFInfo(for: item)
-        let menu = pdf_info?.getMenu(withSettings: settings)
-        sanitizeMenu(menu)
-        return menu
+    func getInfoForAudio(atURL item: URL) -> AudioInfo? {
+        return HelperWrapper.getAudioInfo(for: item)
     }
     
-    func getMenuForWordDocument(atURL item: URL) -> NSMenu? {
-        let doc_info = HelperWrapper.getWordInfo(for: item)
-        let menu = doc_info?.getMenu(withSettings: settings)
-        sanitizeMenu(menu)
-        return menu
+    func getInfoForPDF(atURL item: URL) -> PDFInfo? {
+        return HelperWrapper.getPDFInfo(for: item)
     }
     
-    func getMenuForExcelDocument(atURL item: URL) -> NSMenu? {
-        let xls_info = HelperWrapper.getExcelInfo(for: item)
-        let menu = xls_info?.getMenu(withSettings: settings)
-        sanitizeMenu(menu)
-        return menu
+    func getInfoForWordDocument(atURL item: URL) -> WordInfo? {
+        return HelperWrapper.getWordInfo(for: item)
     }
     
-    func getMenuForPowerpointDocument(atURL item: URL) -> NSMenu? {
-        let ppt_info = HelperWrapper.getPowerpointInfo(for: item)
-        let menu = ppt_info?.getMenu(withSettings: settings)
-        sanitizeMenu(menu)
-        return menu
+    func getInfoForExcelDocument(atURL item: URL) -> ExcelInfo? {
+        return HelperWrapper.getExcelInfo(for: item)
     }
     
-    func getMenuForOpenDocument(atURL item: URL) -> NSMenu? {
-        let ppt_info = HelperWrapper.getOpenDocumentInfo(for: item)
-        let menu = ppt_info?.getMenu(withSettings: settings)
-        sanitizeMenu(menu)
-        return menu
+    func getInfoForPowerpointDocument(atURL item: URL) -> PowerpointInfo? {
+        return HelperWrapper.getPowerpointInfo(for: item)
     }
     
-    func getMenuForOpenSpreadsheet(atURL item: URL) -> NSMenu? {
-        let ppt_info = HelperWrapper.getOpenSpreadsheetInfo(for: item)
-        let menu = ppt_info?.getMenu(withSettings: settings)
-        sanitizeMenu(menu)
-        return menu
+    func getInfoForOpenDocument(atURL item: URL) -> WordInfo? {
+        return HelperWrapper.getOpenDocumentInfo(for: item)
     }
     
-    func getMenuForOpenPresentation(atURL item: URL) -> NSMenu? {
-        let xls_info = HelperWrapper.getOpenPresentationInfo(for: item)
-        let menu = xls_info?.getMenu(withSettings: settings)
-        sanitizeMenu(menu)
-        return menu
+    func getInfoForOpenSpreadsheet(atURL item: URL) -> ExcelInfo? {
+        return HelperWrapper.getOpenSpreadsheetInfo(for: item)
+    }
+    
+    func getInfoForOpenPresentation(atURL item: URL) -> PowerpointInfo? {
+        return HelperWrapper.getOpenPresentationInfo(for: item)
     }
 
-    func getMenuForModel(atURL item: URL) -> NSMenu? {
-        let model_info = HelperWrapper.getModelInfo(for: item)
-        let menu = model_info?.getMenu(withSettings: settings)
-        sanitizeMenu(menu)
-        return menu
+    func getInfoForModel(atURL item: URL) -> ModelInfo? {
+        return HelperWrapper.getModelInfo(for: item)
     }
     
-    func getMenuForArchive(atURL item: URL) -> NSMenu? {
-        let archive_info = HelperWrapper.getArchiveInfo(for: item)
-        let menu = archive_info?.getMenu(withSettings: settings)
-        sanitizeMenu(menu)
-        return menu
+    func getInfoForArchive(atURL item: URL) -> ArchiveInfo? {
+        return HelperWrapper.getArchiveInfo(for: item)
     }
 }

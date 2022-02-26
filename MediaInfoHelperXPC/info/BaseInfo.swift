@@ -1,5 +1,5 @@
 //
-//  BaseInfoItems.swift
+//  BaseInfo.swift
 //  MediaInfo
 //
 //  Created by Sbarex on 18/05/21.
@@ -8,6 +8,11 @@
 
 import Cocoa
 import JavaScriptCore
+
+extension NSNotification.Name {
+    static let JSConsole = NSNotification.Name(rawValue: "JSConsole")
+    static let JSException = NSNotification.Name(rawValue: "JSException")
+}
 
 extension CodingUserInfoKey {
     static let exportStoredValues = CodingUserInfoKey(rawValue: "exportStored")!
@@ -22,7 +27,7 @@ enum JSException: Error {
 }
 
 // MARK: - BaseInfo
-class BaseInfo: NSCoding, Encodable {
+class BaseInfo: NSCoding, Codable {
     static let numberFormatter: NumberFormatter = {
         let numberFormatter = NumberFormatter()
         numberFormatter.allowsFloats = true
@@ -131,17 +136,33 @@ class BaseInfo: NSCoding, Encodable {
         }
     }
     
+    var jsInitialized = false
+    
     lazy fileprivate(set) var jsContext: JSContext? = {
-        return self.initJSContext()
+        let context = self.initJSContext()
+        jsInitialized = true
+        return context
     }()
     
     weak var jsDelegate: JSExceptionDelegate?
     
+    /// In debug mode allow the js log. Must be set before initialize the js context.
+    static var debugJS: Bool = false
+    
+    static var jsOpen: (@convention(block) (String) -> Void)?
+    static var jsExec: (@convention(block) (String, [String]) -> Void)?
+    static var menuAction: ((BaseInfo, NSMenuItem)->Void)?
+    
+    // MARK: -
     init() { }
     
     required init?(coder: NSCoder) {
         
     }
+    required init(from decoder: Decoder) throws {
+        
+    }
+    
     func encode(with coder: NSCoder) {
         
     }
@@ -150,6 +171,7 @@ class BaseInfo: NSCoding, Encodable {
         
     }
     
+    // MARK: - Script support
     func initJSContext() -> JSContext? {
         guard let context = JSContext() else {
             return nil
@@ -169,24 +191,23 @@ class BaseInfo: NSCoding, Encodable {
         encoder.outputFormatting = JSONEncoder.OutputFormatting(rawValue: 0)
         */
         
-        if let data = try? encoder.encode(self), let s = String(data: data, encoding: .utf8) {
-            context.setObject(s , forKeyedSubscript: "fileJSONData" as NSString)
-            context.evaluateScript("const fileData = JSON.parse(fileJSONData); ")
-            context.evaluateScript("""
-if (fileData["metadataRaw"]) {
-    for (key in fileData["metadataRaw"]) {
-        if (!fileData["metadataRaw"].hasOwnProperty(key)) {
-            continue;
-        }
-        fileData["metadataRaw"][key] = JSON.parse(fileData["metadataRaw"][key]);
-    }
-}
-""")
-        } else {
-            context.setObject(nil, forKeyedSubscript: "fileJSONData" as NSString)
-        }
         context.evaluateScript("""
-function __consoleLog() { }
+function deepFreeze(object) {
+  // Retrieve the property names defined on object
+  const propNames = Object.getOwnPropertyNames(object);
+
+  // Freeze properties before freezing self
+
+  for (const name of propNames) {
+    const value = object[name];
+
+    if (value && typeof value === "object") {
+      deepFreeze(value);
+    }
+  }
+
+  return Object.freeze(object);
+}
 const console = {
     debug: function() {
         let a = Array.prototype.slice.call(arguments);
@@ -221,8 +242,37 @@ const console = {
         }
     },
 }
+deepFreeze(console);
+
+let selectedMenuItem = null;
 """);
-        
+        if Self.debugJS {
+            let logFunction: @convention(block) ([AnyHashable]) -> Void  = { (object: [AnyHashable]) in
+                let level = object.first as? String ?? "info"
+                NotificationCenter.default.post(name: .JSConsole, object: (self, level, Array(object.dropFirst())))
+            }
+            context.setObject(logFunction, forKeyedSubscript: "__consoleLog" as NSString)
+        } else {
+            context.evaluateScript("function __consoleLog() { }")
+        }
+        if let data = try? encoder.encode(self), let s = String(data: data, encoding: .utf8) {
+            context.setObject(s , forKeyedSubscript: "fileJSONData" as NSString)
+            context.evaluateScript("const fileData = JSON.parse(fileJSONData); ")
+            context.evaluateScript("""
+if (fileData["metadataRaw"]) {
+    for (key in fileData["metadataRaw"]) {
+        if (!fileData["metadataRaw"].hasOwnProperty(key)) {
+            continue;
+        }
+        fileData["metadataRaw"][key] = JSON.parse(fileData["metadataRaw"][key]);
+    }
+}
+delete fileJSONData;
+""")
+        } else {
+            context.setObject(nil, forKeyedSubscript: "fileJSONData" as NSString)
+        }
+        context.evaluateScript("deepFreeze(fileData);")
         /*
         let logFunction: @convention(block) (String) -> Void  = { (object: AnyHashable) in
             print("JSConsole: ", object)
@@ -233,21 +283,75 @@ const console = {
         return context
     }
     
-    func evaluateScript(code: String, forItem itemIndex: Int) throws -> JSValue? {
+    /// Reset the Javascript context for the specified settings.
+    /// Embed in the context the `settings` var.
+    /// - parameters:
+    ///    - settings:
+    func resetJSContext(settings: Settings?) {
+        self.jsContext = initJSContext()
+        
+        guard let context = self.jsContext else { return }
+        if let settings = settings {
+            let encoder = JSONEncoder()
+            encoder.userInfo[.exportStoredValues] = true
+            
+            if let data = try? encoder.encode(settings), let s = String(data: data, encoding: .utf8) {
+                context.setObject(s, forKeyedSubscript: "settingsJSONData" as NSString)
+                context.evaluateScript("const settings = JSON.parse(settingsJSONData); delete settingsJSONData;")
+                // context.evaluateScript("console.log(settings); ")
+            } else {
+                context.setObject(nil, forKeyedSubscript: "fileJSONData" as NSString)
+            }
+        } else {
+            context.setObject(nil, forKeyedSubscript: "settings" as NSString)
+        }
+        context.evaluateScript("deepFreeze(settings);")
+        
+    }
+    
+    /// Initialize the context cor the action token.
+    func initActionJSContext(selectedItem: NSMenuItem) {
+        guard let context = self.jsContext else { return }
+        
+        if let jsOpen = Self.jsOpen {
+            context.setObject(jsOpen, forKeyedSubscript: "systemOpen" as NSString)
+        }
+        if let jsExec = Self.jsExec {
+            context.setObject(jsExec, forKeyedSubscript: "systemExec" as NSString)
+        }
+        
+        let encoder = JSONEncoder()
+        encoder.userInfo[.exportStoredValues] = true
+        
+        if let data = try? encoder.encode(selectedItem), let s = String(data: data, encoding: .utf8) {
+            context.setObject(s, forKeyedSubscript: "menuJSONData" as NSString)
+            context.evaluateScript("selectedMenuItem = JSON.parse(menuJSONData); delete menuJSONData;")
+            // context.evaluateScript("console.log(selectedMenuItem); ")
+        } else {
+            context.setObject(nil, forKeyedSubscript: "selectedMenuItem" as NSString)
+        }
+        context.evaluateScript("Object.freeze(selectedMenuItem);")
+    }
+    
+    func evaluateScript(code: String, forItem itemIndex: Int, extendExceptionHandler: Bool = true) throws -> JSValue? {
         guard let context = self.jsContext else {
             return nil
         }
         var js_exception: JSException?
         let old_exceptionHandler = context.exceptionHandler
-        context.exceptionHandler = { context, exception in
-            let line_num = exception?.objectForKeyedSubscript("line")?.toNumber().intValue ?? -1
-            let message = exception?.toString()
-            js_exception = JSException.exception(desc: message ?? "", line: line_num)
-            self.jsDelegate?.onJSException(info: self, exception: message, atLine: line_num, forItemAtIndex: itemIndex)
-            old_exceptionHandler?(context, exception)
+        if extendExceptionHandler {
+            context.exceptionHandler = { context, exception in
+                let line_num = exception?.objectForKeyedSubscript("line")?.toNumber().intValue ?? -1
+                let message = exception?.toString()
+                js_exception = JSException.exception(desc: message ?? "", line: line_num)
+                self.jsDelegate?.onJSException(info: self, exception: message, atLine: line_num, forItemAtIndex: itemIndex)
+                old_exceptionHandler?(context, exception)
+            }
         }
         defer {
-            context.exceptionHandler = old_exceptionHandler
+            if extendExceptionHandler {
+                context.exceptionHandler = old_exceptionHandler
+            }
         }
         context.setObject(itemIndex, forKeyedSubscript: "templateItemIndex" as NSString)
         let result = context.evaluateScript(code)
@@ -259,12 +363,17 @@ const console = {
         return result
     }
     
+    // MARK: - Placeholder support.
     internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
         isFilled = false
         if placeholder.hasPrefix("[[script-inline:") {
             guard let code = String(placeholder.dropFirst(16).dropLast(2)).fromBase64(), !code.isEmpty else {
                 isFilled = false
                 return ""
+            }
+            
+            if !self.jsInitialized {
+                self.resetJSContext(settings: settings)
             }
             
             guard let result = try? evaluateScript(code: code, forItem: itemIndex) else {
@@ -276,7 +385,7 @@ const console = {
                 return ""
             }
             if !result.isString {
-                self.jsDelegate?.onJSException(info: self, exception: "Inline script token must return a string value!", atLine: -1, forItemAtIndex: itemIndex)
+                self.jsDelegate?.onJSException(info: self, exception: NSLocalizedString("Inline script token must return a string value!", comment: ""), atLine: -1, forItemAtIndex: itemIndex)
             }
             if let r = result.toString() {
                 isFilled = true
@@ -401,7 +510,7 @@ const console = {
         return Self.getImage(for: name)
     }
     
-    internal func createMenuItem(title: String, image: String?, settings: Settings) -> NSMenuItem {
+    internal func createMenuItem(title: String, image: String?, settings: Settings, tag: Int) -> NSMenuItem {
         let mnu = NSMenuItem(title: title, action: #selector(self.fakeMenuAction(_:)), keyEquivalent: "")
         mnu.isEnabled = true
         mnu.target = self
@@ -416,6 +525,7 @@ const console = {
         } else {
             mnu.image = nil
         }
+        mnu.tag = tag
         return mnu
     }
     
@@ -445,6 +555,7 @@ const console = {
         
         var isFirst = true
         var isFirstFilled = false
+        self.jsInitialized = false // Force JSContext reset.
         for (i, item) in items.enumerated() {
             defer {
                 isFirst = false
@@ -461,7 +572,7 @@ const console = {
             if isFirst {
                 isFirstFilled = true
             }
-            let mnu = self.createMenuItem(title: s, image: item.image, settings: settings)
+            let mnu = self.createMenuItem(title: s, image: item.image, settings: settings, tag: i)
             destination_sub_menu.addItem(mnu)
         }
         
@@ -470,7 +581,7 @@ const console = {
         return menu
     }
     
-    internal func generateMenuFromGlobalScript(_ result: [Any], in submenu: NSMenu, settings: Settings) -> Bool {
+    internal func generateMenuFromGlobalScript(_ result: [Any], in submenu: NSMenu, settings: Settings, forItem itemIndex: Int) -> Bool {
         guard !result.isEmpty else {
             return false
         }
@@ -480,7 +591,7 @@ const console = {
                 if title == "-" {
                     submenu.addItem(NSMenuItem.separator())
                 } else {
-                    let mnu = self.createMenuItem(title: title, image: nil, settings: settings)
+                    let mnu = self.createMenuItem(title: title, image: nil, settings: settings, tag: itemIndex)
                     submenu.addItem(mnu)
                 }
                 n += 1
@@ -493,7 +604,7 @@ const console = {
                     continue
                 }
                 let image = item["image"] as? String
-                let mnu = self.createMenuItem(title: title, image: image, settings: settings)
+                let mnu = self.createMenuItem(title: title, image: image, settings: settings, tag: itemIndex)
                 if let b = item["checked"] as? Bool, b {
                     mnu.state = .on
                 }
@@ -502,11 +613,13 @@ const console = {
                 }
                 if let i = item["tag"] as? Int {
                     mnu.tag = i
+                } else {
+                    mnu.tag = itemIndex
                 }
                 submenu.addItem(mnu)
                 if let items = item["items"] as? [Any] {
                     let new_sub_menu = NSMenu()
-                    _ = generateMenuFromGlobalScript(items, in: new_sub_menu, settings: settings)
+                    _ = generateMenuFromGlobalScript(items, in: new_sub_menu, settings: settings, forItem: itemIndex)
                     if !new_sub_menu.items.isEmpty {
                         mnu.submenu = new_sub_menu
                     }
@@ -525,6 +638,10 @@ const console = {
             guard let code = String(item.template.dropFirst(16).dropLast(2)).fromBase64(), !code.isEmpty else {
                 return false
             }
+        
+            if !self.jsInitialized {
+                self.resetJSContext(settings: settings)
+            }
             
             guard let result = try? evaluateScript(code: code, forItem: itemIndex) else {
                 return false
@@ -535,17 +652,32 @@ const console = {
             }
             
             if !result.isArray {
-                self.jsDelegate?.onJSException(info: self, exception: "Global script token must return an array!", atLine: -1, forItemAtIndex: itemIndex)
+                self.jsDelegate?.onJSException(info: self, exception: NSLocalizedString("Global script token must return an array with the new menu items", comment: ""), atLine: -1, forItemAtIndex: itemIndex)
             }
             if let r = result.toArray() {
-                return self.generateMenuFromGlobalScript(r, in: destination_sub_menu, settings: settings)
+                return self.generateMenuFromGlobalScript(r, in: destination_sub_menu, settings: settings, forItem: itemIndex)
             } else if let r = result.toString(), !r.isEmpty {
-                destination_sub_menu.addItem(self.createMenuItem(title: r, image: nil, settings: settings))
+                let mnu = self.createMenuItem(title: r, image: nil, settings: settings, tag: itemIndex)
+                destination_sub_menu.addItem(mnu)
             } else {
                 return false
             }
             return true
-        } else {
+        } else if item.template.hasPrefix("[[open-with:") {
+            guard let path = String(item.template.dropFirst(12).dropLast(2)).fromBase64(), !path.isEmpty else {
+                return true
+            }
+            let url = URL(fileURLWithPath: path)
+            let title = String(format: NSLocalizedString("Open with %@…", tableName: "LocalizableExt", comment: ""), url.deletingPathExtension().lastPathComponent)
+            let mnu = self.createMenuItem(title: title, image: item.image, settings: settings, tag: itemIndex)
+            if item.image.isEmpty {
+                let img = NSWorkspace.shared.icon(forFile: url.path).resized(to: NSSize(width: 16, height: 16))
+                mnu.toolTip = url.path
+                mnu.image = img
+            }
+            destination_sub_menu.addItem(mnu)
+            return true
+        }  else {
             return false
         }
     }
@@ -576,380 +708,24 @@ const console = {
     func formatERR(useEmptyData: Bool) -> String {
         return useEmptyData ? NSLocalizedString("ERR", tableName: "LocalizableExt", comment: "") : ""
     }
-}
-
-
-enum FileCodingKeys: String, CodingKey {
-    case fileUrl
-    case fileSize
-    case filePath
-    case fileName
-    case fileExtension
-}
-
-// MARK: -
-protocol FileInfo: BaseInfo {
-    static func getFileSize(_ file: URL) -> Int64?
     
-    var file: URL { get }
-    var fileSize: Int64 { get }
-    func processFilePlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String
-    
-    func encodeFileInfo(_ encoder: NSCoder)
-    static func decodeFileInfo(_ coder: NSCoder) -> (URL, Int64?)?
-    func encodeFileInfo(to encoder: Encoder) throws
-}
-
-extension FileInfo {
-    static func getFileSize(_ file: URL) -> Int64? {
-        if let attr = try? FileManager.default.attributesOfItem(atPath: file.path), let fileSize = attr[FileAttributeKey.size] as? Int64 {
-            return fileSize
+    func formatCount(_ n: Int, noneLabel: String, singleLabel: String, manyLabel: String, isFilled: inout Bool, useEmptyData: Bool, formatAsString: Bool = true) -> String {
+        isFilled = n > 0
+        if n == 0 {
+            return useEmptyData ? NSLocalizedString(noneLabel, tableName: "LocalizableExt", comment: "") : ""
+        } else if n == 1 {
+            return NSLocalizedString(singleLabel, tableName: "LocalizableExt", comment: "")
         } else {
-            return nil
-        }
-    }
-    
-    static func decodeFileInfo(_ coder: NSCoder) -> (URL, Int64?)? {
-        guard let u = coder.decodeObject(of: NSString.self, forKey: "file") else {
-            return nil
-        }
-        let file = URL(fileURLWithPath: u as String)
-        let fileSize = coder.decodeInt64(forKey: "fileSize")
-        return (file, fileSize)
-    }
-    
-    func encodeFileInfo(_ coder: NSCoder) {
-        coder.encode(self.file.path as NSString, forKey: "file")
-        coder.encode(self.fileSize, forKey: "fileSize")
-    }
-    
-    func encodeFileInfo(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: FileCodingKeys.self)
-        try container.encode(self.file, forKey: .fileUrl)
-        try container.encode(self.fileSize, forKey: .fileSize)
-        
-        if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
-            try container.encode(self.file.path, forKey: .filePath)
-            try container.encode(self.file.lastPathComponent, forKey: .fileName)
-            try container.encode(self.file.pathExtension, forKey: .fileExtension)
-        }
-    }
-    
-    func processFilePlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String {
-        let useEmptyData = !settings.isEmptyItemsSkipped
-        
-        switch placeholder {
-        case "[[filesize]]":
-            isFilled = self.fileSize > 0
-            return self.fileSize >= 0 ? Self.byteCountFormatter.string(fromByteCount: fileSize) : self.formatND(useEmptyData: useEmptyData)
-        case "[[file-name]]":
-            isFilled = true
-            return self.file.lastPathComponent
-        case "[[file-ext]]":
-            isFilled = true
-            return self.file.pathExtension
-        default:
-            isFilled = false
-            return placeholder
-        }
-    }
-}
-
-// MARK: -
-protocol PaperInfo {
-    static func getPaperSize(width: Double, height: Double) -> String?
-}
-
-extension PaperInfo {
-    /// Get the format of the size
-    /// - parameters:
-    ///   - width: Width, in _mm_.
-    ///   - height: Height, in _mm_.
-    static func getPaperSize(width: Double, height: Double) -> String? {
-        guard width > 0 && height > 0 else {
-            return nil
-        }
-        let formats: [String: [Double]] = [
-            "A0": [841, 1189],
-            "A1": [594, 841],
-            "A2": [420, 594],
-            "A3": [297, 420],
-            "A4": [210, 297],
-            "A5": [148, 210],
-            "A6": [105, 148],
-            "A7": [74, 105],
-            "A8": [52, 74],
-            "A9": [37, 52],
-            "A10": [26, 37],
-            
-            "B0": [1000, 1414],
-            "B1": [707, 1000],
-            "B2": [500, 707],
-            "B3": [353, 500],
-            "B4": [250, 353],
-            "B5": [176, 250],
-            "B6": [125, 176],
-            "B7": [88, 125],
-            "B8": [62, 88],
-            "B9": [44, 62],
-            "B10": [31, 44],
-            
-            "C0": [917, 1297],
-            "C1": [648, 917],
-            "C2": [458, 648],
-            "C3": [324, 458],
-            "C4": [229, 324],
-            "C5": [162, 229],
-            "C6": [114, 162],
-            "C7": [81, 114],
-            "C8": [57, 81],
-            "C9": [40, 57],
-            "C10": [28, 40],
-            
-            "letter": [216, 279],
-            "legal": [216, 356],
-            "legal junior": [203, 127],
-            "ledger": [432, 279], // tabloid
-            
-            "Arch A": [229, 305],
-            "Arch B": [305, 457],
-            "Arch C": [457, 610],
-            "Arch D": [610, 914],
-            "Arch E": [914, 1219],
-            "Arch E1": [762, 1067],
-            "Arch E2": [660, 965],
-            "Arch E£": [686, 991],
-        ]
-        
-        let w = min(width, height)
-        let h = max(width, height)
-        var d = formats.map { k, v -> (String, [Double]) in
-            let dw = abs(v[0] - w)
-            let dh = abs(v[1] - h)
-            
-            return (k, [dw, dh])
-        }
-        if let k = d.first(where: { $0.1[0] <= 0.1 && $0.1[1] <= 0.1 }) {
-            if k.0 == "ledger" && width < height {
-                return "tabloid"
-            }
-            return k.0
-        }
-        d.sort { a, b in
-            let m1 = a.1.reduce(0, +) / Double(a.1.count)
-            let m2 = b.1.reduce(0, +) / Double(b.1.count)
-            return m1 < m2
-        }
-        guard let result = d.first else {
-            return nil
-        }
-        
-        let v = formats[result.0]!
-        let max_delta: Double
-        if v[1] <= 150 {
-            max_delta = 1.5
-        } else if v[1] <= 600 {
-            max_delta = 2.0
-        } else {
-            max_delta = 3.0
-        }
-        if result.1.reduce(0, +) / 2.0 <= max_delta {
-            if result.0 == "ledger" && width < height {
-                return "tabloid" // "~ tabloid"
-            }
-            
-            return "\(result.0)" // "~ \(result.0)"
-        }
-        return nil
-    }
-}
-
-
-// MARK: - DimensionalInfo
-class DimensionalInfo: BaseInfo {
-    enum Orientation {
-        case landscape
-        case portrait
-    }
-    
-    static func getRatio(width: Int, height: Int, approximate: Bool) -> String? {
-        var gcd = Int.gcd(width, height)
-        guard gcd != 1 else {
-            return nil
-        }
-            
-        var circa = false
-        if approximate, gcd < 8, let gcd1 = [Int.gcd(width+1, height), Int.gcd(width-1, height), Int.gcd(width, height+1), Int.gcd(width, height-1)].max(), gcd1 > gcd {
-            gcd = gcd1 * Int.gcd(width/gcd1, height / gcd1)
-            circa = true
-        }
-        let w = width / gcd
-        let h = height / gcd
-        
-        guard w <= 30 && h <= 30 else {
-            return nil
-        }
-        
-        return "\(circa ? "~ " : "")\(w) : \(h)"
-    }
-    
-    static func getResolutioName(width: Int, height: Int)->String? {
-        let resolutions = [
-            // Narrowscreen 4:3 computer display resolutions
-            "MCGA": [320, 200],
-            "QVGA" : [320, 240],
-            "VGA" : [640, 480],
-            "Super VGA" : [800, 600],
-            "XGA" : [1024, 768],
-            "SXGA" : [1280, 1024],
-            "UXGA" : [1600, 1200],
-            
-            // Analog
-            "CRT monitors": [320, 200],
-            "Video CD": [352, 240],
-            "VHS": [333, 480],
-            "Betamax": [350, 480],
-            "Super Betamax": [420, 480],
-            "Betacam SP": [460, 480],
-            "Super VHS": [580, 480],
-            "Enhanced Definition Betamax": [700, 480],
-            
-            // Digital
-            "Digital8": [500, 480],
-            "NTSC DV": [720, 480],
-            "NTSC D1": [720, 486],
-            "NTSC D1 Square pixel": [720, 543],
-            "NTSC D1 Widescreen Square Pixel": [782, 486],
-            
-            "EDTV (Enhanced Definition Television)": [854, 480],
-            "D-VHS, DVD, miniDV, Digital8, Digital Betacam (PAL/SECAM)": [720, 576],
-            "PAL D1/DV": [720, 576],
-            "PAL D1/DV Square pixel": [788, 576],
-            "PAL D1/DV Widescreen Square pixel": [1050, 576],
-            
-            
-            "HDV/HDTV 720": [1280, 720],
-            "HDTV 1080": [1440, 1080],
-            "DVCPRO HD 720": [960, 720],
-            "DVCPRO HD 1080": [1440, 1080],
-            
-            "HDTV 1080 (FullHD)": [1920, 1080],
-            
-            // "HDV (miniDV), AVCHD, HD DVD, Blu-ray, HDCAM SR": [1920, 1080],
-            "2K Flat (1.85:1)": [1998, 1080],
-            "UHD 4K": [3840, 2160],
-            "UHD 8K": [7680, 4320],
-            "Cineon Half": [1828, 1332],
-            "Cineon Full": [3656, 2664],
-            "Film (2K)": [2048, 1556],
-            "Film (4K)": [4096, 3112],
-            "Digital Cinema (2K)": [2048, 1080],
-            "Digital Cinema (4K)": [4096, 2160],
-            "Digital Cinema (16K)": [15360, 8640],
-            "Digital Cinema (64K)": [61440, 34560],
-        ]
-        return resolutions.first(where: { $1[0] == width && $1[1] == height })?.key
-    }
-    
-    var unit = "px"
-    
-    let width: Int
-    let height: Int
-    
-    var orientation: DimensionalInfo.Orientation {
-        return width < height ? .portrait : .landscape
-    }
-    var isLandscape: Bool {
-        return orientation == .landscape
-    }
-    var isPortrait: Bool {
-        return orientation == .portrait
-    }
-    
-    lazy var resolutionName: String? = {
-        return Self.getResolutioName(width: max(width, height), height: min(width, height))
-    }()
-    
-    
-    init(width: Int, height: Int) {
-        self.width = width
-        self.height = height
-        super.init()
-    }
-    
-    required init?(coder: NSCoder) {
-        self.width = coder.decodeInteger(forKey: "width")
-        self.height = coder.decodeInteger(forKey: "height")
-        
-        super.init(coder: coder)
-    }
-    
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.width, forKey: "width")
-        coder.encode(self.height, forKey: "height")
-        super.encode(with: coder)
-    }
-    
-    func getRatio(approximate: Bool) -> String? {
-        return Self.getRatio(width: width, height: height, approximate: approximate)
-    }
-    
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        switch placeholder {
-        case "[[size]]":
-            isFilled = true
-            if let w = Self.numberFormatter.string(from: NSNumber(integerLiteral: width)), let h = Self.numberFormatter.string(from: NSNumber(integerLiteral: height)) {
-               return "\(w) × \(h) \(self.unit)"
-           } else {
-               return "\(width) × \(height) \(self.unit)"
-           }
-        case "[[width]]":
-            if let w = Self.numberFormatter.string(from: NSNumber(integerLiteral: width)) {
-                return "\(w) \(self.unit)"
+            if formatAsString {
+                return String(format: NSLocalizedString(manyLabel, tableName: "LocalizableExt", comment: ""), BaseInfo.numberFormatter.string(from: NSNumber(integerLiteral: n)) ?? "\(n)")
             } else {
-                return "\(width)"
+                return String(format: NSLocalizedString(manyLabel, tableName: "LocalizableExt", comment: ""), n)
             }
-        case "[[height]]":
-            if let h = Self.numberFormatter.string(from: NSNumber(integerLiteral: height)) {
-                    return "\(h) \(self.unit)"
-            } else {
-                return "\(width)"
-            }
-        case "[[ratio]]":
-            guard let ratio = Self.getRatio(width: width, height: height, approximate: !settings.isRatioPrecise) else {
-                isFilled = false
-                return ""
-            }
-            isFilled = true
-            return ratio
-        case "[[resolution]]":
-            isFilled = true
-            return Self.getResolutioName(width: width, height: height) ?? ""
-        default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
         }
     }
-    
-    override internal func getImage(for name: String) -> NSImage? {
-        var image: String
-        switch name {
-        case "image":
-            image = self.isPortrait ? "image_v" : "image"
-        case "video":
-            image = isPortrait ? "video_v" : "video"
-        case "ratio":
-            image = isPortrait ? "ratio_v" : "ratio"
-        case "page":
-            image = isPortrait ? "page_v" : "page"
-        case "artbox":
-            image = self.isPortrait ? "artbox_v" : "artbox"
-        case "bleed":
-            image = self.isPortrait ? "bleed_v" : "bleed"
-        case "pdf":
-            image = self.isPortrait ? "pdf_v" : "pdf"
-        default:
-            image = name
-        }
-        return super.getImage(for: image)
+    func formatCount(_ n: Int, noneLabel: String, singleLabel: String, manyLabel: String, useEmptyData: Bool, formatAsString: Bool = true) -> String {
+        var isFilled = false
+        return formatCount(n, noneLabel: noneLabel, singleLabel: singleLabel, manyLabel: manyLabel, isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: formatAsString)
     }
 }
+

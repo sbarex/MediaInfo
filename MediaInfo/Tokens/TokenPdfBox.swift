@@ -19,6 +19,15 @@ class TokenPdfBox: Token {
             return .MITokenPDFBox
         }
         
+        var title: String {
+            switch self {
+            case .mediaBox: return NSLocalizedString("Media box", comment: "")
+            case .bleedBox: return NSLocalizedString("Bleed box", comment: "")
+            case .cropBox: return NSLocalizedString("Crop box", comment: "")
+            case .artBox: return NSLocalizedString("Art box", comment: "")
+            }
+        }
+        
         var displayString: String {
             switch self {
             case .mediaBox: return NSLocalizedString("Media Box", comment: "")
@@ -53,6 +62,10 @@ class TokenPdfBox: Token {
     required convenience init?(mode: BaseMode) {
         guard let m = mode as? Mode else { return nil }
         self.init(mode: m, unit: .pt)
+    }
+    
+    override var title: String {
+        return mode.title
     }
     
     required init(mode: Mode, unit: PDFInfo.PrintUnit) {
@@ -109,7 +122,7 @@ class TokenPdfBox: Token {
         self.mode = mode
     }
     
-    override func getMenu(extra: [String : AnyHashable] = [:], callback: @escaping ((Token, NSMenuItem)->Void)) -> NSMenu? {
+    override func createMenu() -> NSMenu? {
         let menu = NSMenu()
         
         menu.addItem(withTitle: self.mode.displayString, action: nil, keyEquivalent: "")
@@ -119,14 +132,30 @@ class TokenPdfBox: Token {
             menu.addItem(self.createMenuItem(title: unit.displayString, state: self.unit == unit, tag: unit.rawValue, tooltip: ""))
         }
         
-        self.callbackMenu = callback
         return menu
     }
     
-    @IBAction override func handleTokenMenu(_ sender: NSMenuItem) {
-        if let token = sender.representedObject as? TokenPdfBox, let unit = PDFInfo.PrintUnit(rawValue: sender.tag) {
-            token.unit = unit
+    override func getTokenFromSender(_ sender: NSMenuItem) -> BaseMode? {
+        guard let token = sender.representedObject as? TokenPdfBox else {
+            return nil
         }
-        self.callbackMenu?(self, sender)
+        return token.mode
+    }
+    
+    @IBAction override func handleTokenMenu(_ sender: NSMenuItem) {
+        guard let token = sender.representedObject as? Self, let unit = PDFInfo.PrintUnit(rawValue: sender.tag) else {
+            return
+        }
+        
+        if self.isReadOnly {
+            guard let t = Self.init(mode: token.mode) else {
+                return
+            }
+            t.unit = unit
+            self.callbackMenu?(t, sender)
+        } else {
+            token.unit = unit
+            self.callbackMenu?(self, sender)
+        }
     }
 }

@@ -100,6 +100,13 @@ class HelperWrapper: SettingsService {
                 return
             }
             let data = Data(referencing: d)
+            let decoder = JSONDecoder()
+            do {
+                info = try decoder.decode(T.self, from: data)
+            } catch {
+                print(error)
+            }
+            /*
             let u: NSKeyedUnarchiver
             do {
                 u = try NSKeyedUnarchiver(forReadingFrom: data)
@@ -108,6 +115,7 @@ class HelperWrapper: SettingsService {
             }
             info = T(coder: u)
             u.finishDecoding()
+             */
         }
         
         if !Thread.isMainThread {
@@ -127,5 +135,19 @@ class HelperWrapper: SettingsService {
             return
         }
         service.openFile(url: url)
+    }
+    
+    static func openFile(url: URL, withApp path: String) {
+        guard let service = Self.service as? MediaInfoHelperXPCProtocol else {
+            return
+        }
+        service.openFile(url: url, withApp: path)
+    }
+    
+    static func systemExec(command: String, arguments: [String]) {
+        guard let service = Self.service as? MediaInfoHelperXPCProtocol else {
+            return
+        }
+        service.systemExec(command: command, arguments: arguments)
     }
 }
