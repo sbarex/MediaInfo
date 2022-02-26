@@ -58,19 +58,6 @@ class FileInfo: BaseInfo {
         super.init()
     }
     
-    required init?(coder: NSCoder) {
-        guard let u = coder.decodeObject(of: NSString.self, forKey: "file") else {
-            return nil
-        }
-        self.file = URL(fileURLWithPath: u as String)
-        self.fileSize = coder.decodeInt64(forKey: "fileSize")
-        self.fileCreationDate = coder.decodeObject(of: NSDate.self, forKey: "fileCDate") as Date?
-        self.fileModificationDate = coder.decodeObject(of: NSDate.self, forKey: "fileMDate") as Date?
-        self.fileAccessDate = coder.decodeObject(of: NSDate.self, forKey: "fileADate") as Date?
-        
-        super.init(coder: coder)
-    }
-    
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: FileCodingKeys.self)
         self.file = try container.decode(URL.self, forKey: .fileUrl)
@@ -79,16 +66,6 @@ class FileInfo: BaseInfo {
         self.fileModificationDate = try container.decode(Date.self, forKey: .fileModificationDate)
         self.fileAccessDate = try container.decode(Date.self, forKey: .fileAccessDate)
         try super.init(from: decoder)
-    }
-    
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.file.path as NSString, forKey: "file")
-        coder.encode(self.fileSize, forKey: "fileSize")
-        coder.encode(self.fileCreationDate as NSDate?, forKey: "fileCDate")
-        coder.encode(self.fileModificationDate as NSDate?, forKey: "fileMDate")
-        coder.encode(self.fileAccessDate as NSDate?, forKey: "fileADate")
-        
-        super.encode(with: coder)
     }
     
     override func encode(to encoder: Encoder) throws {

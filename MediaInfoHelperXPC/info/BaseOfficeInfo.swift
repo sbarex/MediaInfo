@@ -54,60 +54,6 @@ class BaseOfficeInfo: FileInfo {
         super.init(file: file)
     }
     
-    required init?(coder: NSCoder) {
-        self.creator = coder.decodeObject(of: NSString.self, forKey: "creator") as String? ?? ""
-        self.title = coder.decodeObject(of: NSString.self, forKey: "title") as String? ?? ""
-        self.subject = coder.decodeObject(of: NSString.self, forKey: "subject") as String? ?? ""
-        self.description = coder.decodeObject(of: NSString.self, forKey: "description") as String? ?? ""
-        
-        let n = coder.decodeInteger(forKey: "keywords_count")
-        var keywords: [String] = []
-        for i in 0 ..< n {
-            if let k = coder.decodeObject(of: NSString.self, forKey: "keyword_\(i)") as String? {
-                keywords.append(k)
-            }
-        }
-        self.keywords = keywords
-        
-        if let n = coder.decodeObject(of: NSNumber.self, forKey: "creationDate")?.doubleValue {
-            self.creationDate = Date(timeIntervalSince1970: n)
-        } else {
-            self.creationDate = nil
-        }
-        if let n = coder.decodeObject(of: NSNumber.self, forKey: "modificationDate")?.doubleValue {
-            self.modificationDate = Date(timeIntervalSince1970: n)
-        } else {
-            self.modificationDate = nil
-        }
-        
-        self.modified = coder.decodeObject(of: NSString.self, forKey: "modified") as String? ?? ""
-        
-        self.application = coder.decodeObject(of: NSString.self, forKey: "application") as String? ?? ""
-        
-        super.init(coder: coder)
-    }
-    
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.creator as NSString, forKey: "creator")
-        coder.encode(self.title as NSString, forKey: "title")
-        coder.encode(self.subject as NSString, forKey: "subject")
-        coder.encode(self.description as NSString, forKey: "description")
-        
-        coder.encode(self.keywords.count, forKey: "keywords_count")
-        for i in 0 ..< self.keywords.count {
-            coder.encode(self.keywords[i] as NSString, forKey: "keyword_\(i)")
-        }
-        
-        coder.encode((self.creationDate?.timeIntervalSince1970) as NSNumber?, forKey: "creationDate")
-        coder.encode((self.modificationDate?.timeIntervalSince1970) as NSNumber?, forKey: "modificationDate")
-        
-        coder.encode(self.modified as NSString, forKey: "modified")
-        
-        coder.encode(self.application as NSString, forKey: "application")
-        
-        super.encode(with: coder)
-    }
-    
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.creator = try container.decode(String.self, forKey: .creator)

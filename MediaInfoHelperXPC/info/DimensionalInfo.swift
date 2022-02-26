@@ -22,7 +22,6 @@ enum DimensionCodingKeys: String, CodingKey {
 protocol DimensionalInfo: BaseInfo {
     static func getRatio(width: Int, height: Int, approximate: Bool) -> String?
     static func getResolutioName(width: Int, height: Int)->String?
-    static func decodeDimension(coder: NSCoder) -> (Int, Int)
     
     var unit: String { get }
     
@@ -35,8 +34,8 @@ protocol DimensionalInfo: BaseInfo {
     
     var resolutionName: String? { get }
     
-    func encodeDimension(with coder: NSCoder)
     func encodeDimension(to encoder: Encoder) throws
+    static func decodeDimension(from decoder: Decoder) throws -> (width: Int, height: Int)
     
     func getRatio(approximate: Bool) -> String?
     func processDimensionPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String
@@ -137,23 +136,12 @@ extension DimensionalInfo {
         return Self.getResolutioName(width: max(width, height), height: min(width, height))
     }
     
-    static func decodeDimension(coder: NSCoder) -> (Int, Int) {
-        let width = coder.decodeInteger(forKey: "width")
-        let height = coder.decodeInteger(forKey: "height")
-        
-        return (width, height)
-    }
-    
-    func encodeDimension(with coder: NSCoder) {
-        coder.encode(self.width, forKey: "width")
-        coder.encode(self.height, forKey: "height")
-    }
-    
     func encodeDimension(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: DimensionCodingKeys.self)
         try container.encode(self.width, forKey: .width)
         try container.encode(self.height, forKey: .height)
     }
+    
     static func decodeDimension(from decoder: Decoder) throws -> (width: Int, height: Int) {
         let container = try decoder.container(keyedBy: DimensionCodingKeys.self)
         let width = try container.decode(Int.self, forKey: .width)

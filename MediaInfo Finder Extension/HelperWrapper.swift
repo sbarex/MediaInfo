@@ -106,16 +106,6 @@ class HelperWrapper: SettingsService {
             } catch {
                 print(error)
             }
-            /*
-            let u: NSKeyedUnarchiver
-            do {
-                u = try NSKeyedUnarchiver(forReadingFrom: data)
-            } catch {
-                return
-            }
-            info = T(coder: u)
-            u.finishDecoding()
-             */
         }
         
         if !Thread.isMainThread {

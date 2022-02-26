@@ -27,7 +27,7 @@ enum JSException: Error {
 }
 
 // MARK: - BaseInfo
-class BaseInfo: NSCoding, Codable {
+class BaseInfo: Codable {
     static let numberFormatter: NumberFormatter = {
         let numberFormatter = NumberFormatter()
         numberFormatter.allowsFloats = true
@@ -156,14 +156,7 @@ class BaseInfo: NSCoding, Codable {
     // MARK: -
     init() { }
     
-    required init?(coder: NSCoder) {
-        
-    }
     required init(from decoder: Decoder) throws {
-        
-    }
-    
-    func encode(with coder: NSCoder) {
         
     }
     

@@ -9,7 +9,7 @@
 import Cocoa
 import UniformTypeIdentifiers
 
-class ArchivedFile: NSCoding, Codable {
+class ArchivedFile: Codable {
     public enum ArchiveSortEnum: String {
         case name = "name"
         case creationDate = "cDate"
@@ -275,59 +275,7 @@ class ArchivedFile: NSCoding, Codable {
         return img
     }()
     
-    // MARK: - Init
-    required init?(coder: NSCoder) {
-        guard let url = coder.decodeObject(of: NSString.self, forKey: "url") else {
-            return nil
-        }
-        guard coder.containsValue(forKey: "type"), let type = ArchivedFileTypeEnum(rawValue: coder.decodeInteger(forKey: "type")) else {
-            return nil
-        }
-        self.type = type
-        self.originalPath = coder.decodeObject(of: NSString.self, forKey: "originalPath") as String? ?? ""
-        self.url = URL(fileURLWithPath: url as String, isDirectory: type == .directory)
-        self.isEncrypted = coder.decodeBool(forKey: "isEncrypted")
-
-        self.cDate = coder.decodeInteger(forKey: "cDate")
-        self.mDate = coder.decodeInteger(forKey: "mDate")
-        self.aDate = coder.decodeInteger(forKey: "aDate")
-        
-        self.size = coder.decodeInt64(forKey: "size")
-        guard let format = coder.decodeObject(of: NSString.self, forKey: "format") as String? else {
-            return nil
-        }
-        self.format = format
-        
-        self.uid = coder.decodeInt64(forKey: "uid")
-        self.uidName = coder.decodeObject(of: NSString.self, forKey: "uidName") as String?
-        self.gid = coder.decodeInt64(forKey: "gid")
-        self.gidName = coder.decodeObject(of: NSString.self, forKey: "gidName") as String?
-        
-        guard let mode = coder.decodeObject(of: NSString.self, forKey: "mode")  as String? else {
-            return nil
-        }
-        self.mode = mode
-        self.acl = coder.decodeObject(of: NSString.self, forKey: "acl") as String?
-        
-        guard let flags = coder.decodeObject(of: NSString.self, forKey: "flags") as String? else {
-            return nil
-        }
-        self.flags = flags
-        self.link = coder.decodeObject(of: NSString.self, forKey: "link") as String?
-        
-        self.files = []
-        let n = coder.decodeInteger(forKey: "fileCount")
-        for i in 0 ..< n {
-            if let data = coder.decodeObject(of: NSData.self, forKey: "file_\(i)") as Data?, let c = try? NSKeyedUnarchiver(forReadingFrom: data) {
-                if let m = ArchivedFile(coder: c) {
-                    m.parent = self
-                    self.files.append(m)
-                }
-                c.finishDecoding()
-            }
-        }
-    }
-    
+    // MARK: - Init    
     public init(fullpath: String, mode: String, cDate: time_t, mDate: time_t, aDate: time_t, type: ArchivedFileTypeEnum, size: Int64, format: String, uid: Int64, uidName: String?, gid: Int64, gidName: String?, acl: String? = "", flags: String = "", link: String? = nil, encrypted: Bool = false) {
         var path = fullpath
         
@@ -362,39 +310,6 @@ class ArchivedFile: NSCoding, Codable {
         self.files = []
     }
     
-    func encode(with coder: NSCoder) {
-        coder.encode(self.url.path as NSString, forKey: "url")
-        coder.encode(self.originalPath as NSString, forKey: "originalPath")
-        coder.encode(self.type.rawValue, forKey: "type")
-        
-        coder.encode(self.cDate, forKey: "cDate")
-        coder.encode(self.mDate, forKey: "mDate")
-        coder.encode(self.aDate, forKey: "aDate")
-        
-        coder.encode(self.size, forKey: "size")
-        coder.encode(self.format as NSString, forKey: "format")
-        
-        coder.encode(self.uid, forKey: "uid")
-        coder.encode(self.uidName as NSString?, forKey: "uidName")
-        coder.encode(self.gid, forKey: "gid")
-        coder.encode(self.gidName as NSString?, forKey: "gidName")
-        
-        coder.encode(self.mode as NSString, forKey: "mode")
-        coder.encode(self.acl as NSString?, forKey: "acl")
-        coder.encode(self.flags as NSString, forKey: "flags")
-        
-        coder.encode(self.link as NSString?, forKey: "link")
-        
-        coder.encode(self.isEncrypted, forKey: "isEncrypted")
-        
-        coder.encode(self.files.count, forKey: "fileCount")
-        for (i, m) in self.files.enumerated() {
-            let c = NSKeyedArchiver(requiringSecureCoding: coder.requiresSecureCoding)
-            m.encode(with: c)
-            coder.encode(c.encodedData, forKey: "file_\(i)")
-        }
-    }
-    
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.url = try container.decode(URL.self, forKey: .url)
@@ -416,6 +331,7 @@ class ArchivedFile: NSCoding, Codable {
         self.isEncrypted = try container.decode(Bool.self, forKey: .isEncrypted)
         self.files = try container.decode([ArchivedFile].self, forKey: .files)
     }
+    
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.url, forKey: .url)
@@ -640,40 +556,6 @@ class ArchiveInfo: FileInfo {
             self.unlimitedFileSize = s
         }
         super.init(file: file)
-    }
-    
-    required init?(coder: NSCoder) {
-        self.compressionName = coder.decodeObject(of: NSString.self, forKey: "compressionName") as String? ?? ""
-        self.unlimitedFileCount = coder.decodeInteger(forKey: "unlimitedFileCount")
-        self.unlimitedFileSize = coder.decodeInt64(forKey: "unlimitedFileSize")
-        
-        var files: [ArchivedFile] = []
-        let n = coder.decodeInteger(forKey: "fileCount")
-        for i in 0 ..< n {
-            if let data = coder.decodeObject(of: NSData.self, forKey: "file_\(i)") as Data?, let c = try? NSKeyedUnarchiver(forReadingFrom: data) {
-                if let m = ArchivedFile(coder: c) {
-                    files.append(m)
-                }
-                c.finishDecoding()
-            }
-        }
-        self.files = files
-        
-        super.init(coder: coder)
-    }
-    
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.compressionName as NSString, forKey: "compressionName")
-        coder.encode(self.unlimitedFileCount, forKey: "unlimitedFileCount")
-        coder.encode(self.unlimitedFileSize, forKey: "unlimitedFileSize")
-        coder.encode(self.files.count, forKey: "fileCount")
-        for (i, m) in self.files.enumerated() {
-            let c = NSKeyedArchiver(requiringSecureCoding: coder.requiresSecureCoding)
-            m.encode(with: c)
-            coder.encode(c.encodedData, forKey: "file_\(i)")
-        }
-        
-        super.encode(with: coder)
     }
     
     required init(from decoder: Decoder) throws {

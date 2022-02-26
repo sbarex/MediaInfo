@@ -643,7 +643,7 @@ extension CodecInfo {
     }
 }
 
-class Chapter: NSCoding, Codable {
+class Chapter: Codable {
     enum CodingKeys: String, CodingKey {
         case title
         case start
@@ -661,18 +661,6 @@ class Chapter: NSCoding, Codable {
         self.title = title
         self.start = start
         self.end = end
-    }
-    
-    required init?(coder: NSCoder) {
-        self.title = coder.decodeObject(of: NSString.self, forKey: "title") as String?
-        self.start = coder.decodeDouble(forKey: "start")
-        self.end = coder.decodeDouble(forKey: "end")
-    }
-    
-    func encode(with coder: NSCoder) {
-        coder.encode(title as NSString?, forKey: "title")
-        coder.encode(start, forKey: "start")
-        coder.encode(end, forKey: "end")
     }
     
     required init(from decoder: Decoder) throws {
@@ -718,9 +706,6 @@ class Chapter: NSCoding, Codable {
 protocol ChaptersInfo: BaseInfo {
     var chapters: [Chapter] { get }
     func processPlaceholderChapters(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String
-    
-    static func decodeChapters(from coder: NSCoder) -> [Chapter]
-    func encodeChapters(in coder: NSCoder)
 }
 
 enum ChaptersCodingKeys: String, CodingKey {
@@ -728,33 +713,6 @@ enum ChaptersCodingKeys: String, CodingKey {
 }
 
 extension ChaptersInfo {
-    static func decodeChapters(from coder: NSCoder) -> [Chapter] {
-        let n = coder.decodeInteger(forKey: "chapters_count")
-        var chapters: [Chapter] = []
-        for i in 0 ..< n {
-            guard let d = coder.decodeObject(of: NSData.self, forKey: "chapter_\(i)") as Data?, let c = try? NSKeyedUnarchiver(forReadingFrom: d) else {
-                continue
-            }
-            defer {
-                c.finishDecoding()
-            }
-            guard let chapter = Chapter(coder: c) else {
-                continue
-            }
-            chapters.append(chapter)
-        }
-        return chapters
-    }
-    
-    func encodeChapters(in coder: NSCoder) {
-        coder.encode(self.chapters.count, forKey: "chapters_count")
-        for i in 0 ..< self.chapters.count {
-            let c = NSKeyedArchiver(requiringSecureCoding: coder.requiresSecureCoding)
-            self.chapters[i].encode(with: c)
-            coder.encode(c.encodedData, forKey: "chapter_\(i)")
-        }
-    }
-    
     func processPlaceholderChapters(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
@@ -852,49 +810,6 @@ class VideoTrackInfo: BaseInfo, DimensionalInfo, LanguageInfo, DurationInfo, Cod
         self.width = width
         self.height = height
         super.init()
-    }
-
-    required init?(coder: NSCoder) {
-        self.duration = coder.decodeDouble(forKey: "duration")
-        self.start_time = coder.decodeDouble(forKey: "start_time")
-        self.codec_short_name = coder.decodeObject(of: NSString.self, forKey: "codec_short_name") as String? ?? ""
-        self.codec_long_name = coder.decodeObject(of: NSString.self, forKey: "codec_long_name") as String?
-        self.profile = coder.decodeObject(of: NSString.self, forKey: "profile") as String?
-        self.pixel_format = VideoPixelFormat(rawValue: coder.decodeInteger(forKey: "pixel_format"))
-        self.field_order = VideoFieldOrder(rawValue: coder.decodeInteger(forKey: "field_order"))
-        self.color_space = VideoColorSpace(rawValue: coder.decodeInteger(forKey: "color_space"))
-        self.lang = coder.decodeObject(of: NSString.self, forKey: "lang") as String?
-        self.bitRate = coder.decodeInt64(forKey: "bitRate")
-        self.frames = coder.decodeInteger(forKey: "frames")
-        self.fps = coder.decodeDouble(forKey: "fps")
-        self.title = coder.decodeObject(of: NSString.self, forKey: "title") as String?
-        self.encoder = coder.decodeObject(of: NSString.self, forKey: "encoder") as String?
-        self.isLossless = coder.decodeObject(of: NSNumber.self, forKey: "isLossless")?.boolValue
-        let d = Self.decodeDimension(coder: coder)
-        self.width = d.0
-        self.height = d.1
-        super.init(coder: coder)
-    }
-    
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.duration, forKey: "duration")
-        coder.encode(self.start_time, forKey: "start_time")
-        coder.encode(self.codec_short_name as NSString, forKey: "codec_short_name")
-        coder.encode(self.codec_long_name as NSString?, forKey: "codec_long_name")
-        coder.encode(self.profile, forKey: "profile")
-        coder.encode(self.pixel_format?.rawValue ?? -1, forKey: "pixel_format")
-        coder.encode(self.field_order?.rawValue ?? -1, forKey: "field_order")
-        coder.encode(self.color_space?.rawValue ?? -1, forKey: "color_space")
-        coder.encode(self.lang as NSString?, forKey: "lang")
-        coder.encode(self.bitRate, forKey: "bitRate")
-        coder.encode(self.frames, forKey: "frames")
-        coder.encode(self.fps, forKey: "fps")
-        coder.encode(self.title as NSString?, forKey: "title")
-        coder.encode(self.encoder as NSString?, forKey: "encoder")
-        coder.encode(self.isLossless as NSNumber?, forKey: "isLossless")
-        
-        self.encodeDimension(with: coder)
-        super.encode(with: coder)
     }
     
     required init(from decoder: Decoder) throws {
@@ -1109,81 +1024,6 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
             title: title, encoder: encoder,
             isLossless: isLossless)
         super.init(file: file)
-    }
-    
-    required init?(coder: NSCoder) {
-        self.engine = MediaEngine(rawValue: coder.decodeInteger(forKey: "engine"))!
-        
-        guard let track = coder.decodeObject(of: [VideoTrackInfo.self], forKey: "track") as? VideoTrackInfo else {
-            return nil
-        }
-        self.videoTrack = track
-        
-        self.chapters = Self.decodeChapters(from: coder)
-        
-        var n = coder.decodeInteger(forKey: "video_count")
-        var videos: [VideoTrackInfo] = []
-        for i in 0 ..< n {
-            if let data = coder.decodeObject(of: NSData.self, forKey: "video_\(i)") as Data?, let coder1 = try? NSKeyedUnarchiver(forReadingFrom: data) {
-                if let video = VideoTrackInfo(coder: coder1) {
-                    videos.append(video)
-                }
-                coder1.finishDecoding()
-            }
-        }
-        self.videoTracks = videos
-        
-        n = coder.decodeInteger(forKey: "audio_count")
-        var audios: [AudioTrackInfo] = []
-        for i in 0 ..< n {
-            if let data = coder.decodeObject(of: NSData.self, forKey: "audio_\(i)") as Data?, let coder1 = try? NSKeyedUnarchiver(forReadingFrom: data) {
-                if let audio = AudioTrackInfo(coder: coder1) {
-                    audios.append(audio)
-                }
-                coder1.finishDecoding()
-            }
-        }
-        self.audioTracks = audios
-        
-        n = coder.decodeInteger(forKey: "subtitles_count")
-        var titles: [SubtitleTrackInfo] = []
-        for i in 0 ..< n {
-            if let data = coder.decodeObject(of: NSData.self, forKey: "subtitle_\(i)") as Data?, let coder1 = try? NSKeyedUnarchiver(forReadingFrom: data) {
-                if let title = SubtitleTrackInfo(coder: coder1) {
-                    titles.append(title)
-                }
-                coder1.finishDecoding()
-            }
-        }
-        self.subtitles = titles
-        
-        super.init(coder: coder)
-    }
-    
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.engine.rawValue, forKey: "engine")
-        coder.encode(self.videoTrack, forKey: "track")
-        self.encodeChapters(in: coder)
-        coder.encode(self.videoTracks.count, forKey: "video_count")
-        for i in 0 ..< self.videoTracks.count {
-            let coder1 = NSKeyedArchiver(requiringSecureCoding: coder.requiresSecureCoding)
-            self.videoTracks[i].encode(with: coder1)
-            coder.encode(coder1.encodedData, forKey: "video_\(i)")
-        }
-        coder.encode(self.audioTracks.count, forKey: "audio_count")
-        for i in 0 ..< self.audioTracks.count {
-            let coder1 = NSKeyedArchiver(requiringSecureCoding: coder.requiresSecureCoding)
-            self.audioTracks[i].encode(with: coder1)
-            coder.encode(coder1.encodedData, forKey: "audio_\(i)")
-        }
-        coder.encode(self.subtitles.count, forKey: "subtitles_count")
-        for i in 0 ..< self.subtitles.count {
-            let coder1 = NSKeyedArchiver(requiringSecureCoding: coder.requiresSecureCoding)
-            self.subtitles[i].encode(with: coder1)
-            coder.encode(coder1.encodedData, forKey: "subtitle_\(i)")
-        }
-        
-        super.encode(with: coder)
     }
     
     required init(from decoder: Decoder) throws {
@@ -1429,26 +1269,6 @@ class ImageVideoInfo: FileInfo, DimensionalInfo, CodecInfo {
         self.height = height
         super.init(file: file)
     }
-
-    required init?(coder: NSCoder) {
-        self.codec_short_name = coder.decodeObject(of: NSString.self, forKey: "codec_short_name") as String? ?? ""
-        self.codec_long_name = coder.decodeObject(of: NSString.self, forKey: "codec_long_name") as String?
-        self.encoder = coder.decodeObject(of: NSString.self, forKey: "encoder") as String?
-        self.isLossless = coder.decodeObject(of: NSNumber.self, forKey: "isLossless")?.boolValue
-        let i = Self.decodeDimension(coder: coder)
-        self.width = i.0
-        self.height = i.1
-        super.init(coder: coder)
-    }
-    
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.codec_short_name as NSString, forKey: "codec_short_name")
-        coder.encode(self.codec_long_name as NSString?, forKey: "codec_long_name")
-        coder.encode(self.encoder as NSString?, forKey: "encoder")
-        coder.encode(self.isLossless as NSNumber?, forKey: "isLossless")
-        self.encodeDimension(with: coder)
-        super.encode(with: coder)
-    }
     
     required init(from decoder: Decoder) throws {
         let dim = try Self.decodeDimension(from: decoder)
@@ -1531,36 +1351,6 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
         self.encoder = encoder
         self.channels = channels
         super.init()
-    }
-    
-    required init?(coder: NSCoder) {
-        self.duration = coder.decodeDouble(forKey: "duration")
-        self.start_time = coder.decodeDouble(forKey: "start_time")
-        self.codec_short_name = coder.decodeObject(of: NSString.self, forKey: "codec_short_name") as String? ?? ""
-        self.codec_long_name = coder.decodeObject(of: NSString.self, forKey: "codec_long_name") as String?
-        self.lang = coder.decodeObject(of: NSString.self, forKey: "lang") as String?
-        self.bitRate = coder.decodeInt64(forKey: "bitRate")
-        self.title = coder.decodeObject(of: NSString.self, forKey: "title") as String?
-        self.encoder = coder.decodeObject(of: NSString.self, forKey: "encoder") as String?
-        self.isLossless = coder.decodeObject(of: NSNumber.self, forKey: "isLossless")?.boolValue
-        self.channels = coder.decodeInteger(forKey: "channels")
-        
-        super.init(coder: coder)
-    }
-    
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.duration, forKey: "duration")
-        coder.encode(self.start_time, forKey: "start_time")
-        coder.encode(self.codec_short_name as NSString, forKey: "codec_short_name")
-        coder.encode(self.codec_long_name as NSString?, forKey: "codec_long_name")
-        coder.encode(self.lang as NSString?, forKey: "lang")
-        coder.encode(self.bitRate, forKey: "bitRate")
-        coder.encode(self.title as NSString?, forKey: "title")
-        coder.encode(self.encoder, forKey: "encoder")
-        coder.encode(self.isLossless as NSNumber?, forKey: "isLossless")
-        coder.encode(self.channels, forKey: "channels")
-        
-        super.encode(with: coder)
     }
     
     required init(from decoder: Decoder) throws {
@@ -1727,28 +1517,6 @@ class AudioInfo: FileInfo, MediaInfo, ChaptersInfo {
         super.init(file: file)
     }
     
-    required init?(coder: NSCoder) {
-        guard let e = MediaEngine(rawValue: coder.decodeInteger(forKey: "engine")) else {
-            return nil
-        }
-        self.engine = e
-        self.chapters = Self.decodeChapters(from: coder)
-        guard let t = coder.decodeObject(of: [AudioTrackInfo.self], forKey: "track") as? AudioTrackInfo else {
-            return nil
-        }
-        self.audioTrack = t
-        
-        super.init(coder: coder)
-    }
-    
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.engine.rawValue, forKey: "engine")
-        coder.encode(self.audioTrack, forKey: "track")
-        self.encodeChapters(in: coder)
-        
-        super.encode(with: coder)
-    }
-    
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let i = try container.decode(Int.self, forKey: .engine)
@@ -1836,19 +1604,6 @@ class SubtitleTrackInfo: BaseInfo, LanguageInfo {
         self.lang = lang
         super.init()
     }
-    
-    required init?(coder: NSCoder) {
-        self.title = coder.decodeObject(of: NSString.self, forKey: "title") as String?
-        self.lang = coder.decodeObject(of: NSString.self, forKey: "lang") as String?
-        
-        super.init(coder: coder)
-    }
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.title as NSString?, forKey: "title")
-        coder.encode(self.lang as NSString?, forKey: "lang")
-        super.encode(with: coder)
-    }
-    
     
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)

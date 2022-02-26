@@ -25,21 +25,6 @@ class ModelInfo: FileInfo {
             self.geometryType = geometryType
         }
         
-        required init?(coder: NSCoder) {
-            guard let s = coder.decodeObject(of: NSString.self, forKey: "name") as String? else {
-                return nil
-            }
-            self.name = s
-            self.material = coder.decodeObject(of: NSString.self, forKey: "material") as String?
-            self.geometryType = coder.decodeInteger(forKey: "geometryType")
-        }
-        
-        func encode(with coder: NSCoder) {
-            coder.encode(self.name as NSString, forKey: "name")
-            coder.encode(self.material as NSString?, forKey: "material")
-            coder.encode(self.geometryType, forKey: "geometryType")
-        }
-        
         required init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             self.name = try container.decode(String.self, forKey: .name)
@@ -102,49 +87,6 @@ class ModelInfo: FileInfo {
             self.hasOcclusion = hasOcclusion
         }
         
-        required init?(coder: NSCoder) {
-            guard let s = coder.decodeObject(of: NSString.self, forKey: "name") as String? else {
-                return nil
-            }
-            self.name = s
-            self.vertexCount = coder.decodeInteger(forKey: "vertexCount")
-            self.hasNormals = coder.decodeBool(forKey: "hasNormals")
-            self.hasTangent = coder.decodeBool(forKey: "hasTangent")
-            self.hasTextureCoordinate = coder.decodeBool(forKey: "hasTextureCoordinate")
-            self.hasVertexColor = coder.decodeBool(forKey: "hasVertexColor")
-            self.hasOcclusion = coder.decodeBool(forKey: "hasOcclusion")
-            
-            self.meshes = []
-            let n = coder.decodeInteger(forKey: "submeshesCount")
-            for i in 0 ..< n {
-                if let data = coder.decodeObject(of: NSData.self, forKey: "submesh_\(i)") as Data?, let c = try? NSKeyedUnarchiver(forReadingFrom: data) {
-                    if let m = SubMesh(coder: c) {
-                        meshes.append(m)
-                    }
-                    c.finishDecoding()
-                }
-            }
-        }
-        
-        func encode(with coder: NSCoder) {
-            coder.encode(name, forKey: "name")
-            
-            coder.encode(vertexCount, forKey: "vertexCount")
-            
-            coder.encode(hasNormals, forKey: "hasNormals")
-            coder.encode(hasTangent, forKey: "hasTangent")
-            coder.encode(hasTextureCoordinate, forKey: "hasTextureCoordinate")
-            coder.encode(hasVertexColor, forKey: "hasVertexColor")
-            coder.encode(hasOcclusion, forKey: "hasOcclusion")
-            
-            coder.encode(self.meshes.count, forKey: "submeshesCount")
-            for (i,m) in self.meshes.enumerated() {
-                let c = NSKeyedArchiver(requiringSecureCoding: coder.requiresSecureCoding)
-                m.encode(with: c)
-                coder.encode(c.encodedData, forKey: "submesh_\(i)")
-            }
-        }
-        
         required init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             self.name = try container.decode(String.self, forKey: .name)
@@ -198,32 +140,6 @@ class ModelInfo: FileInfo {
     init(file: URL, meshes: [Mesh]) {
         self.meshes = meshes
         super.init(file: file)
-    }
-    
-    required init?(coder: NSCoder) {
-        self.meshes = []
-        let n = coder.decodeInteger(forKey: "meshCount")
-        for i in 0 ..< n {
-            if let data = coder.decodeObject(of: NSData.self, forKey: "mesh_\(i)") as Data?, let c = try? NSKeyedUnarchiver(forReadingFrom: data) {
-                if let m = Mesh(coder: c) {
-                    self.meshes.append(m)
-                }
-                c.finishDecoding()
-            }
-        }
-        
-        super.init(coder: coder)
-    }
-    
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.meshes.count, forKey: "meshCount")
-        for (i, m) in self.meshes.enumerated() {
-            let c = NSKeyedArchiver(requiringSecureCoding: coder.requiresSecureCoding)
-            m.encode(with: c)
-            coder.encode(c.encodedData, forKey: "mesh_\(i)")
-        }
-        
-        super.encode(with: coder)
     }
     
     required init(from decoder: Decoder) throws {

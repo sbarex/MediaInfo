@@ -2,12 +2,21 @@ Changelog
 =======
 
 
+### 1.6.1 (19)
+- Better UI and code cleanup.
+- Support for these properties:
+  - file creation date
+  - file modification date
+  - file last access date 
+- Option to allow open the file with a custom app.
+- New images: calendar, gear, script.
+
 ### 1.6.0 (18)
 - New supported files:
     - Compressed archive files
     - Adobe Illustrator `.ai` files (as _PDF_)
     - Video `.trec` files (Camtasia recording)
-- New image fields:
+- New image properties:
     - Profile name
     - Alpha channel
     - Metadata from Exif

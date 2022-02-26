@@ -78,9 +78,6 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         let encoder = JSONEncoder()
         let data = try? encoder.encode(image_info)
         reply(data as NSData?)
-        // let coder = NSKeyedArchiver(requiringSecureCoding: false)
-        // image_info.encode(with: coder)
-        // reply(coder.encodedData as NSData)
     }
     
     func getVideoInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -114,10 +111,6 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         let encoder = JSONEncoder()
         let data = try? encoder.encode(video)
         reply(data as NSData?)
-        
-        // let coder = NSKeyedArchiver(requiringSecureCoding: false)
-        // video.encode(with: coder)
-        // reply(coder.encodedData as NSData)
     }
     
     func getAudioInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -152,10 +145,6 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         let encoder = JSONEncoder()
         let data = try? encoder.encode(audio)
         reply(data as NSData?)
-        
-        // let coder = NSKeyedArchiver(requiringSecureCoding: false)
-        // audio?.encode(with: coder)
-        // reply(coder.encodedData as NSData)
     }
     
     func getPDFInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -168,11 +157,6 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         let encoder = JSONEncoder()
         let data = try? encoder.encode(pdf_info)
         reply(data as NSData?)
-        /*
-        let coder = NSKeyedArchiver(requiringSecureCoding: false)
-        pdf_info.encode(with: coder)
-        reply(coder.encodedData as NSData)
-         */
     }
     
     func getWordInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -185,11 +169,6 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         let encoder = JSONEncoder()
         let data = try? encoder.encode(doc_info)
         reply(data as NSData?)
-        /*
-        let coder = NSKeyedArchiver(requiringSecureCoding: false)
-        doc_info.encode(with: coder)
-        reply(coder.encodedData as NSData)
-         */
     }
     
     func getExcelInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -202,11 +181,6 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         let encoder = JSONEncoder()
         let data = try? encoder.encode(xls_info)
         reply(data as NSData?)
-        /*
-        let coder = NSKeyedArchiver(requiringSecureCoding: false)
-        xls_info.encode(with: coder)
-        reply(coder.encodedData as NSData)
-         */
     }
     
     func getPowerpointInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -219,11 +193,6 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         let encoder = JSONEncoder()
         let data = try? encoder.encode(xppt_info)
         reply(data as NSData?)
-        /*
-        let coder = NSKeyedArchiver(requiringSecureCoding: false)
-        xppt_info.encode(with: coder)
-        reply(coder.encodedData as NSData)
-         */
     }
     
     func getOpenDocumentInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -236,11 +205,6 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         let encoder = JSONEncoder()
         let data = try? encoder.encode(odt_info)
         reply(data as NSData?)
-        /*
-        let coder = NSKeyedArchiver(requiringSecureCoding: false)
-        odt_info.encode(with: coder)
-        reply(coder.encodedData as NSData)
-         */
     }
     
     func getOpenSpreadsheetInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -253,11 +217,6 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         let encoder = JSONEncoder()
         let data = try? encoder.encode(ods_info)
         reply(data as NSData?)
-        /*
-        let coder = NSKeyedArchiver(requiringSecureCoding: false)
-        ods_info.encode(with: coder)
-        reply(coder.encodedData as NSData)
-         */
     }
     
     func getOpenPresentationInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -270,11 +229,6 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         let encoder = JSONEncoder()
         let data = try? encoder.encode(odp_info)
         reply(data as NSData?)
-        /*
-        let coder = NSKeyedArchiver(requiringSecureCoding: false)
-        odp_info.encode(with: coder)
-        reply(coder.encodedData as NSData)
-         */
     }
     
     func getModelInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
@@ -287,11 +241,6 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
             let encoder = JSONEncoder()
             let data = try? encoder.encode(model_info)
             reply(data as NSData?)
-            /*
-            let coder = NSKeyedArchiver(requiringSecureCoding: false)
-            model_info.encode(with: coder)
-            reply(coder.encodedData as NSData)
-             */
         } else {
             reply(nil)
         }
@@ -306,11 +255,6 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         let encoder = JSONEncoder()
         let data = try? encoder.encode(archive_info)
         reply(data as NSData?)
-        /*
-        let coder = NSKeyedArchiver(requiringSecureCoding: false)
-         archive_info.encode(with: coder)
-        reply(coder.encodedData as NSData)
-         */
     }
     
     

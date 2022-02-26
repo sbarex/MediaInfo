@@ -8,36 +8,6 @@
 
 import Cocoa
 
-extension CGRect {
-    func encode(_ coder: NSCoder, withKey key: String) {
-        let c = NSKeyedArchiver(requiringSecureCoding: coder.requiresSecureCoding)
-        c.encode(Double(self.origin.x), forKey: "x")
-        c.encode(Double(self.origin.y), forKey: "y")
-        c.encode(Double(self.width), forKey: "w")
-        c.encode(Double(self.height), forKey: "h")
-        coder.encode(c.encodedData, forKey: key)
-    }
-    
-    init?(_ coder: NSCoder, withKey key: String) {
-        if let data = coder.decodeObject(of: NSData.self, forKey: key) as Data?, let d = try? NSKeyedUnarchiver(forReadingFrom: data) {
-            defer {
-                d.finishDecoding()
-            }
-            guard d.containsValue(forKey: "x") && d.containsValue(forKey: "y") && d.containsValue(forKey: "q") && d.containsValue(forKey: "h") else {
-                return nil
-            }
-            let x = d.decodeDouble(forKey: "x")
-            let y = d.decodeDouble(forKey: "y")
-            let w = d.decodeDouble(forKey: "w")
-            let h = d.decodeDouble(forKey: "h")
-            
-            self.init(x: CGFloat(x), y: CGFloat(y), width: CGFloat(w), height: CGFloat(h))
-        } else {
-            return nil
-        }
-    }
-}
-
 class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
     enum CodingKeys: String, CodingKey {
         case version
@@ -353,80 +323,6 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
         self.height = Int(bounds.height)
         self.unit = "pt"
         super.init(file: file)
-    }
-    
-    required init?(coder: NSCoder) {
-        self.version = coder.decodeObject(of: NSString.self, forKey: "version") as String? ?? ""
-        self.author = coder.decodeObject(of: NSString.self, forKey: "author") as String?
-        self.subject = coder.decodeObject(of: NSString.self, forKey: "subject") as String?
-        self.title = coder.decodeObject(of: NSString.self, forKey: "title") as String?
-        self.producer = coder.decodeObject(of: NSString.self, forKey: "producer") as String?
-        if let n = (coder.decodeObject(of: NSNumber.self, forKey: "creationDate")?.doubleValue) {
-            self.creationDate = Date(timeIntervalSince1970: n)
-        } else {
-            self.creationDate = nil
-        }
-        self.creator = coder.decodeObject(of: NSString.self, forKey: "creator") as String?
-        if let n = coder.decodeObject(of: NSNumber.self, forKey: "modificationDate")?.doubleValue {
-            self.modificationDate = Date(timeIntervalSince1970: n)
-        } else {
-            self.modificationDate = nil
-        }
-        self.isLocked = coder.decodeBool(forKey: "isLocked")
-        self.isEncrypted = coder.decodeBool(forKey: "isEncrypted")
-        self.pagesCount = coder.decodeInteger(forKey: "pagesCount")
-        self.allowsCopying = coder.decodeBool(forKey: "allowsCopying")
-        self.allowsPrinting = coder.decodeBool(forKey: "allowsPrinting")
-        self.cropBox = CGRect(coder, withKey: "cropBox") ?? .zero
-        self.artBox = CGRect(coder, withKey: "artBox") ?? .zero
-        self.bleedBox = CGRect(coder, withKey: "bleedBox") ?? .zero
-        self.mediaBox = CGRect(coder, withKey: "mediaBox") ?? .zero
-        self.trimBox = CGRect(coder, withKey: "trimBox") ?? .zero
-        
-        let n = coder.decodeInteger(forKey: "keywords_count")
-        var keywords: [String] = []
-        for i in 0 ..< n {
-            if let k = coder.decodeObject(of: NSString.self, forKey: "keyword_\(i)") as String? {
-                keywords.append(k)
-            }
-        }
-        self.keywords = keywords
-        
-        let i = Self.decodeDimension(coder: coder)
-        self.width = i.0
-        self.height = i.1
-        self.unit = "pt"
-        
-        super.init(coder: coder)
-    }
-    
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.version as String, forKey: "version")
-        coder.encode(self.author as String?, forKey: "author")
-        coder.encode(self.subject as String?, forKey: "subject")
-        coder.encode(self.title as String?, forKey: "title")
-        coder.encode(self.producer as String?, forKey: "producer")
-        coder.encode((self.creationDate?.timeIntervalSince1970) as NSNumber?, forKey: "creationDate")
-        coder.encode(self.creator as String?, forKey: "creator")
-        coder.encode((self.modificationDate?.timeIntervalSince1970) as NSNumber?, forKey: "modificationDate")
-        coder.encode(self.isLocked, forKey: "isLocked")
-        coder.encode(self.isEncrypted, forKey: "isEncrypted")
-        coder.encode(self.pagesCount, forKey: "pagesCount")
-        coder.encode(self.allowsCopying, forKey: "allowsCopying")
-        coder.encode(self.allowsPrinting, forKey: "allowsPrinting")
-        
-        self.cropBox.encode(coder, withKey: "cropBox")
-        self.artBox.encode(coder, withKey: "artBox")
-        self.bleedBox.encode(coder, withKey: "bleedBox")
-        self.mediaBox.encode(coder, withKey: "mediaBox")
-        self.trimBox.encode(coder, withKey: "trimBox")
-        
-        coder.encode(self.keywords.count, forKey: "keywords_count")
-        for (i, k) in keywords.enumerated() {
-            coder.encode(k as String, forKey: "keyword_\(i)")
-        }
-        self.encodeDimension(with: coder)
-        super.encode(with: coder)
     }
     
     required init(from decoder: Decoder) throws {

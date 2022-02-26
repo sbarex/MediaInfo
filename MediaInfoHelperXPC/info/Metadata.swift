@@ -9,7 +9,7 @@
 import Foundation
 import AVFoundation
 
-protocol MetadataInfo: NSSecureCoding, Codable {
+protocol MetadataInfo: Codable {
     static func getTags() -> [(code: CFString, label: String)]
     static func getLabel(for code: CFString) -> String
     static func getPos(of code: CFString) -> Int
@@ -134,24 +134,6 @@ class MetadataBaseInfo: NSObject, MetadataInfo {
         self.code = code
         self.value = type(of: self).processCFValue(code: code, value: value)
         super.init()
-    }
-    
-    required init?(coder: NSCoder) {
-        guard let code = coder.decodeObject(of: NSString.self, forKey: "code") as CFString? else {
-            return nil
-        }
-        guard let value = coder.decodeObject(of: NSString.self, forKey: "value") as String? else {
-            return nil
-        }
-        
-        self.code = code
-        self.value = value
-        super.init()
-    }
-    
-    func encode(with coder: NSCoder) {
-        coder.encode(code as NSString, forKey: "code")
-        coder.encode(value as NSString, forKey: "value")
     }
     
     required init(from decoder: Decoder) throws {
@@ -294,9 +276,6 @@ class MetadataExifInfo: MetadataBaseInfo {
             super.init(code: code, value: value)
         }
     }
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-    }
     
     required init(from decoder: Decoder) throws {
         try super.init(from: decoder)
@@ -328,9 +307,6 @@ class MetadataExifAuxInfo: MetadataExifInfo {
     
     required init?(code: CFString, value: AnyHashable) {
         super.init(code: code, value: value)
-    }
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
     }
     
     required init(from decoder: Decoder) throws {
@@ -378,9 +354,6 @@ class MetadataTiffInfo: MetadataBaseInfo {
     required init?(code: CFString, value: AnyHashable) {
         super.init(code: code, value: value)
     }
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-    }
     
     required init(from decoder: Decoder) throws {
         try super.init(from: decoder)
@@ -413,9 +386,6 @@ class MetadataJfifInfo: MetadataBaseInfo {
     
     required init?(code: CFString, value: AnyHashable) {
         super.init(code: code, value: value)
-    }
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
     }
     
     required init(from decoder: Decoder) throws {
@@ -454,9 +424,6 @@ class MetadataGifInfo: MetadataBaseInfo {
     required init?(code: CFString, value: AnyHashable) {
         super.init(code: code, value: value)
     }
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-    }
     
     required init(from decoder: Decoder) throws {
         try super.init(from: decoder)
@@ -486,9 +453,6 @@ class MetadataHeicsInfo: MetadataBaseInfo {
     
     required init?(code: CFString, value: AnyHashable) {
         super.init(code: code, value: value)
-    }
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
     }
     
     required init(from decoder: Decoder) throws {
@@ -545,9 +509,6 @@ class MetadataPngInfo: MetadataBaseInfo {
     
     required init?(code: CFString, value: AnyHashable) {
         super.init(code: code, value: value)
-    }
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
     }
     
     required init(from decoder: Decoder) throws {
@@ -799,9 +760,6 @@ class MetadataIPTCInfo: MetadataBaseInfo {
     required init?(code: CFString, value: AnyHashable) {
         super.init(code: code, value: value)
     }
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-    }
     
     required init(from decoder: Decoder) throws {
         try super.init(from: decoder)
@@ -852,9 +810,6 @@ class MetadataGPSInfo: MetadataBaseInfo {
     
     required init?(code: CFString, value: AnyHashable) {
         super.init(code: code, value: value)
-    }
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
     }
     
     required init(from decoder: Decoder) throws {
@@ -1009,9 +964,6 @@ class MetadataDNGInfo: MetadataBaseInfo {
     }
     required init?(code: CFString, value: AnyHashable) {
         super.init(code: code, value: value)
-    }
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
     }
     
     required init(from decoder: Decoder) throws {

@@ -249,16 +249,16 @@ class ViewController: NSViewController {
             imageMenuTableView.example = ImageInfo(file: Bundle.main.bundleURL, width: 1920, height: 1080, dpi: 150, colorMode: "RGB", depth: 8, profileName: "", animated: false, withAlpha: false, colorTable: .regular, metadata: [:], metadataRaw: [:])
         }
         /*
-        let c = NSKeyedArchiver(requiringSecureCoding: true)
-        imageMenuTableView.example!.encode(with: c)
-        c.finishEncoding()
-        if let d = try? NSKeyedUnarchiver(forReadingWith: c.encodedData) {
-            let a = ImageInfo(coder: d)
-            d.finishDecoding()
-            imageMenuTableView.example = a
+        do {
+            let encoder = JSONEncoder()
+            let d = try encoder.encode(imageMenuTableView.example)
+            let decoder = JSONDecoder()
+            let info = try decoder.decode(ImageInfo?.self, from: d)
+            print(info)
+        } catch {
+            print(error)
         }
-         */
-        
+        */
         initJSConsole(info: imageMenuTableView.example)
     }
     

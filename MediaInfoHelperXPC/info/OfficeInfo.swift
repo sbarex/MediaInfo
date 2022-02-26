@@ -42,30 +42,6 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
         super.init(file: file, creator: creator, creationDate: creationDate, modified: modified, modificationDate: modificationDate, title: title, subject: subject, keywords: keywords, description: description, application: application)
     }
     
-    required init?(coder: NSCoder) {
-        self.charactersCount = coder.decodeInteger(forKey: "charactersCount")
-        self.charactersWithSpacesCount = coder.decodeInteger(forKey: "charactersWithSpacesCount")
-        self.wordsCount = coder.decodeInteger(forKey: "wordsCount")
-        self.pagesCount = coder.decodeInteger(forKey: "pagesCount")
-        
-        self.width = coder.decodeDouble(forKey: "width")
-        self.height = coder.decodeDouble(forKey: "height")
-        
-        super.init(coder: coder)
-    }
-    
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.charactersCount, forKey: "charactersCount")
-        coder.encode(self.charactersWithSpacesCount, forKey: "charactersWithSpacesCount")
-        coder.encode(self.wordsCount, forKey: "wordsCount")
-        coder.encode(self.pagesCount, forKey: "pagesCount")
-        
-        coder.encode(self.width, forKey: "width")
-        coder.encode(self.height, forKey: "height")
-        
-        super.encode(with: coder)
-    }
-    
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.charactersCount = try container.decode(Int.self, forKey: .charactersCount)
@@ -170,28 +146,6 @@ class ExcelInfo: BaseOfficeInfo {
         super.init(file: file, creator: creator, creationDate: creationDate, modified: modified, modificationDate: modificationDate, title: title, subject: subject, keywords: keywords, description: description, application: application)
     }
     
-    required init?(coder: NSCoder) {
-        let n = coder.decodeInteger(forKey: "sheets_count")
-        var sheets: [String] = []
-        for i in 0 ..< n {
-            if let name = coder.decodeObject(of: NSString.self, forKey: "sheet_\(i)") as String? {
-                sheets.append(name)
-            }
-        }
-        self.sheets = sheets
-        
-        super.init(coder: coder)
-    }
-    
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.sheets.count, forKey: "sheets_count")
-        for i in 0 ..< self.sheets.count {
-            coder.encode(self.sheets[i] as NSString, forKey: "sheet_\(i)")
-        }
-        
-        super.encode(with: coder)
-    }
-    
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.sheets = try container.decode([String].self, forKey: .sheets)
@@ -272,20 +226,6 @@ class PowerpointInfo: BaseOfficeInfo {
         self.presentationFormat = presentationFormat
         
         super.init(file: file, creator: creator, creationDate: creationDate, modified: modified, modificationDate: modificationDate, title: title, subject: subject, keywords: keywords, description: description, application: application)
-    }
-    
-    required init?(coder: NSCoder) {
-        self.slidesCount = coder.decodeInteger(forKey: "slides_count")
-        self.presentationFormat = coder.decodeObject(of: NSString.self, forKey: "presentationFormat") as String? ?? ""
-        
-        super.init(coder: coder)
-    }
-    
-    override func encode(with coder: NSCoder) {
-        coder.encode(self.slidesCount, forKey: "slides_count")
-        coder.encode(self.presentationFormat as NSString, forKey: "presentationFormat")
-        
-        super.encode(with: coder)
     }
     
     required init(from decoder: Decoder) throws {
