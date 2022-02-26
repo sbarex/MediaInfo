@@ -307,6 +307,35 @@ class FinderSync: FIFinderSync {/*
             // Remove last empty item
             menu.removeItem(item)
         }
+        
+        let attributes: [NSAttributedString.Key : Any] = [.font: NSFont.systemFont(ofSize: NSFont.systemFontSize)]
+        let dash = "─"
+        let dash_size = (dash as NSString).size(withAttributes:attributes).width
+        
+        var fakeSeparator: ((NSMenu)->Void)? = nil
+        fakeSeparator = { menu in
+            let max_width = menu.items.reduce(0 as CGFloat, { tot, item in
+                var width = (item.title as NSString).size(withAttributes: attributes).width
+                if let image = item.image {
+                    width += image.size.width + 8
+                }
+                if item.submenu != nil {
+                    width += 24
+                }
+                return max(tot, width)
+            })
+            let length = min(100, Int(floor(max_width / dash_size)))
+            for item in menu.items {
+                if let m = item.submenu {
+                    fakeSeparator!(m)
+                } else {
+                    if item.title.isEmpty && !item.isEnabled {
+                        item.title = String(repeating: dash, count: length)
+                    }
+                }
+            }
+        }
+        fakeSeparator!(menu)
     }
     
     

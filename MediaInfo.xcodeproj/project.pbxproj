@@ -141,6 +141,9 @@
 		837CF2C027C835E10045F454 /* DimensionalInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837CF2BB27C835A00045F454 /* DimensionalInfo.swift */; };
 		837CF2C127C835E10045F454 /* DimensionalInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837CF2BB27C835A00045F454 /* DimensionalInfo.swift */; };
 		837CF2C327C914F80045F454 /* TokenLanguages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837CF2C227C914F70045F454 /* TokenLanguages.swift */; };
+		837CF2C527CA550A0045F454 /* LanguageInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837CF2C427CA550A0045F454 /* LanguageInfo.swift */; };
+		837CF2C627CA550A0045F454 /* LanguageInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837CF2C427CA550A0045F454 /* LanguageInfo.swift */; };
+		837CF2C727CA550A0045F454 /* LanguageInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 837CF2C427CA550A0045F454 /* LanguageInfo.swift */; };
 		8382895C24FA386400AD2BF4 /* Assets_menu.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8382895B24FA386400AD2BF4 /* Assets_menu.xcassets */; };
 		8382896124FAB30900AD2BF4 /* LocalizableExt.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8382896324FAB30900AD2BF4 /* LocalizableExt.strings */; };
 		8386E6772502BC0F00FD8A46 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8386E6762502BC0F00FD8A46 /* Settings.swift */; };
@@ -815,6 +818,7 @@
 		837CF2BA27C835640045F454 /* PaperInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperInfo.swift; sourceTree = "<group>"; };
 		837CF2BB27C835A00045F454 /* DimensionalInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DimensionalInfo.swift; sourceTree = "<group>"; };
 		837CF2C227C914F70045F454 /* TokenLanguages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenLanguages.swift; sourceTree = "<group>"; };
+		837CF2C427CA550A0045F454 /* LanguageInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageInfo.swift; sourceTree = "<group>"; };
 		8382892724F9541C00AD2BF4 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		8382892924F9542400AD2BF4 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
 		8382892B24F9542B00AD2BF4 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
@@ -1100,6 +1104,7 @@
 				838E305B2653D5F300F797AD /* ImageInfoItem.swift */,
 				83C932C727B2E3AE00EF6134 /* Metadata.swift */,
 				83E5694B264A5BE800A14E96 /* MediaInfoItems.swift */,
+				837CF2C427CA550A0045F454 /* LanguageInfo.swift */,
 				838E305E2653DBAC00F797AD /* PDFInfoItem.swift */,
 				832EEF50265D38CA000BA3F9 /* BaseOfficeInfo.swift */,
 				83E261BD265E7DB10073F716 /* OfficeInfo.swift */,
@@ -2613,6 +2618,7 @@
 				83144CA6264ABFEF000E709B /* MediaInfoItems.swift in Sources */,
 				838E307F2655405F00F797AD /* TokenVideoMetadata.swift in Sources */,
 				837CF2B327C7E65E0045F454 /* TokenFile.swift in Sources */,
+				837CF2C527CA550A0045F454 /* LanguageInfo.swift in Sources */,
 				837CF2C327C914F80045F454 /* TokenLanguages.swift in Sources */,
 				838E30792655083800F797AD /* TokenPdfMetadata.swift in Sources */,
 				838E306B26546A2800F797AD /* MenuTableView.swift in Sources */,
@@ -2674,6 +2680,7 @@
 				83E5694A2649095600A14E96 /* TimeInterval+ext.swift in Sources */,
 				832EEF3C265D10D2000BA3F9 /* SettingsService.swift in Sources */,
 				83E261BF265E7EAA0073F716 /* OfficeInfo.swift in Sources */,
+				837CF2C627CA550A0045F454 /* LanguageInfo.swift in Sources */,
 				83144CA5264AB7DA000E709B /* Int+ext.swift in Sources */,
 				838E30662653E09500F797AD /* NSImage+ext.swift in Sources */,
 				832EEF38265D0E40000BA3F9 /* HelperWrapper.swift in Sources */,
@@ -2699,6 +2706,7 @@
 				832EEF0D265D0A4F000BA3F9 /* MediaInfoItems.swift in Sources */,
 				83342CED2793065E00FF3C12 /* ArchiveInfo+ext.swift in Sources */,
 				83C932CA27B2E3AE00EF6134 /* Metadata.swift in Sources */,
+				837CF2C727CA550A0045F454 /* LanguageInfo.swift in Sources */,
 				832EEF30265D0CD2000BA3F9 /* NSNotification_Name+Ext.swift in Sources */,
 				832EEF16265D0B05000BA3F9 /* main.swift in Sources */,
 				83549C892668EB6000842279 /* ModelInfo+ext.swift in Sources */,
