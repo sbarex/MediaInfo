@@ -311,16 +311,11 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         
         task.arguments = arguments
         task.launchPath = command
-        
-        task.launch()
-        /*
-        task.waitUntilExit()
-        
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let output = String(data: data, encoding: .utf8)!
-        let status = task.terminationStatus
-        reply(status, output)
-         */
+        do {
+            try task.run()
+        } catch {
+            reply(-1, error.localizedDescription)
+        }
     }
     
     func getWebPVersion(reply: @escaping (String)->Void) {
