@@ -28,6 +28,7 @@ protocol JSDelegate: AnyObject {
     func jsExec(command: String, arguments: [String], reply: @escaping (Int32, String)->Void)
     func jsRunApp(at path: String, reply: @escaping (Bool, String?)->Void)
     func jsCopyToClipboard(text: String) -> Bool
+    func jsExecSync(command: String, arguments: [String]) -> (status: Int32, output: String)
 }
 
 enum JSException: Error {
@@ -403,6 +404,19 @@ delete fileJSONData;
             context.setObject(nil, forKeyedSubscript: "fileJSONData" as NSString)
         }
         context.evaluateScript("deepFreeze(settings);")
+        
+        let jsExecSync: @convention(block) (String, [String]) -> JSValue? = { command, arguments in
+            guard let jsDelegate = self.jsDelegate else {
+                return JSValue(nullIn: context)
+            }
+            let r = jsDelegate.jsExecSync(command: command, arguments: arguments)
+            let jr = JSValue(newObjectIn: context)
+            
+            jr?.setObject(r.status, forKeyedSubscript: "status" as NSString)
+            jr?.setObject(r.output, forKeyedSubscript: "output" as NSString)
+            return jr
+        }
+        context.setObject(jsExecSync, forKeyedSubscript: "systemExecSync" as NSString)
         
         return context
     }

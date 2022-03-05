@@ -705,7 +705,8 @@ Menu items created by a global script can have a custom action. You need to set 
 |`console.assert(condition, arg1[, arg2, ...])`|Void|Output a log only if the condition is true.|
 |`toBase64(string)`|String|Encode the argument to a base64 value.|
 |`fromBase64(string)`|String|Decode the argument from a base64 value.|
-|`formatTemplate(string)`|\[String, Bool\]|Format a template. Return an array, on index 0 the formatted result, the index 1 indicate if the return has some token filled.|
+|`formatTemplate(template: String)`|\[String, Bool\]|Format a template. Return an array, on index 0 the formatted result, the index 1 indicate if the return has some token filled.|
+|`systemExecSyng(command, [arguments])`|`{status: Int, output: String}`|Execute an external `command` passing the `arguments`. If invoked during menu formatting, **the command must finish as soon as possible in order not to slow down the display of the menu**. |
  
 _Some standard tokens (such as scripts and open-width) encode the argument with the base64 standard._
 

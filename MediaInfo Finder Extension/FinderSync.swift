@@ -462,6 +462,32 @@ extension FinderSync: JSDelegate {
     func jsExec(command: String, arguments: [String], reply: @escaping (Int32, String) -> Void) {
         HelperWrapper.systemExec(command: command, arguments: arguments, reply: reply)
     }
+    
+    func jsExecSync(command: String, arguments: [String])->(status: Int32, output: String) {
+        let inflightSemaphore = DispatchSemaphore(value: 0)
+
+        var status: Int32 = 0
+        var output: String = ""
+        HelperWrapper.systemExec(command: command, arguments: arguments) { status1, output1 in
+            defer {
+                inflightSemaphore.signal()
+            }
+            
+            status = status1
+            output = output1
+        }
+        
+        if !Thread.isMainThread {
+            let r = inflightSemaphore.wait(timeout: .distantFuture)
+            print(r)
+        } else {
+            while inflightSemaphore.wait(timeout: .now()) == .timedOut {
+                RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0))
+            }
+        }
+        
+        return (status: status, output: output)
+    }
         
     func jsRunApp(at path: String, reply: @escaping (Bool, String?)->Void) {
         HelperWrapper.openApplication(at: URL(fileURLWithPath: path), reply: reply)

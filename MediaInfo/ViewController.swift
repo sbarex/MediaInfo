@@ -1106,6 +1106,47 @@ extension ViewController: JSDelegate {
          // }
          */
     }
+    func jsExecSync(command: String, arguments: [String]) -> (status: Int32, output: String) {
+        let inflightSemaphore = DispatchSemaphore(value: 0)
+
+        var status: Int32 = 0
+        var output: String = ""
+        
+        DispatchQueue.main.async {
+            defer {
+                inflightSemaphore.signal()
+            }
+            
+            let task = Process()
+            let pipe = Pipe()
+            
+            task.standardOutput = pipe
+            task.standardError = pipe
+            
+            task.arguments = arguments
+            task.launchPath = command
+            
+            task.launch()
+            task.waitUntilExit()
+            
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let output1 = String(data: data, encoding: .utf8)!
+            let status1 = task.terminationStatus
+            
+            status = status1
+            output = output1
+        }
+        
+        if !Thread.isMainThread {
+            let _ = inflightSemaphore.wait(timeout: .distantFuture)
+        } else {
+            while inflightSemaphore.wait(timeout: .now()) == .timedOut {
+                RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0))
+            }
+        }
+        
+        return (status: status, output: output)
+    }
     
     func jsRunApp(at path: String, reply: @escaping (Bool, String?) -> Void) {
         systemActionInvoked = true
