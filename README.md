@@ -546,11 +546,12 @@ The `image` property can be:
 |`"bleed_v"`|![vertical artbox](Assets/images/bleed_v.png)||
 |`"crop"`|![crop](Assets/images/crop.png)||
 |`"zip"`|![person](Assets/images/zip.png)||
-|`"script"`|![pencil](Assets/images/script.png)||
-|`"gear", "gearshape"`|![pencil](Assets/images/gearshape.png)||
-|`"calendar"`|![pencil](Assets/images/calendar.png)||
-|`"clipboard"`|![pencil](Assets/images/clipboard.png)||
-|`"flag"`|![pencil](Assets/images/flag.png)||
+|`"script"`|![script](Assets/images/script.png)||
+|`"gear", "gearshape"`|![gear](Assets/images/gearshape.png)||
+|`"calendar"`|![calendar](Assets/images/calendar.png)||
+|`"clipboard"`|![clipboard](Assets/images/clipboard.png)||
+|`"flag"`|![flag](Assets/images/flag.png)||
+|`"folder"`|![folder](Assets/images/folder.png)||
 |`"size"`|![size](Assets/images/size.png)||
 |`"person"`|![person](Assets/images/person.png)||
 |`"shield"`|![person](Assets/images/shield.png)||

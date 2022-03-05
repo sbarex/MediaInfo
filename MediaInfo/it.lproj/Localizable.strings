@@ -276,7 +276,9 @@
 "Calendar" = "Calendario";
 "Clipboard" = "Appunti";
 "Flag" = "Bandiera";
+"Folder" = "Cartella";
 "ABC" = "ABC";
+"Exclamation mark" = "Punto esclamativo";
 
 // MARK: - AppDelegate
 

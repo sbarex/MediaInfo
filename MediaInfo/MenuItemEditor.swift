@@ -149,7 +149,9 @@ class MenuItemEditor: NSViewController {
         Image(name: "calendar", title: NSLocalizedString("Calendar", comment: "")),
         Image(name: "clipboard", title: NSLocalizedString("Clipboard", comment: "")),
         Image(name: "flag", title: NSLocalizedString("Flag", comment: "")),
+        Image(name: "folder", title: NSLocalizedString("Folder", comment: "")),
         Image(name: "abc", title: NSLocalizedString("ABC", comment: "")),
+        Image(name: "exclamationmark", title: NSLocalizedString("Exclamation mark", comment: "")),
     ]
     
     static func getImage(named name: String) -> Image? {
