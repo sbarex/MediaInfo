@@ -148,16 +148,6 @@ class TokenOfficeMetadata: Token {
         }
     }
     
-    override var informativeMessage: String {
-        guard let mode = self.mode as? Mode else {
-            return super.informativeMessage
-        }
-        if mode.requireDeepScan {
-            return String(format: NSLocalizedString("The token '%@' require the deep scan of the file and can slow down menu generation.", comment: ""), mode.displayString)
-        }
-        return super.informativeMessage
-    }
-    
     override var title: String {
         return NSLocalizedString("Office metadata", comment: "")
     }
@@ -178,6 +168,16 @@ class TokenOfficeMetadata: Token {
     
     required init?(pasteboardPropertyList propertyList: Any, ofType type: NSPasteboard.PasteboardType) {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
+    }
+    
+    override func validate(with info: BaseInfo?) -> (info: String, warnings: String) {
+        guard let mode = self.mode as? Mode, mode.requireDeepScan else {
+            return super.validate(with: info)
+        }
+        return (
+            info: String(format: NSLocalizedString("The token ‘%@’ require the deep scan of the file and can slow down menu generation.", comment: ""), mode.displayString),
+            warnings: ""
+        )
     }
     
     override func createMenu() -> NSMenu? {

@@ -6,7 +6,7 @@
 //  Copyright © 2022 sbarex. All rights reserved.
 //
 
-import Foundation
+import Cocoa
 
 // MARK: -
 class FileInfo: BaseInfo {
@@ -86,7 +86,15 @@ class FileInfo: BaseInfo {
         try super.encode(to: encoder)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    override func getImage(for name: String) -> NSImage? {
+        if name == "target-icon" {
+            return NSWorkspace.shared.icon(forFile: self.file.path).resized(to: NSSize(width: 16, height: 16))
+        } else {
+            return super.getImage(for: name)
+        }
+    }
+    
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         
         switch placeholder {
@@ -109,7 +117,64 @@ class FileInfo: BaseInfo {
             isFilled = self.fileAccessDate != nil
             return self.fileAccessDate == nil ? self.formatND(useEmptyData: useEmptyData) : Self.dateFormatter.string(from: self.fileAccessDate!)
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+        }
+    }
+    
+    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+        if item.menuItem.template.hasPrefix("[[open-with:") {
+            guard let path = String(item.menuItem.template.dropFirst(12).dropLast(2)).fromBase64(), !path.isEmpty else {
+                return true
+            }
+            let title = String(format: NSLocalizedString("Open with %@…", tableName: "LocalizableExt", comment: ""), FileManager.default.displayName(atPath: path))
+            let mnu = self.createMenuItem(title: title, image: item.menuItem.image, settings: settings, representedObject: item)
+            if let info = mnu.representedObject as? MenuItemInfo {
+                var info2 = info
+                info2.action = .openWith
+                info2.userInfo["application"] = path
+                mnu.representedObject = info2
+            }
+            if !settings.isIconHidden && item.menuItem.image.isEmpty {
+                let img = NSWorkspace.shared.icon(forFile: path).resized(to: NSSize(width: 16, height: 16))
+                mnu.image = img
+            }
+            mnu.toolTip = path
+            destination_sub_menu.addItem(mnu)
+            return true
+        } else if item.menuItem.template.hasPrefix("[[open-with-default]]") {
+            let title: String
+            let path: String
+            if let url = NSWorkspace.shared.urlForApplication(toOpen: self.file) {
+                path = url.path
+                title = String(format: NSLocalizedString("Open with %@…", tableName: "LocalizableExt", comment: ""), FileManager.default.displayName(atPath: path))
+            } else {
+                title = NSLocalizedString("Open…", tableName: "LocalizableExt", comment: "")
+                path = ""
+            }
+            let mnu = self.createMenuItem(title: title, image: item.menuItem.image, settings: settings, representedObject: item)
+            if let info = mnu.representedObject as? MenuItemInfo {
+                var info2 = info
+                info2.action = .open
+                mnu.representedObject = info2
+            }
+            if !settings.isIconHidden && item.menuItem.image.isEmpty && !path.isEmpty {
+                let img = NSWorkspace.shared.icon(forFile: path).resized(to: NSSize(width: 16, height: 16))
+                mnu.image = img
+            }
+            mnu.toolTip = path
+            destination_sub_menu.addItem(mnu)
+            return true
+        } else if item.menuItem.template == "[[clipboard]]" {
+            let mnu = self.createMenuItem(title: NSLocalizedString("Copy path to the clipboard", tableName: "LocalizableExt", comment: ""), image: item.menuItem.image, settings: settings, representedObject: item)
+            if let info = mnu.representedObject as? MenuItemInfo {
+                var info2 = info
+                info2.action = .clipboard
+                mnu.representedObject = info2
+            }
+            destination_sub_menu.addItem(mnu)
+            return true
+        } else {
+            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
         }
     }
 }

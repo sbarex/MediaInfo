@@ -93,15 +93,6 @@ class TokenImageExtra: Token {
         }
     }
     
-    override var informativeMessage: String {
-        switch self.mode as! Mode {
-        case .metadata:
-            return NSLocalizedString("Extracting metadata can slow down menu generation.", comment: "")
-        default:
-            return super.informativeMessage
-        }
-    }
-    
     override var title: String {
         return NSLocalizedString("Image metadata", comment: "")
     }
@@ -122,6 +113,18 @@ class TokenImageExtra: Token {
     
     required init?(pasteboardPropertyList propertyList: Any, ofType type: NSPasteboard.PasteboardType) {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
+    }
+    
+    override func validate(with info: BaseInfo?) -> (info: String, warnings: String) {
+        guard let mode = self.mode as? Mode else {
+            return super.validate(with: info)
+        }
+        switch mode {
+        case .metadata:
+            return (info: NSLocalizedString("Extracting metadata can slow down menu generation.", comment: ""), warnings: "")
+        default:
+            return super.validate(with: info)
+        }
     }
     
     override func createMenu() -> NSMenu? {
@@ -148,7 +151,7 @@ class TokenMediaExtra: Token {
         var title: String {
             switch self {
             case .codec_short_name: return NSLocalizedString("Codec short name", comment: "")
-            case .codec_full_name: return NSLocalizedString("Codec full name", comment: "")
+            case .codec_full_name: return NSLocalizedString("Codec long name", comment: "")
             case .codec: return NSLocalizedString("Codec name", comment: "")
             case .engine: return NSLocalizedString("Media engine", comment: "")
             }

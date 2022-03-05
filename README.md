@@ -13,6 +13,7 @@ Extension to display information about multimedia (images, videos and audio), PD
 
 > **MediaInfo is distributed in the hope that it will be useful but WITHOUT ANY WARRANTY.**
 
+  - [Behavior](#behavior)
   - [Installation](#installation)
   - [Settings](#settings)
     - [Monitored folders](#monitored-folder)
@@ -24,19 +25,47 @@ Extension to display information about multimedia (images, videos and audio), PD
     - [PDF documents](#pdf-documents)
     - [Office files](#office-files)
     - [Compressed archive files](#compressed-archive-files)
-    - [Scripting support](#scripting-support)
-      - [Inline scripts](#inline-scripts)
-      - [Global scripts](#global-scripts)
-      - [Exposed data](#exposed-data)
+  - [Scripting support](#scripting-support)
+    - [Exposed data](#exposed-data)
+    - [Inline scripts](#inline-scripts)
+    - [Global scripts](#global-scripts)
+    - [Custom action](#custom-action)
+        - [Global action script](#global-action-script)
+        - [Inline action](#inline-action)
+    - [Utility functions](#utility-functions)
+    - [Common properties](#common-properties)
+    - [Properties for images](#properties-for-images)
+    - [Properties for video files](#properties-for-video-files)
+    - [Properties for audio files](#properties-for-audio-files)
+    - [Properties for PDF files](#properties-for-pdf-files)
+    - [Properties for Office files](#properties-for-office-files)
+    - [Properties for compressed archives](#properties-for-compressed-archives)
   - [Known bugs and limitations](#known-bugs-and-limitations)
   - [Build from source](#build-from-source)
     - [Dependencies](#dependencies)
     - [Application processes](#application-processes)
   - [Credits](#credits)
+  
+
+## Behavior
+
+This application allows you to customize the context menu for supported files.
+When you right-click on a file within a [monitored folder](#monitored-folders) the extension extracts all available information for the file and generates the context menu.
+
+|          |           |
+|:---------|:--------- |
+| Image menu example ![Image menu](Assets/menu_image.png) | Video menu example ![Video menu](Assets/menu_video.png) |
+| Audio menu example ![Video menu](Assets/menu_audio.png) | PDF menu example ![PDF menu](Assets/menu_pdf.png) |
+| Office menu example ![Office menu](Assets/menu_office.png) | Archive menu example ![Archive menu](Assets/menu_archive.png) | 
+
+With the main application you can [customize the menu](#customize-the-menu-items). You can compose the file properties generating the menu items. It is also possible to use a [script code](#scripting-support) to format the menu items.
+
+Remember that all rendering operations must be completed before the menu can be displayed. MacOS does not allow you to populate on-demand the menu but only before viewing, so any information extraction and formatting operation must be as fast as possible in order not to slow down the opening of the menu. 
+
 
 ## Installation
 
-Head over to the [releases](https://github.com/sbarex/MediaInfo/releases) page to view the latest version. 
+Go to the [releases](https://github.com/sbarex/MediaInfo/releases) page to download the latest version. 
 
 Move the downloaded app on your Applications folder and launch it to set the monitored folders and the other settings. 
 
@@ -45,11 +74,6 @@ Then you need to enable the associated Finder Sync Extension on the System Prefe
 ![System preferences/Extensions](Assets/extensions.png)
 
 Now right click (or `control` click) on a supported file within a monitored folder to see the contextual menu with the information.
-
-| Image menu | Video Menu |
-|:---------|:--------- |
-| ![Image settings](Assets/menu_image.png) | ![Media settings](Assets/menu_video.png) |
-
 
 **The precompiled application is not notarized or signed.** The application is compiled as universal binary (Intel and Apple Silicon processor).
 
@@ -79,7 +103,7 @@ With the Application you can customize the monitored folders and the properties 
 
 ![Folder settings](Assets/settings_folder.png)
 
-You can also enable the support for auto monitor external disk.
+You can also auto monitor external disk.
 
 > **Information is shown only for files within the monitored folders (and their subfolders).**
 
@@ -93,12 +117,12 @@ The _General_ tab allow to set some common options.
 
 |**Option**|**Description**|
 |:-----------|:-----------------|
-|Show menu icons|Show icons inside the contextual menu. You can customize the icon for each menu item. Some icons (image, video, pdf, page, ratio, media box, bleed box, art box, text document) respect the orientation (portrait or landscape) of the source. The _color_ icon respects the color space (RGB, CMYK, gray scale, B/W, Lab).|
+|Show menu icons|Show icons inside the contextual menu. You can customize the icon for each menu item. Some icons (image, video, pdf, page, ratio, media box, bleed box, art box, text document) respect the orientation (portrait or landscape) of the source. The _color_ icon respects the color space (RGB, CMYK, gray scale, B/W, Lab). The _flag_ icon will be changed to the country language flag when used within a media file.|
 |Skip items with no data for the placeholders|Do not insert menu item with all empty placeholders.|
 |Show info on a submenu|If enabled, on the contextual menu is added a submenu with the info items, otherwise all items are put on the main contextual menu.|
 |Show main info on the submenu title|If enabled, a submenu with file information is added to the context menu, otherwise all items are placed in the main context menu.|
 |Use first menu item as Main info|Use the first item as the main title for the submenu.|
-|Menu action|Action executed when a menu item is selected. |
+|Menu action|Action performed when a menu item is selected. Some menu items always perform a custom action by ignoring this setting.|
 |Allow rounded aspect ratio|For images and videos, allow to round the size for a better ratio. |
 |Media engine priority|Allows you to choose the order in which the media engines are used to recognize images, videos and sounds. Not all engines can recognize all file properties. If one engine fails to process a file, the next engine is tried.  |
 
@@ -114,11 +138,11 @@ For each managed format it is possible to customize the list of menu items. For 
 
 ![Customize a menu item](Assets/settings_menu_item.png)
 
-When composing the menu label, any worthless placeholders are left blank. Multiple spaces or punctuation marks (comma and semicolon) or empty parentheses are automatically eliminated, for this reason it is suggested to separate placeholders whose value may not always be available with spaces, commas or semicolons.
+When composing the menu title, all worthless placeholders are left blank. Multiple spaces or punctuation marks (comma and semicolon) or empty parentheses are automatically deleted. For this reason it is suggested to separate placeholders whose value may not always be available with spaces, commas or semicolons.
 
 You can also specify an explanatory icon for each item. Some icons (_image_, _video_, _pdf_, _page_, _ratio_, _media box_, _bleed box_, _art box_) respect the orientation (portrait or landscape) of the source. The _color_ icon respects the color space (RGB, CMYK, gray scale, B/W, LAB).
 
-Use a single dash (`-`) to create a menu separator. Please note that for a macOS limitation the separator item will not be shown with the usual dividing line but with an empty menu item.  
+Use a single dash (`-`) to create a menu separator. Note that for a macOS limitation the separator element will not be shown with the usual dividing line.  
 
 If you need more control over the information displayed by the menu items you can also use custom scripts (see the [Scripting support](#scripting-support) chapter).
 
@@ -134,11 +158,15 @@ For every type o file there are some common informations:
 |file extension|Extension of the file.|_jpg_|
 |file creation date|Creation date of the file.|_Yesterday 12:45_|
 |file modification date|Modification date of the file.|_Today 11:45_|
-|file access time|Last access time of the file.|_Today 12:35_|
-|open with…|A special menu item to allow open the file with a custom application.|_Open with Preview…_|
-|inline script|A [javascript code](#scripting-support) that output a text value to show in the menu item.||
-|global script|A [javascript code](#scripting-support) that can generate multiple menu items.||
-|action script|A [javascript code](#scripting-support) to handle the action associated to each menu items.||
+|file access time|Last access of the file.|_Today 12:35_|
+|open…|A special menu item to allow the file to be opened with the default application. This menu item will ignore the global menu action option.|_Open with Preview…_|
+|open with…|A special menu item to allow the file to be opened with a custom application. This menu item will ignore the global menu action option.|_Open with Adobe Photoshop…_|
+|inline script|A [script](#scripting-support) that returns a text value to show in the menu title.||
+|global script|A [script](#scripting-support) that can generate multiple menu items.||
+|settings…|A special menu item to open the MediaInfo application to customize the settings. This menu item will ignore the global menu action option.|_MediaInfo Settings…_|
+|about…|A special menu item to open the GitHub page of this project. This menu item will ignore the global menu action option.|_MediaInfo 1.6.1 (19) developed by SBAREX…_|
+|copy to the clipboard…|A special menu item to copy the path into the clipboard. This menu item will ignore the global menu action option.||
+|action script|A [script](#scripting-support) to handle the action associated to each menu item. This element do not generate any menu items.||
 
 ### Images
 
@@ -197,10 +225,14 @@ Available information:
 |codec|Codec name (full name if available, otherwise short name).|_HEVC H.265_||
 |codec short name|Codec short name.|_hevc_||
 |codec long name|Codec long name.|_HEVC H.265_||
-|chapters|Number of chapters.|_2 chapters_ If this placeholder is the only in the menu item will be added a submenu with the list of the chapters.|\*\*|
-|video tracks|Number of video tracks.|_2 video tracks_||
-|audio tracks|Number of audio tracks.|_1 audio tracks_||
-|subtitles|Number of subtitles.|_3 subtitles_||
+|video tracks count|Number of video tracks.|_2 video tracks_||
+|video tracks|Menu with the video tracks. You can customize the items shows.|||
+|audio tracks count|Number of audio tracks.|_1 audio tracks_||
+|audio tracks|Menu with the audio tracks. You can customize the items shows.|||
+|subtitles count|Number of subtitles.|_3 subtitles_||
+|subtitles|Menu with the subtitles list.|||
+|chapters count|Number of chapters.|_2 chapters_|\*\*|
+|chapters|Menu with the list of the chapters.||\*\*|
 |languages|Number of languages.|_2 languages_ Show the number of available languages on video and audio tracks.||
 |frames|Number of frames.|_1.500 frames_||
 |frame rates|Frame rates.|_24 fps_||
@@ -213,10 +245,10 @@ Available information:
 
 Not all properties are always available, depending on the type of file and the engine used to decode it.
 
-\* _Available only with FFMpeg engine._
-\*\* _Not Available with Metadata engine._
+\* _Available only for files decoded with the FFMpeg engine._
+\*\* _Not Available for files decoded with the Metadata engine._
 
-It also shows the data of all the video, audio and subtitle tracks present. This information can be viewed within submenus or in the main menu. The information shown for each track is the same as used for video and audio files. 
+It also shows the data of all the video, audio and subtitle tracks present. This information can be viewed within submenus or in the main menu.  
 
 Supported video format:
 - video handled by the macOS via CoreMedia
@@ -339,7 +371,7 @@ Available information:
 |uncompressed size|Uncompressed size of the archived data. Is not influenced by the max files options.|_8 Mb_|
 
 
-## Scripting support
+# Scripting support
 
 It is possible to customize the content of the menu items through javascript code. 
 
@@ -373,7 +405,26 @@ These two variables are locked and their properties cannot be changed (in strict
 There are three script tokes: inline, global, action. 
 
 
-### Inline scripts
+## Exposed data
+
+There are some common global variables:
+
+|var|type|description|
+|:--|:---|:----------|
+|`fileData`|Object|Properties of the processed file.|
+|`currentFileType`|Int|Type of the processed file: `1` image, `2` video, `3` audio, `4` office, `5` PDF, `6` archive, `7` 3D model.|
+|`settings`|Object|Current settings. |
+|`templateItemIndex`|Int|Index (zero-based) of the processing menu item template. Defined only during rendering phase, for the asynchronous function this value is not guaranteed to remain valid.|
+|`currentItem`|Object|Reference to the processing menu item ```{index: 0, menuItem: {image: "", template: "[[filesize]]", fileType: 1, action: "default", userInfo: {key1: 1, key2: "value"} }```. Defined only during rendering phase, for the asynchronous function this value is not guaranteed to remain valid.|
+|`debugMode`|Bool|`True` if the code is executed inside the main application.| 
+|`macOS_version`|String|Current macOS version (like `"12.2.1"`).|
+_You cannot change the properties of `fileData` or `settings` to alter the data displayed by standard tokens._ 
+
+
+![Log console](Assets/script_log.png)
+
+
+## Inline scripts
 
 The inline script token allows you to place the result of the script evaluation inside a menu item with any other tokens. 
 
@@ -388,7 +439,7 @@ The last statement must return a string value (or null).
 })()
 ```
 
-### Global scripts
+## Global scripts
 
 The global token script allows you to create multiple menu items at once.
 
@@ -410,102 +461,257 @@ The global token script allows you to create multiple menu items at once.
 })()
 ```
 
-The last statement executed must return an array of items representing the menu items to be added. 
+The last statement executed must return an array representing the menu items to add.
 
-Each item in the returned array can be:
-- A string that will be used as a title.
+Each element in the returned array can be:
+- A string that will be used as the title. You can use `"-"` to add a menu separator.
 - An object with these properties:
   - `title` (string, required) The title of the menu item. 
-  - `image` (string, optional) The name of the image for the menu item.
-  - `checked` (bool, optional) Set to `true` to add the checkmark to the menu item.
-  - `indent` (int, optional) Indentation level.
+  - `image` (string, optional) The image name for the menu item. See below for a list of the available images.
+  - `checked` (bool, optional) Set to `true` to add the check mark to the menu item.
+  - `indent` (int, optional) Indentation level (from 0 to 15).
   - `tag` (int, optional)
-  - `items` (Array, optional) An array of the subitems. 
-
+  - `userInfo` ([string: Any]) Dictionary of custom user information.
+  - `action` (String) Action to be performed by selecting the menu item. It can be one of these values:
+    - `"none"`: do nothing.
+    - `"standard"`: execute the action set globally in the settings.
+    - `"open"`: open the file with the default application.
+    - `"openWith"`: open the file with an application. You need to set the full path of the application in `userInfo["application"]`.
+    - `"openSettings"`: open the MediaInfo settings application.
+    - `"clipboard"`: copy the path to the clipboard.
+    - `"about"`: open the GitHub page of this project.
+    - `"custom"`: perform a custom action. You need to set the function _name_ to be called in `userInfo["code"]`.
+  - `items` (Array, optional) An array of the sub-elements. 
+ 
+For each items inside the menu (standard and created by a global script), is required that the combination of tag and the formatted title **must** be unique. For the standard elements, the assigned tag is the zero index of the template used. 
+    
 The `image` property can be:
 
-|value|image|
-|:----|:----|
-|`null` or `"no-image"`|No image, but reserve a space if is set the visibility of icon in the menu items.|
-|`no-space`|No image, and do not reserve a space.|
-|`"image"`, `"image_h"`|![image](Assets/images/image.png)|
-|`"image_v"`|![image vertical](Assets/images/image_v.png)|
-|`"aspectratio"`, `"aspectratio_h"`|![aspect ratio](Assets/images/aspectratio.png)|
-|`"aspectratio_v"`|![aspect ratio vertical](Assets/images/aspectratio_v.png)|
-|`"color"`|![color](Assets/images/color.png)|
-|`"color_rgb"`|![color RGB](Assets/images/color_rgb.png)|
-|`"color_cmyk"`|![color CMYK](Assets/images/color_cmyk.png)|
-|`"color_gray"`|![color Gray](Assets/images/color_gray.png)|
-|`"color_lab"`|![color Lab](Assets/images/color_lab.png)|
-|`"color_bw"`|![color BW](Assets/images/color_bw.png)|
-|`"print"`, `"printer"`|![printer](Assets/images/print.png)|
-|`"video"`, `"video_h"`|![video](Assets/images/video.png)|
-|`"video_v"`|![video vertical](Assets/images/video_v.png)|
-|`"audio"`|![audio](Assets/images/audio.png)|
-|`"speaker"`, `"speaker_mono"`|![speaker mono](Assets/images/speaker_mono.png)|
-|`"speaker_stereo"`|![speaker stereo](Assets/images/speaker_stereo.png)|
-|`"txt"`|![text](Assets/images/txt.png)|
-|`"abc"`|![abc](Assets/images/abc.png)|
-|`"page"`, `"page_h"`|![page](Assets/images/page.png)|
-|`"page_v"`|![page vertical](Assets/images/page_v.png)|
-|`"pages"`|![pages](Assets/images/pages.png)|
-|`"office"` or `"doc"` or `"docx"`, `"word"`|![vertical document](Assets/images/doc.png)|
-|`"doc_h"`|![horizontal document](Assets/images/doc_h.png)|
-|`"xls"`, `"xlsx"`, `"excel"`|![spreadsheet](Assets/images/xls.png)|
-|`"ppt"`, `"pptx"`, `"powerpoint"`|![presentation](Assets/images/ppt.png)|
-|`"3D"`|![3D](Assets/images/3d.png)|
-|`"3d_color"`|![3D color](Assets/images/3d_color.png)|
-|`"3d_occlusion"`|![3D occlusion](Assets/images/3d_occlusion.png)|
-|`"3d_lines"`|![3D lines](Assets/images/3d_lines.png)|
-|`"3d_normal"`|![3D normal](Assets/images/3d_normal.png)|
-|`"3d_points"`|![3D point](Assets/images/3d_points.png)|
-|`"3d_quads"`|![3D quads](Assets/images/3d_quads.png)|
-|`"3d_tangent"`|![3D tangent](Assets/images/3d_tangent.png)|
-|`"3d_triangle_stripe"`|![3D triangle stripe](Assets/images/3d_triangle_stripe.png)|
-|`"3d_triangle"`|![3D triangle](Assets/images/3d_triangle.png)|
-|`"3d_uv"`|![3D UV](Assets/images/3d_uv.png)|
-|`"3d_variable"`|![3D variable](Assets/images/3d_variable.png)|
-|`"pdf"`, `"pdf"`|![pdf](Assets/images/pdf.png)|
-|`"pdf_v"`|![vertical pdf](Assets/images/pdf_v.png)|
-|`"artbox"`|![artbox](Assets/images/artbox.png)|
-|`"artbox_v"`|![vertical artbox](Assets/images/artbox_v.png)|
-|`"bleed"`|![bleed](Assets/images/bleed.png)|
-|`"bleed_v"`|![vertical artbox](Assets/images/bleed_v.png)|
-|`"crop"`|![crop](Assets/images/crop.png)|
-|`"zip"`|![person](Assets/images/zip.png)|
-|`"script"`|![pencil](Assets/images/script.png)|
-|`"gear", "gearshape"`|![pencil](Assets/images/gearshape.png)|
-|`"calendar"`|![pencil](Assets/images/calendar.png)|
-|`"size"`|![size](Assets/images/size.png)|
-|`"person"`|![person](Assets/images/person.png)|
-|`"shield"`|![person](Assets/images/shield.png)|
-|`"tag"`|![tag](Assets/images/tag.png)|
-|`"pencil"`|![pencil](Assets/images/pencil.png)|
+|value|image||
+|:----|:----|:---|
+|`null` or `"no-image"`||No image, but reserve a space if is set the visibility of icon in the menu items.|
+|`no-space`||No image, and do not reserve a space.|
+|`target-icon`||Current file icon.|
+|`"image"`|![image](Assets/images/image_h.png)|_auto oriented_|
+|`"image_v"`|![portrait image](Assets/images/image_v.png)||
+|`"image_h"`|![landscape image](Assets/images/image_h.png)||
+|`"aspectratio"`|![aspect ratio](Assets/images/aspectratio_h.png)|_auto oriented_|
+|`"aspectratio_h"`|![landscape aspect ratio](Assets/images/aspectratio_h.png)||
+|`"aspectratio_v"`|![portrait aspect ratio vertical](Assets/images/aspectratio_v.png)||
+|`"color"`|![color](Assets/images/color.png)|_dynamic_|
+|`"color_rgb"`|![color RGB](Assets/images/color_rgb.png)||
+|`"color_cmyk"`|![color CMYK](Assets/images/color_cmyk.png)||
+|`"color_gray"`|![color Gray](Assets/images/color_gray.png)||
+|`"color_lab"`|![color Lab](Assets/images/color_lab.png)||
+|`"color_bw"`|![color BW](Assets/images/color_bw.png)||
+|`"print"`, `"printer"`|![printer](Assets/images/print.png)||
+|`"video"`|![video](Assets/images/video_h.png)|_auto oriented_|
+|`"video_v"`|![portrait video](Assets/images/video_v.png)||
+|`"video_h"`|![landscape video](Assets/images/video_h.png)||
+|`"audio"`|![audio](Assets/images/audio.png)||
+|`"speaker"`, `"speaker_mono"`|![speaker mono](Assets/images/speaker_mono.png)||
+|`"speaker_stereo"`|![speaker stereo](Assets/images/speaker_stereo.png)||
+|`"txt"`|![text](Assets/images/txt.png)||
+|`"abc"`|![abc](Assets/images/abc.png)||
+|`"page"`|![page](Assets/images/page_v.png)|_auto oriented_|
+|`"page_v"`|![portrait page](Assets/images/page_v.png)||
+|`"page_h"`|![landscape page](Assets/images/page_h.png)||
+|`"pages"`|![pages](Assets/images/pages.png)||
+|`"office"`|![document](Assets/images/doc_v.png)|_auto icon (for word, excel or powerpoint)_|
+|`"office"` or `"doc"` or `"docx"`, `"word"`|![document](Assets/images/doc_v.png)|_auto oriented_|
+|`"doc_h"`, `"word_h"`, `"docx_h"`|![landscape document](Assets/images/doc_h.png)||
+|`"doc_v"`, `"word_v"`, `"docx_v"`|![portrait document](Assets/images/doc_v.png)||
+|`"xls"`, `"xlsx"`, `"excel"`|![spreadsheet](Assets/images/xls.png)||
+|`"ppt"`, `"pptx"`, `"powerpoint"`|![presentation](Assets/images/ppt.png)||
+|`"3D"`|![3D](Assets/images/3d.png)||
+|`"3d_color"`|![3D color](Assets/images/3d_color.png)||
+|`"3d_occlusion"`|![3D occlusion](Assets/images/3d_occlusion.png)||
+|`"3d_lines"`|![3D lines](Assets/images/3d_lines.png)||
+|`"3d_normal"`|![3D normal](Assets/images/3d_normal.png)||
+|`"3d_points"`|![3D point](Assets/images/3d_points.png)||
+|`"3d_quads"`|![3D quads](Assets/images/3d_quads.png)||
+|`"3d_tangent"`|![3D tangent](Assets/images/3d_tangent.png)||
+|`"3d_triangle_stripe"`|![3D triangle stripe](Assets/images/3d_triangle_stripe.png)||
+|`"3d_triangle"`|![3D triangle](Assets/images/3d_triangle.png)||
+|`"3d_uv"`|![3D UV](Assets/images/3d_uv.png)||
+|`"3d_variable"`|![3D variable](Assets/images/3d_variable.png)||
+|`"pdf"`|![pdf](Assets/images/pdf_v.png)|_auto oriented_|
+|`"pdf_h"`|![lanscape pdf](Assets/images/pdf_h.png)||
+|`"pdf_v"`|![portrait pdf](Assets/images/pdf_v.png)||
+|`"artbox"`|![artbox](Assets/images/artbox_h.png)|_auto oriented_|
+|`"artbox_h"`|![artbox](Assets/images/artbox_h.png)|
+|`"artbox_v"`|![vertical artbox](Assets/images/artbox_v.png)||
+|`"bleed"`|![bleed](Assets/images/bleed_h.png)|_auto oriented_|
+|`"bleed_h"`|![bleed](Assets/images/bleed_h.png)||
+|`"bleed_v"`|![vertical artbox](Assets/images/bleed_v.png)||
+|`"crop"`|![crop](Assets/images/crop.png)||
+|`"zip"`|![person](Assets/images/zip.png)||
+|`"script"`|![pencil](Assets/images/script.png)||
+|`"gear", "gearshape"`|![pencil](Assets/images/gearshape.png)||
+|`"calendar"`|![pencil](Assets/images/calendar.png)||
+|`"clipboard"`|![pencil](Assets/images/clipboard.png)||
+|`"flag"`|![pencil](Assets/images/flag.png)||
+|`"size"`|![size](Assets/images/size.png)||
+|`"person"`|![person](Assets/images/person.png)||
+|`"shield"`|![person](Assets/images/shield.png)||
+|`"tag"`|![tag](Assets/images/tag.png)||
+|`"pencil"`|![pencil](Assets/images/pencil.png)||
 
 
-### Action scripts
+## Custom action
 
-When in the [General settings](#general) the action for the menu is set to Execute a script, the action script contain the routine to be called when a user choose a menu item.
-For each supported file type can exists only one action script.
+The user can define a custom action performed when a menu item is chosen.
+There are two options:
+- Set a global action script invoked for each menu item without a specific action.
+- Set an action for a single menu item created by a global script.
+
+To manage the action, these functions are available:
+
+```js
+/**
+ * Open the file at the specified path with the default application.
+ *
+ * @param {String} path Full path of the file.
+ *
+ * @returns {Promise} From macOs 10.15 returns a Promise.
+ *
+ * @example 
+ * systemOpen(fileData.filePath)
+ *    .then(
+ *        function() {
+ *            console.log("success");
+ *        },
+ *        function() {
+ *            console.error("fail");
+ *        },
+ *    );
+ **/
+function systemOpen(path)
+
+/**
+ * Open the file path with the specified application.
+ *
+ * @param {String} path Full path of the file.
+ * @param {String} application Full path of the macOS application.
+ *
+ * @returns {Promise} From macOs 10.15 returns a Promise.
+ *
+ * @example
+ * systemOpenWith(fileData.filePath, "/Applications/TextEdit.app")
+ *    .then(
+ *        function() {
+ *            console.log("success");
+ *        },
+ *        function(reason) {
+ *            let error = reason; // String or Null
+ *            console.error("fail: ", error);
+ *        },
+ *    );
+ **/
+function systemOpenWith(path, application)
+
+/**
+ * Open the specified application.
+ *
+ * @param {String} path Full path of the macOS application.
+ *
+ * @returns {Promise} From macOs 10.15 returns a Promise.
+ *
+ * @example
+ * systemOpenApp("/Applications/TextEdit.app")
+ *    .then(
+ *        function() {
+ *            console.log("success");
+ *        },
+ *        function(reason) {
+ *            let error = reason; // String or Null
+ *            console.error("fail: ", error);
+ *        },
+ *    );
+ **/
+function systemOpenApp(path)
+
+/**
+ * Execute an external `command` passing the arguments as an array of strings.
+ *
+ * @param {String} command Full path of the command to be executed.
+ * @param {String[]} arguments List of arguments for the command.
+ *
+ * @returns {Promise} From macOs 10.15 returns a Promise.
+ *
+ * @example
+ * systemExec("command", ["arg1", "arg2"])
+ *    .then(
+ *        function (reason) {
+ *            let output = reason; // String
+ *            console.log("success: ", output);
+ *        },
+ *        function (reason) {
+ *            let exit_code = reason[0]; // Int
+ *            let output = reason[1]; // String
+ *            console.error("fail: ", exit_code, output);
+ *        },
+ *    );
+ *
+ **/
+function systemExec(command, arguments)
+
+/**
+ * Copy a text into the clipboard.
+ *
+ * @param {String} text 
+ *
+ * @returns {Bool} True on success.
+ *
+ * @example
+ * systemCopyToClipboard("Hello world");
+ *
+ **/
+function systemCopyToClipboard(text)
+```
+
+### Global action script
+
+When the action for the menu is set to `Execute a script` in the [General settings](#general), the action script contains the routine to be called when a user chooses a menu item. 
+Only the first action script will be executed for each supported file.
+
+> Menu items with a prefefined action (such as open, about, settings) and custom items with an action set never execute the global action script.
+
+Within the action script the var `selectedMenuItem` is set with the properties of the chosen menu item.
+
+Each menu item generated by standard tokens has the tag value set to the template's (zero-based) index. Standard tokens that generate submenus (such as medata) use the same tag as the base token for subheadings. 
+
+#### Inline action
+
+Menu items created by a global script can have a custom action. You need to set the `action` attribute to `"custom"` and set `userInfo["code"]` to the name (a string) of an exists function to call to handle the action.
+ The function receives a parameter with the info of the selected menu item:
+ - index (Int): index inside the template
+ - menuItem
+    - image (String)
+    - template (String)
+ - action (String)
+ - userInfo ([String: Any])
 
 
-### Exposed data
+### Utility functions
 
-The global variable `fileData` contain the properties of the processed file.
+|func|return type|description|
+|:---|:-----|:---|
+|`console.log(arg1[, arg2, ...])`|Void|Output a log in the Javascript Console Window (available from the Window menu).|
+|`console.error(arg1[, arg2, ...])`|Void||
+|`console.warn(arg1[, arg2, ...])`|Void||
+|`console.info(arg1[, arg2, ...])`|Void||
+|`console.debug(arg1[, arg2, ...])`|Void||
+|`console.assert(condition, arg1[, arg2, ...])`|Void|Output a log only if the condition is true.|
+|`toBase64(string)`|String|Encode the argument to a base64 value.|
+|`fromBase64(string)`|String|Decode the argument from a base64 value.|
+|`formatTemplate(string)`|\[String, Bool\]|Format a template. Return an array, on index 0 the formatted result, the index 1 indicate if the return has some token filled.|
+ 
+_Some standard tokens (such as scripts and open-width) encode the argument with the base64 standard._
 
-The global variable `settings` is set with the current settings. 
+### Common properties
 
-The global variable `templateItemIndex` is set to the index (zero based) of the current processed menu item template. Note that this index may not match the index of the current menu item because templates with empty results are not converted to menu items and the global script can generate multiple menu. 
-
-_You cannot change the properties of `fileData` to alter the data displayed by standard tokens._ 
-
-In the javascript environment, the `console.log()` function is available to allow a rudimentary tracing function in the Javascript Console Window (available from the Window menu). Also, there are available `console.error()`, `console.warn()` `console.info()`,  `console.debug()`, `console.assert()`.
-
-![Log console](Assets/script_log.png)
-
-
-#### Common properties
-
+Settings:
 
 |property|type|description|example|
 |:-------|:---|:----|:------|
@@ -541,6 +747,9 @@ In the javascript environment, the `console.log()` function is available to allo
 |`settings`.`videoHandled`|bool|||
 |`settings`.`videoTemplates`|Array|||
 
+
+fileData:
+
 |property|type|description|example|
 |:-------|:---|:----|:------|
 |`fileData`.`fileUrl`|string|The url of the processed file.|_"file:///Users/Default/Documents/file.jpg"_|
@@ -553,7 +762,7 @@ In the javascript environment, the `console.log()` function is available to allo
 |`fileData`.`fileAccessDate`|Date|Last access date.||
 
 
-#### Properties for the images
+### Properties for images
 
 |property|type|description|example|
 |:-------|:---|:----|:------|
@@ -597,7 +806,7 @@ Depending on the image type, not all metadata properties will be populated.
 Every metadata group is an array of objects. Each object has three string properties: `code`, `value` and `label`. For a list of metadata codes see ImageIO - `CGImageProperties.h` on the Apple documentation.
 
 
-#### Properties for video files
+### Properties for video files
 
 |property|type|description|example|
 |:-------|:---|:----|:------|
@@ -661,7 +870,7 @@ Every item in the `fileData`.`subtitles` is an object with these properties:
 |`langFlag`|string\|null||_":it:"_|
 
 
-#### Properties for audio files
+### Properties for audio files
 
 |property|type|description|example|
 |:-------|:---|:----|:------|
@@ -682,7 +891,7 @@ Every item in the `fileData`.`subtitles` is an object with these properties:
 |`fileData`.`title`|string\|null|||
 
 
-#### Properties for PDF files
+### Properties for PDF files
 
 |property|type|description|example|
 |:-------|:---|:----|:------|
@@ -709,7 +918,7 @@ Every item in the `fileData`.`subtitles` is an object with these properties:
 |`fileData`.`version`|string||_"1.6"_|
 
 
-#### Properties for Office files
+### Properties for Office files
 
 |property|type|description|example|
 |:-------|:---|:----|:------|
@@ -735,7 +944,7 @@ Every item in the `fileData`.`subtitles` is an object with these properties:
 |`fileData`.`presentationFormat`|String|||
 
 
-#### Properties for compressed archive files
+### Properties for compressed archives
 
 |property|type|description|example|
 |:-------|:---|:----|:------|
@@ -777,9 +986,9 @@ Every item in the `fileData`.`files` array has these properties:
 This only happens for directly managed folders, not for subfolders. This is a common issue for many Finder Extension due to a macOS API limitation. **A temporary workaround is to manage the parent folder of the one located in the sidebar.**
 
 - Menu item separators are not rendered as usual.
-This is a limitation of the Apple API. The separators are rendered as a disabled empty menu items.
+This is a limitation of the Apple API. 
 
-- The Apple API allow to set only few option for each menu items: `title`, `tag`, `image` (automatically resized to 16x16 px), `indentationLevel`, `enabled`, `state`, `action` (the target is always the `FIFinderSync` object). When the image is passed from the code to the System it will be reprocessed ad lose the template attribute. This prevent the B/W image to change the color from black to white when the menu item is selected.
+- The Apple API allow to set only few option for each menu items: `title`, `tag`, `image` (automatically resized to 16x16 px), `indentationLevel`, `enabled`, `state`, `action` (the target is always the `FIFinderSync` instance). When the menu image is passed from the code to the System it will be reprocessed ad lose the template attribute. This prevent the B/W image to change the color from black to white when the menu item is selected.
 
 
 ## Build from source

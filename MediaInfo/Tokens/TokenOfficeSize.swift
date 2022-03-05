@@ -85,13 +85,6 @@ class TokenOfficeSize: Token {
         return [.office]
     }
     
-    override var informativeMessage: String {
-        guard let mode = self.mode as? Mode else {
-            return super.informativeMessage
-        }
-        return String(format: NSLocalizedString("The token '%@' require the deep scan of the file and can slow down menu generation.", comment: ""), mode.displayString)
-    }
-    
     override var title: String {
         return NSLocalizedString("Printed size", comment: "")
     }
@@ -112,6 +105,16 @@ class TokenOfficeSize: Token {
     
     required init?(pasteboardPropertyList propertyList: Any, ofType type: NSPasteboard.PasteboardType) {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
+    }
+    
+    override func validate(with info: BaseInfo?) -> (info: String, warnings: String) {
+        guard let mode = self.mode as? Mode else {
+            return super.validate(with: info)
+        }
+        
+        return (
+            info: String(format: NSLocalizedString("The token ‘%@’ require the deep scan of the file and can slow down menu generation.", comment: ""), mode.displayString),
+            warnings: "")
     }
     
     override func createMenu() -> NSMenu? {

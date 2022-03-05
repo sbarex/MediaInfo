@@ -45,13 +45,6 @@ class FinderSync: FIFinderSync {/*
         } catch {
             print("Failed to start updater with error: \(error)")
         }*/
-        
-        BaseInfo.jsOpen = { (file: String) in
-            HelperWrapper.openFile(url: URL(fileURLWithPath: file))
-        }
-        BaseInfo.jsExec = { (command: String, arguments: [String]) in
-            HelperWrapper.systemExec(command: command, arguments: arguments)
-        }
     }
     
     deinit {
@@ -177,18 +170,57 @@ class FinderSync: FIFinderSync {/*
     
     var currentFile: URL?
     var currentFileType: Settings.SupportedFile?
-    var currentInfo: BaseInfo?
+    var currentInfo: BaseInfo? {
+        didSet {
+            oldValue?.jsDelegate = nil
+            currentInfo?.jsDelegate = self
+        }
+    }
     
     @objc internal func fakeMenuAction(_ sender: NSMenuItem) {
         guard let file = self.currentFile, let currentFileType = self.currentFileType else {
             return
         }
         
-        let menuItems = settings.getMenuItems(for: currentFileType)
-        if sender.tag >= 0 && sender.tag < menuItems.count {
-            let item = menuItems[sender.tag]
-            if item.template.hasPrefix("[[open-with:"), let path = String(item.template.dropFirst(12).dropLast(2)).fromBase64() {
-                HelperWrapper.openFile(url: file, withApp: path)
+        let item = BaseInfo.postprocessMenuItem(sender, from: self.representedObjects) as? MenuItemInfo
+        if let item = item {
+            switch item.action {
+            case .none:
+                // No action
+                return
+            case .standard:
+                // Standard action
+                break
+            case .openSettings:
+                var url = Bundle.main.bundleURL
+                if url.pathExtension == "appex" {
+                    url = url.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+                }
+                
+                HelperWrapper.openApplication(at: url) { _,_ in }
+                return
+            case .about:
+                HelperWrapper.openFile(url: URL(string: "https://github.com/sbarex/MediaInfo")!) {_ in }
+                return
+            case .open:
+                HelperWrapper.openFile(url: file) {_ in }
+                return
+            case .openWith:
+                if let path = item.userInfo["application"] as? String, !path.isEmpty {
+                    HelperWrapper.openFile(url: file, withApp: path) {_,_ in }
+                    return
+                }
+            case .custom:
+                if let info = currentInfo, let code = item.userInfo["code"] as? String, !code.isEmpty {
+                    info.initAction(context: info.getJSContext(with: self.settings), selectedItem: item, settings: self.settings)
+                    _ = try? info.evaluateScript(code: "globalThis['\(code)'](selectedMenuItem);", forItem: item, settings: self.settings)
+                    return
+                }
+            case .clipboard:
+                let pasteboard = NSPasteboard.general
+                pasteboard.declareTypes([NSPasteboard.PasteboardType.string], owner: nil)
+                        
+                pasteboard.setString(file.path, forType: NSPasteboard.PasteboardType.string)
                 return
             }
         }
@@ -197,14 +229,13 @@ class FinderSync: FIFinderSync {/*
         case .none:
             return
         case .open:
-            HelperWrapper.openFile(url: file)
+            HelperWrapper.openFile(url: file) {_ in }
         case .script:
             guard let info = currentInfo, let code = settings.getActionCode(for: currentFileType) else {
                 return
             }
-            
-            info.initActionJSContext(selectedItem: sender)
-            _ = try? info.evaluateScript(code: code, forItem: -1)
+            info.initAction(context: info.getJSContext(with: self.settings), selectedItem: item, settings: self.settings)
+            _ = try? info.evaluateScript(code: code, forItem: nil, settings: self.settings)
         }
     }
     
@@ -254,7 +285,7 @@ class FinderSync: FIFinderSync {/*
         } else if settings.isModelsHandled && UTTypeConformsTo(uti as CFString, "public.3d-content" as CFString) {
             currentFileType = .model
             currentInfo = getInfoForModel(atURL: item)
-        } else if settings.isArchiveHandled && (UTTypeConformsTo(uti as CFString, "public.zip-archive" as CFString) || UTTypeConformsTo(uti as CFString, "com.rarlab.rar-archive" as CFString)) {
+        } else if settings.isArchiveHandled && (UTTypeConformsTo(uti as CFString, "public.zip-archive" as CFString) || UTTypeConformsTo(uti as CFString, "com.rarlab.rar-archive" as CFString) || UTTypeConformsTo(uti as CFString, "public.archive" as CFString) || UTTypeConformsTo(uti as CFString, "org.gnu.gnu-zip-archive" as CFString)) {
             currentFileType = .archive
             currentInfo = getInfoForArchive(atURL: item)
         } else {
@@ -338,10 +369,36 @@ class FinderSync: FIFinderSync {/*
         fakeSeparator!(menu)
     }
     
+    var representedObjects: [Int: Any] = [:]
+    
+    internal func postprocessMenuItem(_ item: NSMenuItem) {
+        var hasher = Hasher()
+        hasher.combine(item.tag)
+        hasher.combine(item.title)
+        let key = hasher.finalize()
+        
+        item.representedObject = representedObjects[key]
+        
+        if item.tag != 0, let representedObject = self.representedObjects[item.tag] {
+            item.representedObject = representedObject
+        }
+    }
+    
+    internal func postprocessMenu(_ menu: NSMenu?) {
+        guard let menu = menu else {
+            return
+        }
+        for item in menu.items {
+            if item.tag != 0, let representedObject = self.representedObjects[item.tag] {
+                item.representedObject = representedObject
+            }
+        }
+    }
     
     func getMenu(for info: BaseInfo) -> NSMenu? {
         let menu = info.getMenu(withSettings: settings)
         sanitizeMenu(menu)
+        self.representedObjects = BaseInfo.preprocessMenu(menu)
         return menu
     }
     
@@ -391,5 +448,30 @@ class FinderSync: FIFinderSync {/*
     
     func getInfoForArchive(atURL item: URL) -> ArchiveInfo? {
         return HelperWrapper.getArchiveInfo(for: item)
+    }
+}
+
+// MARK: - JSDelegate
+extension FinderSync: JSDelegate {
+    func jsOpen(path: String, reply: @escaping (Bool)->Void) {
+        HelperWrapper.openFile(url: URL(fileURLWithPath: path), reply: reply)
+    }
+    func jsOpen(path: String, with app: String, reply: @escaping (Bool, String?)->Void) {
+        HelperWrapper.openFile(url: URL(fileURLWithPath: path), withApp: app, reply: reply)
+    }
+    func jsExec(command: String, arguments: [String], reply: @escaping (Int32, String) -> Void) {
+        HelperWrapper.systemExec(command: command, arguments: arguments, reply: reply)
+    }
+        
+    func jsRunApp(at path: String, reply: @escaping (Bool, String?)->Void) {
+        HelperWrapper.openApplication(at: URL(fileURLWithPath: path), reply: reply)
+    }
+    
+    func jsCopyToClipboard(text: String) -> Bool {
+        let pasteboard = NSPasteboard.general
+        pasteboard.declareTypes([NSPasteboard.PasteboardType.string], owner: nil)
+                
+        let r = pasteboard.setString(text, forType: NSPasteboard.PasteboardType.string)
+        return r
     }
 }

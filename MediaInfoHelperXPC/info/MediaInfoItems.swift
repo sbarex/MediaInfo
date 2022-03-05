@@ -8,384 +8,16 @@
 
 import Cocoa
 
-enum VideoColorSpace: Int {
-    case gbr
-    case bt709
-    case unknown
-    case reserved
-    case fcc
-    case bt470bg
-    case smpte170m
-    case smpte240m
-    case ycgco
-    case bt2020nc
-    case bt2020c
-    case smpte2085
-    case chroma_derived_nc
-    case chroma_derived_c
-    case ictcp
-    
-    var label: String {
-        switch self {
-        case .gbr: return "gbr"
-        case .bt709: return "bt709"
-        case .unknown: return "unknown"
-        case .reserved: return "reserved"
-        case .fcc: return "fcc"
-        case .bt470bg: return "bt470bg"
-        case .smpte170m: return "smpte170m"
-        case .smpte240m: return "smpte240m"
-        case .ycgco: return "ycgco"
-        case .bt2020nc: return "bt2020nc"
-        case .bt2020c: return "bt2020c"
-        case .smpte2085: return "smpte2085"
-        case .chroma_derived_nc: return "chroma derived nc"
-        case .chroma_derived_c: return "chroma derived c"
-        case .ictcp: return "ictcp"
-        }
-    }
-}
-
-enum VideoPixelFormat: Int {
-    case yuv420p
-    case yuyv422
-    case yvyu422
-    case y210le
-    case y210be
-    case rgb24
-    case bgr24
-    case x2rgb10le
-    case x2rgb10be
-    case yuv422p
-    case yuv444p
-    case yuv410p
-    case yuv411p
-    case yuvj411p
-    case gray
-    case monow
-    case monob
-    case pal8
-    case yuvj420p
-    case yuvj422p
-    case yuvj444p
-    case xvmc
-    case uyvy422
-    case uyyvyy411
-    case bgr8
-    case bgr4
-    case bgr4_byte
-    case rgb8
-    case rgb4
-    case rgb4_byte
-    case nv12
-    case nv21
-    case argb
-    case rgba
-    case abgr
-    case bgra
-    case zero_rgb
-    case rgb0
-    case zero_bgr
-    case bgr0
-    case gray9be
-    case gray9le
-    case gray10be
-    case gray10le
-    case gray12be
-    case gray12le
-    case gray14be
-    case gray14le
-    case gray16be
-    case gray16le
-    case yuv440p
-    case yuvj440p
-    case yuv440p10le
-    case yuv440p10be
-    case yuv440p12le
-    case yuv440p12be
-    case yuva420p
-    case yuva422p
-    case yuva444p
-    case yuva420p9be
-    case yuva420p9le
-    case yuva422p9be
-    case yuva422p9le
-    case yuva444p9be
-    case yuva444p9le
-    case yuva420p10be
-    case yuva420p10le
-    case yuva422p10be
-    case yuva422p10le
-    case yuva444p10be
-    case yuva444p10le
-    case yuva420p16be
-    case yuva420p16le
-    case yuva422p16be
-    case yuva422p16le
-    case yuva444p16be
-    case yuva444p16le
-    case rgb48be
-    case rgb48le
-    case rgba64be
-    case rgba64le
-    case rgb565be
-    case rgb565le
-    case rgb555be
-    case rgb555le
-    case rgb444be
-    case rgb444le
-    case bgr48be
-    case bgr48le
-    case bgra64be
-    case bgra64le
-    case bgr565be
-    case bgr565le
-    case bgr555be
-    case bgr555le
-    case bgr444be
-    case bgr444le
-    case vaapi
-    case yuv420p9le
-    case yuv420p9be
-    case yuv420p10le
-    case yuv420p10be
-    case yuv420p12le
-    case yuv420p12be
-    case yuv420p14le
-    case yuv420p14be
-    case yuv420p16le
-    case yuv420p16be
-    case yuv422p9le
-    case yuv422p9be
-    case yuv422p10le
-    case yuv422p10be
-    case yuv422p12le
-    case yuv422p12be
-    case yuv422p14le
-    case yuv422p14be
-    case yuv422p16le
-    case yuv422p16be
-    case yuv444p16le
-    case yuv444p16be
-    case yuv444p10le
-    case yuv444p10be
-    case yuv444p9le
-    case yuv444p9be
-    case yuv444p12le
-    case yuv444p12be
-    case yuv444p14le
-    case yuv444p14be
-    case d3d11va_vld
-    case dxva2_vld
-    case ya8
-    case ya16le
-    case ya16be
-    case videotoolbox_vld
-    case gbrp
-    case gbrp9le
-    case gbrp9be
-    case gbrp10le
-    case gbrp10be
-    case gbrp12le
-    case gbrp12be
-    case gbrp14le
-    case gbrp14be
-    case gbrp16le
-    case gbrp16be
-    case gbrap
-    case gbrap16le
-    case gbrap16be
-    case vdpau
-    case xyz12le
-    case xyz12be
-    
-    var label: String {
-        switch self {
-        case .yuv420p: return "yuv420p"
-        case .yuyv422: return "yuyv422"
-        case .yvyu422: return "yvyu422"
-        case .y210le: return "y210le"
-        case .y210be: return "y210be"
-        case .rgb24: return "rgb24"
-        case .bgr24: return "bgr24"
-        case .x2rgb10le: return "x2rgb10le"
-        case .x2rgb10be: return "x2rgb10be"
-        case .yuv422p: return "yuv422p"
-        case .yuv444p: return "yuv444p"
-        case .yuv410p: return "yuv410p"
-        case .yuv411p: return "yuv411p"
-        case .yuvj411p: return "yuvj411p"
-        case .gray: return "gray"
-        case .monow: return "monow"
-        case .monob: return "monob"
-        case .pal8: return "pal8"
-        case .yuvj420p: return "yuvj420p"
-        case .yuvj422p: return "yuvj422p"
-        case .yuvj444p: return "yuvj444p"
-        case .xvmc: return "xvmc"
-        case .uyvy422: return "uyvy422"
-        case .uyyvyy411: return "uyyvyy411"
-        case .bgr8: return "bgr8"
-        case .bgr4: return "bgr4"
-        case .bgr4_byte: return "bgr4_byte"
-        case .rgb8: return "rgb8"
-        case .rgb4: return "rgb4"
-        case .rgb4_byte: return "rgb4_byte"
-        case .nv12: return "nv12"
-        case .nv21: return "nv21"
-        case .argb: return "argb"
-        case .rgba: return "rgba"
-        case .abgr: return "abgr"
-        case .bgra: return "bgra"
-        case .zero_rgb: return "0rgb"
-        case .rgb0: return "rgb0"
-        case .zero_bgr: return "0bgr"
-        case .bgr0: return "bgr0"
-        case .gray9be: return "gray9be"
-        case .gray9le: return "gray9le"
-        case .gray10be: return "gray10be"
-        case .gray10le: return "gray10le"
-        case .gray12be: return "gray12be"
-        case .gray12le: return "gray12le"
-        case .gray14be: return "gray14be"
-        case .gray14le: return "gray14le"
-        case .gray16be: return "gray16be"
-        case .gray16le: return "gray16le"
-        case .yuv440p: return "yuv440p"
-        case .yuvj440p: return "yuvj440p"
-        case .yuv440p10le: return "yuv440p10le"
-        case .yuv440p10be: return "yuv440p10be"
-        case .yuv440p12le: return "yuv440p12le"
-        case .yuv440p12be: return "yuv440p12be"
-        case .yuva420p: return "yuva420p"
-        case .yuva422p: return "yuva422p"
-        case .yuva444p: return "yuva444p"
-        case .yuva420p9be: return "yuva420p9be"
-        case .yuva420p9le: return "yuva420p9le"
-        case .yuva422p9be: return "yuva422p9be"
-        case .yuva422p9le: return "yuva422p9le"
-        case .yuva444p9be: return "yuva444p9be"
-        case .yuva444p9le: return "yuva444p9le"
-        case .yuva420p10be: return "yuva420p10be"
-        case .yuva420p10le: return "yuva420p10le"
-        case .yuva422p10be: return "yuva422p10be"
-        case .yuva422p10le: return "yuva422p10le"
-        case .yuva444p10be: return "yuva444p10be"
-        case .yuva444p10le: return "yuva444p10le"
-        case .yuva420p16be: return "yuva420p16be"
-        case .yuva420p16le: return "yuva420p16le"
-        case .yuva422p16be: return "yuva422p16be"
-        case .yuva422p16le: return "yuva422p16le"
-        case .yuva444p16be: return "yuva444p16be"
-        case .yuva444p16le: return "yuva444p16le"
-        case .rgb48be: return "rgb48be"
-        case .rgb48le: return "rgb48le"
-        case .rgba64be: return "rgba64be"
-        case .rgba64le: return "rgba64le"
-        case .rgb565be: return "rgb565be"
-        case .rgb565le: return "rgb565le"
-        case .rgb555be: return "rgb555be"
-        case .rgb555le: return "rgb555le"
-        case .rgb444be: return "rgb444be"
-        case .rgb444le: return "rgb444le"
-        case .bgr48be: return "bgr48be"
-        case .bgr48le: return "bgr48le"
-        case .bgra64be: return "bgra64be"
-        case .bgra64le: return "bgra64le"
-        case .bgr565be: return "bgr565be"
-        case .bgr565le: return "bgr565le"
-        case .bgr555be: return "bgr555be"
-        case .bgr555le: return "bgr555le"
-        case .bgr444be: return "bgr444be"
-        case .bgr444le: return "bgr444le"
-        case .vaapi: return "vaapi"
-        case .yuv420p9le: return "yuv420p9le"
-        case .yuv420p9be: return "yuv420p9be"
-        case .yuv420p10le: return "yuv420p10le"
-        case .yuv420p10be: return "yuv420p10be"
-        case .yuv420p12le: return "yuv420p12le"
-        case .yuv420p12be: return "yuv420p12be"
-        case .yuv420p14le: return "yuv420p14le"
-        case .yuv420p14be: return "yuv420p14be"
-        case .yuv420p16le: return "yuv420p16le"
-        case .yuv420p16be: return "yuv420p16be"
-        case .yuv422p9le: return "yuv422p9le"
-        case .yuv422p9be: return "yuv422p9be"
-        case .yuv422p10le: return "yuv422p10le"
-        case .yuv422p10be: return "yuv422p10be"
-        case .yuv422p12le: return "yuv422p12le"
-        case .yuv422p12be: return "yuv422p12be"
-        case .yuv422p14le: return "yuv422p14le"
-        case .yuv422p14be: return "yuv422p14be"
-        case .yuv422p16le: return "yuv422p16le"
-        case .yuv422p16be: return "yuv422p16be"
-        case .yuv444p16le: return "yuv444p16le"
-        case .yuv444p16be: return "yuv444p16be"
-        case .yuv444p10le: return "yuv444p10le"
-        case .yuv444p10be: return "yuv444p10be"
-        case .yuv444p9le: return "yuv444p9le"
-        case .yuv444p9be: return "yuv444p9be"
-        case .yuv444p12le: return "yuv444p12le"
-        case .yuv444p12be: return "yuv444p12be"
-        case .yuv444p14le: return "yuv444p14le"
-        case .yuv444p14be: return "yuv444p14be"
-        case .d3d11va_vld: return "d3d11va_vld"
-        case .dxva2_vld: return "dxva2_vld"
-        case .ya8: return "ya8"
-        case .ya16le: return "ya16le"
-        case .ya16be: return "ya16be"
-        case .videotoolbox_vld: return "videotoolbox_vld"
-        case .gbrp: return "gbrp"
-        case .gbrp9le: return "gbrp9le"
-        case .gbrp9be: return "gbrp9be"
-        case .gbrp10le: return "gbrp10le"
-        case .gbrp10be: return "gbrp10be"
-        case .gbrp12le: return "gbrp12le"
-        case .gbrp12be: return "gbrp12be"
-        case .gbrp14le: return "gbrp14le"
-        case .gbrp14be: return "gbrp14be"
-        case .gbrp16le: return "gbrp16le"
-        case .gbrp16be: return "gbrp16be"
-        case .gbrap: return "gbrap"
-        case .gbrap16le: return "gbrap16le"
-        case .gbrap16be: return "gbrap16be"
-        case .vdpau: return "vdpau"
-        case .xyz12le: return "xyz12le"
-        case .xyz12be: return "xyz12be"
-        }
-    }
-}
-
-enum VideoFieldOrder: Int {
-    case topFirst
-    case bottomFirst
-    case topFirstSwapped
-    case bottomFirstSwapped
-    case unknown
-    case progressive
-    
-    var label: String {
-        switch self {
-        case .topFirst: return "top first"
-        case .bottomFirst: return "bottom first"
-        case .topFirstSwapped: return "top coded first (swapped)"
-        case .bottomFirstSwapped: return "bottom coded first (swapped)"
-        case .unknown: return "unknown"
-        case .progressive: return "progressive"
-        }
-    }
-}
-
-
-// MARK: -
+// MARK: - DurationInfo
 protocol DurationInfo: BaseInfo {
     var duration: Double { get }
     var bitRate: Int64 { get }
     var start_time: Double { get }
+    func processDurationPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem: MenuItemInfo?) -> String
 }
 
 extension DurationInfo {
-    func processDurationPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String {
+    func processDurationPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem: MenuItemInfo?) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[duration]]":
@@ -419,17 +51,9 @@ extension DurationInfo {
             return placeholder
         }
     }
-    
-    static func getAvailableDurationTokens() -> [String] {
-        return [
-            "[[duration]]",
-            "[[seconds]]",
-            "[[bitrate]]",
-        ]
-    }
 }
 
-// MARK: -
+// MARK: - CodecInfo
 protocol CodecInfo: BaseInfo {
     var codec_short_name: String { get }
     var codec_long_name: String? { get }
@@ -437,11 +61,11 @@ protocol CodecInfo: BaseInfo {
     var encoder: String? { get }
     var isLossless: Bool? { get }
     
-    func processPlaceholderCodec(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String
+    func processPlaceholderCodec(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String
 }
 
 extension CodecInfo {
-    func processPlaceholderCodec(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String {
+    func processPlaceholderCodec(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[codec-short]]":
@@ -482,6 +106,7 @@ extension CodecInfo {
     }
 }
 
+// MARK: - Chapter
 class Chapter: Codable {
     enum CodingKeys: String, CodingKey {
         case title
@@ -542,17 +167,15 @@ class Chapter: Codable {
     }
 }
 
+// MARK: - ChaptersInfo
 protocol ChaptersInfo: BaseInfo {
     var chapters: [Chapter] { get }
-    func processPlaceholderChapters(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String
-}
-
-enum ChaptersCodingKeys: String, CodingKey {
-    case chapters
+    func processPlaceholderChapters(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String
+    func processSpecialChaptersMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool
 }
 
 extension ChaptersInfo {
-    func processPlaceholderChapters(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String {
+    func processPlaceholderChapters(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[chapters-count]]":
@@ -561,271 +184,69 @@ extension ChaptersInfo {
             return placeholder
         }
     }
+    
+    func processSpecialChaptersMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+        switch item.menuItem.template {
+        case "[[chapters]]":
+            guard !self.chapters.isEmpty else {
+                return true
+            }
+            
+            let chapters_menu = NSMenu(title: NSLocalizedString("Chapters", comment: ""))
+            for (i, chapter) in self.chapters.enumerated() {
+                var info = item
+                info.userInfo["chapter_index"] = i
+                chapters_menu.addItem(self.createMenuItem(title: chapter.getTitle(index: i), image: "-", settings: settings, representedObject: info))
+            }
+            
+            let title = self.formatCount(chapters.count, noneLabel: "No Chapter", singleLabel: "1 Chapter", manyLabel: "%d Chapters", useEmptyData: true, formatAsString: false)
+            let mnu = self.createMenuItem(title: title, image: item.menuItem.image, settings: settings, representedObject: item)
+            destination_sub_menu.addItem(mnu)
+            destination_sub_menu.setSubmenu(chapters_menu, for: mnu)
+            
+            return true
+        default:
+            return false
+        }
+    }
 }
 
-// MARK: -
+// MARK: - MediaInfo
 protocol MediaInfo: FileInfo, LanguageInfo, DurationInfo, CodecInfo {
     
 }
 
 // MARK: -
-class VideoTrackInfo: BaseInfo, DimensionalInfo, LanguageInfo, DurationInfo, CodecInfo {
-    enum CodingKeys: String, CodingKey {
-        case duration
-        case startTime
-        case codecShortName
-        case codecLongName
-        case profile
-        case pixelFormat
-        case pixelFormatLabel
-        case fieldOrder
-        case fieldOrderLabel
-        case colorSpace
-        case colorSpaceLabel
-        case lang
-        case langFlag
-        case bitRate
-        case frames
-        case fps
-        case title
-        case encoder
-        case isLossless
-    }
-    
-    let start_time: Double
-    let duration: Double
-    let codec_short_name: String
-    let codec_long_name: String?
-    let profile: String?
-    let pixel_format: VideoPixelFormat?
-    let field_order: VideoFieldOrder?
-    let color_space: VideoColorSpace?
-    
-    let lang: String?
-    let bitRate: Int64
-    let fps: Double
-    let frames: Int
-    let title: String?
-    let encoder: String?
-    let isLossless: Bool?
-    
-    let width: Int
-    let height: Int
-    let unit: String = "px"
-    
-    init(
-        width: Int, height: Int,
-        duration: Double,
-        start_time: Double,
-        codec_short_name: String, codec_long_name: String?, profile: String?,
-        pixel_format: VideoPixelFormat?,
-        color_space: VideoColorSpace?,
-        field_order: VideoFieldOrder?,
-        lang: String?,
-        bitRate: Int64, fps: Double,
-        frames: Int,
-        title: String?, encoder: String?,
-        isLossless: Bool?
-    ) {
-        self.duration = duration
-        self.start_time = start_time
-        self.codec_short_name = codec_short_name
-        self.codec_long_name = codec_long_name
-        self.profile = profile
-        self.pixel_format = pixel_format
-        self.field_order = field_order
-        self.color_space = color_space
-        
-        self.lang = lang
-        self.bitRate = bitRate
-        self.frames = frames
-        self.fps = fps
-        
-        self.title = title
-        self.encoder = encoder
-        
-        self.isLossless = isLossless
-        
-        self.width = width
-        self.height = height
-        super.init()
-    }
-    
-    required init(from decoder: Decoder) throws {
-        let dim = try Self.decodeDimension(from: decoder)
-        width = dim.width
-        height = dim.height
-        
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.duration = try container.decode(Double.self, forKey: .duration)
-        self.start_time = try container.decode(Double.self, forKey: .startTime)
-        self.codec_short_name = try container.decode(String.self, forKey: .codecShortName)
-        self.codec_long_name = try container.decode(String?.self, forKey: .codecLongName)
-        self.profile = try container.decode(String?.self, forKey: .profile)
-        if let i = try container.decode(Int?.self, forKey: .pixelFormat) {
-            self.pixel_format = VideoPixelFormat(rawValue: i)
-        } else {
-            self.pixel_format = nil
-        }
-        if let i = try container.decode(Int?.self, forKey: .fieldOrder) {
-            self.field_order = VideoFieldOrder(rawValue: i)
-        } else {
-            self.field_order = nil
-        }
-        if let i = try container.decode(Int?.self, forKey: .colorSpace) {
-            self.color_space = VideoColorSpace(rawValue: i)
-        } else {
-            self.color_space = nil
-        }
-        self.lang = try container.decode(String?.self, forKey: .lang)
-        self.bitRate = try container.decode(Int64.self, forKey: .bitRate)
-        self.frames = try container.decode(Int.self, forKey: .frames)
-        self.fps = try container.decode(Double.self, forKey: .fps)
-        self.title = try container.decode(String?.self, forKey: .title)
-        self.encoder = try container.decode(String?.self, forKey: .encoder)
-        self.isLossless = try container.decode(Bool?.self, forKey: .isLossless)
-        
-        try super.init(from: decoder)
-    }
-    
-    override func encode(to encoder: Encoder) throws {
-        try super.encode(to: encoder)
-        try self.encodeDimension(to: encoder)
-        
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.duration, forKey: .duration)
-        try container.encode(self.start_time, forKey: .startTime)
-        try container.encode(self.codec_short_name, forKey: .codecShortName)
-        try container.encode(self.codec_long_name, forKey: .codecLongName)
-        try container.encode(self.profile, forKey: .profile)
-        try container.encode(self.pixel_format?.rawValue, forKey: .pixelFormat)
-        try container.encode(self.field_order?.rawValue, forKey: .fieldOrder)
-        try container.encode(self.color_space?.rawValue, forKey: .colorSpace)
-        try container.encode(self.lang, forKey: .lang)
-        try container.encode(self.bitRate, forKey: .bitRate)
-        try container.encode(self.frames, forKey: .frames)
-        try container.encode(self.fps, forKey: .fps)
-        try container.encode(self.title, forKey: .title)
-        try container.encode(self.encoder, forKey: .encoder)
-        try container.encode(self.isLossless, forKey: .isLossless)
-        
-        if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
-            try container.encode(self.pixel_format?.label, forKey: .pixelFormatLabel)
-            try container.encode(self.field_order?.label, forKey: .fieldOrderLabel)
-            try container.encode(self.color_space?.label, forKey: .colorSpaceLabel)
-            try container.encode(self.getCountryFlag(), forKey: .langFlag)
-        }
-    }
-    
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        if let s = self.processVideoPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex) {
-            return s
-        } else {
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
-        }
-    }
-    
-    internal func processVideoPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String? {
-        let useEmptyData = !settings.isEmptyItemsSkipped
-        switch placeholder {
-        case "[[duration]]", "[[seconds]]", "[[bitrate]]", "[[start-time]]", "[[start-time-s]]":
-            return processDurationPlaceholder(placeholder, settings: settings, isFilled: &isFilled)
-        case "[[frames]]":
-            isFilled = true
-            let s = Self.numberFormatter.string(from: NSNumber(value: frames)) ?? "\(frames)"
-            return String(format: NSLocalizedString("%@ frames", tableName: "LocalizableExt", comment: ""), s)
-        case "[[fps]]":
-            isFilled = fps > 0
-            if fps == 0 {
-                return self.formatND(useEmptyData: useEmptyData)
-            } else {
-                let s = Self.numberFormatter.string(from: NSNumber(floatLiteral: fps)) ?? "\(fps)"
-                return String(format: NSLocalizedString("%@ fps", tableName: "LocalizableExt", comment: ""), s)
-            }
-        case "[[profile]]":
-            isFilled = !(self.profile?.isEmpty ?? true)
-            return self.profile ?? self.formatND(useEmptyData: useEmptyData)
-        case "[[field-order]]":
-            isFilled = self.field_order != nil
-            return self.field_order?.label ?? self.formatND(useEmptyData: useEmptyData)
-        case "[[pixel-format]]":
-            isFilled = self.pixel_format != nil
-            return self.pixel_format?.label ?? self.formatND(useEmptyData: useEmptyData)
-        case "[[color-space]]":
-            isFilled = self.color_space != nil
-            return self.color_space?.label ?? self.formatND(useEmptyData: useEmptyData)
-        case "[[title]]":
-            isFilled = !(self.title?.isEmpty ?? true)
-            return self.title ?? self.formatND(useEmptyData: useEmptyData)
-        case "[[codec]]", "[[codec-long]]", "[[codec-short]]", "[[compression]]", "[[encoder]]":
-            return self.processPlaceholderCodec(placeholder, settings: settings, isFilled: &isFilled)
-        case "[[languages]]", "[[languages-flag]]", "[[language-count]]",
-             "[[language]]", "[[language-flag]]":
-            return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
-        case "[[size]]", "[[width]]", "[[height]]", "[[ratio]]", "[[resolution]]":
-            return self.processDimensionPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
-        case "[[subtitles-count]]", "[[audio-count]]", "[[video-count]]", "[[video]]", "[[audio]]", "[[subtitles]]", "[[chapters]]",
-            "[[chapters-count]]",
-            "[[filesize]]", "[[file-name]]", "[[file-ext]]", "[[file-cdate]]", "[[file-mdate]]", "[[file-adate]]",
-            "[[engine]]":
-            isFilled = false
-            return ""
-            
-        default:
-            return nil
-        }
-    }
-    
-    override func getStandardTitle(forSettings settings: Settings) -> String {
-        var template = "[[size]], [[duration]]"
-        if self.fps > 0 {
-            template += " [[fps]]"
-        }
-        if self.bitRate > 0 {
-            template += ", [[bitrate]]"
-        }
-        if !self.codec_short_name.isEmpty {
-            template += " ([[codec]])"
-        }
-        template += " [[language-flag]]"
-        var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
-        return isFilled ? title : ""
-    }
-    
-    override func getMenu(withSettings settings: Settings) -> NSMenu? {
-        return self.generateMenu(items: settings.videoMenuItems, image: self.getImage(for: "video"), withSettings: settings)
-    }
-}
-
-// MARK: -
 class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
     var lang: String? { return self.videoTrack.lang }
+    lazy var flagImage: NSImage? = {
+        return self.getImageOfFlag()
+    }()
     var languages: [String] {
         var languages: Set<String> = []
-        if let l = self.lang {
+        if let l = self.lang, !l.isEmpty {
             languages.insert(l)
         }
         for v in self.videoTracks {
-            if let l = v.lang {
+            if let l = v.lang, !l.isEmpty {
                 languages.insert(l)
             }
         }
         for a in self.audioTracks {
-            if let l = a.lang {
+            if let l = a.lang, !l.isEmpty {
                 languages.insert(l)
             }
         }
         return Array(languages)
     }
     
-    var duration: Double { return self.duration }
-    var bitRate: Int64 { return self.bitRate }
-    var start_time: Double { return self.start_time }
-    var codec_short_name: String { return self.codec_short_name }
-    var codec_long_name: String?  { return self.codec_long_name }
-    var encoder: String? { return self.encoder }
-    var isLossless: Bool? { return self.isLossless }
+    var duration: Double { return self.videoTrack.duration }
+    var bitRate: Int64 { return self.videoTrack.bitRate }
+    var start_time: Double { return self.videoTrack.start_time }
+    var codec_short_name: String { return self.videoTrack.codec_short_name }
+    var codec_long_name: String?  { return self.videoTrack.codec_long_name }
+    var encoder: String? { return self.videoTrack.encoder }
+    var isLossless: Bool? { return self.videoTrack.isLossless }
     
     enum CodingKeys: String, CodingKey {
         case chapters
@@ -844,7 +265,20 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
     let engine: MediaEngine
     let videoTrack: VideoTrackInfo
     
-    init(file: URL, width: Int, height: Int, duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, profile: String?, pixel_format: VideoPixelFormat?, color_space: VideoColorSpace?, field_order: VideoFieldOrder?, lang: String?, bitRate: Int64, fps: Double, frames: Int, title: String?, encoder: String?, isLossless: Bool?, chapters: [Chapter], video: [VideoTrackInfo], audio: [AudioTrackInfo], subtitles: [SubtitleTrackInfo], engine: MediaEngine) {
+    override var infoType: Settings.SupportedFile { return .video }
+    override var standardMainItem: MenuItemInfo {
+        var template = "[[size]], [[duration]]"
+        if self.bitRate > 0 {
+            template += ", [[bitrate]]"
+        }
+        if !self.codec_short_name.isEmpty {
+            template += " ([[codec]])"
+        }
+        template += " [[languages-flag]]"
+        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "video", template: template))
+    }
+    
+    init(file: URL, width: Int, height: Int, duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, profile: String?, pixel_format: VideoTrackInfo.VideoPixelFormat?, color_space: VideoTrackInfo.VideoColorSpace?, field_order: VideoTrackInfo.VideoFieldOrder?, lang: String?, bitRate: Int64, fps: Double, frames: Int, title: String?, encoder: String?, isLossless: Bool?, chapters: [Chapter], video: [VideoTrackInfo], audio: [AudioTrackInfo], subtitles: [SubtitleTrackInfo], engine: MediaEngine) {
         
         self.videoTracks = video
         self.audioTracks = audio
@@ -862,6 +296,7 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
             bitRate: bitRate, fps: fps, frames: frames,
             title: title, encoder: encoder,
             isLossless: isLossless)
+        
         super.init(file: file)
     }
     
@@ -896,89 +331,47 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        if let s = self.videoTrack.processVideoPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex) {
+    override func getImage(for name: String) -> NSImage? {
+        if name == "flag", let img = self.flagImage {
+            return img
+        } else {
+            return super.getImage(for: name)
+        }
+    }
+    
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        if let s = self.videoTrack.processVideoPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item) {
             return s
         }
         
         let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[languages]]", "[[languages-flag]]", "[[language-count]]":
-            return processLanguagesPlaceholder(placeholder, settings: settings, isFilled: &isFilled) ?? placeholder
+            return processLanguagesPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item) ?? placeholder
         case "[[language]]", "[[language-flag]]":
-            return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
+            return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         case "[[subtitles-count]]":
-            let n = subtitles.count
-            isFilled = n > 0
-            
-            if n == 0 {
-                return useEmptyData ? NSLocalizedString("No Subtitle", tableName: "LocalizableExt", comment: "") : ""
-            } else if n == 1 {
-                return NSLocalizedString("1 Subtitle", tableName: "LocalizableExt", comment: "")
-            } else {
-                return String(format: NSLocalizedString("%s Subtitles", tableName: "LocalizableExt", comment: ""), n)
-            }
+            return self.formatCount(subtitles.count, noneLabel: "No Subtitle", singleLabel: "1 Subtitle", manyLabel: "%d Subtitles", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[audio-count]]":
-            let n = audioTracks.count
-            isFilled = n > 0
-            if n == 0 {
-                return useEmptyData ? NSLocalizedString("No Audio track", tableName: "LocalizableExt", comment: "") : ""
-            } else if n == 1 {
-                return NSLocalizedString("1 Audio track", tableName: "LocalizableExt", comment: "")
-            } else {return String(format: NSLocalizedString("%d Audio tracks", tableName: "LocalizableExt", comment: ""), n)
-            }
+            return self.formatCount(audioTracks.count, noneLabel: "No Audio track", singleLabel: "1 Audio track", manyLabel: "%d Audio tracks", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[video-count]]":
-            let n = videoTracks.count
-            isFilled = n > 0
-            
-            if n == 0 {
-                return useEmptyData ? NSLocalizedString("No Video track", tableName: "LocalizableExt", comment: "") : ""
-            } else if n == 1 {
-                return NSLocalizedString("1 Video track", tableName: "LocalizableExt", comment: "")
-            } else {
-                return String(format: NSLocalizedString("%d Video tracks", tableName: "LocalizableExt", comment: ""), n)
-            }
+            return self.formatCount(videoTracks.count, noneLabel: "No Video track", singleLabel: "1 Video track", manyLabel: "%d Video tracks", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[chapters-count]]":
-            return self.processPlaceholderChapters(placeholder, settings: settings, isFilled: &isFilled)
+            return self.processPlaceholderChapters(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         case "[[engine]]":
             isFilled = true
             return engine.label
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         }
     }
     
-    override func getStandardTitle(forSettings settings: Settings) -> String {
-        var template = "[[size]], [[duration]]"
-        if self.bitRate > 0 {
-            template += ", [[bitrate]]"
+    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+        if self.processSpecialChaptersMenuItem(item, inMenu: destination_sub_menu, withSettings: settings) {
+            return true
         }
-        if !self.codec_short_name.isEmpty {
-            template += " ([[codec]])"
-        }
-        template += " [[languages-flag]]"
-        var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
-        return isFilled ? title : ""
-    }
-    
-    override internal func processSpecialMenuItem(_ item: Settings.MenuItem, atIndex itemIndex: Int, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
-        switch item.template {
-        case "[[chapters]]":
-            guard !self.chapters.isEmpty else {
-                return true
-            }
-            
-            let chapters_menu = NSMenu(title: "Chapters")
-            for (i, chapter) in self.chapters.enumerated() {
-                chapters_menu.addItem(self.createMenuItem(title: chapter.getTitle(index: i), image: "-", settings: settings, tag: itemIndex))
-            }
-            
-            let title = self.formatCount(chapters.count, noneLabel: "No Chapter", singleLabel: "1 Chapter", manyLabel: "%d Chapters", useEmptyData: true, formatAsString: false)
-            let mnu = self.createMenuItem(title: title, image: item.image, settings: settings, tag: itemIndex)
-            
-            destination_sub_menu.addItem(mnu)
-            destination_sub_menu.setSubmenu(chapters_menu, for: mnu)
+        
+        switch item.menuItem.template {
         case "[[video]]":
             let n = self.videoTracks.count
             guard n > 0 else {
@@ -994,11 +387,18 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
                 video_sub_menu = destination_sub_menu
             }
             for video in videoTracks {
+                video.initJS = { settings in
+                    return self.getJSContext(with: settings)
+                }
                 guard let video_menu = video.getMenu(withSettings: settings) else {
                     continue
                 }
-                for item in video_menu.items {
-                    video_sub_menu.addItem(item.copy() as! NSMenuItem)
+                for (i, menu_item) in video_menu.items.enumerated() {
+                    let mnu = menu_item.copy() as! NSMenuItem
+                    var info = mnu.representedObject as? MenuItemInfo ?? item
+                    info.userInfo["video_track_index"] = i
+                    mnu.representedObject = info
+                    video_sub_menu.addItem(mnu)
                 }
             }
             if group_tracks {
@@ -1026,12 +426,19 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
             }
             
             for audio in audioTracks {
-               guard let audio_menu = audio.getMenu(withSettings: settings) else {
-                   continue
-               }
-               for item in audio_menu.items {
-                   audio_sub_menu.addItem(item.copy() as! NSMenuItem)
-               }
+                audio.initJS = { settings in
+                    return self.getJSContext(with: settings)
+                }
+                guard let audio_menu = audio.getMenu(withSettings: settings) else {
+                    continue
+                }
+                for (i, menu_item) in audio_menu.items.enumerated() {
+                    let mnu = menu_item.copy() as! NSMenuItem
+                    var info = mnu.representedObject as? MenuItemInfo ?? item
+                    info.userInfo["audio_track_index"] = i
+                    mnu.representedObject = info
+                    audio_sub_menu.addItem(mnu)
+                }
             }
             if group_tracks {
                 if n == 1 && settings.isInfoOnMainItem && audio_sub_menu.items.count == 1 {
@@ -1053,259 +460,37 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
             if group_tracks {
                 let title = self.formatCount(n, noneLabel: "No Subtitle", singleLabel: "1 Subtitle", manyLabel: "%d Subtitles", useEmptyData: true, formatAsString: false)
                 let mnu_txt = destination_sub_menu.addItem(withTitle: title, action: nil, keyEquivalent: "")
-               mnu_txt.image = self.getImage(for: "txt")
-               sub_menu_txt = NSMenu(title: title)
-               destination_sub_menu.setSubmenu(sub_menu_txt, for: mnu_txt)
+                mnu_txt.image = self.getImage(for: "txt")
+                sub_menu_txt = NSMenu(title: title)
+                destination_sub_menu.setSubmenu(sub_menu_txt, for: mnu_txt)
             } else {
-               sub_menu_txt = destination_sub_menu
+                sub_menu_txt = destination_sub_menu
             }
             for subtitle in subtitles {
-               guard let subtitle_menu = subtitle.getMenu(withSettings: settings) else {
-                   continue
-               }
-               for item in subtitle_menu.items {
-                   item.tag = itemIndex
-                   sub_menu_txt.addItem(item.copy() as! NSMenuItem)
-               }
+                subtitle.initJS = { settings in
+                    return self.getJSContext(with: settings)
+                }
+                guard let subtitle_menu = subtitle.getMenu(withSettings: settings) else {
+                    continue
+                }
+                for (i, menu_item) in subtitle_menu.items.enumerated() {
+                    let mnu = menu_item.copy() as! NSMenuItem
+                    var info = item
+                    info.userInfo["subtitle_index"] = i
+                    mnu.representedObject = info
+                    mnu.tag = item.index
+                    sub_menu_txt.addItem(mnu)
+                }
             }
         default:
-            return super.processSpecialMenuItem(item, atIndex: itemIndex, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
         }
         
         return true
     }
-    
-    override func getMenu(withSettings settings: Settings) -> NSMenu? {
-        return self.generateMenu(items: settings.videoMenuItems, image: self.getImage(for: "video"), withSettings: settings)
-    }
 }
 
 // MARK: -
-class ImageVideoInfo: FileInfo, DimensionalInfo, CodecInfo {
-    enum CodingKeys: String, CodingKey {
-        case codecShortName
-        case codecLongName
-        case isLossless
-        case encoder
-    }
-
-    var width: Int
-    var height: Int
-    let unit = "px"
-    
-    let codec_short_name: String
-    let codec_long_name: String?
-    
-    let isLossless: Bool?
-    let encoder: String?
-    
-    init(file: URL, width: Int, height: Int, codec_short_name: String, codec_long_name: String?, isLossless: Bool?, encoder: String?) {
-        self.codec_short_name = codec_short_name
-        self.codec_long_name = codec_long_name
-        self.isLossless = isLossless
-        self.encoder = encoder
-        self.width = width
-        self.height = height
-        super.init(file: file)
-    }
-    
-    required init(from decoder: Decoder) throws {
-        let dim = try Self.decodeDimension(from: decoder)
-        self.width = dim.width
-        self.height = dim.height
-        
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.codec_short_name = try container.decode(String.self, forKey: .codecShortName)
-        self.codec_long_name = try container.decode(String?.self, forKey: .codecLongName)
-        self.isLossless = try container.decode(Bool?.self, forKey: .isLossless)
-        self.encoder = try container.decode(String?.self, forKey: .encoder)
-        
-        try super.init(from: decoder)
-    }
-    
-    override func encode(to encoder: Encoder) throws {
-        try super.encode(to: encoder)
-        try self.encodeDimension(to: encoder)
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.codec_short_name, forKey: .codecShortName)
-        try container.encode(self.codec_long_name, forKey: .codecLongName)
-        try container.encode(self.isLossless, forKey: .isLossless)
-        try container.encode(self.encoder, forKey: .encoder)
-    }
-    
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        switch placeholder {
-        case "[[codec]]", "[[codec-long]]", "[[codec-short]]", "[[compression]]", "[[encoder]]":
-            return self.processPlaceholderCodec(placeholder, settings: settings, isFilled: &isFilled)
-        case "[[size]]", "[[width]]", "[[height]]", "[[ratio]]", "[[resolution]]":
-            return self.processDimensionPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
-        default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
-        }
-    }
-}
-
-// MARK: -
-class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
-    enum CodingKeys: String, CodingKey {
-        case duration
-        case startTime
-        case codecShortName
-        case codecLongName
-        case lang
-        case langFlag
-        case bitRate
-        case title
-        case encoder
-        case isLossless
-        case channels
-    }
-    
-    let duration: Double
-    let start_time: Double
-    let codec_short_name: String
-    let codec_long_name: String?
-    let lang: String?
-    let bitRate: Int64
-    let title: String?
-    let encoder: String?
-    let isLossless: Bool?
-    let channels: Int
-    var isMono: Bool {
-        return channels == 1
-    }
-    var isStereo: Bool {
-        return channels == 2
-    }
-    
-    init(duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, lang: String?, bitRate: Int64, title: String?, encoder: String?, isLossless: Bool?, channels: Int) {
-        self.duration = duration
-        self.start_time = start_time
-        self.codec_short_name = codec_short_name
-        self.codec_long_name = codec_long_name
-        self.lang = lang
-        self.bitRate = bitRate
-        self.isLossless = isLossless
-        self.title = title
-        self.encoder = encoder
-        self.channels = channels
-        super.init()
-    }
-    
-    required init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.duration = try container.decode(Double.self, forKey: .duration)
-        self.start_time = try container.decode(Double.self, forKey: .startTime)
-        self.codec_short_name = try container.decode(String.self, forKey: .codecShortName)
-        self.codec_long_name = try container.decode(String?.self, forKey: .codecLongName)
-        self.lang = try container.decode(String?.self, forKey: .lang)
-        self.bitRate = try container.decode(Int64.self, forKey: .bitRate)
-        self.title = try container.decode(String?.self, forKey: .title)
-        self.encoder = try container.decode(String?.self, forKey: .encoder)
-        self.isLossless = try container.decode(Bool?.self, forKey: .isLossless)
-        self.channels = try container.decode(Int.self, forKey: .channels)
-        
-        try super.init(from: decoder)
-    }
-    
-    override func encode(to encoder: Encoder) throws {
-        try super.encode(to: encoder)
-        
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.duration, forKey: .duration)
-        try container.encode(self.start_time, forKey: .startTime)
-        try container.encode(self.codec_short_name, forKey: .codecShortName)
-        try container.encode(self.codec_long_name, forKey: .codecLongName)
-        try container.encode(self.lang, forKey: .lang)
-        try container.encode(self.bitRate, forKey: .bitRate)
-        try container.encode(self.title, forKey: .title)
-        try container.encode(self.encoder, forKey: .encoder)
-        try container.encode(self.isLossless, forKey: .isLossless)
-        try container.encode(self.channels, forKey: .channels)
-        
-        
-        if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
-            try container.encode(self.getCountryFlag(), forKey: .langFlag)
-        }
-    }
-    
-    override func getImage(for name: String) -> NSImage? {
-        if name == "speaker" && self.isStereo {
-            return super.getImage(for: "speaker_stereo");
-        } else {
-            return super.getImage(for: name)
-        }
-    }
-    
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        if let s = self.processAudioPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex) {
-            return s
-        } else {
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
-        }
-    }
-    
-    internal func processAudioPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String? {
-        let useEmptyData = !settings.isEmptyItemsSkipped
-        switch placeholder {
-        case "[[duration]]", "[[seconds]]", "[[bitrate]]", "[[start-time]]", "[[start-time-s]]":
-            return processDurationPlaceholder(placeholder, settings: settings, isFilled: &isFilled)
-        case "[[codec]]", "[[codec-long]]", "[[codec-short]]":
-            return self.processPlaceholderCodec(placeholder, settings: settings, isFilled: &isFilled)
-        case "[[language]]", "[[language-flag]]":
-            return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
-        case "[[filesize]]", "[[file-name]]", "[[file-ext]]", "[[file-cdate]]", "[[file-mdate]]", "[[file-adate]]",
-             "[[chapters-count]]", "[[engine]]":
-            isFilled = false
-            return ""
-        case "[[channels]]":
-            isFilled = channels > 0
-            if channels <= 0 {
-                return self.formatND(useEmptyData: useEmptyData)
-            } else if channels == 1 {
-                return NSLocalizedString("1 Channel", tableName: "LocalizableExt", comment: "")
-            } else {
-                return String(format: NSLocalizedString("%d Channels", tableName: "LocalizableExt", comment: ""), channels)
-            }
-            
-        case "[[channels-name]]":
-            isFilled = channels > 0
-            if channels <= 0 {
-                return self.formatND(useEmptyData: useEmptyData)
-            } else if channels == 1 {
-                return NSLocalizedString("Mono", tableName: "LocalizableExt", comment: "")
-            } else if channels == 2 {
-                return NSLocalizedString("Stereo", tableName: "LocalizableExt", comment: "")
-            } else {
-                return String(format: NSLocalizedString("%d Channels", tableName: "LocalizableExt", comment: ""), channels)
-            }
-        default:
-            return nil
-        }
-    }
-    
-    override func getStandardTitle(forSettings settings: Settings) -> String {
-        var template = "[[duration]]"
-        if self.bitRate > 0 {
-            template += ", [[bitrate]]"
-        }
-        
-        if !self.codec_short_name.isEmpty {
-            template += " [[codec]]"
-        }
-        if let country = self.lang, !country.isEmpty {
-            template += " [[language-flag]]"
-        }
-        var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
-        return isFilled ? title : ""
-    }
-    
-    override func getMenu(withSettings settings: Settings) -> NSMenu? {
-        return self.generateMenu(items: settings.audioMenuItems, image: self.getImage(for: "audio"), withSettings: settings)
-    }
-}
-
 class AudioInfo: FileInfo, MediaInfo, ChaptersInfo {
     enum CodingKeys: String, CodingKey {
         case chapters
@@ -1316,6 +501,9 @@ class AudioInfo: FileInfo, MediaInfo, ChaptersInfo {
     var lang: String? {
         return audioTrack.lang
     }
+    lazy var flagImage: NSImage? = {
+        return self.getImageOfFlag()
+    }()
     
     var duration: Double {
         return audioTrack.duration
@@ -1349,6 +537,11 @@ class AudioInfo: FileInfo, MediaInfo, ChaptersInfo {
     let engine: MediaEngine
     let audioTrack: AudioTrackInfo
     
+    override var infoType: Settings.SupportedFile { return .audio }
+    override var standardMainItem: MenuItemInfo {
+        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "audio", template: "")) // FIXME: template
+    }
+    
     init(file: URL, duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, lang: String?, bitRate: Int64, title: String?, encoder: String?, isLossless: Bool?, chapters: [Chapter], channels: Int, engine: MediaEngine) {
         self.chapters = chapters
         self.engine = engine
@@ -1379,48 +572,37 @@ class AudioInfo: FileInfo, MediaInfo, ChaptersInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
-        if let s = self.audioTrack.processAudioPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex) {
+    override func getImage(for name: String) -> NSImage? {
+        if name == "flag", let img = self.flagImage {
+            return img
+        } else {
+            return super.getImage(for: name)
+        }
+    }
+    
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        if let s = self.audioTrack.processAudioPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item) {
             return s
         } else {
             switch placeholder {
             case "[[chapters-count]]":
-                return self.processPlaceholderChapters(placeholder, settings: settings, isFilled: &isFilled)
+                return self.processPlaceholderChapters(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
             case "[[engine]]":
                 isFilled = true
                 return engine.label
             default:
-                return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
+                return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
             }
         }
     }
     
-    override internal func processSpecialMenuItem(_ item: Settings.MenuItem, atIndex itemIndex: Int, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
-        switch item.template {
-        case "[[chapters]]":
-            guard !self.chapters.isEmpty else {
-                return true
-            }
-            
-            var isFilled = false
-            let s = self.replacePlaceholders(in: "[[chapters-count]]", settings: settings, isFilled: &isFilled, forItem: itemIndex)
-            let chapters_menu = NSMenu(title: NSLocalizedString("Chapters", comment: ""))
-            for (i, chapter) in self.chapters.enumerated() {
-                chapters_menu.addItem(self.createMenuItem(title: chapter.getTitle(index: i), image: "-", settings: settings, tag: itemIndex))
-            }
-            
-            let mnu = self.createMenuItem(title: s, image: item.image, settings: settings, tag: itemIndex)
-            destination_sub_menu.addItem(mnu)
-            destination_sub_menu.setSubmenu(chapters_menu, for: mnu)
-        default:
-            return super.processSpecialMenuItem(item, atIndex: itemIndex, inMenu: destination_sub_menu, withSettings: settings)
-        }
+    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
         
-        return true
-    }
-    
-    override func getMenu(withSettings settings: Settings) -> NSMenu? {
-        return self.generateMenu(items: settings.audioMenuItems, image: self.getImage(for: "audio"), withSettings: settings)
+        if self.processSpecialChaptersMenuItem(item, inMenu: destination_sub_menu, withSettings: settings) {
+            return true
+        } else {
+            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
+        }
     }
 }
 
@@ -1437,6 +619,12 @@ class SubtitleTrackInfo: BaseInfo, LanguageInfo {
     lazy var flagImage: NSImage? = {
         return self.getImageOfFlag()
     }()
+    
+
+    override var standardMainItem: MenuItemInfo {
+        let template = "[[title]] [[language-flag]]"
+        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "txt", template: template))
+    }
     
     init(title: String?, lang: String?) {
         self.title = title
@@ -1463,43 +651,50 @@ class SubtitleTrackInfo: BaseInfo, LanguageInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    override func getImage(for name: String) -> NSImage? {
+        if name == "flag", let img = self.flagImage {
+            return img
+        } else {
+            return super.getImage(for: name)
+        }
+    }
+    
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         switch placeholder {
         case "[[title]]":
             isFilled = !(title?.isEmpty ?? true)
-            return title ?? ""
+            return title ?? NSLocalizedString("Subtitle", comment: "")
         case "[[language]]", "[[language-flag]]":
-            return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
+            return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         }
     }
     
     override func getStandardTitle(forSettings settings: Settings) -> String {
-        var template = ""
-        if let _ = self.title {
-            template += "[[title]] "
+        var item = standardMainItem
+        if !(self.lang?.isEmpty ?? true) && !settings.isIconHidden && flagImage != nil {
+            let template = item.menuItem.template.replacingOccurrences(of: "[[language-flag]]", with: "")
+            item = MenuItemInfo(fileType: item.fileType, index: item.index, item: Settings.MenuItem(image: item.menuItem.image, template: template))
         }
-        if (settings.isIconHidden || flagImage == nil) && !(self.lang?.isEmpty ?? true) {
-            template += " [[language-flag]]"
-        }
-        if !template.isEmpty {
-            var isFilled = false
-            let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
-            return isFilled ? title : ""
-        } else {
-            return ""
-        }
+        
+        var isFilled = false
+        let title: String = self.replacePlaceholders(in: item.menuItem.template, settings: settings, isFilled: &isFilled, forItem: item)
+        return isFilled ? title : ""
     }
     
     override func getMenu(withSettings settings: Settings) -> NSMenu? {
-        let menu = NSMenu(title: "")
+        let menu = NSMenu(title: NSLocalizedString("Subtitle", comment: ""))
         menu.autoenablesItems = false
-                
+        
+        guard !((title?.isEmpty ?? true) && self.lang == nil) else {
+            return nil
+        }
+        
         let destination_sub_menu: NSMenu = menu
         let title = self.getStandardTitle(forSettings: settings)
         if !title.isEmpty {
-            let mnu = createMenuItem(title: title, image: "txt", settings: settings, tag: 0)
+            let mnu = createMenuItem(title: title, image: "txt", settings: settings, representedObject: self.standardMainItem)
             if let image = self.flagImage {
                 mnu.image = image
             }
@@ -1507,7 +702,4 @@ class SubtitleTrackInfo: BaseInfo, LanguageInfo {
         }
         return menu
     }
-}
-
-class AttachmentTrackInfo: BaseInfo {
 }

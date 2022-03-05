@@ -43,9 +43,9 @@ class TokenVideoMetadata: Token {
             case .profile: return "Main"
             case .title: return "title"
             case .encoder: return "encoder"
-            case .fieldOrder: return VideoFieldOrder.topFirst.label
-            case .pixelFormat: return VideoPixelFormat.yuv420p.label
-            case .colorSpace: return VideoColorSpace.gbr.label
+            case .fieldOrder: return VideoTrackInfo.VideoFieldOrder.topFirst.label
+            case .pixelFormat: return VideoTrackInfo.VideoPixelFormat.yuv420p.label
+            case .colorSpace: return VideoTrackInfo.VideoColorSpace.gbr.label
             }
         }
         
@@ -110,6 +110,86 @@ class TokenVideoMetadata: Token {
     override func createMenu() -> NSMenu? {
         let menu = NSMenu()
         menu.addItem(withTitle: NSLocalizedString("Metadata", comment: ""), action: nil, keyEquivalent: "")
+        menu.addItem(NSMenuItem.separator())
+        
+        for mode in Mode.allCases {
+            menu.addItem(self.createMenuItem(title: mode.title, state: self.mode as! Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))
+        }
+        
+        return menu
+    }
+}
+
+class TokenAudioTrackMetadata: Token {
+    enum Mode: Int, CaseIterable, BaseMode {
+        case title
+        case encoder
+        
+        static var pasteboardType: NSPasteboard.PasteboardType {
+            return .MITokenAudioTrackMetadata
+        }
+        
+        var title: String {
+            switch self {
+            case .title: return NSLocalizedString("Title", comment: "")
+            case .encoder: return NSLocalizedString("Encoder", comment: "")
+            }
+        }
+        
+        var displayString: String {
+            switch self {
+            case .title: return "title"
+            case .encoder: return "encoder"
+            }
+        }
+        
+        var placeholder: String {
+            switch self {
+            case .title: return "[[title]]"
+            case .encoder: return "[[encoder]]"
+            }
+        }
+        
+        init?(placeholder: String) {
+            switch placeholder {
+            case "[[title]]": self = .title
+            case "[[encoder]]": self = .encoder
+            default: return nil
+            }
+        }
+    }
+    
+    override class var ModeClass: BaseMode.Type { return Mode.self }
+    
+    override class var supportedTypes: [SupportedType] {
+        return [.audio]
+    }
+    
+    override var title: String {
+        return NSLocalizedString("Audio metadata", comment: "")
+    }
+    
+    required convenience init?(mode: BaseMode) {
+        guard let m = mode as? Mode else { return nil }
+        self.init(mode: m)
+    }
+    
+    required init(mode: Mode) {
+        super.init()
+        self.mode = mode
+    }
+    
+    required init?(placeholder: String) {
+        super.init(placeholder: placeholder)
+    }
+    
+    required init?(pasteboardPropertyList propertyList: Any, ofType type: NSPasteboard.PasteboardType) {
+        super.init(pasteboardPropertyList: propertyList, ofType: type)
+    }
+    
+    override func createMenu() -> NSMenu? {
+        let menu = NSMenu()
+        menu.addItem(withTitle: self.title, action: nil, keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
         
         for mode in Mode.allCases {

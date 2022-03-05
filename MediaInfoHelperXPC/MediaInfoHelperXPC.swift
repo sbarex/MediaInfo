@@ -258,37 +258,69 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
     }
     
     
-    func openFile(url: URL) {
-        NSWorkspace.shared.open(url)
+    func openFile(url: URL, reply: ((Bool)->Void)) {
+        let r = NSWorkspace.shared.open(url)
+        reply(r)
     }
     
-    func openFile(url: URL, withApp path: String) {
+    func openFile(url: URL, withApp path: String, reply: @escaping ((Bool, String?)->Void)) {
         guard !path.isEmpty else {
+            reply(false, nil)
             return
         }
         if #available(macOS 10.15, *) {
             let conf = NSWorkspace.OpenConfiguration()
             conf.activates = true
-            NSWorkspace.shared.open([url], withApplicationAt: URL(fileURLWithPath: path), configuration: conf, completionHandler: nil)
+            NSWorkspace.shared.open([url], withApplicationAt: URL(fileURLWithPath: path), configuration: conf) { app, error in
+                reply(app != nil, error?.localizedDescription)
+            }
         } else {
-            systemExec(command: "/usr/bin/open", arguments: ["-a", path, url.path])
+            systemExec(command: "/usr/bin/open", arguments: ["-a", path, url.path]) { status, output in
+                reply(status == 0, status != 0 ? output : nil)
+            }
         }
     }
     
-    func systemExec(command: String, arguments: [String]) {
+    func openApplication(at url: URL, reply: @escaping ((Bool, String?)->Void)) {
+        if #available(macOS 10.15, *) {
+            let conf = NSWorkspace.OpenConfiguration()
+            conf.activates = true
+            NSWorkspace.shared.openApplication(at: url, configuration: conf) { app, error in
+                reply(app != nil, error?.localizedDescription)
+            }
+        } else {
+            systemExec(command: "/usr/bin/open", arguments: ["-a", url.path]) { status, output in
+                reply(status == 0, status != 0 ? output : nil)
+            }
+        }
+    }
+    
+    func systemExec(command: String, arguments: [String], reply: @escaping ((Int32, String)->Void)) {
         let task = Process()
         let pipe = Pipe()
         
+        task.terminationHandler = { _ in
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let output = String(data: data, encoding: .utf8)!
+            let status = task.terminationStatus
+            reply(status, output)
+        }
+        
         task.standardOutput = pipe
         task.standardError = pipe
+        
         task.arguments = arguments
         task.launchPath = command
+        
         task.launch()
+        /*
+        task.waitUntilExit()
         
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let output = String(data: data, encoding: .utf8)!
-        
-        print(output)
+        let status = task.terminationStatus
+        reply(status, output)
+         */
     }
     
     func getWebPVersion(reply: @escaping (String)->Void) {

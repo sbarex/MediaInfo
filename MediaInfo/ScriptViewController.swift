@@ -52,9 +52,10 @@ class ScriptViewController: NSViewController {
     /*
     The inline script code must return a string (or null) value.
     
-    Global locked variables:
+    Global variables:
     - `fileData`: The properties of current file.
     - `templateItemIndex`: Zero based index of the current processed menu item template.
+    - `currentItem`: Object of current processed menu item template.
     - `settings`: Application settings.
     
     */
@@ -73,25 +74,27 @@ class ScriptViewController: NSViewController {
         let code = """
 (function() {
     /*
-    The global script code must return an array (or null) of menu items.
+    The global script code must return an array of menu items (or null).
 
     Each element of the array can be:
-    - a plain string (the title of the menu item)
-    - a dash ("-") to insert a separator
-    - an object with these properties:
-      - title (String, *required*): The menu item title
+    - A plain string (the title of the menu item).
+    - A dash ("-") to insert a separator.
+    - An object with these properties:
+      - title (String, *required*): The menu item title.
       - image (String): The image of the menu item.
-      - tag (Int)
+      - tag (Int).
       - checked (Boolean)
       - enabled (Boolean)
-      - indent (Int between 0 - 15)
+      - indent (Int, between 0 - 15)
+      - userInfo ([String: Any]): Custom user info
+      - action (String)
       - items (Array of menu items): A list of submenu items.
 
-    Global locked variables:
+    Global variables:
     - `fileData`: The properties of current file.
     - `templateItemIndex`: Zero based index of the current processed menu item template.
+    - `currentItem`: Object of current processed menu item template.
     - `settings`: Application settings.
-    
     */
 
     // console.log(fileData); // fileData contains the current info properties.
@@ -114,19 +117,27 @@ class ScriptViewController: NSViewController {
     
     @IBAction func addActionTemplate(_ sender: Any) {
         let code = """
-/**
- * Action code invoked when the user choose a menu item.
- **/
-function onAction(filePath) {
-    /*
-    Global locked variables:
-    - `fileData`: The properties of current file.
-    - `templateItemIndex`: Zero based index of the current processed menu item template.
-    - `settings`: Application settings.
-    */
+/*
+Global variables:
+- `fileData`: The properties of current file.
+- `settings`: Application settings.
+- `selectedMenuItem`: Properties of the chosen menu item:
+    - index (Int): index inside the template
+    - menuItem
+        - image (String)
+        - template (String)
+    - action (String)
+    - userInfo ([String: Any])
 
-    system.open(filePath);
-}
+Available commands:
+- systemOpen(file): open the `file` path winth the defalt app.
+- systemOpenWith(file, app): open the `file` path winth the `app` path.
+- systemOpenApp(path): open the application at `path`.
+- systemExec(command, [arguments]): execute the `command` with the list of `arguments`.
+
+*/
+
+systemOpen(fileData.filePath);
 
 """
         setCode(code)

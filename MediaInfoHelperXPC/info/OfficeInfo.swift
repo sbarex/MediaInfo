@@ -30,6 +30,11 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
     let width: Double
     let height: Double
     
+    override var standardMainItem: MenuItemInfo {
+        let template = "[[size:paper:cm]], [[title]], [[pages]]"
+        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "doc", template: template))
+    }
+    
     init(file: URL, charactersCount: Int, charactersWithSpacesCount: Int, wordsCount: Int, pagesCount: Int, creator: String, creationDate: Date?, modified: String, modificationDate: Date?, title: String, subject: String, keywords: [String], description: String, application: String, width: Double, height: Double) {
         self.charactersCount = charactersCount
         self.charactersWithSpacesCount = charactersWithSpacesCount
@@ -68,14 +73,18 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
     override func getImage(for name: String) -> NSImage? {
         if name == "office" {
             return getImage(for: "doc")
-        } else if name == "doc" && width > height {
+        } else if (name == "doc" || name == "docx" || name == "word") {
+            return Self.getImage(for: width > height ? "doc_h" : "doc_v")
+        } else if name == "doc_v" || name == "docx_v" || name == "word_v" {
+            return Self.getImage(for: "doc_v")
+        } else if name == "doc_h" || name == "docx_h" || name == "word_h" {
             return Self.getImage(for: "doc_h")
+        } else {
+            return Self.getImage(for: name)
         }
-        
-        return Self.getImage(for: name)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         
         switch placeholder {
@@ -101,7 +110,7 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
                 isFilled = true
                 return s
             } else {
-                return self.processPlaceholder("[[size:"+placeholder.suffix(4), settings: settings, isFilled: &isFilled, forItem: itemIndex)
+                return self.processPlaceholder("[[size:"+placeholder.suffix(4), settings: settings, isFilled: &isFilled, forItem: item)
             }
         case "[[size:cm]]", "[[size:mm]]", "[[size:in]]":
             guard width > 0 && height > 0 else {
@@ -121,15 +130,8 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
             isFilled = true
             return "\(w) × \(h) \(unit.label)"
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         }
-    }
-    
-    override func getStandardTitle(forSettings settings: Settings) -> String {
-        let template = "[[size:paper:cm]], [[title]], [[pages]]"
-        var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
-        return isFilled ? title : ""
     }
 }
 
@@ -138,7 +140,13 @@ class ExcelInfo: BaseOfficeInfo {
     enum CodingKeys: String, CodingKey {
         case sheets
     }
+    
     let sheets: [String]
+    
+    override var standardMainItem: MenuItemInfo {
+        let template = "[[title]], [[pages]]"
+        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "xls", template: template))
+    }
     
     init(file: URL, creator: String, creationDate: Date?, modified: String, modificationDate: Date?, title: String, subject: String, keywords: [String], description: String, application: String, sheets: [String]) {
         self.sheets = sheets
@@ -166,47 +174,37 @@ class ExcelInfo: BaseOfficeInfo {
         return Self.getImage(for: name)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIdex: Int) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         
         switch placeholder {
         case "[[pages]]":
             return self.formatCount(sheets.count, noneLabel: "No Sheet", singleLabel: "1 Sheet", manyLabel: "%d Sheets", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIdex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         }
     }
     
-    override func getStandardTitle(forSettings settings: Settings) -> String {
-        let template = "[[title]], [[pages]]"
-        var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
-        return isFilled ? title : ""
-    }
-    
-    override internal func processSpecialMenuItem(_ item: Settings.MenuItem, atIndex itemIndex: Int, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
-        if item.template == "[[sheets]]" || item.template == "[[pages]]" && !self.sheets.isEmpty {
+    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+        if item.menuItem.template == "[[sheets]]" || item.menuItem.template == "[[pages]]" && !self.sheets.isEmpty {
             guard !self.sheets.isEmpty else {
                 return true
             }
-            let title: String
             let n = self.sheets.count
-            if n == 1 {
-                title = NSLocalizedString("1 Sheet", tableName: "LocalizableExt", comment: "")
-            } else {
-                title = String(format: NSLocalizedString("%d Sheets", tableName: "LocalizableExt", comment: ""), n)
-            }
-            let mnu = self.createMenuItem(title: title, image: "no-image", settings: settings, tag: itemIndex)
+            let title: String = self.formatCount(n, noneLabel: "No Sheet", singleLabel: "1 Sheet", manyLabel: "%d Sheets", useEmptyData: true, formatAsString: false)
+            let mnu = self.createMenuItem(title: title, image: "no-image", settings: settings, representedObject: item)
             let submenu = NSMenu(title: title)
-            for sheet in self.sheets {
-                submenu.addItem(createMenuItem(title: sheet, image: "-", settings: settings, tag: itemIndex))
+            for (i, sheet) in self.sheets.enumerated() {
+                var info =  item
+                info.userInfo["sheet_index"] = i
+                submenu.addItem(createMenuItem(title: sheet, image: "-", settings: settings, representedObject: info))
             }
             destination_sub_menu.addItem(mnu)
             destination_sub_menu.setSubmenu(submenu, for: mnu)
             
             return true
         } else {
-            return super.processSpecialMenuItem(item, atIndex: itemIndex, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
         }
     }
 }
@@ -220,6 +218,11 @@ class PowerpointInfo: BaseOfficeInfo {
     
     let slidesCount: Int
     let presentationFormat: String
+    
+    override var standardMainItem: MenuItemInfo {
+        let template = "[[title]], [[pages]]"
+        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "ppt", template: template))
+    }
     
     init(file: URL, creator: String, creationDate: Date?, modified: String, modificationDate: Date?, title: String, subject: String, keywords: [String], description: String, application: String, slidesCount: Int, presentationFormat: String) {
         self.slidesCount = slidesCount
@@ -250,7 +253,7 @@ class PowerpointInfo: BaseOfficeInfo {
         return Self.getImage(for: name)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         
         switch placeholder {
@@ -260,14 +263,7 @@ class PowerpointInfo: BaseOfficeInfo {
             isFilled = !self.presentationFormat.isEmpty
             return self.presentationFormat
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         }
-    }
-    
-    override func getStandardTitle(forSettings settings: Settings) -> String {
-        let template = "[[title]], [[pages]]"
-        var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
-        return isFilled ? title : ""
     }
 }

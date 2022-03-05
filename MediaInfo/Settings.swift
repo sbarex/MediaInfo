@@ -95,6 +95,8 @@ class Settings: Codable {
         case videoHandled
         case tracksGrouped
         case videoTemplates
+        case videoTrackTemplates
+        case audioTrackTemplates
         
         case audioHandled
         case audioTemplates
@@ -125,29 +127,41 @@ class Settings: Codable {
         case script
     }
     
-    enum SupportedFile: Int {
+    enum SupportedFile: Int, Codable {
+        case none = 0
         case image
         case video
         case audio
         case office
-        case model
         case pdf
         case archive
+        case model
+        
+        case videoTrakcs
+        case audioTraks
     }
     
-    static let Version = 1.7
+    static let Version = 1.8
+    
     static func getStandardSettings() -> Settings {
         let settings = Settings(fromDict: [:])
+    
+        settings.version = Self.Version
+        
         settings.imageMenuItems = [
-            MenuItem(image: "image", template: "[[size]], [[color-depth]] [[is-alpha]] [[is-animated]]"),
+            MenuItem(image: "image", template: "[[size]], [[color-depth]] [[is-animated]]"),
             MenuItem(image: "ratio", template: "[[ratio]], [[resolution]]"),
-            MenuItem(image: "color", template: "[[color-depth]]"),
+            MenuItem(image: "color", template: "[[color-depth]], [[is-alpha]], [[color-table]], [[profile-name]]"),
             MenuItem(image: "printer", template: "[[dpi]]"),
             MenuItem(image: "printer", template: "[[print:cm]]"),
             MenuItem(image: "printer", template: "[[print:cm:300]]"),
             MenuItem(image: "printer", template: "[[paper]]"),
             MenuItem(image: "", template: "-"),
             MenuItem(image: "size", template: "[[filesize]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[open-with-default]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[about]]"),
         ]
         settings.videoMenuItems = [
             MenuItem(image: "video", template: "[[size]], [[duration]], [[fps]] ([[languages-flag]])"),
@@ -155,14 +169,30 @@ class Settings: Codable {
             MenuItem(image: "video", template: "[[bitrate]], [[codec]]"),
             MenuItem(image: "", template: "[[frames]]"),
             MenuItem(image: "tag", template: "[[title]]"),
-            MenuItem(image: "", template: "[[frames]]"),
             MenuItem(image: "video", template: "[[video]]"),
             MenuItem(image: "audio", template: "[[audio]]"),
             MenuItem(image: "txt", template: "[[subtitles]]"),
             MenuItem(image: "chapters", template: "[[chapters]]"),
             MenuItem(image: "", template: "-"),
             MenuItem(image: "size", template: "[[filesize]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[open-with-default]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[about]]"),
         ]
+        settings.videoTracksMenuItems = [
+            MenuItem(image: "video", template: "[[size]], [[duration]], [[fps]] ([[language-flag]])"),
+            MenuItem(image: "ratio", template: "[[ratio]], [[resolution]]"),
+            MenuItem(image: "video", template: "[[bitrate]], [[codec]]"),
+            MenuItem(image: "", template: "[[frames]]"),
+            MenuItem(image: "tag", template: "[[title]]"),
+        ]
+        settings.audioTracksMenuItems = [
+            MenuItem(image: "audio", template: "[[duration]] ([[seconds]]) [[channels-name]] [[language-flag]]"),
+            MenuItem(image: "audio", template: "[[bitrate]], [[codec]]"),
+            MenuItem(image: "tag", template: "[[title]]"),
+        ]
+        
         settings.audioMenuItems = [
             MenuItem(image: "audio", template: "[[duration]] ([[seconds]]) [[channels-name]] [[language-flag]]"),
             MenuItem(image: "audio", template: "[[bitrate]], [[codec]]"),
@@ -170,6 +200,10 @@ class Settings: Codable {
             MenuItem(image: "", template: "([[engine]])"),
             MenuItem(image: "", template: "-"),
             MenuItem(image: "size", template: "[[filesize]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[open-with-default]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[about]]"),
         ]
         
         settings.pdfMenuItems = [
@@ -185,6 +219,10 @@ class Settings: Codable {
             MenuItem(image: "shield", template: "[[version]], [[security]]"),
             MenuItem(image: "", template: "-"),
             MenuItem(image: "size", template: "[[filesize]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[open-with-default]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[about]]"),
         ]
         
         settings.officeMenuItems = [
@@ -198,6 +236,10 @@ class Settings: Codable {
             MenuItem(image: "", template: "([[application]])"),
             MenuItem(image: "", template: "-"),
             MenuItem(image: "size", template: "[[filesize]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[open-with-default]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[about]]"),
         ]
         
         settings.modelsMenuItems = [
@@ -207,17 +249,25 @@ class Settings: Codable {
             MenuItem(image: "3d", template: "[[colors]], [[occlusion]]"),
             MenuItem(image: "", template: "-"),
             MenuItem(image: "size", template: "[[filesize]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[open-with-default]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[about]]"),
         ]
         
         settings.archiveMenuItems = [
             MenuItem(image: "zip", template: "[[filesize]] = [[uncompressed-size]] uncompressed, [[n-files]]"),
             MenuItem(image: "", template: "[[files-plain-with-icon]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[open-with-default]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[about]]"),
         ]
         
         return settings
     }
     
-    struct MenuItem: Codable {
+    struct MenuItem: Codable, Hashable {
         enum CodingKeys: String, CodingKey {
             case image
             case template
@@ -253,6 +303,8 @@ class Settings: Codable {
     
     var isVideoHandled = true
     var videoMenuItems: [MenuItem] = []
+    var videoTracksMenuItems: [MenuItem] = []
+    var audioTracksMenuItems: [MenuItem] = []
     
     var isAudioHandled = true
     var audioMenuItems: [MenuItem] = []
@@ -298,7 +350,6 @@ class Settings: Codable {
         self.useFirstItemAsMain = try container.decode(Bool.self, forKey: .useFirstItemAsMain)
         self.isEmptyItemsSkipped = try container.decode(Bool.self, forKey: .skipEmpty)
         
-        
         self.isRatioPrecise = try container.decode(Bool.self, forKey: .isRatioPrecise)
         
         self.isImagesHandled = try container.decode(Bool.self, forKey: .imageHandled)
@@ -308,6 +359,8 @@ class Settings: Codable {
         self.isVideoHandled = try container.decode(Bool.self, forKey: .videoHandled)
         self.isTracksGrouped = try container.decode(Bool.self, forKey: .tracksGrouped)
         self.videoMenuItems = try container.decode([MenuItem].self, forKey: .videoTemplates)
+        self.videoTracksMenuItems = try container.decode([MenuItem].self, forKey: .videoTrackTemplates)
+        self.audioTracksMenuItems = try container.decode([MenuItem].self, forKey: .audioTrackTemplates)
         
         self.isAudioHandled = try container.decode(Bool.self, forKey: .audioHandled)
         self.audioMenuItems = try container.decode([MenuItem].self, forKey: .audioTemplates)
@@ -330,6 +383,8 @@ class Settings: Codable {
         
         self.menuAction = try container.decode(Action.self, forKey: .menuAction)
         self.engines = try container.decode([MediaEngine].self, forKey: .engines)
+        
+        migrate()
     }
     
     func encode(to encoder: Encoder) throws {
@@ -352,6 +407,8 @@ class Settings: Codable {
         try container.encode(self.isVideoHandled, forKey: .videoHandled)
         try container.encode(self.isTracksGrouped, forKey: .tracksGrouped)
         try container.encode(self.videoMenuItems, forKey: .videoTemplates)
+        try container.encode(self.videoTracksMenuItems, forKey: .videoTrackTemplates)
+        try container.encode(self.audioTracksMenuItems, forKey: .audioTrackTemplates)
         
         try container.encode(self.isAudioHandled, forKey: .audioHandled)
         try container.encode(self.audioMenuItems, forKey: .audioTemplates)
@@ -374,6 +431,22 @@ class Settings: Codable {
         
         try container.encode(self.menuAction, forKey: .menuAction)
         try container.encode(self.engines, forKey: .engines)
+    }
+    
+    internal func migrate() {
+        guard self.version != Self.Version else {
+            return
+        }
+        if self.version < 1.8 {
+            let def = Self.getStandardSettings()
+            if self.videoTracksMenuItems.isEmpty {
+                self.videoTracksMenuItems = def.videoTracksMenuItems
+            }
+            if self.audioTracksMenuItems.isEmpty {
+                self.audioTracksMenuItems = def.audioTracksMenuItems
+            }
+        }
+        self.version = Self.Version
     }
     
     func refresh(fromDict defaultsDomain: [String: AnyHashable]) {
@@ -405,6 +478,8 @@ class Settings: Codable {
         self.isVideoHandled = defaultsDomain["video_handled"] as? Bool ?? true
         self.isTracksGrouped = defaultsDomain["group_tracks"] as? Bool ?? true
         self.videoMenuItems = processItems(defaultsDomain["video_items"])
+        self.videoTracksMenuItems = processItems(defaultsDomain["video_tracks_items"])
+        self.audioTracksMenuItems = processItems(defaultsDomain["audio_tracks_items"])
         
         self.isAudioHandled = defaultsDomain["audio_handled"] as? Bool ?? true
         self.audioMenuItems = processItems(defaultsDomain["audio_items"])
@@ -474,6 +549,10 @@ class Settings: Codable {
             self.folders = d.sorted().map({ URL(fileURLWithPath: $0 )})
         }
         self.handleExternalDisk = (defaultsDomain["external-disk"] as? Bool) ?? false
+        
+        if !defaultsDomain.isEmpty {
+            migrate()
+        }
     }
     
     func toDictionary() -> [String: AnyHashable] {
@@ -499,6 +578,8 @@ class Settings: Codable {
         dict["video_handled"] = self.isVideoHandled
         dict["group_tracks"] = self.isTracksGrouped
         dict["video_items"] = self.videoMenuItems.map({ return [$0.image, $0.template]})
+        dict["video_tracks_items"] = self.videoTracksMenuItems.map({ return [$0.image, $0.template]})
+        dict["audio_tracks_items"] = self.audioTracksMenuItems.map({ return [$0.image, $0.template]})
         
         dict["audio_handled"] = self.isAudioHandled
         dict["audio_items"] = self.audioMenuItems.map({ return [$0.image, $0.template]})
@@ -527,10 +608,16 @@ class Settings: Codable {
     
     func getMenuItems(for type: SupportedFile) -> [MenuItem] {
         switch type {
+        case .none:
+            return []
         case .image:
             return self.imageMenuItems
         case .video:
             return self.videoMenuItems
+        case .videoTrakcs:
+            return self.videoTracksMenuItems
+        case .audioTraks:
+            return self.audioTracksMenuItems
         case .audio:
             return self.audioMenuItems
         case .office:
@@ -545,23 +632,7 @@ class Settings: Codable {
     }
     
     func getActionCode(for type: SupportedFile) -> String? {
-        let templates: [Settings.MenuItem]
-        switch type {
-        case .image:
-            templates = imageMenuItems
-        case .video:
-            templates = videoMenuItems
-        case .audio:
-            templates = audioMenuItems
-        case .office:
-            templates = officeMenuItems
-        case .model:
-            templates = modelsMenuItems
-        case .pdf:
-            templates = pdfMenuItems
-        case .archive:
-            templates = archiveMenuItems
-        }
+        let templates = getMenuItems(for: type)
         guard let template = templates.first(where: {$0.template.hasPrefix("[[script-action:")}) else {
             return nil
         }

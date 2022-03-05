@@ -47,7 +47,7 @@ class TraceViewController: NSViewController {
         } else {
             color = .secondaryLabelColor
         }
-        textView.textStorage?.append(NSAttributedString(string: "(\(d)) \(info) [mnu \(index)]:\n", attributes: [.foregroundColor: color]))
+        self.textView.textStorage?.append(NSAttributedString(string: "(\(d)) \(info) [mnu \(index)]:\n", attributes: [.foregroundColor: color]))
     }
     
     @objc func handleJSConsole(_ notification : Notification) {
@@ -55,36 +55,39 @@ class TraceViewController: NSViewController {
             return
         }
         let index = info.0.jsContext?.objectForKeyedSubscript("templateItemIndex").toNumber().intValue ?? -1
+        // let item = info.0.jsContext?.objectForKeyedSubscript("currentItem").toObject() as? MenuItemInfo
         
-        let labelAttributes: [NSAttributedString.Key: AnyHashable] = [.foregroundColor: NSColor.labelColor]
-        
-        appendInfoHead(info.0, level: info.1, itemIndex: index)
-        
-        print("JSConsole \(info.0) [\(info.1) for menu item \(index)]: ", terminator: "")
-        if let objects = info.2 as? [AnyHashable] {
-            for object in objects {
-                if JSONSerialization.isValidJSONObject(object), let data = try? JSONSerialization.data(withJSONObject: object, options: [.fragmentsAllowed, .prettyPrinted, .sortedKeys]), let s = String(data: data, encoding: .utf8) {
-                    print(s, terminator: " ")
-                    textView.textStorage?.append(NSAttributedString(string: "\(s) ", attributes: labelAttributes))
+        DispatchQueue.main.async {
+            let labelAttributes: [NSAttributedString.Key: AnyHashable] = [.foregroundColor: NSColor.labelColor]
+            
+            self.appendInfoHead(info.0, level: info.1, itemIndex: index)
+            
+            print("JSConsole \(info.0) [\(info.1) for menu item \(index)]: ", terminator: "")
+            if let objects = info.2 as? [AnyHashable] {
+                for object in objects {
+                    if JSONSerialization.isValidJSONObject(object), let data = try? JSONSerialization.data(withJSONObject: object, options: [.fragmentsAllowed, .prettyPrinted, .sortedKeys]), let s = String(data: data, encoding: .utf8) {
+                        print(s, terminator: " ")
+                        self.textView.textStorage?.append(NSAttributedString(string: "\(s) ", attributes: labelAttributes))
+                    } else {
+                        print(object, terminator: " ")
+                        self.textView.textStorage?.append(NSAttributedString(string: "\(object) ", attributes: labelAttributes))
+                    }
+                }
+            } else {
+                if JSONSerialization.isValidJSONObject(info.2), let data = try? JSONSerialization.data(withJSONObject: info.2, options: [.fragmentsAllowed, .prettyPrinted, .sortedKeys]), let s = String(data: data, encoding: .utf8) {
+                    print(s, terminator: "")
+                    self.textView.textStorage?.append(NSAttributedString(string: "\(s)", attributes: labelAttributes))
                 } else {
-                    print(object, terminator: " ")
-                    textView.textStorage?.append(NSAttributedString(string: "\(object) ", attributes: labelAttributes))
+                    print(info.2, terminator: "")
+                    self.textView.textStorage?.append(NSAttributedString(string: "\(info.2)", attributes: labelAttributes))
                 }
             }
-        } else {
-            if JSONSerialization.isValidJSONObject(info.2), let data = try? JSONSerialization.data(withJSONObject: info.2, options: [.fragmentsAllowed, .prettyPrinted, .sortedKeys]), let s = String(data: data, encoding: .utf8) {
-                print(s, terminator: "")
-                textView.textStorage?.append(NSAttributedString(string: "\(s)", attributes: labelAttributes))
-            } else {
-                print(info.2, terminator: "")
-                textView.textStorage?.append(NSAttributedString(string: "\(info.2)", attributes: labelAttributes))
-            }
+            
+            self.textView.textStorage?.append(NSAttributedString(string: "\n", attributes: [.foregroundColor: NSColor.labelColor]))
+            print("\n")
+        
+            self.textView.scrollToEndOfDocument(nil)
         }
-        
-        textView.textStorage?.append(NSAttributedString(string: "\n", attributes: [.foregroundColor: NSColor.labelColor]))
-        print("\n")
-        
-        textView.scrollToEndOfDocument(nil)
     }
     
     @objc func handleJSException(_ notification : Notification) {

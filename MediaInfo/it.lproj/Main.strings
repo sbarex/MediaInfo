@@ -133,8 +133,14 @@
 /* Class = "NSButtonCell"; title = "Show info on a submenu"; ObjectID = "miM-mB-nHF"; */
 "miM-mB-nHF.title" = "Mostra le informazioni in un sotto menu";
 
+"pfb-Pi-02t.title" = "Informazione principale come titolo del sotto menu";
 /* Class = "NSButtonCell"; title = "Customize the main menu title"; ObjectID = "FzS-qT-KmD"; */
 "FzS-qT-KmD.title" = "Usa la prima voce di menu come elemento principale";
+
+"Hax-TK-efd.title" = "Azione del menu";
+"HVa-Dm-7Kg.title" = "Non fare nulla";
+"OrN-Vg-FAv.title" = "Apri con l’applicazione predefinita";
+"kmY-9L-V9u.title" = "Esegui lo script di azione";
 
 /* Class = "NSButtonCell"; title = "Show image/video aspect ratio"; ObjectID = "2uO-lI-Axl"; */
 "2uO-lI-Axl.title" = "Arrotonda le proporzioni di immagini e video";
@@ -164,7 +170,7 @@
 
 "hkM-Fc-2qh.title" = "Gestisci gli archivi compressi";
 "Fw5-Hp-WKw.title" = "Numero totale di file processabili";
-"K5p-FH-df2.title" = "Limite sottolivelli";
+"K5p-FH-df2.title" = "Limite sotto livelli";
 "P3E-fJ-Jhx.title" = "Limite di file per cartella";
 
 "o81-Ld-5Eb.title" = "Annulla";
@@ -173,3 +179,13 @@
 "3ia-5X-Wg0.title" = "Testo a capo";
 "Tt7-eY-hRC.title" = "Modello per codice inline";
 "k8N-8k-h1C.title" = "Modello per codice globale";
+"FYU-jy-Vp5.title" = "Modello per codice di azione";
+
+"LEg-hA-WPD.title" = "OK";
+"lm6-fA-X4X.title" = "Annulla";
+
+/* Class = "NSSegmentedCell"; Bip-Es-r1Y.ibShadowedToolTips[0] = "Move up."; ObjectID = "Bip-Es-r1Y"; */
+"Bip-Es-r1Y.ibShadowedToolTips[0]" = "Sposta in alto.";
+
+/* Class = "NSSegmentedCell"; Bip-Es-r1Y.ibShadowedToolTips[1] = "Move down."; ObjectID = "Bip-Es-r1Y"; */
+"Bip-Es-r1Y.ibShadowedToolTips[1]" = "Sposta in basso.";

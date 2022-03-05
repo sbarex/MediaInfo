@@ -215,6 +215,14 @@ class ViewController: NSViewController {
         }
     }
     
+    var videoTracksMenuItems: [Settings.MenuItem] = []
+    var audioTracksMenuItems: [Settings.MenuItem] = []
+    
+    var representedObjects: [Int: Any] = [:]
+    
+    var systemActionInvoked = false
+    var systemActionShowMessage = false
+    
     func refreshFirstItem() {
         for view in [imageMenuTableView, videoMenuTableView, audioMenuTableView, pdfMenuTableView, officeMenuTableView, modelsMenuTableView, archiveMenuTableView] {
             view?.tableView.reloadData(forRowIndexes: IndexSet(integer: 0), columnIndexes: IndexSet(integer: 0))
@@ -240,14 +248,15 @@ class ViewController: NSViewController {
         imageMenuTableView.sampleTokens = [
             (label: NSLocalizedString("Size: ", comment: ""), tokens: [TokenDimensional(mode: .widthHeight), TokenPrint(mode: TokenPrint.Mode.dpi)]),
             (label: NSLocalizedString("Color: ", comment: ""), tokens: [TokenColor(mode: .colorSpaceDepth)]),
-            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenImageExtra(mode: .animated), TokenFile(mode: .filesize), TokenScript(mode: .inline(code: "")), TokenOpenWith(mode: .app(path: ""))])
+            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenImageExtra(mode: .animated), TokenFile(mode: .filesize), TokenScript(mode: .inline(code: "")), TokenAction(mode: .app(path: ""))])
         ]
-        imageMenuTableView.validTokens = [TokenDimensional.self, TokenPrint.self, TokenColor.self, TokenFile.self, TokenImageExtra.self, TokenText.self, TokenScript.self, TokenOpenWith.self]
+        imageMenuTableView.validTokens = [TokenDimensional.self, TokenPrint.self, TokenColor.self, TokenFile.self, TokenImageExtra.self, TokenText.self, TokenScript.self, TokenAction.self]
         if let url = Bundle.main.url(forResource: "test", withExtension: "jpg"), let img = getCGImageInfo(forFile: url, processMetadata: true) {
             imageMenuTableView.example = img
         } else {
             imageMenuTableView.example = ImageInfo(file: Bundle.main.bundleURL, width: 1920, height: 1080, dpi: 150, colorMode: "RGB", depth: 8, profileName: "", animated: false, withAlpha: false, colorTable: .regular, metadata: [:], metadataRaw: [:])
         }
+        
         /*
         do {
             let encoder = JSONEncoder()
@@ -259,6 +268,8 @@ class ViewController: NSViewController {
             print(error)
         }
         */
+        imageMenuTableView.example?.jsDelegate = self
+        imageMenuTableView.viewController = self
         initJSConsole(info: imageMenuTableView.example)
     }
     
@@ -271,9 +282,10 @@ class ViewController: NSViewController {
             (label: NSLocalizedString("Size: ", comment: ""), tokens: [TokenDimensional(mode: .widthHeight)]),
             (label: NSLocalizedString("Length: ", comment: ""), tokens: [TokenDuration(mode: .hours)]),
             (label: NSLocalizedString("Language: ", comment: ""), tokens: [TokenLanguages(mode: .flags)]),
-            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenMediaExtra(mode: .codec_short_name), TokenVideoMetadata(mode: .frames), TokenMediaTrack(mode: .video), TokenFile(mode: .filesize), TokenScript(mode: .inline(code: "")), TokenOpenWith(mode: .app(path: ""))]),
+            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenMediaExtra(mode: .codec_short_name), TokenVideoMetadata(mode: .frames), TokenMediaTrack(mode: .video), TokenFile(mode: .filesize), TokenScript(mode: .inline(code: "")), TokenAction(mode: .app(path: ""))]),
         ]
-        videoMenuTableView.validTokens = [TokenDimensional.self, TokenDuration.self, TokenLanguages.self, TokenMediaExtra.self, TokenFile.self, TokenVideoMetadata.self, TokenMediaTrack.self, TokenText.self, TokenScript.self, TokenOpenWith.self]
+        videoMenuTableView.validTokens = [TokenDimensional.self, TokenDuration.self, TokenLanguages.self, TokenMediaExtra.self, TokenFile.self, TokenVideoMetadata.self, TokenMediaTrack.self, TokenText.self, TokenScript.self, TokenAction.self]
+        
         if let url = Bundle.main.url(forResource: "test", withExtension: "mp4"), let video = getCMVideoInfo(forFile: url) {
             videoMenuTableView.example = video
         } else {
@@ -292,7 +304,7 @@ class ViewController: NSViewController {
                 isLossless: false,
                 chapters: [Chapter(title: "title1", start: 0, end: 200), Chapter(title: "title2", start: 201, end: 600)],
                 video: [
-                    VideoTrackInfo(width: 1920, height: 1080, duration: 3600, start_time: 0, codec_short_name: "Codec", codec_long_name: "Codec long name", profile: "Main", pixel_format: VideoPixelFormat.argb, color_space: nil, field_order: VideoFieldOrder.progressive, lang: nil, bitRate: 1024*1024, fps: 24, frames: 3600*25, title: nil, encoder: nil, isLossless: nil)
+                    VideoTrackInfo(width: 1920, height: 1080, duration: 3600, start_time: 0, codec_short_name: "Codec", codec_long_name: "Codec long name", profile: "Main", pixel_format: VideoTrackInfo.VideoPixelFormat.argb, color_space: nil, field_order: VideoTrackInfo.VideoFieldOrder.progressive, lang: nil, bitRate: 1024*1024, fps: 24, frames: 3600*25, title: nil, encoder: nil, isLossless: nil)
                 ],
                 audio: [
                     AudioTrackInfo(duration: 3600, start_time: 0, codec_short_name: "mp3", codec_long_name: "MP3 (MPEG audio layer 3)", lang: "EN", bitRate: 512*1025, title: "Audio title", encoder: "Encoder", isLossless: false, channels: 2)
@@ -304,6 +316,8 @@ class ViewController: NSViewController {
                 )
         }
         
+        videoMenuTableView.example?.jsDelegate = self
+        videoMenuTableView.viewController = self
         initJSConsole(info: videoMenuTableView.example)
     }
     
@@ -315,10 +329,10 @@ class ViewController: NSViewController {
         audioMenuTableView.sampleTokens = [
             (label: NSLocalizedString("Length: ", comment: ""), tokens: [TokenDuration(mode: .hours)]),
             (label: NSLocalizedString("Language: ", comment: ""), tokens: [TokenLanguage(mode: .flag)]),
-            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenMediaExtra(mode: .codec_short_name), TokenFile(mode: .filesize), TokenScript(mode: .inline(code: "")), TokenOpenWith(mode: .app(path: ""))]),
+            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenMediaExtra(mode: .codec_short_name), TokenFile(mode: .filesize), TokenScript(mode: .inline(code: "")), TokenAction(mode: .app(path: ""))]),
             (label: NSLocalizedString("Metadata: ", comment: ""), tokens: [TokenAudioMetadata(mode: .title)])
         ]
-        audioMenuTableView.validTokens = [TokenDuration.self, TokenLanguage.self, TokenMediaExtra.self, TokenFile.self, TokenAudioMetadata.self, TokenText.self, TokenScript.self, TokenOpenWith.self]
+        audioMenuTableView.validTokens = [TokenDuration.self, TokenLanguage.self, TokenMediaExtra.self, TokenFile.self, TokenAudioMetadata.self, TokenText.self, TokenScript.self, TokenAction.self]
         if let url = Bundle.main.url(forResource: "test", withExtension: "mp3") {
             audioMenuTableView.example = getCMAudioInfo(forFile: url)
         } else {
@@ -335,6 +349,8 @@ class ViewController: NSViewController {
                 engine: .coremedia)
         }
         
+        audioMenuTableView.example?.jsDelegate = self
+        audioMenuTableView.viewController = self
         initJSConsole(info: audioMenuTableView.example)
     }
     
@@ -346,13 +362,15 @@ class ViewController: NSViewController {
         pdfMenuTableView.sampleTokens = [
             (label: NSLocalizedString("Size: ", comment: ""), tokens: [TokenPdfBox(mode: .mediaBox, unit: .pt), TokenPdfBox(mode: .bleedBox, unit: .pt), TokenPdfBox(mode: .cropBox, unit: .pt), TokenPdfBox(mode: .artBox, unit: .pt)]),
             (label: NSLocalizedString("Metadata: ", comment: ""), tokens: [TokenPdfMetadata(mode: .pages)]),
-            (label: NSLocalizedString("Extra", comment: ""), tokens: [TokenFile(mode: .filesize), TokenScript(mode: .inline(code: "")), TokenOpenWith(mode: .app(path: ""))])
+            (label: NSLocalizedString("Extra", comment: ""), tokens: [TokenFile(mode: .filesize), TokenScript(mode: .inline(code: "")), TokenAction(mode: .app(path: ""))])
         ]
-        pdfMenuTableView.validTokens = [TokenPdfBox.self, TokenPdfMetadata.self, TokenFile.self, TokenText.self, TokenScript.self, TokenOpenWith.self]
+        pdfMenuTableView.validTokens = [TokenPdfBox.self, TokenPdfMetadata.self, TokenFile.self, TokenText.self, TokenScript.self, TokenAction.self]
         if let url = Bundle.main.url(forResource: "test", withExtension: "pdf"), let pdf = CGPDFDocument(url as CFURL) {
             pdfMenuTableView.example = PDFInfo(file: url, pdf: pdf)
         }
         
+        pdfMenuTableView.example?.jsDelegate = self
+        pdfMenuTableView.viewController = self
         initJSConsole(info: pdfMenuTableView.example)
     }
     
@@ -364,11 +382,13 @@ class ViewController: NSViewController {
         officeMenuTableView.sampleTokens = [
             (label: NSLocalizedString("Size: ", comment: ""), tokens: [TokenOfficeSize(mode: .print_paper_cm)]),
             (label: NSLocalizedString("Metadata: ", comment: ""), tokens: [TokenOfficeMetadata(mode: .pages), TokenFile(mode: .filesize)]),
-            (label: NSLocalizedString("Extra", comment: ""), tokens: [ TokenScript(mode: .inline(code: "")), TokenOpenWith(mode: .app(path: ""))])
+            (label: NSLocalizedString("Extra", comment: ""), tokens: [ TokenScript(mode: .inline(code: "")), TokenAction(mode: .app(path: ""))])
         ]
-        officeMenuTableView.validTokens = [TokenOfficeSize.self, TokenOfficeMetadata.self, TokenFile.self, TokenText.self, TokenScript.self, TokenOpenWith.self]
+        officeMenuTableView.validTokens = [TokenOfficeSize.self, TokenOfficeMetadata.self, TokenFile.self, TokenText.self, TokenScript.self, TokenAction.self]
         officeMenuTableView.example = WordInfo(file: Bundle.main.bundleURL, charactersCount: 1765, charactersWithSpacesCount: 2000, wordsCount: 123, pagesCount: 3, creator: "sbarex", creationDate: Date(timeIntervalSinceNow: -60*60), modified: "sbarex", modificationDate: Date(timeIntervalSinceNow: 0), title: "Title", subject: "Subject", keywords: ["key1", "key2"], description: "Description", application: "Microsoft Word", width: 21/2.54, height: 29.7/2.54)
         
+        officeMenuTableView.example?.jsDelegate = self
+        officeMenuTableView.viewController = self
         initJSConsole(info: officeMenuTableView.example)
     }
     
@@ -384,13 +404,15 @@ class ViewController: NSViewController {
         ]
         modelsMenuTableView.validTokens = [TokenModelMetadata.self, TokenText.self, TokenFile.self, TokenScript.self, TokenOpenWidth.self]
         modelsMenuTableView.example = ModelInfo(parseModel: Bundle.main.url(forResource: "test", withExtension: "obj")!) ?? ModelInfo(parseModel: Bundle.main.bundleURL, meshes: [ModelInfo.Mesh(name: "mesh1", vertexCount: 2040, hasNormals: true, hasTangent: false, hasTextureCoordinate: true, hasVertexColor: false, hasOcclusion: false)]),
-         (label: NSLocalizedString("Extra", comment: ""), tokens: [ TokenScript(mode: .inline(code: "")), TokenOpenWith(mode: .app(path: ""))])
+         (label: NSLocalizedString("Extra", comment: ""), tokens: [ TokenScript(mode: .inline(code: "")), TokenAction(mode: .app(path: ""))])
         */
         if let t = tabView.tabViewItems.first(where: { $0.identifier as? String == "3D"}) {
             // Hide the 3D tab.
             tabView.removeTabViewItem(t)
         }
         
+        modelsMenuTableView.example?.jsDelegate = self
+        modelsMenuTableView.viewController = self
         initJSConsole(info: modelsMenuTableView.example)
     }
     
@@ -402,12 +424,14 @@ class ViewController: NSViewController {
         archiveMenuTableView.supportedType = .archive
         archiveMenuTableView.sampleTokens = [
             // (label: NSLocalizedString("Size: ", comment: ""), tokens: [TokenArchive(mode: .compressionMethod)]),
-            (label: NSLocalizedString("Files", comment: ""), tokens: [TokenArchive(mode: .files)]),
-            (label: NSLocalizedString("Extra", comment: ""), tokens: [ TokenFile(mode: .filesize), TokenScript(mode: .inline(code: "")), TokenOpenWith(mode: .app(path: ""))])
+            (label: NSLocalizedString("Files: ", comment: ""), tokens: [TokenArchive(mode: .files)]),
+            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [ TokenFile(mode: .filesize), TokenScript(mode: .inline(code: "")), TokenAction(mode: .app(path: ""))])
         ]
-        archiveMenuTableView.validTokens = [TokenArchive.self, TokenFile.self, TokenScript.self, TokenOpenWith.self]
+        archiveMenuTableView.validTokens = [TokenArchive.self, TokenFile.self, TokenScript.self, TokenAction.self]
         archiveMenuTableView.example = try? ArchiveInfo(file: Bundle.main.url(forResource: "test", withExtension: "zip")!)
         
+        archiveMenuTableView.example?.jsDelegate = self
+        archiveMenuTableView.viewController = self
         initJSConsole(info: archiveMenuTableView.example)
     }
     
@@ -430,13 +454,70 @@ class ViewController: NSViewController {
         updateEngineSegmentedControl()
         
         BaseInfo.menuAction = { info, sender in
+            self.systemActionInvoked = false
+            self.systemActionShowMessage = true
+            defer {
+                self.systemActionShowMessage = false
+            }
+            
+            let item = BaseInfo.postprocessMenuItem(sender, from: self.representedObjects) as? MenuItemInfo
+            
+            if let item = item {
+                var alert: NSAlert? = NSAlert()
+                alert?.alertStyle = .informational
+                switch item.action {
+                case .none:
+                    // No action
+                    return
+                case .standard:
+                    // Standard action
+                    alert = nil
+                case .openSettings:
+                    alert?.messageText = NSLocalizedString("Opening Settings", comment: "")
+                    alert?.informativeText = NSLocalizedString("The action will open this application.", comment: "")
+                case .about:
+                    alert?.messageText = NSLocalizedString("Opening of the project website", comment: "")
+                    alert?.informativeText = NSLocalizedString("The action will open this project’s GitHub page.", comment: "")
+                case .open:
+                    alert?.messageText = NSLocalizedString("Opening the file", comment: "")
+                    alert?.informativeText = NSLocalizedString("The action will open the file with the default application.", comment: "")
+                case .openWith:
+                    alert?.messageText = NSLocalizedString("Opening the file with an Application", comment: "")
+                    alert?.informativeText = String(format: NSLocalizedString("The action will open the file with the application %@.", comment: ""), item.userInfo["application"] as? String ?? "")
+                case .custom:
+                    alert?.messageText = NSLocalizedString("Running the script", comment: "")
+                    alert?.informativeText = NSLocalizedString("The action will execute a custom script.", comment: "")
+                    
+                    if let code = item.userInfo["code"] as? String {
+                        let settings = self.getSettings()
+                        info.initAction(context: info.getJSContext(with: settings), selectedItem: item, settings: settings)
+                        _ = try? info.evaluateScript(code: "globalThis['\(code)'](selectedMenuItem);", forItem: item, settings: settings)
+                        if self.systemActionInvoked {
+                            alert = nil
+                        }
+                    }
+                case .clipboard:
+                    alert?.messageText = NSLocalizedString("Clipboard", comment: "")
+                    alert?.informativeText = NSLocalizedString("The action will copy the path into the cliboard.", comment: "")
+                }
+                
+                if let alert = alert {
+                    alert.runModal()
+                    return
+                }
+            }
+            
+            var alert: NSAlert? = NSAlert()
+            alert?.alertStyle = .informational
+            
             let settings = self.getSettings()
             switch settings.menuAction {
             case .none:
                 return
             case .open:
-                return
+                alert?.messageText = NSLocalizedString("The action will open the file with the default application.", comment: "")
             case .script:
+                alert?.messageText = NSLocalizedString("The action will run the general action script.", comment: "")
                 func getActionCode(for info: BaseInfo) -> String? {
                     if info is ImageInfo {
                         return settings.getActionCode(for: .image)
@@ -459,15 +540,21 @@ class ViewController: NSViewController {
                 guard let code = getActionCode(for: info) else {
                     let alert = NSAlert()
                     alert.alertStyle = .warning
-                    alert.messageText = "No action script defined!"
+                    alert.messageText = NSLocalizedString("No action script defined!", comment: "")
                     alert.addButton(withTitle: "OK").keyEquivalent = "\r"
                     alert.runModal()
                     return
                 }
                 
-                info.initActionJSContext(selectedItem: sender)
-                _ = try? info.evaluateScript(code: code, forItem: -1)
+                let settings = self.getSettings()
+                info.initAction(context: info.getJSContext(with: settings), selectedItem: item, settings: settings)
+                _ = try? info.evaluateScript(code: code, forItem: nil, settings: self.getSettings())
+                if self.systemActionInvoked {
+                    alert = nil
+                }
             }
+            
+            alert?.runModal()
         }
         
         DispatchQueue.main.async {
@@ -567,6 +654,8 @@ class ViewController: NSViewController {
         
         settings.isVideoHandled = self.isVideoHandled
         settings.videoMenuItems = self.videoMenuTableView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
+        settings.videoTracksMenuItems = self.videoTracksMenuItems
+        settings.audioTracksMenuItems = self.audioTracksMenuItems
         
         settings.isTracksGrouped = self.isTracksGrouped
         
@@ -657,6 +746,8 @@ class ViewController: NSViewController {
             self.isEmptyItemsSkipped = settings.isEmptyItemsSkipped
             
             self.isTracksGrouped = settings.isTracksGrouped
+            self.videoTracksMenuItems = settings.videoTracksMenuItems
+            self.audioTracksMenuItems = settings.audioTracksMenuItems
             
             self.folders = settings.folders.sorted(by: { $0.path < $1.path })
             self.isExternalDiskHandled = settings.handleExternalDisk
@@ -791,7 +882,7 @@ class ViewController: NSViewController {
     }
 }
 
-
+// MARK: - NSTableViewDataSource
 extension ViewController: NSTableViewDataSource {
     func numberOfRows(in tableView: NSTableView) -> Int {
         if tableView.identifier?.rawValue == "engines" {
@@ -802,6 +893,7 @@ extension ViewController: NSTableViewDataSource {
     }
 }
 
+// MARK: - NSTableViewDelegate
 extension ViewController: NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         if tableView.identifier?.rawValue == "engines" {
@@ -908,12 +1000,16 @@ extension ViewController: NSMenuDelegate {
             return
         }
         
+        self.representedObjects = BaseInfo.preprocessMenu(menu_example)
+        
         while menu.items.count > 1 {
             menu.removeItem(at: 1)
         }
         
         if settings.isInfoOnSubMenu, let item = menu_example.items.first {
             let mnu = menu.addItem(withTitle: item.title, action: nil, keyEquivalent: "")
+            mnu.tag = item.tag
+            mnu.representedObject = item.representedObject
             mnu.image = item.image
             if let submenu = item.submenu?.copy() as? NSMenu, !submenu.items.isEmpty {
                 menu.setSubmenu(submenu, for: mnu)
@@ -925,5 +1021,131 @@ extension ViewController: NSMenuDelegate {
                 menu.addItem(item.copy() as! NSMenuItem)
             }
         }
+    }
+}
+
+// MARK: -
+extension ViewController: JSDelegate {
+    func jsOpen(path: String, reply: @escaping (Bool)->Void) {
+        systemActionInvoked = true
+        if systemActionShowMessage {
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.alertStyle = .informational
+                alert.messageText = NSLocalizedString("Opening a file/url", comment: "")
+                alert.informativeText = String(format: NSLocalizedString("This action will open the %@ with the default application.", comment: ""), path)
+                alert.runModal()
+            }
+        }
+        reply(false)
+        /*
+        let r = NSWorkspace.shared.open(URL(fileURLWithPath: path))
+        reply(r)
+        */
+    }
+    func jsOpen(path: String, with app: String, reply: @escaping (Bool, String?)->Void) {
+        systemActionInvoked = true
+        if systemActionShowMessage {
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.alertStyle = .informational
+                alert.messageText = NSLocalizedString("Opening a file", comment: "")
+                alert.informativeText = String(format: NSLocalizedString("This action will open the file %@ with the %@ application.", comment: ""), path, app)
+                alert.runModal()
+            }
+        }
+        reply(false, NSLocalizedString("Implemented only from the Finder extension.", comment: ""))
+        
+        /*
+        if #available(macOS 10.15, *) {
+            let url = URL(fileURLWithPath: path)
+            let conf = NSWorkspace.OpenConfiguration()
+            conf.activates = true
+            NSWorkspace.shared.open([url], withApplicationAt: URL(fileURLWithPath: path), configuration: conf) { app, error in
+                reply(app != nil, error?.localizedDescription)
+            }
+        } else {
+            self.jsExec(command: "/usr/bin/open", arguments: ["-a", app, path]) { status, output in
+                reply(status == 0, status != 0 ? output : nil)
+            }
+        }
+        */
+    }
+    func jsExec(command: String, arguments: [String], reply: @escaping (Int32, String) -> Void) {
+        systemActionInvoked = true
+        if systemActionShowMessage {
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.alertStyle = .informational
+                alert.messageText = NSLocalizedString("Command execution", comment: "")
+                alert.informativeText = String(format: NSLocalizedString("This action will exectute the command %@ with arguments: %@.", comment: ""), command, arguments.joined(separator: ", "))
+                alert.runModal()
+            }
+        }
+        reply(1, NSLocalizedString("Implemented only from the Finder extension.", comment: ""))
+        /*
+        //DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.5) {
+            let task = Process()
+            let pipe = Pipe()
+            
+            task.terminationHandler = { _ in
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                let output = String(data: data, encoding: .utf8)!
+                let status = task.terminationStatus
+                reply(status, output)
+            }
+            
+            task.standardOutput = pipe
+            task.standardError = pipe
+            
+            task.arguments = arguments
+            task.launchPath = command
+            
+            task.launch()
+            // task.waitUntilExit()
+         // }
+         */
+    }
+    
+    func jsRunApp(at path: String, reply: @escaping (Bool, String?) -> Void) {
+        systemActionInvoked = true
+        if systemActionShowMessage {
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.alertStyle = .informational
+                alert.messageText = NSLocalizedString("Launching an application", comment: "")
+                alert.informativeText = String(format: NSLocalizedString("This action will open the application %@.", comment: ""), path)
+                alert.runModal()
+            }
+        }
+        reply(false, NSLocalizedString("Implemented only from the Finder extension.", comment: ""))
+        /*
+        if #available(macOS 10.15, *) {
+            let url = URL(fileURLWithPath: path)
+            let conf = NSWorkspace.OpenConfiguration()
+            conf.activates = true
+            NSWorkspace.shared.openApplication(at: url, configuration: conf) { app, error in
+                reply(app != nil, error?.localizedDescription)
+            }
+        } else {
+            self.jsExec(command: "/usr/bin/open", arguments: ["-a", path]) { status, output in
+                reply(status == 0, status != 0 ? output : nil)
+            }
+        }
+        */
+    }
+    
+    func jsCopyToClipboard(text: String) -> Bool {
+        systemActionInvoked = true
+        if systemActionShowMessage {
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.alertStyle = .informational
+                alert.messageText = NSLocalizedString("Clipboard", comment: "")
+                alert.informativeText = String(format: NSLocalizedString("This action will copy \"%@\" to the clipboard.", comment: ""), text)
+                alert.runModal()
+            }
+        }
+        return false
     }
 }

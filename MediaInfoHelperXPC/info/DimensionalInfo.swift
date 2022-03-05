@@ -38,7 +38,7 @@ protocol DimensionalInfo: BaseInfo {
     static func decodeDimension(from decoder: Decoder) throws -> (width: Int, height: Int)
     
     func getRatio(approximate: Bool) -> String?
-    func processDimensionPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String
+    func processDimensionPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String
     func getDimensionImage(for name: String) -> String?
 }
 
@@ -153,7 +153,7 @@ extension DimensionalInfo {
         return Self.getRatio(width: width, height: height, approximate: approximate)
     }
     
-    func processDimensionPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    func processDimensionPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         switch placeholder {
         case "[[size]]":
             isFilled = true
@@ -194,19 +194,19 @@ extension DimensionalInfo {
         var image: String
         switch name {
         case "image":
-            image = self.isPortrait ? "image_v" : "image"
+            image = self.isPortrait ? "image_v" : "image_h"
         case "video":
-            image = isPortrait ? "video_v" : "video"
-        case "ratio":
-            image = isPortrait ? "ratio_v" : "ratio"
+            image = isPortrait ? "video_v" : "video_h"
+        case "ratio", "aspectratio":
+            image = isPortrait ? "ratio_v" : "ratio_h"
         case "page":
-            image = isPortrait ? "page_v" : "page"
+            image = isPortrait ? "page_v" : "page_h"
         case "artbox":
-            image = self.isPortrait ? "artbox_v" : "artbox"
+            image = self.isPortrait ? "artbox_v" : "artbox_h"
         case "bleed":
-            image = self.isPortrait ? "bleed_v" : "bleed"
+            image = self.isPortrait ? "bleed_v" : "bleed_h"
         case "pdf":
-            image = self.isPortrait ? "pdf_v" : "pdf"
+            image = self.isPortrait ? "pdf_v" : "pdf_h"
         default:
             return nil
         }

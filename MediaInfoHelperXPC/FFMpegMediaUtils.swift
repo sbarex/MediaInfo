@@ -11,7 +11,7 @@ import Foundation
 let AV_NOPTS_VALUE = UInt64(0x8000000000000000) // Int64.max + 1
 let AV_TIME_BASE: Int64 = 1_000_000
 
-extension VideoPixelFormat {
+extension VideoTrackInfo.VideoPixelFormat {
     init?(pix_fmt: AVPixelFormat) {
         switch pix_fmt {
         case AV_PIX_FMT_NONE: return nil
@@ -171,7 +171,7 @@ extension VideoPixelFormat {
     }
 }
 
-extension VideoColorSpace {
+extension VideoTrackInfo.VideoColorSpace {
     init?(space: AVColorSpace) {
         guard space != AVCOL_SPC_NB else {
             return nil
@@ -199,7 +199,7 @@ extension VideoColorSpace {
     }
 }
 
-extension VideoFieldOrder {
+extension VideoTrackInfo.VideoFieldOrder {
     init?(order: AVFieldOrder) {
         switch order {
         case AV_FIELD_UNKNOWN: self = .unknown
@@ -227,8 +227,9 @@ func initFFMpeg(forFile file: URL) -> UnsafeMutablePointer<AVFormatContext>? {
     
     var format_opts: UnsafeMutablePointer<AVDictionary>? = nil
     withUnsafeMutablePointer(to: &format_opts) { ptr in
+        // Scan and combine all PMTs. The value is an integer with value from -1 to 1 (-1 means automatic setting, 1 means enabled, 0 means disabled). Default value is -1.
         av_dict_set(ptr, "scan_all_pmts", "1", AV_DICT_DONT_OVERWRITE)
-        let _ = avformat_open_input(&pFormatCtx, strdup(file.path), pFmt, ptr)
+        let _ = avformat_open_input(&pFormatCtx,  strdup(file.path), pFmt, ptr)
         av_dict_free(ptr)
     }
     
@@ -462,7 +463,7 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
     var streams: [BaseInfo] = []
 
     for i in 0 ..< Int(pFormatCtx.pointee.nb_streams) {
-        guard let st = pFormatCtx.pointee.streams[i] else {
+        guard let st = pFormatCtx.pointee.streams[i]?.pointee else {
             continue
         }
         var avctx = avcodec_alloc_context3(nil)
@@ -472,9 +473,9 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
         defer {
             avcodec_free_context(&avctx)
         }
-        avcodec_parameters_to_context(avctx, st.pointee.codecpar)
+        avcodec_parameters_to_context(avctx, st.codecpar)
         
-        let start_time: Int64 = getFFMpegTime(t: st.pointee.start_time)
+        let start_time: Int64 = getFFMpegTime(t: st.start_time)
         
         let codec_short_name: String
         if let s = avcodec_get_name(avctx!.pointee.codec_id) {
@@ -495,6 +496,7 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
         let isLossless = (Int32(avctx!.pointee.properties) & FF_CODEC_PROPERTY_LOSSLESS) != 0
         
         /*
+        /*
          * Common keys:
          *   language
          *   title ("HD 720 Hevc")
@@ -508,34 +510,36 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
          */
         var t: UnsafeMutablePointer<AVDictionaryEntry>?
         repeat {
-            t = av_dict_get(pFormatCtx.pointee.streams[i]!.pointee.metadata, "", t, AV_DICT_IGNORE_SUFFIX)
+            t = av_dict_get(st.metadata, "", t, AV_DICT_IGNORE_SUFFIX)
             if let tt = t?.pointee, let key = String(cString: tt.key), let value = String(cString: tt.value) {
-                print("\(key): \(value)")
+                // During XPC debug print and NSLog do not generate output on the Xcode console. Use Console.app
+                NSLog("%@, %@", key, value)
             }
         } while t != nil
+        */
+        let lang = getFFMpegLang(data: st.metadata)
         
-        let lang = getFFMpegLang(data: st.pointee.metadata)
-        
-        let title: String? = av_dict_get(data: st.pointee.metadata, key: "title", previous: nil, flags: AV_DICT_IGNORE_SUFFIX)
-        let encoder: String? = av_dict_get(data: st.pointee.metadata, key: "encoder", previous: nil, flags: AV_DICT_IGNORE_SUFFIX)
+        let title: String? = av_dict_get(data: st.metadata, key: "title", previous: nil, flags: AV_DICT_IGNORE_SUFFIX)
+        let encoder: String? = av_dict_get(data: st.metadata, key: "encoder", previous: nil, flags: AV_DICT_IGNORE_SUFFIX)
         
         /*
         var bit_rate: Int64
-        if let t = av_dict_get(pFormatCtx.pointee.streams[i]!.pointee.metadata, "BPS", nil, AV_DICT_IGNORE_SUFFIX), let n = Int64(String(cString: t.pointee.value)) {
+        if let t = av_dict_get(st.metadata, "BPS", nil, AV_DICT_IGNORE_SUFFIX), let n = Int64(String(cString: t.pointee.value)) {
             bit_rate = n
         } else {
             bit_rate = pFormatCtx.pointee.bit_rate
         }
         */
         
-        var duration: Int64 = getFFMpegTime(t: st.pointee.duration)
+        var duration: Int64 = getFFMpegTime(t: st.duration)
         if duration < 0 {
             duration = mainDuration >= 0 ? mainDuration : 0
         }
+        let time_factor = av_q2d(st.time_base)
         
         switch avctx!.pointee.codec_type {
         case AVMEDIA_TYPE_VIDEO:
-            // let ratio = st.pointee.codecpar.pointee.sample_aspect_ratio.num == 0 ? "" : "\(st.pointee.codecpar.pointee.sample_aspect_ratio.num):\(st.pointee.codecpar.pointee.sample_aspect_ratio.den)"
+            // let ratio = st.codecpar.pointee.sample_aspect_ratio.num == 0 ? "" : "\(st.codecpar.pointee.sample_aspect_ratio.num):\(st.codecpar.pointee.sample_aspect_ratio.den)"
             let width = Int(avctx!.pointee.width)
             let height = Int(avctx!.pointee.height)
             
@@ -564,22 +568,22 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
                 profile = nil
             }
             
-            var frames = st.pointee.nb_frames
-            if frames == 0 && st.pointee.avg_frame_rate.num != 0 {
-                frames = Int64((Double(duration) / (Double(st.pointee.avg_frame_rate.num) / Double(st.pointee.avg_frame_rate.den))).rounded())
+            var frames = st.nb_frames
+            if frames == 0 && st.avg_frame_rate.num != 0 {
+                frames = Int64((Double(duration) / (Double(st.avg_frame_rate.num) / Double(st.avg_frame_rate.den))).rounded())
             }
             
             let bit_rate = avctx!.pointee.bit_rate
-            let fps = st.pointee.avg_frame_rate.den != 0 && st.pointee.avg_frame_rate.num != 0 ? av_q2d(st.pointee.avg_frame_rate) : 0 // 24 fps
+            let fps = st.avg_frame_rate.den != 0 && st.avg_frame_rate.num != 0 ? av_q2d(st.avg_frame_rate) : 0 // 24 fps
             
             let v = VideoTrackInfo(
                 width: width, height: height,
-                duration: Double(duration) / Double(AV_TIME_BASE),
-                start_time: Double(start_time) / Double(AV_TIME_BASE),
+                duration: Double(duration) * time_factor,
+                start_time: Double(start_time) * time_factor,
                 codec_short_name: codec_short_name, codec_long_name: codec_long_name,
                 profile: profile,
-                pixel_format: VideoPixelFormat(pix_fmt: avctx!.pointee.pix_fmt), color_space: VideoColorSpace(space: avctx!.pointee.colorspace),
-                field_order: VideoFieldOrder(order: avctx!.pointee.field_order),
+                pixel_format: VideoTrackInfo.VideoPixelFormat(pix_fmt: avctx!.pointee.pix_fmt), color_space: VideoTrackInfo.VideoColorSpace(space: avctx!.pointee.colorspace),
+                field_order: VideoTrackInfo.VideoFieldOrder(order: avctx!.pointee.field_order),
                 lang: lang,
                 bitRate: bit_rate, fps: fps,
                 frames: Int(frames),
@@ -604,8 +608,8 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
             }
             
             let a = AudioTrackInfo(
-                duration: Double(duration)/Double(AV_TIME_BASE),
-                start_time: Double(start_time) / Double(AV_TIME_BASE),
+                duration: Double(duration) * time_factor,
+                start_time: Double(start_time) * time_factor,
                 codec_short_name: codec_short_name, codec_long_name: codec_long_name,
                 lang: lang,
                 bitRate: bit_rate,
@@ -617,7 +621,7 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
             
         case AVMEDIA_TYPE_SUBTITLE:
             let title: String?
-            if let t = av_dict_get(pFormatCtx.pointee.streams[i]!.pointee.metadata, "title", nil, 0) {
+            if let t = av_dict_get(st.metadata, "title", nil, AV_DICT_IGNORE_SUFFIX) {
                 title = String(cString: t.pointee.value)
             } else {
                 title = nil

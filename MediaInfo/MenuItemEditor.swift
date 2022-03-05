@@ -10,20 +10,34 @@ import AppKit
 
 class MenuItemEditor: NSViewController {
     struct Image {
-        static let noImageName = "no-image"
+        static let noImageNames = ["no-image", "target-icon", "no-space", ""]
         let name: String
         let title: String
         let color: Bool
+        let alternate_names: [String]
+        let indent: Int
         
         var hasImage: Bool {
-            return !name.isEmpty && name != Self.noImageName
+            return !name.isEmpty && !Self.noImageNames.contains(name)
         }
         lazy var image: NSImage? = {
-            guard !name.isEmpty else {
-                return NSImage(named: Self.noImageName)?.resized(to: NSSize(width: 16, height: 16))
+            guard !Self.noImageNames.contains(name) else {
+                let img: NSImage?
+                if self.name == "" {
+                    img = NSImage(named: "square.dashed")?.resized(to: NSSize(width: 16, height: 16))
+                } else if self.name == "no-space" {
+                    img = NSImage(named: "square.split.diagonal.2x2")?.resized(to: NSSize(width: 16, height: 16))
+                } else if self.name == "target-icon" {
+                    img = NSImage(named: "doc.viewfinder")?.resized(to: NSSize(width: 16, height: 16))
+                } else {
+                    img = NSImage(named: "no-image")?.resized(to: NSSize(width: 16, height: 16))
+                }
+                img?.isTemplate = !color
+                return img
             }
+            
             var name = self.name
-            if name == "page" || name == "bleed" || name == "artbox" || name == "pdf" {
+            if name == "bleed" || name == "artbox" || name == "pdf" {
                 name += "_v"
             }
             let img = NSImage(named: name)?.resized(to: NSSize(width: 16, height: 16))
@@ -31,10 +45,16 @@ class MenuItemEditor: NSViewController {
             return img
         }()
         
-        init(name: String, title: String, color: Bool = false) {
+        init(name: String, title: String, color: Bool = false, alternateNames: [String] = [], indent: Int = 0) {
             self.name = name
             self.title = title
             self.color = color
+            self.alternate_names = alternateNames
+            self.indent = indent
+        }
+        
+        func isValid(for name: String)->Bool {
+            return self.name == name || self.alternate_names.contains(name)
         }
         
         static func separator() -> Image {
@@ -43,25 +63,45 @@ class MenuItemEditor: NSViewController {
     }
     
     static let images: [Image] = [
-        Image(name: "", title: NSLocalizedString("No image", comment: ""), color: true),
-        Image(name: "no-space", title: NSLocalizedString("No image (and no space)", comment: ""), color: true),
+        Image(name: "", title: NSLocalizedString("No image", comment: "")),
+        Image(name: "no-space", title: NSLocalizedString("No image (and no space)", comment: "")),
+        Image(name: "target-icon", title: NSLocalizedString("Icon of current file", comment: "")),
         Image.separator(),
-        Image(name: "image", title: NSLocalizedString("Image", comment: "")),
-        Image(name: "video", title: NSLocalizedString("Video", comment: "")),
+        Image(name: "image", title: NSLocalizedString("Image (auto oriented)", comment: "")),
+        Image(name: "image_h", title: NSLocalizedString("Image (landscape)", comment: ""), indent: 1),
+        Image(name: "image_v", title: NSLocalizedString("Image (portrait)", comment: ""), indent: 1),
+        
+        Image(name: "video", title: NSLocalizedString("Video (auto oriented)", comment: "")),
+        Image(name: "video_h", title: NSLocalizedString("Video (landscape)", comment: ""), indent: 1),
+        Image(name: "video_v", title: NSLocalizedString("Video (portrait)", comment: ""), indent: 1),
+        
         Image(name: "audio", title: NSLocalizedString("Audio", comment: "")),
         Image(name: "txt", title: NSLocalizedString("Subtitle", comment: "")),
-        Image(name: "pdf", title: NSLocalizedString("PDF", comment: "")),
-        Image(name: "3d", title: NSLocalizedString("3D model", comment: "")),
+        Image(name: "pdf", title: NSLocalizedString("PDF (auto oriented)", comment: "")),
+        Image(name: "pdf_v", title: NSLocalizedString("PDF (portrait)", comment: ""), indent: 1),
+        Image(name: "pdf_h", title: NSLocalizedString("PDF (landscape)", comment: ""), indent: 1),
+        
+        Image(name: "office", title: NSLocalizedString("Office suite", comment: "")),
+        Image(name: "doc", title: NSLocalizedString("Office text document (auto oriented)", comment: ""), alternateNames: ["docx", "word"]),
+        Image(name: "doc_h", title: NSLocalizedString("Office text document (landscape)", comment: ""), alternateNames: ["docx_h", "word_h"], indent: 1),
+        Image(name: "doc_v", title: NSLocalizedString("Office text document (portrait)", comment: ""), alternateNames: ["docx_v", "word_v"], indent: 1),
+        Image(name: "xls", title: NSLocalizedString("Office spreadsheet", comment: ""), alternateNames: [ "xlsx", "excel"]),
+        Image(name: "ppt", title: NSLocalizedString("Office presentation", comment: ""), alternateNames: ["pptx", "powerpoint"]),
+        
+        Image(name: "3d", title: NSLocalizedString("3D model", comment: ""), alternateNames: ["3D"]),
         Image(name: "zip", title: NSLocalizedString("Compressed archive", comment: "")),
         
         Image.separator(),
-        Image(name: "aspectratio", title: NSLocalizedString("Aspect ratio", comment: "")),
+        
+        Image(name: "aspectratio", title: NSLocalizedString("Aspect ratio (auto oriented)", comment: ""), alternateNames: ["ratio"]),
+        Image(name: "aspectratio_h", title: NSLocalizedString("Aspect ratio (landscape)", comment: ""), alternateNames: ["ratio_h"], indent: 1),
+        Image(name: "aspectratio_v", title: NSLocalizedString("Aspect ratio (portrait)", comment: ""), alternateNames: ["ratio_v"], indent: 1),
         Image(name: "size", title: NSLocalizedString("File size", comment: "")),
-        Image(name: "print", title: NSLocalizedString("Printer", comment: "")),
+        Image(name: "print", title: NSLocalizedString("Printer", comment: ""), alternateNames: ["printer"]),
         Image(name: "person", title: NSLocalizedString("Person", comment: "")),
         Image(name: "speaker", title: NSLocalizedString("Speaker (mono or stereo)", comment: "")),
-        Image(name: "speaker_mono", title: NSLocalizedString("Speaker", comment: "")),
-        Image(name: "speaker_stereo", title: NSLocalizedString("Speakers", comment: "")),
+        Image(name: "speaker_mono", title: NSLocalizedString("Speaker (mono)", comment: ""), indent: 1),
+        Image(name: "speaker_stereo", title: NSLocalizedString("Speakers (stereo)", comment: ""), indent: 1),
         
         Image.separator(),
         Image(name: "color", title: NSLocalizedString("Color", comment: "")),
@@ -72,19 +112,19 @@ class MenuItemEditor: NSViewController {
         Image(name: "color_lab", title: NSLocalizedString("CIE Lab color", comment: ""), color: true),
         
         Image.separator(),
-        Image(name: "page",   title: NSLocalizedString("PDF page", comment: "")),
+        Image(name: "page",   title: NSLocalizedString("PDF page (auto oriented)", comment: "")),
+        Image(name: "page_h", title: NSLocalizedString("PDF page (landscape)", comment: ""), indent: 1),
+        Image(name: "page_v", title: NSLocalizedString("PDF page (portrait)", comment: ""), indent: 1),
         Image(name: "pages",  title: NSLocalizedString("PDF number of pages", comment: "")),
-        Image(name: "page",   title: NSLocalizedString("PDF media box", comment: "")),
-        Image(name: "bleed",  title: NSLocalizedString("PDF bleed box", comment: "")),
+        Image(name: "page",   title: NSLocalizedString("PDF media box (auto oriented)", comment: "")),
+        Image(name: "bleed",  title: NSLocalizedString("PDF bleed box (auto oriented)", comment: "")),
+        Image(name: "bleed_v",  title: NSLocalizedString("PDF bleed box (portrait)", comment: ""), indent: 1),
+        Image(name: "bleed_h",  title: NSLocalizedString("PDF bleed box (landscape)", comment: ""), indent: 1),
         Image(name: "crop",   title: NSLocalizedString("PDF trim box", comment: "")),
-        Image(name: "artbox", title: NSLocalizedString("PDF art box", comment: "")),
+        Image(name: "artbox", title: NSLocalizedString("PDF art box (auto oriented)", comment: "")),
+        Image(name: "artbox_v", title: NSLocalizedString("PDF art box (portrait)", comment: ""), indent: 1),
+        Image(name: "artbox_h", title: NSLocalizedString("PDF art box (landscape)", comment: ""), indent: 1),
         Image(name: "shield", title: NSLocalizedString("PDF security", comment: "")),
-        
-        Image.separator(),
-        Image(name: "office", title: NSLocalizedString("Office suite", comment: "")),
-        Image(name: "doc", title: NSLocalizedString("Office text document", comment: "")),
-        Image(name: "xls", title: NSLocalizedString("Office spreadsheet", comment: "")),
-        Image(name: "ppt", title: NSLocalizedString("Office presentation", comment: "")),
         
         Image.separator(),
         
@@ -104,14 +144,16 @@ class MenuItemEditor: NSViewController {
         Image.separator(),
         Image(name: "tag", title: NSLocalizedString("Tag", comment: "")),
         Image(name: "pencil", title: NSLocalizedString("Pencil", comment: "")),
-        Image(name: "gearshape", title: NSLocalizedString("Gear", comment: "")),
+        Image(name: "gearshape", title: NSLocalizedString("Gear", comment: ""), alternateNames: ["gear"]),
         Image(name: "script", title: NSLocalizedString("Script", comment: "")),
         Image(name: "calendar", title: NSLocalizedString("Calendar", comment: "")),
+        Image(name: "clipboard", title: NSLocalizedString("Clipboard", comment: "")),
+        Image(name: "flag", title: NSLocalizedString("Flag", comment: "")),
         Image(name: "abc", title: NSLocalizedString("ABC", comment: "")),
     ]
     
     static func getImage(named name: String) -> Image? {
-        if let image = images.first(where: {$0.name == name}) {
+        if let image = images.first(where: { $0.isValid(for: name) }) {
             return image
         }
         return nil
@@ -146,7 +188,7 @@ class MenuItemEditor: NSViewController {
     }
     internal var imageName: String = "" {
         didSet {
-            self.imagePopupButton?.selectItem(at: Self.images.firstIndex(where: {$0.name == self.imageName}) ?? 0)
+            self.imagePopupButton?.selectItem(at: Self.images.firstIndex(where: { $0.isValid(for: self.imageName) }) ?? 0)
         }
     }
     
@@ -162,6 +204,7 @@ class MenuItemEditor: NSViewController {
                 imagePopupButton.menu?.addItem(NSMenuItem.separator())
             } else {
                 let item = NSMenuItem(title: image.title, action: nil, keyEquivalent: "")
+                item.indentationLevel = image.indent
                 item.image = image.image
                 imagePopupButton.menu?.addItem(item)
             }
@@ -175,7 +218,7 @@ class MenuItemEditor: NSViewController {
         
         tokenField.objectValue = tokens
         
-        self.imagePopupButton?.selectItem(at: Self.images.firstIndex(where: {$0.name == self.imageName}) ?? 0)
+        self.imagePopupButton?.selectItem(at: Self.images.firstIndex(where: { $0.isValid(for: self.imageName) }) ?? 0)
     }
     
     @IBAction func handleCancel(_ sender: Any) {

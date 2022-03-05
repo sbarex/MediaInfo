@@ -19,11 +19,79 @@ extension CodingUserInfoKey {
 }
 
 protocol JSExceptionDelegate: AnyObject {
-    func onJSException(info: BaseInfo, exception: String?, atLine line: Int, forItemAtIndex itemIndex: Int)
+    func onJSException(info: BaseInfo, exception: String?, atLine line: Int, forItem item: MenuItemInfo?)
+}
+
+protocol JSDelegate: AnyObject {
+    func jsOpen(path: String, reply: @escaping (Bool)->Void)
+    func jsOpen(path: String, with app: String, reply: @escaping (Bool, String?)->Void)
+    func jsExec(command: String, arguments: [String], reply: @escaping (Int32, String)->Void)
+    func jsRunApp(at path: String, reply: @escaping (Bool, String?)->Void)
+    func jsCopyToClipboard(text: String) -> Bool
 }
 
 enum JSException: Error {
     case exception(desc: String, line: Int)
+}
+
+enum MenuAction: String, Codable {
+    case standard
+    case none
+    case open
+    case openWith
+    case openSettings
+    case about
+    case custom
+    case clipboard
+}
+
+struct MenuItemInfo: Hashable, Encodable {
+    enum CodingKeys: String, CodingKey {
+        case index
+        case menuItem
+        case fileType
+        case userInfo
+        case action
+    }
+    
+    static func == (lhs: MenuItemInfo, rhs: MenuItemInfo) -> Bool {
+        return lhs.fileType == rhs.fileType && lhs.index == rhs.index && lhs.menuItem == rhs.menuItem && lhs.userInfo == rhs.userInfo
+    }
+    
+    let index: Int
+    let menuItem: Settings.MenuItem
+    let fileType: Settings.SupportedFile
+    var userInfo: [String: AnyHashable]
+    var action: MenuAction
+    
+    init (fileType: Settings.SupportedFile, index: Int, item: Settings.MenuItem, action: MenuAction = .standard, userInfo: [String: AnyHashable] = [:]) {
+        self.fileType = fileType
+        self.index = index
+        self.menuItem = item
+        self.userInfo = userInfo
+        self.action = action
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(fileType)
+        hasher.combine(index)
+        hasher.combine(menuItem)
+        hasher.combine(userInfo)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(index, forKey: .index)
+        try container.encode(menuItem, forKey: .menuItem)
+        try container.encode(fileType, forKey: .fileType)
+        
+        var userInfo: [String: AnyCodable] = [:]
+        for info in self.userInfo {
+            userInfo[info.key] = AnyCodable(value: info.value)
+        }
+        try container.encode(userInfo, forKey: .userInfo)
+        try container.encode(action, forKey: .action)
+    }
 }
 
 // MARK: - BaseInfo
@@ -48,12 +116,8 @@ class BaseInfo: Codable {
         var img: NSImage?
         var isColor = false
         switch mode {
-        case "image", "image_h":
-            img = NSImage(named: "image")
-        case "image_v":
-            img = NSImage(named: "image_v")
-        case "aspectratio_h":
-            img = NSImage(named: "aspectratio")
+        case "image":
+            img = NSImage(named: "image_h")
         case "color":
             img = NSImage(named: "color")
         case "color_rgb":
@@ -73,24 +137,29 @@ class BaseInfo: Codable {
             isColor = true
         case "print", "printer":
             img = NSImage(named: "print")
-        case "video", "video_h":
-            img = NSImage(named: "video")
-        case "video_v":
-            img = NSImage(named: "video_v")
+        case "video":
+            img = NSImage(named: "video_h")
         case "audio":
             img = NSImage(named: "audio")
         case "text":
             img = NSImage(named: "txt")
-        case "ratio":
-            img = NSImage(named: "aspectratio")
+        case "ratio", "aspectratio":
+            img = NSImage(named: "aspectratio_h")
+        case "ratio_h":
+            img = NSImage(named: "aspectratio_h")
         case "ratio_v":
             img = NSImage(named: "aspectratio_v")
         case "size":
             img = NSImage(named: "size")
-        case "page", "page_h":
-            img = NSImage(named: "page")
-        case "page_v":
+        case "page":
+            img = NSImage(named: "page_h")
+            
+        case "mediabox_h", "mediabox":
+            img = NSImage(named: "page_h")
+        case "mediabox_v":
             img = NSImage(named: "page_v")
+        case "bleed":
+            img = NSImage(named: "bleed_v")
             
         case "pages":
             img = NSImage(named: "pages")
@@ -98,11 +167,17 @@ class BaseInfo: Codable {
             img = NSImage(named: "tag")
         case "pencil":
             img = NSImage(named: "pencil")
+        case "gear", "gearshape":
+            img = NSImage(named: "gearshape")
             
         case "office":
             img = NSImage(named: "doc")
         case "doc", "docx", "word":
-            img = NSImage(named: "doc")
+            img = NSImage(named: "doc_v")
+        case "docx_v", "word_v":
+            img = NSImage(named: "doc_v")
+        case "docx_h", "word_h":
+            img = NSImage(named: "doc_h")
         case "xls", "xlsx", "excel":
             img = NSImage(named: "xls")
         case "ppt", "pptx", "powerpoint":
@@ -121,6 +196,9 @@ class BaseInfo: Codable {
             img = NSImage(named: mode)
             isColor = true
             
+        case "pdf":
+            img = NSImage(named: "pdf_v")
+            
         default:
             img = NSImage(named: mode)
         }
@@ -138,20 +216,29 @@ class BaseInfo: Codable {
     
     var jsInitialized = false
     
-    lazy fileprivate(set) var jsContext: JSContext? = {
-        let context = self.initJSContext()
-        jsInitialized = true
-        return context
-    }()
+    lazy var initJS: ((Settings)->JSContext?) = { settings in
+        return self.initJSContext(settings: settings)
+    }
     
-    weak var jsDelegate: JSExceptionDelegate?
+    fileprivate(set) var jsContext: JSContext? {
+        didSet {
+            jsInitialized = jsContext != nil
+        }
+    }
+    
+    weak var jsExceptionDelegate: JSExceptionDelegate?
+    weak var jsDelegate: JSDelegate?
     
     /// In debug mode allow the js log. Must be set before initialize the js context.
     static var debugJS: Bool = false
     
-    static var jsOpen: (@convention(block) (String) -> Void)?
-    static var jsExec: (@convention(block) (String, [String]) -> Void)?
     static var menuAction: ((BaseInfo, NSMenuItem)->Void)?
+    
+    var infoType: Settings.SupportedFile { return .none }
+    
+    var standardMainItem: MenuItemInfo {
+        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "", template: ""))
+    }
     
     // MARK: -
     init() { }
@@ -165,7 +252,19 @@ class BaseInfo: Codable {
     }
     
     // MARK: - Script support
-    func initJSContext() -> JSContext? {
+    /// Get the javascript context.
+    func getJSContext(with settings: Settings, reset: Bool = false) -> JSContext? {
+        if !jsInitialized || reset {
+            self.jsContext = self.initJS(settings)
+        }
+        return self.jsContext
+    }
+    
+    /// Initialize the Javascript context for the specified settings.
+    /// Embed in the context the `settings` var.
+    /// - parameters:
+    ///    - settings:
+    func initJSContext(settings: Settings) -> JSContext? {
         guard let context = JSContext() else {
             return nil
         }
@@ -184,7 +283,11 @@ class BaseInfo: Codable {
         encoder.outputFormatting = JSONEncoder.OutputFormatting(rawValue: 0)
         */
         
+        let processInfo = ProcessInfo()
+        
         context.evaluateScript("""
+const macOS_version = "\(processInfo.operatingSystemVersion.majorVersion).\(processInfo.operatingSystemVersion.minorVersion).\(processInfo.operatingSystemVersion.patchVersion)";
+
 function deepFreeze(object) {
   // Retrieve the property names defined on object
   const propNames = Object.getOwnPropertyNames(object);
@@ -201,6 +304,7 @@ function deepFreeze(object) {
 
   return Object.freeze(object);
 }
+
 const console = {
     debug: function() {
         let a = Array.prototype.slice.call(arguments);
@@ -237,21 +341,45 @@ const console = {
 }
 deepFreeze(console);
 
+const currentFileType = \(self.infoType.rawValue);
 let selectedMenuItem = null;
 """);
+        let toBase64: @convention(block) (String) -> String  = { text in
+            return text.toBase64()
+        }
+        context.setObject(toBase64, forKeyedSubscript: "toBase64" as NSString)
+        let fromBase64: @convention(block) (String) -> String?  = { text in
+            return text.fromBase64()
+        }
+        context.setObject(fromBase64, forKeyedSubscript: "fromBase64" as NSString)
+        let formatTemplate: @convention(block) (String) -> [AnyHashable] = { placeholder in
+            var isFilled = false
+            let s = self.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: nil)
+            return [s, isFilled]
+        }
+        context.setObject(formatTemplate, forKeyedSubscript: "formatTemplate" as NSString)
+        
         if Self.debugJS {
             let logFunction: @convention(block) ([AnyHashable]) -> Void  = { (object: [AnyHashable]) in
                 let level = object.first as? String ?? "info"
                 NotificationCenter.default.post(name: .JSConsole, object: (self, level, Array(object.dropFirst())))
             }
             context.setObject(logFunction, forKeyedSubscript: "__consoleLog" as NSString)
+            
+            let voidFunction: @convention(block) () -> Void  = { }
+            context.setObject(voidFunction, forKeyedSubscript: "systemOpen" as NSString)
+            context.setObject(voidFunction, forKeyedSubscript: "systemExec" as NSString)
+            context.setObject(voidFunction, forKeyedSubscript: "systemOpenApp" as NSString)
+            context.setObject(voidFunction, forKeyedSubscript: "systemOpenWith" as NSString)
+            context.setObject(true, forKeyedSubscript: "debugMode" as NSString)
         } else {
             context.evaluateScript("function __consoleLog() { }")
+            context.setObject(false, forKeyedSubscript: "debugMode" as NSString)
         }
         if let data = try? encoder.encode(self), let s = String(data: data, encoding: .utf8) {
             context.setObject(s , forKeyedSubscript: "fileJSONData" as NSString)
-            context.evaluateScript("const fileData = JSON.parse(fileJSONData); ")
             context.evaluateScript("""
+const fileData = JSON.parse(fileJSONData);
 if (fileData["metadataRaw"]) {
     for (key in fileData["metadataRaw"]) {
         if (!fileData["metadataRaw"].hasOwnProperty(key)) {
@@ -266,68 +394,143 @@ delete fileJSONData;
             context.setObject(nil, forKeyedSubscript: "fileJSONData" as NSString)
         }
         context.evaluateScript("deepFreeze(fileData);")
-        /*
-        let logFunction: @convention(block) (String) -> Void  = { (object: AnyHashable) in
-            print("JSConsole: ", object)
+        
+        if let data = try? encoder.encode(settings), let s = String(data: data, encoding: .utf8) {
+            context.setObject(s, forKeyedSubscript: "settingsJSONData" as NSString)
+            context.evaluateScript("const settings = JSON.parse(settingsJSONData); delete settingsJSONData;")
+            // context.evaluateScript("console.log(settings); ")
+        } else {
+            context.setObject(nil, forKeyedSubscript: "fileJSONData" as NSString)
         }
-        context.setObject(logFunction, forKeyedSubscript: "__consoleLog" as NSString)
-         */
+        context.evaluateScript("deepFreeze(settings);")
         
         return context
     }
     
-    /// Reset the Javascript context for the specified settings.
-    /// Embed in the context the `settings` var.
-    /// - parameters:
-    ///    - settings:
-    func resetJSContext(settings: Settings?) {
-        self.jsContext = initJSContext()
-        
-        guard let context = self.jsContext else { return }
-        if let settings = settings {
-            let encoder = JSONEncoder()
-            encoder.userInfo[.exportStoredValues] = true
-            
-            if let data = try? encoder.encode(settings), let s = String(data: data, encoding: .utf8) {
-                context.setObject(s, forKeyedSubscript: "settingsJSONData" as NSString)
-                context.evaluateScript("const settings = JSON.parse(settingsJSONData); delete settingsJSONData;")
-                // context.evaluateScript("console.log(settings); ")
-            } else {
-                context.setObject(nil, forKeyedSubscript: "fileJSONData" as NSString)
-            }
-        } else {
-            context.setObject(nil, forKeyedSubscript: "settings" as NSString)
-        }
-        context.evaluateScript("deepFreeze(settings);")
-        
-    }
-    
     /// Initialize the context cor the action token.
-    func initActionJSContext(selectedItem: NSMenuItem) {
-        guard let context = self.jsContext else { return }
+    func initAction(context: JSContext?, selectedItem item: MenuItemInfo?, settings: Settings) {
+        guard let context = context else {
+            return
+        }
+
+        let jsOpen: @convention(block) (String) -> JSValue? = { path in
+            if #available(macOS 10.15, *) {
+                guard let jsDelegate = self.jsDelegate else {
+                    return JSValue(newPromiseRejectedWithReason: [], in: context)
+                }
+                let result = JSValue(newPromiseIn: context) { resolve, reject in
+                    jsDelegate.jsOpen(path: path) { success in
+                        if success {
+                            resolve?.call(withArguments: [])
+                        } else {
+                            reject?.call(withArguments: [])
+                        }
+                    }
+                }
+                return result
+            } else {
+                // Fallback on earlier versions
+                self.jsDelegate?.jsOpen(path: path) { _ in }
+                return JSValue(bool: self.jsDelegate != nil, in: context)
+            }
+        }
+        context.setObject(jsOpen, forKeyedSubscript: "systemOpen" as NSString)
         
-        if let jsOpen = Self.jsOpen {
-            context.setObject(jsOpen, forKeyedSubscript: "systemOpen" as NSString)
+        let jsOpenWith: @convention(block) (String, String) -> JSValue? = { path, app in
+            if #available(macOS 10.15, *) {
+                guard let jsDelegate = self.jsDelegate else {
+                    return JSValue(newPromiseRejectedWithReason: [], in: context)
+                }
+                let result = JSValue(newPromiseIn: context) { resolve, reject in
+                    jsDelegate.jsOpen(path: path, with: app) { success, error_msg in
+                        if success {
+                            resolve?.call(withArguments: [])
+                        } else {
+                            reject?.call(withArguments: error_msg != nil ? [error_msg!] : [])
+                        }
+                    }
+                }
+                return result
+            } else {
+                // Fallback on earlier versions
+                self.jsDelegate?.jsOpen(path: path, with: app) { _,_ in }
+                return JSValue(bool: self.jsDelegate != nil, in: context)
+            }
         }
-        if let jsExec = Self.jsExec {
-            context.setObject(jsExec, forKeyedSubscript: "systemExec" as NSString)
+        context.setObject(jsOpenWith, forKeyedSubscript: "systemOpenWith" as NSString)
+        
+        let jsExec: @convention(block) (String, [String]) -> JSValue? = { command, arguments in
+            if #available(macOS 10.15, *) {
+                guard let jsDelegate = self.jsDelegate else {
+                    return JSValue(newPromiseRejectedWithReason: "No delegate available", in: context)
+                }
+
+                let result = JSValue(newPromiseIn: context) { resolve, reject in
+                    jsDelegate.jsExec(command: command, arguments: arguments) { status, output in
+                        if status != 0 {
+                            reject?.call(withArguments: [output])
+                        } else {
+                            resolve?.call(withArguments: [[status, output]])
+                        }
+                    }
+                }
+                return result
+            } else {
+                guard let jsDelegate = self.jsDelegate else {
+                    return JSValue(bool: false, in: context)
+                }
+                // Fallback on earlier versions
+                jsDelegate.jsExec(command: command, arguments: arguments) { _,_ in }
+                return JSValue.init(nullIn: context)
+            }
         }
+        context.setObject(jsExec, forKeyedSubscript: "systemExec" as NSString)
+        
+        let jsOpenApp: @convention(block) (String) -> JSValue? = { path in
+            if #available(macOS 10.15, *) {
+                guard let jsDelegate = self.jsDelegate else {
+                    return JSValue(newPromiseRejectedWithReason: [], in: context)
+                }
+                let result = JSValue(newPromiseIn: context) { resolve, reject in
+                    jsDelegate.jsRunApp(at: path) { success, error_msg in
+                        if success {
+                            resolve?.call(withArguments: [])
+                        } else {
+                            reject?.call(withArguments: error_msg != nil ? [error_msg!] : [])
+                        }
+                    }
+                }
+                return result
+            } else {
+                // Fallback on earlier versions
+                self.jsDelegate?.jsRunApp(at: path) { _,_ in }
+                return JSValue(bool: self.jsDelegate != nil, in: context)
+            }
+        }
+        context.setObject(jsOpenApp, forKeyedSubscript: "systemOpenApp" as NSString)
+        
+        let jsCopyToClipboard: @convention(block) (String) -> JSValue? = { text in
+            let r = self.jsDelegate?.jsCopyToClipboard(text: text) ?? false
+            
+            return JSValue(bool: r, in: context)
+        }
+        context.setObject(jsCopyToClipboard, forKeyedSubscript: "systemCopyToClipboard" as NSString)
         
         let encoder = JSONEncoder()
         encoder.userInfo[.exportStoredValues] = true
         
-        if let data = try? encoder.encode(selectedItem), let s = String(data: data, encoding: .utf8) {
-            context.setObject(s, forKeyedSubscript: "menuJSONData" as NSString)
-            context.evaluateScript("selectedMenuItem = JSON.parse(menuJSONData); delete menuJSONData;")
-            // context.evaluateScript("console.log(selectedMenuItem); ")
+        let s: String
+        if let data = try? encoder.encode(item), let t = String(data: data, encoding: .utf8), let d = try? JSONSerialization.data(withJSONObject: t, options: [.fragmentsAllowed]), let t2 = String(data: d, encoding: .utf8) {
+            s = t2
         } else {
-            context.setObject(nil, forKeyedSubscript: "selectedMenuItem" as NSString)
+            s = "null"
         }
-        context.evaluateScript("Object.freeze(selectedMenuItem);")
+        
+        context.evaluateScript("selectedMenuItem = JSON.parse(\(s)); Object.freeze(selectedMenuItem);")
     }
     
-    func evaluateScript(code: String, forItem itemIndex: Int, extendExceptionHandler: Bool = true) throws -> JSValue? {
-        guard let context = self.jsContext else {
+    func evaluateScript(code: String, forItem item: MenuItemInfo?, extendExceptionHandler: Bool = true, settings: Settings) throws -> JSValue? {
+        guard let context = self.getJSContext(with: settings) else {
             return nil
         }
         var js_exception: JSException?
@@ -337,7 +540,7 @@ delete fileJSONData;
                 let line_num = exception?.objectForKeyedSubscript("line")?.toNumber().intValue ?? -1
                 let message = exception?.toString()
                 js_exception = JSException.exception(desc: message ?? "", line: line_num)
-                self.jsDelegate?.onJSException(info: self, exception: message, atLine: line_num, forItemAtIndex: itemIndex)
+                self.jsExceptionDelegate?.onJSException(info: self, exception: message, atLine: line_num, forItem: item)
                 old_exceptionHandler?(context, exception)
             }
         }
@@ -346,7 +549,8 @@ delete fileJSONData;
                 context.exceptionHandler = old_exceptionHandler
             }
         }
-        context.setObject(itemIndex, forKeyedSubscript: "templateItemIndex" as NSString)
+        context.setObject(item?.index ?? -1, forKeyedSubscript: "templateItemIndex" as NSString)
+        context.setObject(item, forKeyedSubscript: "currentItem" as NSString)
         let result = context.evaluateScript(code)
         
         if let js_exception = js_exception {
@@ -357,7 +561,7 @@ delete fileJSONData;
     }
     
     // MARK: - Placeholder support.
-    internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         isFilled = false
         if placeholder.hasPrefix("[[script-inline:") {
             guard let code = String(placeholder.dropFirst(16).dropLast(2)).fromBase64(), !code.isEmpty else {
@@ -365,11 +569,7 @@ delete fileJSONData;
                 return ""
             }
             
-            if !self.jsInitialized {
-                self.resetJSContext(settings: settings)
-            }
-            
-            guard let result = try? evaluateScript(code: code, forItem: itemIndex) else {
+            guard let result = try? evaluateScript(code: code, forItem: item, settings: settings) else {
                 isFilled = false
                 return ""
             }
@@ -378,7 +578,7 @@ delete fileJSONData;
                 return ""
             }
             if !result.isString {
-                self.jsDelegate?.onJSException(info: self, exception: NSLocalizedString("Inline script token must return a string value!", comment: ""), atLine: -1, forItemAtIndex: itemIndex)
+                self.jsExceptionDelegate?.onJSException(info: self, exception: NSLocalizedString("Inline script token must return a string value!", comment: ""), atLine: -1, forItem: item)
             }
             if let r = result.toString() {
                 isFilled = true
@@ -416,8 +616,8 @@ delete fileJSONData;
     ///   - settings: Settings used to customize the data.
     ///   - values: Values that override the standard value.
     ///   - isFilled: Set to `true` when at least one placeholder is replaced.
-    ///   - itemIndex: Index of the menu item.
-    func replacePlaceholders(in template: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    ///   - item: Current processed menu item.
+    func replacePlaceholders(in template: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo) -> String {
         let results = Self.splitTokens(in: template)
         
         var text = template
@@ -426,7 +626,7 @@ delete fileJSONData;
         var isPlaceholderFilled = false
         for result in results {
             let placeholder = String(template[Range(result.range, in: template)!])
-            let r = processPlaceholder(placeholder, settings: settings, isFilled: &isPlaceholderFilled, forItem: itemIndex)
+            let r = processPlaceholder(placeholder, settings: settings, isFilled: &isPlaceholderFilled, forItem: item)
             if isPlaceholderFilled {
                 isFilled = true
             }
@@ -445,8 +645,8 @@ delete fileJSONData;
     ///   - attributes: Attributes used to format the value of placeholders.
     ///   - values: Values that override the standard value.
     ///   - isFilled: Set to `true` when at least one placeholder is replaced.
-    ///   - itemIndex: Index of the menu item.
-    func replacePlaceholders(in template: String, settings: Settings, attributes: [NSAttributedString.Key: Any]? = nil, isFilled: inout Bool, forItem itemIndex: Int) -> NSMutableAttributedString {
+    ///   - item: Current menu item.
+    func replacePlaceholders(in template: String, settings: Settings, attributes: [NSAttributedString.Key: Any]? = nil, isFilled: inout Bool, forItem item: MenuItemInfo) -> NSMutableAttributedString {
         guard let regex = try? NSRegularExpression(pattern: #"\[\[([^]]+)\]\]"#) else {
             return NSMutableAttributedString(string: template)
         }
@@ -458,7 +658,7 @@ delete fileJSONData;
         var isPlaceholderFilled = false
         for result in results {
             let placeholder = String(template[Range(result.range, in: template)!])
-            let r = processPlaceholder(placeholder, settings: settings, isFilled: &isPlaceholderFilled, forItem: itemIndex)
+            let r = processPlaceholder(placeholder, settings: settings, isFilled: &isPlaceholderFilled, forItem: item)
             if isPlaceholderFilled {
                 isFilled = true
             }
@@ -496,14 +696,17 @@ delete fileJSONData;
     }
     
     func getStandardTitle(forSettings settings: Settings) -> String {
-        return ""
+        var isFilled = false
+        let item = standardMainItem
+        let title: String = self.replacePlaceholders(in: item.menuItem.template, settings: settings, isFilled: &isFilled, forItem: item)
+        return isFilled ? title : ""
     }
     
     internal func getImage(for name: String) -> NSImage? {
         return Self.getImage(for: name)
     }
     
-    internal func createMenuItem(title: String, image: String?, settings: Settings, tag: Int) -> NSMenuItem {
+    internal func createMenuItem(title: String, image: String?, settings: Settings, representedObject item: MenuItemInfo) -> NSMenuItem {
         let mnu = NSMenuItem(title: title, action: #selector(self.fakeMenuAction(_:)), keyEquivalent: "")
         mnu.isEnabled = true
         mnu.target = self
@@ -518,12 +721,53 @@ delete fileJSONData;
         } else {
             mnu.image = nil
         }
-        mnu.tag = tag
+        mnu.representedObject = item
+        mnu.tag = item.index
         return mnu
     }
     
     func getMenu(withSettings settings: Settings) -> NSMenu? {
-        return nil
+        let items = settings.getMenuItems(for: self.infoType)
+        guard !items.isEmpty else {
+            return nil
+        }
+        return self.generateMenu(items: items, image: self.getImage(for: standardMainItem.menuItem.image), withSettings: settings)
+    }
+    
+    static func preprocessMenu(_ menu: NSMenu?) -> [Int: Any] {
+        guard let menu = menu else {
+            return [:]
+        }
+        var representedObjects: [Int: Any] = [:]
+        
+        for item in menu.items {
+            if item.representedObject != nil {
+                var hasher = Hasher()
+                hasher.combine(item.tag)
+                hasher.combine(item.title)
+                hasher.combine(item.hasSubmenu)
+                
+                let key = hasher.finalize()
+                
+                representedObjects[key] = item.representedObject
+            }
+            if item.hasSubmenu {
+                let r = preprocessMenu(item.submenu)
+                for item in r {
+                    representedObjects[item.key] = item.value
+                }
+            }
+        }
+        return representedObjects
+    }
+    static func postprocessMenuItem(_ item: NSMenuItem, from data: [Int: Any]) -> Any? {
+        var hasher = Hasher()
+        hasher.combine(item.tag)
+        hasher.combine(item.title)
+        hasher.combine(item.hasSubmenu)
+        
+        let key = hasher.finalize()
+        return data[key]
     }
     
     internal func generateMenu(items: [Settings.MenuItem], image: NSImage?, withSettings settings: Settings) -> NSMenu? {
@@ -548,24 +792,25 @@ delete fileJSONData;
         
         var isFirst = true
         var isFirstFilled = false
-        self.jsInitialized = false // Force JSContext reset.
+        self.jsContext = nil // Force JSContext reset.
         for (i, item) in items.enumerated() {
             defer {
                 isFirst = false
             }
-            if self.processSpecialMenuItem(item, atIndex: i, inMenu: destination_sub_menu, withSettings: settings) {
+            let info = MenuItemInfo(fileType: self.infoType, index: i, item: item)
+            if self.processSpecialMenuItem(info, inMenu: destination_sub_menu, withSettings: settings) {
                 continue
             }
             
             var isFilled = false
-            let s = self.replacePlaceholders(in: item.template, settings: settings, isFilled: &isFilled, forItem: i)
+            let s = self.replacePlaceholders(in: item.template, settings: settings, isFilled: &isFilled, forItem: info)
             if s.isEmpty || (settings.isEmptyItemsSkipped && !isFilled) {
                 continue
             }
             if isFirst {
                 isFirstFilled = true
             }
-            let mnu = self.createMenuItem(title: s, image: item.image, settings: settings, tag: i)
+            let mnu = self.createMenuItem(title: s, image: item.image, settings: settings, representedObject: info)
             destination_sub_menu.addItem(mnu)
         }
         
@@ -574,7 +819,7 @@ delete fileJSONData;
         return menu
     }
     
-    internal func generateMenuFromGlobalScript(_ result: [Any], in submenu: NSMenu, settings: Settings, forItem itemIndex: Int) -> Bool {
+    internal func generateMenuFromGlobalScript(_ result: [Any], in submenu: NSMenu, settings: Settings, forItem itemInfo: MenuItemInfo) -> Bool {
         guard !result.isEmpty else {
             return false
         }
@@ -584,7 +829,7 @@ delete fileJSONData;
                 if title == "-" {
                     submenu.addItem(NSMenuItem.separator())
                 } else {
-                    let mnu = self.createMenuItem(title: title, image: nil, settings: settings, tag: itemIndex)
+                    let mnu = self.createMenuItem(title: title, image: nil, settings: settings, representedObject: itemInfo)
                     submenu.addItem(mnu)
                 }
                 n += 1
@@ -597,7 +842,17 @@ delete fileJSONData;
                     continue
                 }
                 let image = item["image"] as? String
-                let mnu = self.createMenuItem(title: title, image: image, settings: settings, tag: itemIndex)
+                var jsInfo = itemInfo
+                let mnu = self.createMenuItem(title: title, image: image, settings: settings, representedObject: jsInfo)
+                if let userInfo = item["userInfo"] as? [String: AnyHashable] {
+                    for i in userInfo {
+                        jsInfo.userInfo[i.key] = i.value
+                    }
+                }
+                if let s = item["action"] as? String, let action = MenuAction(rawValue: s) {
+                    jsInfo.action = action
+                }
+                mnu.representedObject = jsInfo
                 if let b = item["checked"] as? Bool, b {
                     mnu.state = .on
                 }
@@ -606,13 +861,14 @@ delete fileJSONData;
                 }
                 if let i = item["tag"] as? Int {
                     mnu.tag = i
-                } else {
-                    mnu.tag = itemIndex
+                }
+                if let s = item["tooltip"] as? String {
+                    mnu.toolTip = s // Tooltip is not available from the Finder extension.
                 }
                 submenu.addItem(mnu)
                 if let items = item["items"] as? [Any] {
                     let new_sub_menu = NSMenu()
-                    _ = generateMenuFromGlobalScript(items, in: new_sub_menu, settings: settings, forItem: itemIndex)
+                    _ = generateMenuFromGlobalScript(items, in: new_sub_menu, settings: settings, forItem: itemInfo)
                     if !new_sub_menu.items.isEmpty {
                         mnu.submenu = new_sub_menu
                     }
@@ -623,20 +879,40 @@ delete fileJSONData;
         return n > 0
     }
     
-    internal func processSpecialMenuItem(_ item: Settings.MenuItem, atIndex itemIndex: Int, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
-        if item.template == "-" {
-            destination_sub_menu.addItem(NSMenuItem.separator())
+    internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+        if item.menuItem.template == "-" {
+            let mnu = NSMenuItem.separator()
+            mnu.tag = item.index
+            mnu.representedObject = item
+            destination_sub_menu.addItem(mnu)
             return true
-        } else if item.template.hasPrefix("[[script-global:")  {
-            guard let code = String(item.template.dropFirst(16).dropLast(2)).fromBase64(), !code.isEmpty else {
+        } else if item.menuItem.template == "[[open-settings]]" {
+            let mnu = self.createMenuItem(title: NSLocalizedString("MediaInfo Settings…", tableName: "LocalizableExt", comment: ""), image: item.menuItem.image, settings: settings, representedObject: item)
+            if let info = mnu.representedObject as? MenuItemInfo {
+                var info2 = info
+                info2.action = .openSettings
+                mnu.representedObject = info2
+            }
+            destination_sub_menu.addItem(mnu)
+            return true
+        } else if item.menuItem.template == "[[about]]" {
+            let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+            let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+            let r = String(format: NSLocalizedString("MediaInfo %@ (%@) developed by %@…", tableName: "LocalizableExt", comment: ""), version, build, "SBAREX")
+            let mnu = self.createMenuItem(title: r, image: item.menuItem.image, settings: settings, representedObject: item)
+            if let info = mnu.representedObject as? MenuItemInfo {
+                var info2 = info
+                info2.action = .about
+                mnu.representedObject = info2
+            }
+            destination_sub_menu.addItem(mnu)
+            return true
+        } else if item.menuItem.template.hasPrefix("[[script-global:")  {
+            guard let code = String(item.menuItem.template.dropFirst(16).dropLast(2)).fromBase64(), !code.isEmpty else {
                 return false
             }
         
-            if !self.jsInitialized {
-                self.resetJSContext(settings: settings)
-            }
-            
-            guard let result = try? evaluateScript(code: code, forItem: itemIndex) else {
+            guard let result = try? evaluateScript(code: code, forItem: item, settings: settings) else {
                 return false
             }
             
@@ -645,32 +921,20 @@ delete fileJSONData;
             }
             
             if !result.isArray {
-                self.jsDelegate?.onJSException(info: self, exception: NSLocalizedString("Global script token must return an array with the new menu items", comment: ""), atLine: -1, forItemAtIndex: itemIndex)
+                self.jsExceptionDelegate?.onJSException(info: self, exception: NSLocalizedString("Global script token must return an array with the new menu items", comment: ""), atLine: -1, forItem: item)
             }
             if let r = result.toArray() {
-                return self.generateMenuFromGlobalScript(r, in: destination_sub_menu, settings: settings, forItem: itemIndex)
+                return self.generateMenuFromGlobalScript(r, in: destination_sub_menu, settings: settings, forItem: item)
             } else if let r = result.toString(), !r.isEmpty {
-                let mnu = self.createMenuItem(title: r, image: nil, settings: settings, tag: itemIndex)
+                let mnu = self.createMenuItem(title: r, image: nil, settings: settings, representedObject: item)
                 destination_sub_menu.addItem(mnu)
             } else {
                 return false
             }
             return true
-        } else if item.template.hasPrefix("[[open-with:") {
-            guard let path = String(item.template.dropFirst(12).dropLast(2)).fromBase64(), !path.isEmpty else {
-                return true
-            }
-                let title = String(format: NSLocalizedString("Open with %@…", tableName: "LocalizableExt", comment: ""),
-                               FileManager.default.displayName(atPath: path))
-            let mnu = self.createMenuItem(title: title, image: item.image, settings: settings, tag: itemIndex)
-            if item.image.isEmpty {
-                let img = NSWorkspace.shared.icon(forFile: path).resized(to: NSSize(width: 16, height: 16))
-                mnu.image = img
-            }
-            mnu.toolTip = path
-            destination_sub_menu.addItem(mnu)
+        } else if item.menuItem.template.hasPrefix("[[script-action:")  {
             return true
-        }  else {
+        } else {
             return false
         }
     }
@@ -680,6 +944,9 @@ delete fileJSONData;
             if settings.useFirstItemAsMain && isFirstFilled {
                 if let item = destination_sub_menu.items.first, !item.isSeparatorItem {
                     menu.items.first!.title = item.title
+                    if item.image != nil {
+                        menu.items.first!.image = item.image
+                    }
                     destination_sub_menu.items.remove(at: 0)
                 }
             } else {
@@ -691,8 +958,9 @@ delete fileJSONData;
         }
     }
     
-    @objc internal func fakeMenuAction(_ sender: Any) {
+    @objc internal func fakeMenuAction(_ sender: NSMenuItem) {
         print(sender)
+        Self.menuAction?(self, sender)
     }
     
     func formatND(useEmptyData: Bool) -> String {

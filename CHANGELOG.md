@@ -8,8 +8,17 @@ Changelog
   - file creation date
   - file modification date
   - file last access date 
-- Option to allow open the file with a custom app.
-- New images: calendar, gear, script.
+- New special menu items:
+  - Open with the default app
+  - Open with a specific app
+  - Copy path to the clipboard
+  - Open the main app to change the settings
+  - About MediaInfo
+- Option to genarate menu items from code that execute custom actions.
+- Option to define a script to handle the menu action.
+- New images: calendar, flag, gear, script, clipboard and option to use the current file icon.
+- Fixed bug on the FFMpeg duration extraction.
+
 
 ### 1.6.0 (18)
 - New supported files:

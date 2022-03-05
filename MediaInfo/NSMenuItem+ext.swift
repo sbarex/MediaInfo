@@ -29,6 +29,6 @@ extension NSMenuItem: Encodable {
         try container.encode(self.state.rawValue, forKey: .state)
         try container.encode(self.indentationLevel, forKey: .indentationLevel)
         try container.encode(self.submenu?.items, forKey: .items)
-        try container.encode(self.parent, forKey: .parent)
+        // try container.encode(self.parent, forKey: .parent)
     }
 }

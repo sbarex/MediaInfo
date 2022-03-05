@@ -20,6 +20,9 @@
 
 // MARK: - Base Info
 "Open with %@…" = "Apri con %@…";
+"MediaInfo Settings…" = "Impostazioni di MediaInfo…";
+"MediaInfo %@ (%@) developed by %@…" = "MediaInfo %@ (%@) sviluppato da %@…";
+"Copy path to the clipboard" = "Copia il percorso negli appunti";
 
 // MARK: - Image info
 "B/W" = "B/N";
@@ -34,7 +37,7 @@
 "%d dpi" = "%d dpi";
 "Metadata" = "Metadati";
 
-// MZRK: - LanguageInfo
+// MARK: - LanguageInfo
 
 "No Language" = "nessuna lingua";
 "1 Language" = "una lingua";
@@ -57,12 +60,12 @@
 "1 Subtitle" = "1 sottotitolo";
 "%d Subtitles" = "%d sottotitoli";
 
-"Audio traks" = "Tracce audio";
+"Audio tracks" = "Tracce audio";
 "No Audio track" = "nessuna traccia audio";
 "1 Audio track" = "1 traccia audio";
 "%d Audio tracks" = "%d tracce audio";
 
-"Video traks" = "Tracce video";
+"Video tracks" = "Tracce video";
 "No Video track" = "nessuna traccia video";
 "1 Video track" = "1 traccia video";
 "%d Video tracks" = "%d tracce video";
@@ -104,7 +107,7 @@
 "No Slide" = "nessuna diapositiva";
 "1 Slide" = "1 diapositiva";
 "%d Slides" = "%d diapositive";
-"Application name" = "Nome dell'applicazione";
+"Application name" = "Nome dell’applicazione";
 
 // MARK: - 3D Model
 "No Mesh" = "nessuna mesh";

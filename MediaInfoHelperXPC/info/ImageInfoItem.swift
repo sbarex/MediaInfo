@@ -12,13 +12,6 @@ import JavaScriptCore
 
 // MARK: - ImageInfo
 class ImageInfo: FileInfo, DimensionalInfo, PaperInfo {
-    enum ColorTable: Int {
-        case unknown
-        case regular
-        case indexed
-        case float
-    }
-    
     enum CodingKeys: String, CodingKey {
         case dpi
         case colorMode
@@ -30,6 +23,13 @@ class ImageInfo: FileInfo, DimensionalInfo, PaperInfo {
         case isIndexed
         case metadata
         case metadataRaw
+    }
+    
+    enum ColorTable: Int {
+        case unknown
+        case regular
+        case indexed
+        case float
     }
     
     static func getMetaClasses() -> [AnyClass] {
@@ -78,6 +78,8 @@ class ImageInfo: FileInfo, DimensionalInfo, PaperInfo {
             return "color"
         }
     }
+    
+    override var infoType: Settings.SupportedFile { return .image }
     
     init(file: URL, width: Int, height: Int, dpi: Int, colorMode: String, depth: Int, profileName:String, animated: Bool, withAlpha: Bool, colorTable: ColorTable, metadata: [String: [MetadataInfo]], metadataRaw: [String: String]) {
         self.dpi = dpi
@@ -142,11 +144,11 @@ class ImageInfo: FileInfo, DimensionalInfo, PaperInfo {
         try container.encode(self.metadataRaw, forKey: .metadataRaw)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[size]]", "[[width]]", "[[height]]", "[[ratio]]", "[[resolution]]":
-            return self.processDimensionPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
+            return self.processDimensionPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         case "[[animated]]":
             isFilled = true
             return NSLocalizedString(isAnimated ? "animated" : "static", tableName: "LocalizableExt", comment: "")
@@ -212,7 +214,7 @@ class ImageInfo: FileInfo, DimensionalInfo, PaperInfo {
         
         case "[[print:cm]]", "[[print:mm]]", "[[print:in]]":
             if dpi > 0 {
-                return processPlaceholder(placeholder[placeholder.startIndex..<placeholder.index(placeholder.endIndex, offsetBy: -2)]+":\(dpi)]]", settings: settings, isFilled: &isFilled, forItem: itemIndex)
+                return processPlaceholder(placeholder[placeholder.startIndex..<placeholder.index(placeholder.endIndex, offsetBy: -2)]+":\(dpi)]]", settings: settings, isFilled: &isFilled, forItem: item)
             } else {
                 isFilled = false
                 return self.formatND(useEmptyData: useEmptyData)
@@ -254,14 +256,14 @@ class ImageInfo: FileInfo, DimensionalInfo, PaperInfo {
                     return self.formatND(useEmptyData: useEmptyData)
                 }
             } else {
-                return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
+                return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
             }
         }
     }
     
-    override func processSpecialMenuItem(_ item: Settings.MenuItem, atIndex itemIndex: Int, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
-        if item.template.hasPrefix("[[print:") {
-            let s = item.template.trimmingCharacters(in: CharacterSet(charactersIn: "[]")) .split(separator: ":")
+    override func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+        if item.menuItem.template.hasPrefix("[[print:") {
+            let s = item.menuItem.template.trimmingCharacters(in: CharacterSet(charactersIn: "[]")) .split(separator: ":")
             guard s.count > 2 else {
                 return false
             }
@@ -271,7 +273,7 @@ class ImageInfo: FileInfo, DimensionalInfo, PaperInfo {
             }
             
             for item2 in settings.imageMenuItems {
-                guard item2.template != item.template else {
+                guard item2.template != item.menuItem.template else {
                     continue
                 }
                 if item2.template == "[[print:\(um.placeholder)]]" {
@@ -281,27 +283,33 @@ class ImageInfo: FileInfo, DimensionalInfo, PaperInfo {
             }
             
             return false
-        } else if item.template == "[[metadata]]" {
+        } else if item.menuItem.template == "[[metadata]]" {
             guard !self.metadata.isEmpty else {
                 return false
             }
             let metadata_submenu = NSMenu(title: NSLocalizedString("Metadata", tableName: "LocalizableExt", comment: ""))
             let keys = self.metadata.keys.sorted()
-            let image = settings.isIconHidden
+            let iconHidden = settings.isIconHidden
             settings.isIconHidden = true
             for key in keys {
+                var subItemInfo = item
+                subItemInfo.userInfo["metadata_key"] = String(key)
+                
                 let items = self.metadata[key]!
                 let mnu_item = NSMenuItem(title: key, action: nil, keyEquivalent: "")
                 mnu_item.submenu = NSMenu(title: key)
-                mnu_item.tag = itemIndex
-                for item in items {
+                mnu_item.representedObject = subItemInfo
+                for (i, item) in items.enumerated() {
                     guard !item.isHidden, !item.value.isEmpty else {
                         continue
                     }
                     if item.label == "-" {
                         mnu_item.submenu!.addItem(NSMenuItem.separator())
                     } else {
-                        let mnu_tag = self.createMenuItem(title: "\(item.label): \(item.value)", image: nil, settings: settings, tag: itemIndex)
+                        var subItemInfo2 = subItemInfo
+                        subItemInfo2.userInfo["metadata_key_index"] = i
+                        
+                        let mnu_tag = self.createMenuItem(title: "\(item.label): \(item.value)", image: nil, settings: settings, representedObject: subItemInfo2)
                         mnu_item.submenu!.addItem(mnu_tag)
                     }
                 }
@@ -309,18 +317,18 @@ class ImageInfo: FileInfo, DimensionalInfo, PaperInfo {
                     metadata_submenu.addItem(mnu_item)
                 }
             }
-            settings.isIconHidden = image
-            let metadata_mnu = self.createMenuItem(title: NSLocalizedString("Metadata", tableName: "LocalizableExt", comment: ""), image: item.image, settings: settings, tag: itemIndex)
+            settings.isIconHidden = iconHidden
+            let metadata_mnu = self.createMenuItem(title: NSLocalizedString("Metadata", tableName: "LocalizableExt", comment: ""), image: item.menuItem.image, settings: settings, representedObject: item)
             metadata_mnu.submenu = metadata_submenu
             destination_sub_menu.addItem(metadata_mnu)
             
             return true
         } else {
-            return super.processSpecialMenuItem(item, atIndex: itemIndex, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
         }
     }
     
-    override func getStandardTitle(forSettings settings: Settings) -> String {
+    override var standardMainItem: MenuItemInfo {
         var template = "[[size]]"
         if self.isAnimated {
             template += " ([[is-animated]])"
@@ -332,9 +340,8 @@ class ImageInfo: FileInfo, DimensionalInfo, PaperInfo {
         if self.dpi > 0 {
             template += " ([[dpi]])"
         }
-        var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
-        return isFilled ? title : ""
+        
+        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "image", template: template))
     }
     
     override internal func getImage(for name: String) -> NSImage? {
@@ -349,10 +356,6 @@ class ImageInfo: FileInfo, DimensionalInfo, PaperInfo {
             image = name
         }
         return super.getImage(for: image)
-    }
-    
-    override func getMenu(withSettings settings: Settings) -> NSMenu? {
-        return self.generateMenu(items: settings.imageMenuItems, image: self.getImage(for: "image"), withSettings: settings)
     }
     
     static func parseExif(dict: [CFString: AnyHashable])->[MetadataExifInfo] {

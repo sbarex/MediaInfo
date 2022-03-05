@@ -19,7 +19,7 @@ protocol LanguageInfo: BaseInfo {
     /// Get an image 32 x 32 px of the country flag.
     func getImageOfFlag() -> NSImage?
     
-    func processLanguagePlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String
+    func processLanguagePlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String
     static func getCountryFlag(lang: String?) -> String?
 }
 
@@ -44,7 +44,7 @@ extension LanguageInfo {
         return Self.getCountryFlag(lang: self.lang)
     }
     
-    func processLanguagePlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String {
+    func processLanguagePlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[language-count]]":
@@ -124,23 +124,15 @@ extension LanguageInfo {
 protocol LanguagesInfo: LanguageInfo {
     var languages: [String] { get }
     
-    func processLanguagesPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String?
+    func processLanguagesPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String?
 }
 
 extension LanguagesInfo {
-    func processLanguagesPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool) -> String? {
+    func processLanguagesPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String? {
         let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[language-count]]":
-            let n = languages.count
-            isFilled = n > 0
-            if n == 0 {
-                return useEmptyData ? NSLocalizedString("No Language", tableName: "LocalizableExt", comment: "") : ""
-            } else if n == 1 {
-                return NSLocalizedString("1 Language", tableName: "LocalizableExt", comment: "")
-            } else {
-                return String(format: NSLocalizedString("%d Languages", tableName: "LocalizableExt", comment: ""), n)
-            }
+            return formatCount(languages.count, noneLabel: "No Language", singleLabel: "1 Language", manyLabel: "%d Languages", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
         case "[[languages]]":
             isFilled = !languages.isEmpty
             return isFilled ? languages.joined(separator: " ") : self.formatND(useEmptyData: useEmptyData)
@@ -148,7 +140,7 @@ extension LanguagesInfo {
             isFilled = !languages.isEmpty
             return isFilled ? languages.map({ Self.getCountryFlag(lang: $0) ?? "🏳" }).joined(separator: " ") : ""
         case "[[language-flag]]", "[[language]]":
-            return self.processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled)
+            return self.processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         default:
             return nil
         }

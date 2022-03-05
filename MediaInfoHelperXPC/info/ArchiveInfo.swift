@@ -323,7 +323,7 @@ class ArchivedFile: Codable {
         self.uid = try container.decode(Int64.self, forKey: .uid)
         self.uidName = try container.decode(String?.self, forKey: .uidName)
         self.gid = try container.decode(Int64.self, forKey: .gid)
-        self.gidName = try container.decode(String.self, forKey: .gidName)
+        self.gidName = try container.decode(String?.self, forKey: .gidName)
         self.mode = try container.decode(String.self, forKey: .mode)
         self.acl = try container.decode(String?.self, forKey: .acl)
         self.flags = try container.decode(String.self, forKey: .flags)
@@ -544,6 +544,12 @@ class ArchiveInfo: FileInfo {
     let unlimitedFileCount: Int
     let unlimitedFileSize: Int64
     
+    override var infoType: Settings.SupportedFile { return .archive }
+    override var standardMainItem: MenuItemInfo {
+        let template = "[[filesize]] = [[uncompressed-size]] uncompressed, [[n-files]]"
+        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "zip", template: template))
+    }
+    
     init(file: URL, compressionName: String, files: [ArchivedFile], unlimitedFileCount: Int?, unlimitedFileSize: Int64?) {
         self.compressionName = compressionName
         self.files = files
@@ -590,19 +596,7 @@ class ArchiveInfo: FileInfo {
     }
 
     // MARK: -
-    
-    override func getMenu(withSettings settings: Settings) -> NSMenu? {
-        return self.generateMenu(items: settings.archiveMenuItems, image: self.getImage(for: "zip"), withSettings: settings)
-    }
-    
-    override func getStandardTitle(forSettings settings: Settings) -> String {
-        let template = "[[filesize]] = [[uncompressed-size]] uncompressed, [[n-files]]"
-        var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
-        return isFilled ? title : ""
-    }
-    
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         switch placeholder {
         case "[[compression-method]]":
             isFilled = !self.compressionName.isEmpty
@@ -616,18 +610,18 @@ class ArchiveInfo: FileInfo {
             return Self.byteCountFormatter.string(fromByteCount: self.unlimitedFileSize)
             
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
+            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         }
     }
     
-    override internal func processSpecialMenuItem(_ item: Settings.MenuItem, atIndex itemIndex: Int, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
         var format_files: ((_ title: String, _ files: [ArchivedFile], _ show_icons: Bool, _ plain: Bool, _ depth: Int, _ settings: Settings) -> NSMenu)! = nil
         format_files = { (title, files, show_icons, plain, depth, settings) in
             let submenu = NSMenu(title: title)
             var n = 0
             for file in files {
                 if settings.maxFilesInDepth > 0 && n >= settings.maxFilesInDepth {
-                    let mnu = self.createMenuItem(title: "…", image: nil, settings: settings, tag: itemIndex)
+                    let mnu = self.createMenuItem(title: "…", image: nil, settings: settings, representedObject: item)
                     mnu.isEnabled = false
                     mnu.action = nil
                     mnu.target = nil
@@ -637,8 +631,9 @@ class ArchiveInfo: FileInfo {
                     submenu.addItem(mnu)
                     break
                 }
-                
-                let m = self.createMenuItem(title: file.name, image: nil, settings: settings, tag: itemIndex)
+                var info = item
+                info.userInfo["file"] = file.fullPath
+                let m = self.createMenuItem(title: file.name, image: nil, settings: settings, representedObject: info)
                 if show_icons {
                     m.image = file.getIcon(size: NSSize(width: 16, height: 16))
                 }
@@ -664,14 +659,14 @@ class ArchiveInfo: FileInfo {
             return submenu
         }
         
-        switch item.template {
+        switch item.menuItem.template {
         case "[[files]]", "[[files-with-icon]]", "[[files-plain]]", "[[files-plain-with-icon]]":
             guard !self.files.isEmpty else {
                 return true
             }
             
-            let show_icons = item.template == "[[files-with-icon]]" || item.template == "[[files-plain-with-icon]]"
-            let plain = item.template == "[[files-plain]]" || item.template == "[[files-plain-with-icon]]"
+            let show_icons = item.menuItem.template == "[[files-with-icon]]" || item.menuItem.template == "[[files-plain-with-icon]]"
+            let plain = item.menuItem.template == "[[files-plain]]" || item.menuItem.template == "[[files-plain-with-icon]]"
             
             let n = self.unlimitedFileCount
             let title = self.formatCount(n, noneLabel: "No File", singleLabel: "1 File", manyLabel: "%@ Files", useEmptyData: !settings.isEmptyItemsSkipped, formatAsString: true)
@@ -681,14 +676,14 @@ class ArchiveInfo: FileInfo {
                 let mnu = submenu.items.first!.copy(with: .none) as! NSMenuItem
                 destination_sub_menu.addItem(mnu)
             } else {
-                let mnu = self.createMenuItem(title: title, image: "zip", settings: settings, tag: itemIndex)
+                let mnu = self.createMenuItem(title: title, image: "zip", settings: settings, representedObject: item)
                 destination_sub_menu.addItem(mnu)
                 destination_sub_menu.setSubmenu(submenu, for: mnu)
             }
             
             return true
         default:
-            return super.processSpecialMenuItem(item, atIndex: itemIndex, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
         }
     }
 }

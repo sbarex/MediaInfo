@@ -1,6 +1,7 @@
 
 /* Class = "NSButton"; ibShadowedToolTip = "Show / Hide the tag placeholders."; ObjectID = "BIJ-Sw-mSL"; */
 "BIJ-Sw-mSL.ibShadowedToolTip" = "Mostra / Nascondi i segnaposti.";
+"uAj-F2-fYN.ibShadowedToolTip" = "Aggiorna tutto.";
 
 /* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "G4E-kR-eDP"; */
 // "G4E-kR-eDP.title" = "Text Cell";
@@ -29,3 +30,6 @@
 
 /* Class = "NSSegmentedCell"; sjn-C7-Dgy.ibShadowedToolTips[4] = "Move down."; ObjectID = "sjn-C7-Dgy"; */
 "sjn-C7-Dgy.ibShadowedToolTips[4]" = "Sposta in basso.";
+
+/* Class = "NSButton"; ibShadowedToolTip = "Script exception."; ObjectID = "MJE-Hj-Hwq"; */
+"MJE-Hj-Hwq.ibShadowedToolTip" = "Errore nello script.";

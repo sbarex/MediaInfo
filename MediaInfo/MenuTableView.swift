@@ -18,21 +18,39 @@ class MenuTableView: NSView {
         }
         
         var image: String
-        var template: String
+        var template: String {
+            didSet {
+                formatted = nil
+                isFilled = false
+                info = nil
+                warnings = []
+                exception = nil
+                line = nil
+            }
+        }
+        
+        var info: Set<String>?
+        var warnings: Set<String>
         
         var exception: String?
         var line: Int?
-        
-        var info: Set<String>?
         var scriptType: ScriptType
+        var formatted: NSAttributedString?
+        var isFilled: Bool
         
-        init(image: String, template: String, exception: String? = nil, line: Int? = nil, info: Set<String>? = nil, scriptType: ScriptType = .none) {
+        init(image: String, template: String, warnings: Set<String> = [], exception: String? = nil, line: Int? = nil, info: Set<String>? = nil, scriptType: ScriptType = .none) {
             self.image = image
             self.template = template
+            
+            self.warnings = warnings
+            
             self.exception = exception
             self.line = line
             self.info = info
+            
             self.scriptType = scriptType
+            self.formatted = nil
+            self.isFilled = false
         }
     }
     
@@ -62,11 +80,12 @@ class MenuTableView: NSView {
     
     var example: BaseInfo? {
         didSet {
-            oldValue?.jsDelegate = nil
-            example?.jsDelegate = self
+            oldValue?.jsExceptionDelegate = nil
+            example?.jsExceptionDelegate = self
         }
     }
     var supportedType: Token.SupportedType = .image
+    weak var viewController: ViewController?
     
     var getSettings: ()->Settings = { return Settings(fromDict: [:]) }
     
@@ -89,7 +108,7 @@ class MenuTableView: NSView {
         contentView.frame = bounds
         contentView.autoresizingMask = [.width, .height]
         
-        tableView.doubleAction   = #selector(self.handleTableDoubleClick(_:))
+        tableView.doubleAction = #selector(self.handleTableDoubleClick(_:))
         tableView.registerForDraggedTypes([NSPasteboard.PasteboardType("private.table-row")])
     }
     
@@ -151,13 +170,20 @@ class MenuTableView: NSView {
         }
     }
     
+    @IBAction func doRefresh(_ sender: Any) {
+        tableView.beginUpdates()
+        self.refreshItems(example: self.example, force: true, settings: self.getSettings())
+        tableView.reloadData()
+        tableView.endUpdates()
+    }
+    
     func confirmRemoveItem(action: @escaping ()->Void) {
         let alert = NSAlert()
-        alert.messageText = "Are you sure to remove this item?"
+        alert.messageText = NSLocalizedString("Are you sure to remove this item?", comment: "")
         alert.alertStyle = .warning
         
-        alert.addButton(withTitle: "Remove")
-        alert.addButton(withTitle: "Cancel")
+        alert.addButton(withTitle: NSLocalizedString("Remove", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Cancel", comment: ""))
         alert.beginSheetModal(for: self.contentView.window!) { r in
             if r == .alertFirstButtonReturn {
                 action()
@@ -189,7 +215,6 @@ class MenuTableView: NSView {
             if row >= 0 {
                 self.items[row].image = image
                 self.items[row].template = self.getTemplate(fromTokens: tokens)
-                self.items[row].info = nil
                 self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integersIn: 0...1))
             } else {
                 let index = self.tableView.selectedRow
@@ -200,8 +225,6 @@ class MenuTableView: NSView {
                 } else {
                     self.items.append(MenuItem(image: image, template: self.getTemplate(fromTokens: tokens)))
                     self.tableView.insertRows(at: IndexSet(integer: self.items.count - 1), withAnimation: .slideDown)
-                    // self.tableView.reloadData()
-                    // self.tableView.selectRowIndexes(IndexSet(integer: self.items.count-1), byExtendingSelection: false)
                 }
             }
             self.contentView.window?.isDocumentEdited = true
@@ -225,55 +248,77 @@ class MenuTableView: NSView {
         }
         return template
     }
+    
+    func refreshItems(example: BaseInfo?, force: Bool = false, settings: Settings) {
+        for (i, item) in self.items.enumerated() {
+            self.refreshItem(item, atIndex: i, force: force, example: example, settings: settings)
+        }
+    }
+    func refreshItem(_ item: MenuItem, atIndex i: Int, force: Bool = false, example: BaseInfo?, settings: Settings) {
+        if item.info == nil || force {
+            item.info = []
+            item.warnings = []
+            item.scriptType = .none
+            
+            let tokens = self.getTokens(from: item.template)
+            for token in tokens {
+                let info = token.validate(with: self.example)
+                if !info.info.isEmpty {
+                    item.info?.insert(info.info)
+                }
+                if !info.warnings.isEmpty {
+                    item.warnings.insert(info.warnings)
+                }
+                if let token = token as? TokenScript {
+                    if item.scriptType == .none {
+                        switch token.mode as! TokenScript.Mode {
+                        case .inline: item.scriptType = .inline
+                        case .global: item.scriptType = .global
+                        case .action: item.scriptType = .action
+                        }
+                    }
+                }
+            }
+        }
+        
+        if item.formatted == nil || force {
+            if let example = example {
+                let info = MenuItemInfo(fileType: example.infoType, index: i, item: Settings.MenuItem(image: item.image, template: item.template))
+                
+                var isFilled = false
+                item.formatted = example.replacePlaceholders(in: item.template, settings: settings, attributes: [.underlineStyle: NSUnderlineStyle.single.rawValue], isFilled: &isFilled, forItem: info)
+                item.isFilled = isFilled
+                
+                if !isFilled {
+                    item.formatted = example.replacePlaceholdersFake(in: item.template, settings: settings, attributes: [.underlineStyle: NSUnderlineStyle.single.rawValue], forItem: info)
+                }
+            } else {
+                item.formatted = nil
+                item.isFilled = false
+            }
+        }
+    }
 }
 
+// MARK: - NSTableViewDelegate
 extension MenuTableView: NSTableViewDelegate {
-    func validateTokens(in template: String)->(Set<String>, MenuItem.ScriptType) {
-        var isScript: MenuItem.ScriptType = .none
-        let tokens = self.getTokens(from: template)
-        var messages: Set<String> = []
-        for token in tokens {
-            let msg = token.informativeMessage
-            if !msg.isEmpty {
-                messages.insert(msg)
-            }
-            if let token = token as? TokenScript {
-                if isScript == .none {
-                    switch token.mode as! TokenScript.Mode {
-                    case .inline: isScript = .inline
-                    case .global: isScript = .global
-                    case .action: isScript = .action
-                    }
-                }
-                if isScript != .action, let example = self.example {
-                    let msg = example.getScriptInfo(token: token)
-                    if !msg.isEmpty {
-                        messages.insert(msg)
-                    }
-                }
-            }
-            
-        }
-        return (messages, isScript)
-    }
-    
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         let item = items[row]
         
-        if item.info == nil {
-            let r = validateTokens(in: item.template)
-            item.info = r.0
-            item.scriptType = r.1
-        }
+        let settings = self.getSettings()
         
+        self.refreshItem(items[row], atIndex: row, example: self.example, settings: settings)
         if tableColumn?.identifier.rawValue == "actions" {
             let exception = item.exception
             let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "InfoCell"), owner: nil) as? ScriptCell
             cell?.exception = exception
+            cell?.warnings = item.warnings
             cell?.line = item.line
             cell?.info = item.info
             
             if item.scriptType == .global || item.scriptType == .action, item.template.hasPrefix("[[script-global:") || item.template.hasPrefix("[[script-action:") {
+                cell?.editButton.image = NSImage(named: "applescript")
+                cell?.editButton.toolTip = NSLocalizedString("Edit the script…", comment: "")
                 cell?.editAction = {
                         let tokens = self.getTokens(from: item.template)
                     (tokens.first as? TokenScript)?.editScript(action: { _ in
@@ -284,14 +329,73 @@ extension MenuTableView: NSTableViewDelegate {
                     })
                 }
             } else if item.template.hasPrefix("[[open-with:") {
+                cell?.editButton.image = NSImage(named: "folder")
+                cell?.editButton.toolTip = NSLocalizedString("Choose the application…", comment: "")
                 cell?.editAction = {
                         let tokens = self.getTokens(from: item.template)
-                    (tokens.first as? TokenOpenWith)?.editPath(action: { _ in
+                    (tokens.first as? TokenAction)?.editPath(action: { _ in
                         item.template = self.getTemplate(fromTokens: tokens)
                         item.info = nil
                         self.window?.isDocumentEdited = true
                         self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integersIn: 0...1))
                     })
+                }
+            } else if item.template == "[[video]]" {
+                cell?.editButton.image = NSImage(named: "contextualmenu.and.cursorarrow")
+                cell?.editButton.toolTip = NSLocalizedString("Edit the submenu…", comment: "")
+                cell?.editAction = {
+                    guard let vc = NSStoryboard.main?.instantiateController(withIdentifier: "ItemsEditorController") as? ItemsEditorController else {
+                        return
+                    }
+                    vc.initView = { vc in
+                        vc.title = NSLocalizedString("Video track menu items", comment: "")
+                        vc.itemsView.supportedType = .video
+                        vc.itemsView.getSettings = self.getSettings
+                        vc.itemsView.items = self.getSettings().videoTracksMenuItems.map({ MenuTableView.MenuItem(image: $0.image, template: $0.template)})
+                        vc.itemsView.sampleTokens = [
+                            (label: NSLocalizedString("Size: ", comment: ""), tokens: [TokenDimensional(mode: .widthHeight)]),
+                            (label: NSLocalizedString("Length: ", comment: ""), tokens: [TokenDuration(mode: .hours)]),
+                            (label: NSLocalizedString("Language: ", comment: ""), tokens: [TokenLanguage(mode: .flag)]),
+                            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenMediaExtra(mode: .codec_short_name), TokenVideoMetadata(mode: .frames), TokenScript(mode: .inline(code: ""))]),
+                        ]
+                        vc.itemsView.validTokens = [TokenDimensional.self, TokenDuration.self, TokenLanguage.self, TokenMediaExtra.self, TokenVideoMetadata.self, TokenText.self, TokenScript.self]
+                        
+                        vc.itemsView.example = (self.example as? VideoInfo)?.videoTrack
+                    }
+                    vc.onSave = { vc in
+                        self.viewController?.videoTracksMenuItems = vc.itemsView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
+                    }
+                    NSApplication.shared.keyWindow?.contentViewController?.presentAsModalWindow(vc)
+                    
+                    self.window?.isDocumentEdited = true
+                }
+            } else if item.template == "[[audio]]" {
+                cell?.editButton.image = NSImage(named: "contextualmenu.and.cursorarrow")
+                cell?.editAction = {
+                    guard let vc = NSStoryboard.main?.instantiateController(withIdentifier: "ItemsEditorController") as? ItemsEditorController else {
+                        return
+                    }
+                    vc.initView = { vc in
+                        vc.title = NSLocalizedString("Audio track menu items", comment: "")
+                        vc.itemsView.supportedType = .audio
+                        vc.itemsView.getSettings = self.getSettings
+                        vc.itemsView.items = self.getSettings().audioTracksMenuItems.map({ MenuTableView.MenuItem(image: $0.image, template: $0.template)})
+                        vc.itemsView.sampleTokens = [
+                            (label: NSLocalizedString("Length: ", comment: ""), tokens: [TokenDuration(mode: .hours)]),
+                            (label: NSLocalizedString("Language: ", comment: ""), tokens: [TokenLanguage(mode: .flag)]),
+                            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenMediaExtra(mode: .codec_short_name), TokenScript(mode: .inline(code: ""))]),
+                            (label: NSLocalizedString("Metadata: ", comment: ""), tokens: [TokenAudioTrackMetadata(mode: .title)])
+                        ]
+                        vc.itemsView.validTokens = [TokenDuration.self, TokenLanguage.self, TokenMediaExtra.self, TokenAudioTrackMetadata.self, TokenText.self, TokenScript.self]
+
+                        vc.itemsView.example = (self.example as? VideoInfo)?.audioTracks.first
+                    }
+                    vc.onSave = { vc in
+                        self.viewController?.audioTracksMenuItems = vc.itemsView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
+                    }
+                    NSApplication.shared.keyWindow?.contentViewController?.presentAsModalWindow(vc)
+                    
+                    self.window?.isDocumentEdited = true
                 }
             } else {
                 cell?.editAction = nil
@@ -299,28 +403,17 @@ extension MenuTableView: NSTableViewDelegate {
             return cell
         }
         
-        let settings = self.getSettings()
-        let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "MenuTokensCell"), owner: nil) as? NSTableCellView
+        let cell = tableView.makeView(withIdentifier: NSUserInterfaceItemIdentifier(rawValue: "MenuTokensCell"), owner: nil) as? MenuTokensCell
+        // cell?.isIndented = row > 0 && settings.useFirstItemAsMain
         let attributedString: NSMutableAttributedString
-        if isTagHidden, let example = example {
-            // let font = NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-            // let font = NSFont.systemFont(ofSize: NSFont.systemFontSize, weight: .light)
-            // let font = NSFontManager.shared.convert(NSFont.systemFont(ofSize: NSFont.systemFontSize), toHaveTrait: [.italicFontMask])
-            var isFilled = false
-            let oldException = item.exception
-            item.exception = nil
-            let s = example.replacePlaceholders(in: item.template, settings: settings, attributes: [.underlineStyle: NSUnderlineStyle.single.rawValue], isFilled: &isFilled, forItem: row)
-            if isFilled {
-                attributedString = s
-            } else {
-                attributedString = example.replacePlaceholdersFake(in: item.template, settings: settings, attributes: [.underlineStyle: NSUnderlineStyle.single.rawValue], forItem: row)
-            }
-            if /*(oldException == nil && self.items[row].exception != nil) || */ (oldException != nil && self.items[row].exception == nil) {
-                tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integer: 1))
-            }
+        
+        let info = MenuItemInfo(fileType: example?.infoType ?? .none, index: row, item: Settings.MenuItem(image: item.image, template: item.template))
+        
+        if isTagHidden, let s = item.formatted {
+            attributedString = NSMutableAttributedString(attributedString: s)
         } else {
             let font = NSFont.systemFont(ofSize: NSFont.systemFontSize, weight: .light)
-            attributedString = BaseInfo.replacePlaceholdersFake(in: item.template, settings: settings, attributes: [.font: font, .underlineStyle: NSUnderlineStyle.single.rawValue], forItem: row)
+            attributedString = BaseInfo.replacePlaceholdersFake(in: item.template, settings: settings, attributes: [.font: font, .underlineStyle: NSUnderlineStyle.single.rawValue], forItem: info)
         }
         if row == 0 && settings.isUsingFirstItemAsMain {
             attributedString.addAttribute(.font, value: NSFont.boldSystemFont(ofSize: NSFont.systemFontSize), range: NSRange(location: 0, length: attributedString.length))
@@ -333,6 +426,7 @@ extension MenuTableView: NSTableViewDelegate {
     }
 }
 
+// MARK: - NSTableViewDataSource
 extension MenuTableView: NSTableViewDataSource {
     func numberOfRows(in tableView: NSTableView) -> Int {
         return items.count
@@ -410,7 +504,10 @@ extension MenuTableView: NSTableViewDataSource {
 }
 
 extension MenuTableView: JSExceptionDelegate {
-    func onJSException(info: BaseInfo, exception: String?, atLine line: Int, forItemAtIndex itemIndex: Int) {
+    func onJSException(info: BaseInfo, exception: String?, atLine line: Int, forItem item: MenuItemInfo?) {
+        guard let itemIndex = item?.index else {
+            return
+        }
         if itemIndex >= 0 && itemIndex < self.items.count {
             let old = self.items[itemIndex].exception
             self.items[itemIndex].exception = exception
@@ -454,15 +551,20 @@ extension Array {
     }
 }
 
-// MARK: -
+// MARK: - ScriptCell
 class ScriptCell: NSTableCellView {
     @IBOutlet weak var editButton: NSButton!
     @IBOutlet weak var exceptionButton: NSButton!
     @IBOutlet weak var infoButton: NSButton!
     
+    var warnings: Set<String>? {
+        didSet {
+            exceptionButton?.isHidden = (warnings?.isEmpty ?? true) && (exception?.isEmpty ?? true)
+        }
+    }
     var exception: String? {
         didSet {
-            exceptionButton?.isHidden = exception == nil
+            exceptionButton?.isHidden = (warnings?.isEmpty ?? true) && (exception?.isEmpty ?? true)
         }
     }
     var line: Int?
@@ -487,14 +589,25 @@ class ScriptCell: NSTableCellView {
     
     @IBAction func handleJSButton(_ sender: Any) {
         let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Warning", comment: "")
         alert.alertStyle = .critical
         
+        var msg = self.warnings?.joined(separator: "\n") ?? ""
+        
         if let num = line, num >= 0 {
-            alert.messageText = NSLocalizedString(String(format: "JS Exception at line %d", num), comment: "")
-        } else {
-            alert.messageText = NSLocalizedString("JS Exception", comment: "")
+            if !msg.isEmpty {
+                msg += "\n"
+            }
+            msg += NSLocalizedString(String(format: "JS Exception at line %d", num), comment: "") + ": "
+        } else if !(self.exception?.isEmpty ?? true) {
+            if !msg.isEmpty {
+                msg += "\n"
+            }
+            msg += NSLocalizedString("JS Exception: ", comment: "")
         }
-        alert.informativeText = self.exception ?? ""
+        msg += exception ?? ""
+        
+        alert.informativeText = msg
         alert.addButton(withTitle: NSLocalizedString("OK", comment: "")).keyEquivalent = "\r"
         alert.runModal()
     }
@@ -515,3 +628,14 @@ class ScriptCell: NSTableCellView {
     }
 }
 
+// MARK: - MenuTokensCell
+
+class MenuTokensCell: NSTableCellView {
+    @IBOutlet weak var stackLeadingConstraint: NSLayoutConstraint!
+    
+    var isIndented: Bool = false {
+        didSet {
+            stackLeadingConstraint.constant = isIndented ? 26 : 2
+        }
+    }
+}

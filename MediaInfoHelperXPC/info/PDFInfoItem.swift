@@ -221,7 +221,20 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
     let bleedBox: CGRect
     let mediaBox: CGRect
     let trimBox: CGRect
+
+    override var infoType: Settings.SupportedFile { return .pdf }
+    override var standardMainItem: MenuItemInfo {
+        let template = "[[mediabox:cm]], [[pages]], [[security]]"
+        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "pdf", template: template))
+    }
     
+    override func getImage(for name: String) -> NSImage? {
+        if let image = self.getDimensionImage(for: name) {
+            return super.getImage(for: image)
+        }
+        return super.getImage(for: name)
+    }
+     
     /*
     let allowsCommenting: Bool
     let allowsContentAccessibility: Bool
@@ -404,20 +417,13 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem itemIndex: Int) -> String {
+    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[size]]", "[[width]]", "[[height]]", "[[ratio]]", "[[resolution]]":
-            return self.processDimensionPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
+            return self.processDimensionPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         case "[[pages]]":
-            isFilled = true
-            if pagesCount == 0 {
-                return useEmptyData ? NSLocalizedString("No Page", tableName: "LocalizableExt", comment: "") : ""
-            } else if self.pagesCount == 1 {
-                return NSLocalizedString("1 Page", tableName: "LocalizableExt", comment: "")
-            } else {
-                return String(format: NSLocalizedString("%@ Pages", tableName: "LocalizableExt", comment: ""), BaseInfo.numberFormatter.string(from: NSNumber(integerLiteral: self.pagesCount)) ?? "\(self.pagesCount)")
-            }
+            return formatCount(pagesCount, noneLabel: "No Page", singleLabel: "1 Page", manyLabel: "%@ Pages", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: true)
         case "[[locked]]":
             isFilled = self.isLocked
             return self.isLocked ? "🔒" : ""
@@ -456,18 +462,17 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
             }
             isFilled = true
             return Self.dateFormatter.string(from: v)
-            
         case "[[keywords]]":
             isFilled = !self.keywords.isEmpty
             return self.keywords.joined(separator: " ")
         case "[[mediabox]]":
-            return self.processPlaceholder("[[mediabox:pt]]", settings: settings, isFilled: &isFilled, forItem: itemIndex)
+            return self.processPlaceholder("[[mediabox:pt]]", settings: settings, isFilled: &isFilled, forItem: item)
         case "[[bleedbox]]":
-            return self.processPlaceholder("[[bleedbox:pt]]", settings: settings, isFilled: &isFilled, forItem: itemIndex)
+            return self.processPlaceholder("[[bleedbox:pt]]", settings: settings, isFilled: &isFilled, forItem: item)
         case "[[cropbox]]":
-            return self.processPlaceholder("[[cropbox:pt]]", settings: settings, isFilled: &isFilled, forItem: itemIndex)
+            return self.processPlaceholder("[[cropbox:pt]]", settings: settings, isFilled: &isFilled, forItem: item)
         case "[[artbox]]":
-            return self.processPlaceholder("[[artbox:pt]]", settings: settings, isFilled: &isFilled, forItem: itemIndex)
+            return self.processPlaceholder("[[artbox:pt]]", settings: settings, isFilled: &isFilled, forItem: item)
         case "[[security]]":
             var s: [String] = []
             if isLocked {
@@ -503,19 +508,8 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
                 isFilled = !self.artBox.isEmpty
                 return Self.formatBox(self.bounds(for: .artBox), placeholder: placeholder) ?? self.formatND(useEmptyData: useEmptyData)
             } else {
-                return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: itemIndex)
+                return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
             }
         }
-    }
-    
-    override func getStandardTitle(forSettings settings: Settings) -> String {
-        let template = "[[mediabox:cm]], [[pages]], [[security]]"
-        var isFilled = false
-        let title: String = self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: -1)
-        return isFilled ? title : ""
-    }
-    
-    override func getMenu(withSettings settings: Settings) -> NSMenu? {
-        return self.generateMenu(items: settings.pdfMenuItems, image: self.getImage(for: "pdf"), withSettings: settings)
     }
 }

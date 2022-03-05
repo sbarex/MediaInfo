@@ -190,6 +190,17 @@ class TokenScript: Token {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
     }
     
+    override func validate(with info: BaseInfo?) -> (info: String, warnings: String) {
+        guard !(self.mode as! Mode).isAction else {
+            return (info: "", warnings: "")
+        }
+        if let info = info {
+            let msg = info.getScriptInfo(token: self)
+            return (info: msg, warnings: "")
+        }
+        return (info: "", warnings: "")
+    }
+    
     override func createMenu() -> NSMenu? {
         let mode = self.mode as! Mode
        
@@ -232,7 +243,9 @@ class TokenScript: Token {
         }
 
         if sender.tag == 3 {
-            token.editScript()
+            token.editScript() { _ in
+                self.callbackMenu?(self, sender)
+            }
             return
         }
         

@@ -58,7 +58,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
             } else {
                 let alert = NSAlert()
                 alert.messageText = NSLocalizedString("Settings not found!", comment: "")
-                alert.informativeText = NSLocalizedString("You probably haven't customize the standard settings.", comment: "")
+                alert.informativeText = NSLocalizedString("You probably haven’t customize the standard settings.", comment: "")
                 alert.addButton(withTitle: NSLocalizedString("Close", comment: ""))
                 alert.alertStyle = .informational
                 

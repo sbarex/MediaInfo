@@ -13,7 +13,7 @@ extension NSPasteboard.PasteboardType {
     static let MITokenDimensional = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-dim")
     static let MITokenDuration = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-time")
     static let MITokenFile = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-file")
-    static let MITokenOpenWith = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-open-with")
+    static let MITokenAction = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-open-with")
     static let MITokenImageExtra = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-image-extra")
     static let MITokenVideoExtra = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-video-extra")
     static let MITokenMediaTrack = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-media-track")
@@ -28,6 +28,7 @@ extension NSPasteboard.PasteboardType {
     static let MITokenOfficeMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-office-metadata")
     static let MITokenVideoMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-video-metadata")
     static let MITokenAudioMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-audio-metadata")
+    static let MITokenAudioTrackMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-audio-track-metadata")
     static let MITokenModelMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.model-metadata")
     static let MITokenArchiveTrack = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-archive-track")
     static let MITokenScript = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-script")
@@ -77,7 +78,6 @@ extension BaseMode where Self: RawRepresentable, Self.RawValue == Int {
 protocol BaseToken {
     static var ModeClass: BaseMode.Type { get }
     var mode: BaseMode { get }
-    var informativeMessage: String { get }
 }
 
 class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
@@ -119,10 +119,6 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
     }
     var title: String {
         return "Token"
-    }
-    
-    var informativeMessage: String {
-        return ""
     }
     
     var hasMenu: Bool { return true }
@@ -173,6 +169,17 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
         self.mode = mode
     }
     
+    // MARK: -
+
+    func isValidFor(type supportedType: SupportedType) -> Bool {
+        return Self.supportedTypes.contains(supportedType)
+    }
+    
+    func validate(with info: BaseInfo?) -> (info: String, warnings: String) {
+        return (info: "", warnings: "")
+    }
+    
+    // MARK: -
     static func parseTemplate(_ template: String, for supportedType: SupportedType) -> [Token] {
         guard let regex = try? NSRegularExpression(pattern: #"\[\[([^]]+)\]\]"#) else {
             return []
@@ -195,7 +202,7 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
             TokenOfficeSize.self,
             TokenOfficeMetadata.self,
             TokenArchive.self,
-            TokenScript.self, TokenOpenWith.self
+            TokenScript.self, TokenAction.self
         ]
         var tokens: [Token] = []
         
@@ -227,6 +234,7 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
         return tokens
     }
     
+    // MARK: - Menu generation
     func createMenuItem(title: String, state: Bool, tag: Int, tooltip: String?) -> NSMenuItem {
         let mnu = NSMenuItem(title: title, action: #selector(self.handleTokenMenu(_:)), keyEquivalent: "")
         mnu.representedObject = self
@@ -249,10 +257,6 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
         self.callbackMenu = callback
         
         return menu
-    }
-    
-    func isValidFor(type supportedType: SupportedType) -> Bool {
-        return Self.supportedTypes.contains(supportedType)
     }
     
     func getTokenFromSender(_ sender: NSMenuItem) -> BaseMode? {

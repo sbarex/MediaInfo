@@ -1,0 +1,39 @@
+
+/* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "B1n-6t-hCh"; */
+"B1n-6t-hCh.title" = "Text Cell";
+
+/* Class = "NSButton"; ibShadowedToolTip = "Show / Hide the tag placeholders."; ObjectID = "BIJ-Sw-mSL"; */
+"BIJ-Sw-mSL.ibShadowedToolTip" = "Show / Hide the tag placeholders.";
+
+/* Class = "NSTextFieldCell"; title = "Text Cell"; ObjectID = "G4E-kR-eDP"; */
+"G4E-kR-eDP.title" = "Text Cell";
+
+/* Class = "NSButton"; ibShadowedToolTip = "Script exception."; ObjectID = "MJE-Hj-Hwq"; */
+"MJE-Hj-Hwq.ibShadowedToolTip" = "Script exception.";
+
+/* Class = "NSTextFieldCell"; title = "Menu items:"; ObjectID = "Oe0-6g-Jhn"; */
+"Oe0-6g-Jhn.title" = "Menu items:";
+
+/* Class = "NSTextFieldCell"; title = "Table View Cell"; ObjectID = "PIn-kr-P3d"; */
+"PIn-kr-P3d.title" = "Table View Cell";
+
+/* Class = "NSButtonCell"; title = "Button"; ObjectID = "ZHn-NV-jPX"; */
+"ZHn-NV-jPX.title" = "Button";
+
+/* Class = "NSSegmentedCell"; sjn-C7-Dgy.ibShadowedToolTips[0] = "Add a item."; ObjectID = "sjn-C7-Dgy"; */
+"sjn-C7-Dgy.ibShadowedToolTips[0]" = "Add a item.";
+
+/* Class = "NSSegmentedCell"; sjn-C7-Dgy.ibShadowedToolTips[1] = "Remove the selected item."; ObjectID = "sjn-C7-Dgy"; */
+"sjn-C7-Dgy.ibShadowedToolTips[1]" = "Remove the selected item.";
+
+/* Class = "NSSegmentedCell"; sjn-C7-Dgy.ibShadowedToolTips[2] = "Edit the selected item."; ObjectID = "sjn-C7-Dgy"; */
+"sjn-C7-Dgy.ibShadowedToolTips[2]" = "Edit the selected item.";
+
+/* Class = "NSSegmentedCell"; sjn-C7-Dgy.ibShadowedToolTips[3] = "Move up."; ObjectID = "sjn-C7-Dgy"; */
+"sjn-C7-Dgy.ibShadowedToolTips[3]" = "Move up.";
+
+/* Class = "NSSegmentedCell"; sjn-C7-Dgy.ibShadowedToolTips[4] = "Move down."; ObjectID = "sjn-C7-Dgy"; */
+"sjn-C7-Dgy.ibShadowedToolTips[4]" = "Move down.";
+
+/* Class = "NSButton"; ibShadowedToolTip = "Edit the script code."; ObjectID = "wbv-1G-Te5"; */
+"wbv-1G-Te5.ibShadowedToolTip" = "Edit the script code.";

@@ -41,14 +41,14 @@
 "List of all available language ISO country codes." = "Elenco dei codici ISO di tutte le lingue disponibili.";
 "Flags  of all available languages." = "Bandiere di tutte le lingue disponibili.";
 
-"Image metadata" = "Metadati dell'immagine";
+"Image metadata" = "Metadati dell’immagine";
 "Animated/Static status" = "Animata/Statica";
 "Is animated" = "Animata";
 "Transparent/Opaque status" = "Trasparente/Opaca";
 "With alpha channel" = "Con trasparenza";
 "Printed format" = "Formato di stampa";
 "Metadata list" = "Lista dei metadati";
-"Extracting metadata can slow down menu generation." = "L'estrazione dei metadati può rallentare la generazione del menu.";
+"Extracting metadata can slow down menu generation." = "L’estrazione dei metadati può rallentare la generazione del menu.";
 
 "Codec" = "Codec";
 "Codec short name" = "Nome breve del codec";
@@ -75,10 +75,15 @@
 "Last access date" = "Data di ultimo accesso";
     
 "Actions" = "Azioni";
-"Open the file with an external app." = "Apri il file con un'applicazione esterna.";
+"Open the file with an external app." = "Apri il file con un’applicazione esterna.";
 "Open with…" = "Apri con…";
-"Choose the app…" = "Scegli l'applicazione…";
-"Choose the Application" = "Scegli l'applicazione…";
+"Open with %@…" = "Apri con %@…";
+"Open…" = "Apri…";
+"Open with the default app" = "Apri con l’applicazione predefinita";
+"About…" = "Informazioni su…";
+"Choose the app…" = "Scegli l’applicazione…";
+"Choose the Application" = "Scegli l’applicazione…";
+"You must specify the application used to open the file!" = "È necessario indicare l’applicazione da usare per aprire il file!";
 
 "Video metadata" = "Metadati video";
 "Metadata" = "Metadati";
@@ -130,7 +135,7 @@
 "Printed paper format or size (inch)" = "Formato o dimensioni di stampa (pollici)";
 "Page size (for document files)." = "Dimensioni della pagina (per documenti testuali).";
 "Page format or page size (for document files)." = "Formato o dimensioni della pagina (per documenti testuali).";
-"The token '%@' require the deep scan of the file and can slow down menu generation." = "Il token '%@` richede la scansione approfondita del file che può rallentare la generazione del menu.";
+"The token ‘%@’ require the deep scan of the file and can slow down menu generation." = "Il token ‘%@’ richede la scansione approfondita del file che può rallentare la generazione del menu.";
 
 "Office metadata" = "Metadati file di Office";
 "Creator name and date" = "Autore e data di creazione";
@@ -142,9 +147,9 @@
 "Number of characters" = "Numero di caratteri";
 "Number of characters (spaces included)" = "Numero di caratteri (spazi inclusid)";
 "Sheets list" = "Lista dei fogli";
-"Application name" = "nom dell'applicazione";
-"Submenu with all keywords." = "Sottomenu con l'elenco delle parole chiave.";
-"Submenu with sheets name (for spreadsheet files)." = "Soottomenu con l'elenco dei foglio (per file di tipo foglio di calcolo)";
+"Application name" = "nom dell’applicazione";
+"Submenu with all keywords." = "Sottomenu con l’elenco delle parole chiave.";
+"Submenu with sheets name (for spreadsheet files)." = "Soottomenu con l’elenco dei foglio (per i foglio di calcolo)";
 "Number of words (for document files)." = "Numero di parole (per dumenti testuali)";
 "Number of characters (for document files)." = "Numero di caratteri (per dumenti testuali)";
 "Number of characters, spaces included (for document files)." = "Numero di caratteri, spazi inclusi (per dumenti testuali)";
@@ -158,11 +163,11 @@
 "Vertex color availability" = "Colori per vertici disponibili";
 "Occlusion availability" = "Ambient Occlusion disponibile";
 
-"Archive info" = "Informazioni sull'archivio";
-"Files submenu" = "Submenu gerarchico dei file";
-"Files submenu (with icons)" = "Submenu gerarchico dei files (con icone)";
-"Plain files submenu" = "Submenu dei file";
-"Plain files submenu (with icons)" = "Submenu dei file (con icone)";
+"Archive info" = "Informazioni sull’archivio";
+"Files submenu" = "Menu gerarchico dei file";
+"Files submenu (with icons)" = "Menu gerarchico dei files (con icone)";
+"Plain files submenu" = "Menu dei file";
+"Plain files submenu (with icons)" = "Menu dei file (con icone)";
 "Number of files" = "Numero di file";
 "Uncompressed file size" = "Dimensione non compressa";
 
@@ -178,7 +183,17 @@
 "Inline script token must return a string value!" = "Lo script in linea deve restituire un valore testuale!";
 "Global script token must return an array with the new menu items!" = "Lo script globale deve restituire un array di nuove voci di menu!";
 
-// MARK: -
+"Error, the token [%@] must be the only one." = "Attenzione, il token [%@] deve essere usato da solo.";
+
+"Animated/static." = "\"Animata\" o \"Statica\"";
+"With/Without alpha channel." = "Stato di presenza del canale alpha.";
+"Resolution" = "Risoluzione";
+"Printed size" = "Dimensioni a stampa";
+"pages/sheets/slides count" = "numero di pagine/fogli/diapositive";
+"start at" = "Inizio al";
+"start at second" = "Inizio al secondo";
+
+// MARK: - Buttons
 "Yes" = "Sì";
 "No" = "No";
 "OK" = "OK";
@@ -187,168 +202,62 @@
 "Close" = "Chiudi";
 "Ignore" = "Ignora";
 
-// MARK: -
-"Finder extension not enabled!" = "Estensione del Finder non abilitata!";
-"Open System Settings" = "Apri le Preferenze di Sistema";
-
-// MARK: -
-"No folders selected to be monitored" = "Nessuna cartella monitorata";
-"Are you sure you want to continue?" = "Sicuro di voler continuare?";
-"Unable to save the settings!" = "Impossibile salvare le impostazioni!";
-"Are you sure to reset the current settings to the standar values?" = "Sicuro di resettare le impostazioni ai valori prefefiniti?";
-
-// MARK: -
-"Save the settings before closing?" = "Salvare le impostazioni prima di chiudere?";
-"Don’t Save" = "Non salvare";
-"Settings saved" = "Impostazioni salvate correttamete.";
-"Save" = "Salva";
-"Are you sure to revert to the original saved settings?" = "Sicuro di ripristinare le ultime impostazioni salvate?";
-
-// MARK: -
-
-"Show only if the image is animated." = "Mostra solo se l’immagine è animata.";
-"The Updater failed to start. For detailed error information, check the Console.app log." = "Impossibile avviare il servizio di aggiornamento. Per ulteriori informazioni controlla il log con Console.app.";
-"Updater Error" = "Errore di aggiornamento";
-
-// MARK: -
-
-"Width." = "Larghezza.";
-"Height." = "Altezza.";
-"Ratio." = "Rapporto.";
-"Resolution name." = "Nome della risoluzione.";
-
-// MARK: -
-
-"Time." = "Durata.";
-"Duration." = "Durata in secondi.";
-"Bit rate." = "Bit rate.";
-"Number of frames." = "Numbero di frame.";
-
-// MARK: -
-
-"Color space and depth." = "Spazio colore e profondità.";
-"Color space." = "Spazio colore.";
-"Color depth." = "Profondità colore.";
-"Profile name." = "Nome del profilo.";
-"Pixel format." = "Formato del pixel.";
-"Field order." = "Field order.";
-"Submenu metadata." = "Menu dei metadati.";
-
-// MARK: -
-
-"Language country code." = "Codice della lingua.";
-"Language country flag." = "Bandiera della lingua.";
-
-// MARK: -
-"File size." = "Dimensioni del file.";
-"Animated/static." = "\"Animata\" o \"Statica\"";
-"Animated status." = "Stato di animazione dell’immagine.";
-"With alpha channel." = "Indica se l'immagine ha un canale alpha.";
-"With/Without alpha channel." = "Stato di presenza del canale alpha.";
-"File name." = "Nome del file";
-"File extension." = "Estensione del file";
-"Codec (short name)." = "Codec (nome breve).";
-"Codec (long name)." = "Codec (nome completo).";
-"Codec." = "Codec.";
-"Paper size." = "Dimensioni del foglio.";
-"paper size" = "Dimensione del foglio";
-
-"Media engine." = "Motore di analisi utilizzato.";
-
-// MARK: -
-"Resolution" = "Risoluzione";
-
-"Resolution." = "Risoluzione.";
-"Printed size" = "Dimensioni a stampa";
-
-// MARK: -
-
-// MARK: -
-"Allow copy" = "Copia consentita";
-"Allow print" = "Stampa consentita";
-"Allow copy status (Yes/No)." = "Copia consentita (Sì/No)";
-"Allow Print status (Yes/No)." = "Stampa consentita (Sì/No)";
-"pages/sheets/slides count" = "numero di pagine/fogli/diapositive";
-"Number of pages." = "Numero di pagine.";
-"Number of words (for document files)." = "Numbero di parole (for documenti di testo).";
-"Number of characters (for document files)." = "Numbero di caratteri (per i documenti di testo).";
-"Number of characters, spaces included (for document files)." = "Numbero di caratteri, spazi inclusi (per i documenti di testo).";
-"Submenu with all keywords." = "Sottomenu con le parole chiave.";
-"Submenu with sheets name (for spreadsheet files)." = "Sottomenu con i nome dei fogli (per i fogli di calcolo).";
-"sheets" = "fogli";
-"Page size (for document files)." = "Dimensioni sulla pagina (per documenti di testo).";
-"Page format or page size (for document files)." = "Formato pagina o sue dimensioni (per documenti di testo).";
-"Number of channels." = "Numero di canali";
-
-// MARK: -
-"Number of audio tracks." = "Numero di tracce audio.";
-"Number of video tracks." = "Numero di tracce video.";
-"Number of available subtitles." = "Numero di sottotitoli disponibili.";
-"Number of available languages." = "Numero di lingue disponibili.";
-
-"List of available languages (on video and audio tracks)." = "Lista delle lingue disponibili (nelle tracce audio e video).";
-"List of available languages (on video and audio tracks) rendered as a country flag." = "Lista delle lingue disponibili (nelle tracce audio e video) usado le bandiere nazionali.";
-
-"Size: " = "Dimensioni: ";
-"Length: " = "Durata: ";
-"Language: " = "Lingua: ";
-"Extra: " = "Extra: ";
-"Color: " = "Colore: ";
-"Metadata: " = "Metadati: ";
-
-"fps" = "fps";
-"Frames per second." = "Frame al secondo.";
-"Profile." = "Profilo.";
-"Title." = "Titolo.";
-"Encoder." = "Encoder.";
-
-"Start time." = "Ora di inizio.";
-"Start time (in seconds)." = "Ora di inizio (in secondi).";
-"start at" = "Inizio al";
-"start at second" = "Inizio al secondo";
-"Number of chapters." = "Numbero di capitoli.";
-"List of chapters." = "Lista dei capitoli.";
-"List of video tracks." = "Lista delle tracce video.";
-"List of audio tracks." = "Lista delle tracce audio.";
-"List of subtitles." = "Lista dei sotto titoli.";
-
 // MARK: - Images
 "No image" = "Nessuna immagine";
 "No image (and no space)" = "Nessuna immagine (non riserva lo spazio)";
-"Aspect ratio" = "Proporzioni";
-"Image" = "Immagine";
-"Video" = "Video";
+"Icon of current file" = "Icona del file attuale";
+"Image (auto oriented)" = "Immagine (orientamento automatico)";
+"Image (landscape)" = "Immagine (orizzontale)";
+"Image (portrait)" = "Immagine (verticale)";
+"Video (auto oriented)" = "Video (orientamento automatico)";
+"Video (landscape)" = "Video (orizzontale)";
+"Video (portrait)" = "Video (verticale)";
+
 "Audio" = "Audio";
 "Subtitle" = "Sotto titolo";
-"PDF" = "PDF";
+"PDF (auto oriented)" = "PDF (orientamento automatico)";
+"PDF (portrait)" = "PDF (verticale)";
+"PDF (landscape)" = "PDF (orizzontale)";
+"3D model" = "Modello 3D";
+"Compressed archive" = "Archivio compresso";
+
+"Aspect ratio (auto oriented)" = "Proporzioni (orientamento automatico)";
+"Aspect ratio (landscape)" = "Proporzioni (orizzontale)";
+"Aspect ratio (portrait)" = "Proporzioni (verticale)";
+"File size" = "Dimensioni del file";
 "Printer" = "Stampante";
 "Person" = "Persona";
 "Speaker (mono or stereo)" = "Altoparlante (mono o stereo)";
-"Speaker" = "Altoparlante";
-"Speakers" = "Altoparlanti";
+"Speaker (mono)" = "Altoparlante (mono)";
+"Speakers (stereo)" = "Altoparlanti (stereo)";
 "Color" = "Colore";
 "Black and White" = "Bianco e nero";
 "Gray scale" = "Scala di grigio";
 "RGB color" = "Colore RGB";
 "CMYK color" = "Colore CMYK";
 "CIE Lab color" = "Colore CIE Lab";
-"PDF page" = "Pagina PDF";
+
+"PDF page (auto oriented)" = "Pagina PDF (orientamento automatico)";
+"PDF page (landscape)" = "Pagina PDF (orizzontale)";
+"PDF page (portrait)" = "Pagina PDF (verticale)";
 "PDF number of pages" = "Numero di pagine";
-"PDF media box" = "Media box";
-"PDF bleed box" = "Abbondanza";
+"PDF media box (auto oriented)" = "Media box (orientamento automatico)";
+"PDF media box (landscape)" = "Media box (orizzontale)";
+"PDF media box (portrait)" = "Media box (verticale)";
+"PDF bleed box (auto oriented)" = "Abbondanza (orientamento automatico)";
+"PDF bleed box (landscape)" = "Abbondanza (orizzontale)";
+"PDF bleed box (portrait)" = "Abbondanza (verticale)";
 "PDF trim box" = "Ritaglio";
-"PDF art box" = "Art box";
+"PDF art box (auto oriented)" = "Art box (orientamento automatico)";
+"PDF art box (landscape)" = "Art box (orizzontale)";
+"PDF art box (portrait)" = "Art box (verticale)";
 "PDF security" = "Sicurezza PDF";
-"Tag" = "Tag";
-"Pencil" = "Matita";
-"Gear" = "Ingranaggio";
-"Calendar" = "Calendario";
 "Office suite" = "Suite Office";
-"Office text document" = "Documento di testo";
+"Office text document (auto oriented)" = "Documento di testo (orientamento automatico)";
+"Office text document (landscape)" = "Documento di testo (orizzontale)";
+"Office text document (portrait)" = "Documento di testo (verticale)";
 "Office spreadsheet" = "Foglio di calcolo";
 "Office presentation" = "Presentazione";
-
-"3D model" = "Modello 3D";
 "3D points" = "Punti 3D";
 "3D lines" = "Linee 3D";
 "3D triangle faces" = "Facce 3D triangolari";
@@ -360,37 +269,102 @@
 "3D color per vertex" = "3D colori per vertice";
 "3D texture coords" = "3D coordinate per texture";
 "3D occlusion per vertex" = "3D occlusion per vertice";
-
-"Compressed archive" = "Archivio compresso";
-"Files submenu" = "Menu gerarchico dei file";
-"Files submenu." = "Menu gerarchico dei file.";
-"Files submenu (with icons)" = "Menu gerarchico dei file (con icone)";
-"Files submenu (with icons)." = "Menu gerarchico dei file (con icone).";
-"Plain files submenu" = "Menu dei file";
-"Plain files submenu." = "Menu dei file.";
-"Plain files submenu (with icons)" = "Menu dei file (con icone)";
-"Plain files submenu (with icons)." = "Menu dei file (con icone).";
-
-"Compression method." = "Algoritmo di compressione";
-"File count." = "Numero di files.";
-"Uncompressed size." = "Dimensione non compressa.";
-
-"Settings not found!" = "Impostazioni non trovate!";
-"You probably haven't customize the standard settings." = "Probabilmente non hai ancora personalizzato le impostazioni standard.";
-
-"Inline script." = "Script in linea.";
-"Global script." = "Script globale.";
+"Tag" = "Tag";
+"Pencil" = "Matita";
+"Gear" = "Ingranaggio";
 "Script" = "Script";
-"Inline script" = "Script in linea";
-"Global script" = "Script globale";
-"Customize the script…" = "Modifica lo script…";
+"Calendar" = "Calendario";
+"Clipboard" = "Appunti";
+"Flag" = "Bandiera";
+"ABC" = "ABC";
 
-"If the script does not need the metadata it is recommended to insert the comment /* no-metadata */ as the first line to speed up the generation of the menu." = "Se lo script non ha bisogno di accedere ai metadati si consiglia in inserire come prima riga il commento /* no-metadata */ per velocizzare la generazione del menu.";
+// MARK: - AppDelegate
 
-"If the script does not need the metadata it is recommended to insert the comment /* no-deep-scan */ as the first line to speed up the generation of the menu." = "Se lo script non ha bisogno di accedere ai metadati si consiglia in inserire come prima riga il commento /* no-deep-scan */ per velocizzare la generazione del menu.";
+"Updater Error" = "Errore di aggiornamento";
+"The Updater failed to start. For detailed error information, check the Console.app log." = "Impossibile avviare il servizio di aggiornamento. Per ulteriori informazioni controlla il log con Console.app.";
+"Settings not found!" = "Impostazioni non trovate!";
+"You probably haven’t customize the standard settings." = "Probabilmente non hai ancora personalizzato le impostazioni standard.";
 
+// MARK: - ViewController
+"Save the settings before closing?" = "Salvare le impostazioni prima di chiudere?";
+"Don’t Save" = "Non salvare";
+"Settings saved" = "Impostazioni salvate correttamete.";
+"Save" = "Salva";
+"Size: " = "Dimensioni: ";
+"Color: " = "Colore: ";
+"Extra: " = "Extra: ";
+"Length: " = "Durata: ";
+"Language: " = "Lingua: ";
+"Metadata: " = "Metadati: ";
+"Files: " = "File: ";
+
+"No action script defined!" = "Nessuno script di azione definito!";
+
+"Finder extension not enabled!" = "Estensione del Finder non abilitata!";
+"Open System Settings" = "Apri le Preferenze di Sistema";
+
+"No folders selected to be monitored" = "Nessuna cartella monitorata";
+"Are you sure you want to continue?" = "Sicuro di voler continuare?";
+"Unable to save the settings!" = "Impossibile salvare le impostazioni!";
+
+"Are you sure to revert to the original saved settings?" = "Sicuro di ripristinare le ultime impostazioni salvate?";
+"Are you sure to reset the current settings to the standar values?" = "Sicuro di resettare le impostazioni ai valori prefefiniti?";
+
+"Opening a file/url" = "Apertura file/url";
+"This action will open the %@ with the default application." = "Questa azione aprirà %@ con l’applicazione predefinita.";
+"Opening a file" = "Apertura file";
+"This action will open the file %@ with the %@ application." = "Questa azione aprirà il file %@ con l’applicazione %@.";
+"Command execution" = "Esecuzione comando";
+"This action will exectute the command %@ with arguments: %@." = "Questa azione eseguirà il comando %@ con gli argumenti: %@.";
+"Launching an application" = "Apertura dell’applicazione";
+"This action will open the application %@." = "Questa azione aprirà l’applicazione %@.";
+
+"Implemented only from the Finder extension." = "Implementato solo nell’estensione del Finder.";
+
+"Clipboard" = "Appunti";
+"The action will copy the path into the cliboard." = "L’azione copierà negli appunti il percorso completo del file.";
+"This action will copy \"%@\" to the clipboard." = "L’azione copierà il testo \"%@\" negli appunti.";
+
+// MARK: - ScriptViewController
 "Are you sure to replace the current script code?" = "Sicuro di sostituire il codice attuale?";
 "Replace" = "Sostituisci";
 
+"Opening Settings" = "Apertura delle impostazioni";
+"The action will open this application." = "L’azione aprirà questa applicaizone.";
+"Opening of the project website" = "Apertura del sito web";
+"The action will open this project’s GitHub page." = "L’azione aprirà la pagina GitHub del progetto.";
+"Opening the file" = "Apertura file";
+"The action will open the file with the default application." = "L’azione aprirà il file con l’applicazione predefinita.";
+"Opening the file with an Application" = "Apri con Applicazione";
+"The action will open the file with the application %@." = "L’azione aprirà il file con l’applicazione %@.";
+"Running the script" = "Esecuzione di script";
+"The action will execute a custom script." = "Verrà eseguito uno script specifico.";
+"This action will open the file with the default application." = "L’azione aprirà il file con l’applicazione predefinita.";
+"The action will run the general action script." = "L’azione eseguirarà lo script di azione globale.";
+"No action script defined!" = "Non è stato definito lo script di azione!";
+
+// MARK: - MenuTableView
+"Are you sure to remove this item?" = "Sicuro di eliminare questo elemento?";
+"Remove" = "Rimuovi";
+"Edit the script…" = "Modifica il codice…";
+"Choose the application…" = "Scegli l’applicazione…";
+"Edit the submenu…" = "Modifica le voci del menu…";
+"Video track menu items" = "Voci di menu per le tracce video";
+"Audio track menu items" = "Voci di menu per le tracce audio";
+
 "JS Exception" = "Eccezione JS";
 "JS Exception at line %d" = "Eccezione JS alla linea %d";
+
+"Warning" = "Attenzione";
+
+// MARK: BaseInfo+ext
+"If the script does not need the metadata it is recommended to insert the comment /* no-metadata */ as the first line to speed up the generation of the menu." = "Se lo script non ha bisogno di accedere ai metadati si consiglia in inserire come prima riga il commento /* no-metadata */ per velocizzare la generazione del menu.";
+
+"If the script does not need the metadata it is recommended to insert the comment /* no-deep-scan */ as the first line to speed up the generation of the menu." = "Se lo script non ha bisogno di accedere ai metadati si consiglia in inserire come prima riga il commento /* no-deep-scan */ per velocizzare la generazione del menu.";
+"Missing application path. Define the userInfo.application value with the full path of the application to use to open the file." = "Percorso dell’applicazione mancante. Definisci il valore userInfo.application con il percorso completo dell’applicazione da usare per aprire il file.";
+"Missing action name. Define the userInfo.code value with the name of the function to call." = "Nome dell’azione mancante. Definisci il valore userInfo.code con il nome della funzione da chiamare.";
+"The custom action will invoke the code `%@` but is not a global function name (%@). Define the userInfo.code value with the name of the function to call." = "L’azione personalizzata invocherà il codice `%@` ma non è un nome di funzione globale. Definisci il valore userInfo.code con il nome della funzione da chiamare.";
+"Global script token must return an array!" = "Lo script globale deve restituire un array!";
+"Inline script token must return a string value!" = "Lo script in linea deve restituire un valore testuale!";
+
+// MARK: -

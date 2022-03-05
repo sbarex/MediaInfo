@@ -104,7 +104,8 @@ class HelperWrapper: SettingsService {
             do {
                 info = try decoder.decode(T.self, from: data)
             } catch {
-                print(error)
+                let e = error
+                print(error, e)
             }
         }
         
@@ -120,24 +121,31 @@ class HelperWrapper: SettingsService {
         return info
     }
     
-    static func openFile(url: URL) {
+    static func openFile(url: URL, reply: @escaping ((Bool) -> Void)) {
         guard let service = Self.service as? MediaInfoHelperXPCProtocol else {
             return
         }
-        service.openFile(url: url)
+        service.openFile(url: url, reply: reply)
     }
     
-    static func openFile(url: URL, withApp path: String) {
+    static func openFile(url: URL, withApp path: String, reply: @escaping ((Bool, String?) -> Void)) {
         guard let service = Self.service as? MediaInfoHelperXPCProtocol else {
             return
         }
-        service.openFile(url: url, withApp: path)
+        service.openFile(url: url, withApp: path, reply: reply)
     }
     
-    static func systemExec(command: String, arguments: [String]) {
+    static func openApplication(at url: URL, reply: @escaping ((Bool, String?) -> Void)) {
         guard let service = Self.service as? MediaInfoHelperXPCProtocol else {
             return
         }
-        service.systemExec(command: command, arguments: arguments)
+        service.openApplication(at: url, reply: reply)
+    }
+    
+    static func systemExec(command: String, arguments: [String], reply: @escaping ((Int32, String) -> Void)) {
+        guard let service = Self.service as? MediaInfoHelperXPCProtocol else {
+            return
+        }
+        service.systemExec(command: command, arguments: arguments, reply: reply)
     }
 }
