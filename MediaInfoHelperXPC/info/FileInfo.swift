@@ -13,6 +13,7 @@ class FileInfo: BaseInfo {
     enum FileCodingKeys: String, CodingKey {
         case fileUrl
         case fileSize
+        case fileSizeFull
         case filePath
         case fileName
         case fileExtension
@@ -44,6 +45,7 @@ class FileInfo: BaseInfo {
     
     var file: URL
     var fileSize: Int64
+    var fileSizeFull: Int64
     var fileCreationDate: Date?
     var fileModificationDate: Date?
     var fileAccessDate: Date?
@@ -52,6 +54,11 @@ class FileInfo: BaseInfo {
         self.file = file
         let info = Self.getFileInfo(file)
         self.fileSize = info?.0 ?? -1
+        if let r = try? file.resourceValues(forKeys: [.totalFileAllocatedSizeKey]) {
+            self.fileSizeFull = Int64(r.totalFileAllocatedSize ?? Int(info?.0 ?? -1))
+        } else {
+            self.fileSizeFull = self.fileSize
+        }
         self.fileCreationDate = info?.1
         self.fileModificationDate = info?.2
         self.fileAccessDate = info?.3
@@ -62,6 +69,7 @@ class FileInfo: BaseInfo {
         let container = try decoder.container(keyedBy: FileCodingKeys.self)
         self.file = try container.decode(URL.self, forKey: .fileUrl)
         self.fileSize = try container.decode(Int64.self, forKey: .fileSize)
+        self.fileSizeFull = try container.decode(Int64.self, forKey: .fileSizeFull)
         self.fileCreationDate = try container.decode(Date.self, forKey: .fileCreationDate)
         self.fileModificationDate = try container.decode(Date.self, forKey: .fileModificationDate)
         self.fileAccessDate = try container.decode(Date.self, forKey: .fileAccessDate)
@@ -72,6 +80,7 @@ class FileInfo: BaseInfo {
         var container = encoder.container(keyedBy: FileCodingKeys.self)
         try container.encode(self.file, forKey: .fileUrl)
         try container.encode(self.fileSize, forKey: .fileSize)
+        try container.encode(self.fileSizeFull, forKey: .fileSizeFull)
         
         try container.encode(self.fileCreationDate, forKey: .fileCreationDate)
         try container.encode(self.fileModificationDate, forKey: .fileModificationDate)
@@ -101,6 +110,9 @@ class FileInfo: BaseInfo {
         case "[[filesize]]":
             isFilled = self.fileSize > 0
             return self.fileSize >= 0 ? Self.byteCountFormatter.string(fromByteCount: fileSize) : self.formatND(useEmptyData: useEmptyData)
+        case "[[filesize-full]]":
+            isFilled = self.fileSizeFull > 0
+            return self.fileSizeFull >= 0 ? Self.byteCountFormatter.string(fromByteCount: fileSizeFull) : self.formatND(useEmptyData: useEmptyData)
         case "[[file-name]]":
             isFilled = true
             return self.file.lastPathComponent
