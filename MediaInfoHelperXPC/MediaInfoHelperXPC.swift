@@ -41,6 +41,9 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         case "archive":
             getArchiveInfo(for: item, withReply: reply)
             
+        case "folder":
+            getFolderInfo(for: item, withReply: reply)
+            
         default:
             reply(nil)
         }
@@ -247,13 +250,30 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
     }
     
     func getArchiveInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
-        guard let archive_info = try? ArchiveInfo(file: item, limit: self.settings?.maxFilesInArchive ?? 0) else {
+        guard let archive_info = try? ArchiveInfo(file: item, limit: self.settings?.archiveMaxFiles ?? 0) else {
             reply(nil)
             return
         }
         
         let encoder = JSONEncoder()
         let data = try? encoder.encode(archive_info)
+        reply(data as NSData?)
+    }
+    
+    func getFolderInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
+        let info = FolderInfo(
+            folder: item,
+            maxFiles: self.settings?.folderMaxFiles ?? 200,
+            maxDepth: self.settings?.folderMaxDepth ?? 10,
+            maxFilesInDepth: self.settings?.folderMaxFilesInDepth ?? 50,
+            skipHidden: self.settings?.folderSkipHiddenFiles ?? true,
+            skipBundle: !(self.settings?.isBundleHandled ?? false),
+            useGenericIcon: self.settings?.folderUsesGenericIcon ?? true,
+            sizeMode: self.settings?.folderSizeMethod ?? .fast
+        )
+        
+        let encoder = JSONEncoder()
+        let data = try? encoder.encode(info)
         reply(data as NSData?)
     }
     

@@ -8,6 +8,7 @@
 
 import Foundation
 import AVFoundation
+import os.log
 
 extension FourCharCode {
     // Create a String representation of a FourCC
@@ -48,12 +49,16 @@ extension AVAssetTrack {
 /// Get image info for image format supported by coregraphics.
 func getCGImageInfo(forFile url: URL, processMetadata: Bool) -> ImageInfo? {
     // Create the image source
+    let time = CFAbsoluteTimeGetCurrent()
+    os_log("Fetch info for image %{private}@ (%{public}@) with Core Graphics…", log: OSLog.infoExtraction, type: .debug, url.path, processMetadata ? "with metadata" : "without metadata")
     guard let img_src = CGImageSourceCreateWithURL(url as CFURL, nil) else {
+        os_log("Unable to open the image %{private}@ with Core Graphics!", log: OSLog.infoExtraction, type: .error, url.path)
         return nil
     }
 
     // Copy images properties
     guard let img_properties = CGImageSourceCopyPropertiesAtIndex(img_src, 0, nil) else {
+        os_log("Unable to get image properties with Core Graphics!", log: OSLog.infoExtraction, type: .error)
         return nil
     }
     
@@ -109,6 +114,7 @@ func getCGImageInfo(forFile url: URL, processMetadata: Bool) -> ImageInfo? {
     var metadata_raw: [String: String] = [:]
     
     if processMetadata {
+        os_log("Fetch metadata…", log: OSLog.infoExtraction, type: .debug)
         if let i: CFDictionary = getKey(kCGImagePropertyExifDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
             if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
                 metadata_raw["Exif"] = s
@@ -323,7 +329,7 @@ func getCGImageInfo(forFile url: URL, processMetadata: Bool) -> ImageInfo? {
             }
         }
     }
-    
+    os_log("Image info fetched with Core Graphics in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
     return ImageInfo(file: url, width: width, height: height, dpi: dpi, colorMode: color, depth: depth, profileName: cp as String, animated: images > 1, withAlpha: alpha > 0, colorTable: isFloat ? .float : (isIndexed ? .indexed : .regular), metadata: metadata, metadataRaw: metadata_raw)
 }
 
@@ -500,6 +506,9 @@ func getCMMediaInfo(forFile file: URL) -> MediaInfo? {
 }
 
 func getCMMediaStreams(forFile file: URL) -> [BaseInfo] {
+    let time = CFAbsoluteTimeGetCurrent()
+    os_log("Fetch info for media %{private}@ with Core Graphics…", log: OSLog.infoExtraction, type: .debug, file.path)
+    
     let asset = AVURLAsset(url: file)
     var streams: [BaseInfo] = []
     
@@ -603,5 +612,6 @@ func getCMMediaStreams(forFile file: URL) -> [BaseInfo] {
         }
     }
     
+    os_log("Media info fetched with Core Graphics in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
     return streams
 }

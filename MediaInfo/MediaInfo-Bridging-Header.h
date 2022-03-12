@@ -9,6 +9,8 @@
 #ifndef MediaInfo_Bridging_Header_h
 #define MediaInfo_Bridging_Header_h
 
+#include "../MediaInfoHelperXPC/utils/du.h"
+
 #include "libarchive/include/archive.h"
 #include "libarchive/include/archive_entry.h"
 #define FORMAT_AE_IFMT      0170000

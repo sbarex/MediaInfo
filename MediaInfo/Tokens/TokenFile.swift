@@ -11,6 +11,7 @@ import AppKit
 class TokenFile: Token {
     enum Mode: Int, CaseIterable, BaseMode {
         case filesize = 1
+        case filesizeFull
         case fileName
         case fileExtension
         case fileCreationDate
@@ -24,6 +25,7 @@ class TokenFile: Token {
         var title: String {
             switch self {
             case .filesize: return NSLocalizedString("File size", comment: "")
+            case .filesizeFull: return NSLocalizedString("Allocated file size", comment: "")
             case .fileName: return NSLocalizedString("File name", comment: "")
             case .fileExtension: return NSLocalizedString("File extension", comment: "")
             case .fileCreationDate: return NSLocalizedString("Creation date", comment: "")
@@ -35,6 +37,7 @@ class TokenFile: Token {
         var displayString: String {
             switch self {
             case .filesize: return "12 MB"
+            case .filesizeFull: return "13 MB"
             case .fileName: return "filename.ext"
             case .fileExtension: return "ext"
             case .fileCreationDate: return "29 November"
@@ -46,6 +49,7 @@ class TokenFile: Token {
         var placeholder: String {
             switch self {
             case .filesize: return "[[filesize]]"
+            case .filesizeFull: return "[[filesize-full]]"
             case .fileName: return "[[file-name]]"
             case .fileExtension: return "[[file-ext]]"
             case .fileCreationDate: return "[[file-cdate]]"
@@ -57,6 +61,7 @@ class TokenFile: Token {
         init?(placeholder: String) {
             switch placeholder {
             case "[[filesize]]": self = .filesize
+            case "[[filesize-full]]": self = .filesizeFull
             case "[[file-name]]": self = .fileName
             case "[[file-ext]]": self = .fileExtension
             case "[[file-cdate]]": self = .fileCreationDate
@@ -74,7 +79,7 @@ class TokenFile: Token {
     }
     
     override var title: String {
-        return NSLocalizedString("File properies", comment: "")
+        return NSLocalizedString("File properties", comment: "")
     }
     
     init(mode: Mode) {
@@ -95,9 +100,21 @@ class TokenFile: Token {
         super.init(pasteboardPropertyList: propertyList, ofType: type)
     }
     
+    override func validate(with info: BaseInfo?) -> (info: String, warnings: String) {
+        switch self.mode as! Mode {
+        case .filesizeFull:
+            if let _ = info as? FolderInfo {
+                return (info: NSLocalizedString("Calculating the allocated size of the contained files can slow down the menu display. ", comment: ""), warnings: "")
+            }
+        default:
+            break
+        }
+        return super.validate(with: info)
+    }
+    
     override func createMenu() -> NSMenu? {
         let menu = NSMenu()
-        menu.addItem(withTitle: NSLocalizedString("File properies", comment: ""), action: nil, keyEquivalent: "").isEnabled = false
+        menu.addItem(withTitle: NSLocalizedString("File properties", comment: ""), action: nil, keyEquivalent: "").isEnabled = false
         menu.addItem(NSMenuItem.separator())
         for mode in Mode.allCases {
             menu.addItem(self.createMenuItem(title: mode.title, state: self.mode as! TokenFile.Mode == mode, tag: mode.rawValue, tooltip: mode.tooltip))

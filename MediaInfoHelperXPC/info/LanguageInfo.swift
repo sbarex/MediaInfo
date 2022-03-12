@@ -53,7 +53,7 @@ extension LanguageInfo {
                 if isFilled {
                     return NSLocalizedString("1 Language", tableName: "LocalizableExt", comment: "")
                 } else {
-                    return useEmptyData ? NSLocalizedString("No Language", tableName: "LocalizableExt", comment: "") : ""
+                    return useEmptyData ? NSLocalizedString("no Language", tableName: "LocalizableExt", comment: "") : ""
                 }
             } else {
                 isFilled = false
@@ -132,7 +132,7 @@ extension LanguagesInfo {
         let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[language-count]]":
-            return formatCount(languages.count, noneLabel: "No Language", singleLabel: "1 Language", manyLabel: "%d Languages", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
+            return formatCount(languages.count, noneLabel: "no Language", singleLabel: "1 Language", manyLabel: "%d Languages", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
         case "[[languages]]":
             isFilled = !languages.isEmpty
             return isFilled ? languages.joined(separator: " ") : self.formatND(useEmptyData: useEmptyData)

@@ -144,15 +144,15 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
                 return formatND(useEmptyData: useEmptyData)
             }
         case "[[channels]]":
-            return formatCount(channels, noneLabel: "No Channel", singleLabel: "1 Channel", manyLabel: "%d Channels", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
+            return formatCount(channels, noneLabel: "no Channel", singleLabel: "1 Channel", manyLabel: "%d Channels", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
         case "[[channels-name]]":
             isFilled = channels > 0
             if channels <= 0 {
                 return self.formatND(useEmptyData: useEmptyData)
             } else if channels == 1 {
-                return NSLocalizedString("Mono", tableName: "LocalizableExt", comment: "")
+                return NSLocalizedString("mono", tableName: "LocalizableExt", comment: "")
             } else if channels == 2 {
-                return NSLocalizedString("Stereo", tableName: "LocalizableExt", comment: "")
+                return NSLocalizedString("stereo", tableName: "LocalizableExt", comment: "")
             } else {
                 return String(format: NSLocalizedString("%d Channels", tableName: "LocalizableExt", comment: ""), channels)
             }

@@ -32,8 +32,8 @@ unexport INSTALL_DIR
 
 SDK_PATH = $(shell /usr/bin/xcrun --show-sdk-path)
 
-CFLAGS = -I${BUILD_DIR}/liblz4/include -I${BUILD_DIR}/libb2/include -I${BUILD_DIR}/libzstd/include
-LDFLAGS = -L${BUILD_DIR}/liblz4 -L${BUILD_DIR}/libb2 -L${BUILD_DIR}/libzstd -L${SDK_PATH}/usr/lib
+CFLAGS = -I${BUILD_DIR}/liblz4/include -I${BUILD_DIR}/libb2/include -I${BUILD_DIR}/libzstd/include -I${BUILD_DIR}/liblzma/include
+LDFLAGS = -L${BUILD_DIR}/liblz4 -L${BUILD_DIR}/libb2 -L${BUILD_DIR}/libzstd -L${BUILD_DIR}/liblzma/lib -L${SDK_PATH}/usr/lib
 
 CFLAGS_x86_64 = -target x86_64-apple-macos10.14
 LDFLAGS_x86_64 = -target x86_64-apple-macos10.14
@@ -102,6 +102,14 @@ ${BUILD_DIR}/libzstd/libzstd.a :
 	${MAKE} -f Makefile-libzstd
 #	$(error "libzstd not found on $@ !")
 
+# Check if the lib lzma exists.
+liblzma : ${BUILD_DIR}/liblzma/lib/liblzma.a
+${BUILD_DIR}/liblzma/lib/liblzma.a :
+	@echo ""
+	@echo "${bold}Creating liblzma…${normal}"
+	${MAKE} -f Makefile-liblzma
+#	$(error "liblzma not found on $@ !")
+
 clean:
 	@echo "${bold}Cleaning libarchive…${normal}"
 		
@@ -155,7 +163,7 @@ $(makefiles) :
 	@echo ""
 	@echo "${bold}libarchive configuration for ${ARCH} platform…${normal}"
 	@mkdir -p "${LIBARCHIVE_INSTALL_DIR}"
-	@cd "${LIBARCHIVE_INSTALL_DIR}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" ${SOURCE_ROOT}/libarchive/configure --host=${HOST} --prefix="${LIBARCHIVE_INSTALL_DIR}" --enable-shared=no --enable-static=yes
+	@cd "${LIBARCHIVE_INSTALL_DIR}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" ${SOURCE_ROOT}/libarchive/configure --host=${HOST} --prefix="${LIBARCHIVE_INSTALL_DIR}" --enable-shared=no --enable-static=yes --disable-bsdtar
 
 # Build the library for a CPU architecture.
 $(libarchive_files) : 
@@ -184,6 +192,6 @@ endif
 	@echo ""
 	
 
-all: check_arch liblz4 libb2 libzstd source-libarchive libarchive
-install: check_arch liblz4 libb2 libzstd source-libarchive libarchive
+all: check_arch liblz4 libb2 libzstd liblzma source-libarchive libarchive
+install: check_arch liblz4 libb2 libzstd liblzma source-libarchive libarchive
 

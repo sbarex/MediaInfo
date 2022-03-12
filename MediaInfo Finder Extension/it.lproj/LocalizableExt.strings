@@ -39,7 +39,7 @@
 
 // MARK: - LanguageInfo
 
-"No Language" = "nessuna lingua";
+"no Language" = "nessuna lingua";
 "1 Language" = "una lingua";
 "%d Languages" = "%d lingue";
 
@@ -49,86 +49,96 @@
 
 "Chapter" = "Capitolo";
 "Chapters" = "Capitoli";
-"No Chapter" = "nessun capitolo";
+"no Chapter" = "nessun capitolo";
 "1 Chapter" = "1 capitolo";
 "%d Chapters" = "%d capitoli";
 "%@ frames" = "%@ fotogrammi";
 "%@ fps" = "%@ fps";
 
 "Subtitles" = "Sottotitoli";
-"No Subtitle" = "nessun sottotilo";
+"no Subtitle" = "nessun sottotilo";
 "1 Subtitle" = "1 sottotitolo";
 "%d Subtitles" = "%d sottotitoli";
 
 "Audio tracks" = "Tracce audio";
-"No Audio track" = "nessuna traccia audio";
+"no Audio track" = "nessuna traccia audio";
 "1 Audio track" = "1 traccia audio";
 "%d Audio tracks" = "%d tracce audio";
 
 "Video tracks" = "Tracce video";
-"No Video track" = "nessuna traccia video";
+"no Video track" = "nessuna traccia video";
 "1 Video track" = "1 traccia video";
 "%d Video tracks" = "%d tracce video";
 
-"Mono" = "mono";
-"Stereo" = "stereo";
+"mono" = "mono";
+"stereo" = "stereo";
 "1 Channel" = "1 canale";
 "%d Channels" = "%d canali";
+"no Channel" = "nessun canale";
 
 // MARK: - PDF Info
-"No Page" = "nessuna pagina";
+"no Page" = "nessuna pagina";
 "1 Page" = "1 pagina";
 "%@ Pages" = "%@ pagine";
-"Version %@" = "versione %@";
-"No copy" = "copia vietata";
-"No print" = "stampa vietata";
+"version %@" = "versione %@";
+"copy denied" = "copia vietata";
+"print denied" = "stampa vietata";
 
 // MARK: - OfficeInfo
-"Created by %@" = "creato da %@";
+"created by %@" = "creato da %@";
 "on %@" = "il %@";
-"Created on %@" = "creato il %@";
-"Last saved by %@" = "ultimo salvataggio di %@";
-"Last saved on %@" = "ultimo salvataggio il %@";
-"No Keyword" = "nessuna parola chiave";
+"created on %@" = "creato il %@";
+"last saved by %@" = "ultimo salvataggio di %@";
+"last saved on %@" = "ultimo salvataggio il %@";
+"no Keyword" = "nessuna parola chiave";
 "1 Keyword" = "1 parola chiave";
 "%d Keywords" = "%d parole chiave";
-"No Character" = "Newssun carattere";
+"no Character" = "nessun carattere";
 "1 Character" = "1 carattere";
 "%@ Characters" = "%@ caratteri";
-"No Character (spaces included)" = "newssun carattere o spazio";
+"no Character (spaces included)" = "nessun carattere o spazio";
 "1 Character (spaces included)" = "1 carattere (spazi inclusi)";
 "%@ Characters (spaces included)" = "%@ caratteri (spazi inclusi)";
-"No Word" = "nessuna parola";
+"no Word" = "nessuna parola";
 "1 Word" = "1 parola";
 "%@ Words" = "%@ parole";
-"No sheet" = "nessun foglio";
+"no Sheet" = "nessun foglio";
 "1 Sheet" = "1 foglio";
 "%d Sheets" = "%d fogli";
-"No Slide" = "nessuna diapositiva";
+"no Slide" = "nessuna diapositiva";
 "1 Slide" = "1 diapositiva";
 "%d Slides" = "%d diapositive";
-"Application name" = "Nome dell’applicazione";
+"application name" = "nome dell’applicazione";
 
 // MARK: - 3D Model
-"No Mesh" = "nessuna mesh";
+"no Mesh" = "nessuna mesh";
 "1 Mesh" = "1 mesh";
 "%@ Meshs" = "%@ mesh";
-"No Vertex" = "nessun vertice";
-"No Vertex" = "1 vertice";
+"no Vertex" = "nessun vertice";
+"1 Vertex" = "1 vertice";
 "%@ Vertices" = "%@ vertici";
-"With normals" = "normali presenti";
-"Without normals" = "normali assenti";
-"With tangents" = "tangenti presenti";
-"Without tangents" = "tangenti assenti";
-"With texture coordinates" = "coordinate texture presenti";
-"Without texture coordinates" = "coordinate texture assenti";
-"With vertex colors" = "vertici con colori";
-"Without vertex colors" = "veritici privi di colore";
-"With occlusion" = "ambient occlusion per vertici";
-"Without occlusion" = "ambient occlusion assente";
+"with normals" = "normali presenti";
+"without normals" = "normali assenti";
+"with tangents" = "tangenti presenti";
+"without tangents" = "tangenti assenti";
+"with texture coordinates" = "coordinate texture presenti";
+"without texture coordinates" = "coordinate texture assenti";
+"with vertex colors" = "vertici con colori";
+"without vertex colors" = "veritici privi di colore";
+"with occlusion" = "ambient occlusion per vertici";
+"without occlusion" = "ambient occlusion assente";
 
 // MARK: - Archive
 
-"No file" = "nessun file";
+"no file" = "nessun file";
 "1 file" = "1 file";
 "%@ files" = "%@ file";
+"more than 1 file" = "più di 1 file";
+"more than %@ files" = "più di %@ file";
+"more than %@" = "più di %@";
+"no processed file" = "nessun file processato";
+"1 processed file" = "1 file processato";
+"%@ processed files" = "%@ file processati";
+"unknown uncompressed size" = "dimensione decompressa sconosciuta";
+"more than %@ uncompressed" = "più di %@ decompressi";
+"%@ uncompressed" = "%@ decompressi";

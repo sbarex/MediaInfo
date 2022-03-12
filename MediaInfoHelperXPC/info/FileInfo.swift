@@ -103,6 +103,14 @@ class FileInfo: BaseInfo {
         }
     }
     
+    override func placeholderAllowCapitalize(_ placeholder: String) -> Bool {
+        switch placeholder {
+        case "[[file-name]]", "[[file-ext]]": return false
+        default:
+            return super.placeholderAllowCapitalize(placeholder)
+        }
+    }
+    
     override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         let useEmptyData = !settings.isEmptyItemsSkipped
         

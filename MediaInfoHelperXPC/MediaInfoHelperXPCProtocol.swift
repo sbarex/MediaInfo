@@ -28,6 +28,7 @@ import Foundation
     func getModelInfo(for item: URL, withReply reply: @escaping (NSData?)->Void)
     
     func getArchiveInfo(for item: URL, withReply reply: @escaping (NSData?)->Void)
+    func getFolderInfo(for item: URL, withReply reply: @escaping (NSData?)->Void)
     
     func getWebPVersion(reply: @escaping (String)->Void)
     

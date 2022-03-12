@@ -180,6 +180,16 @@
 		838E307D2655389B00F797AD /* TokenMediaExtra.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838E307C2655389B00F797AD /* TokenMediaExtra.swift */; };
 		838E307F2655405F00F797AD /* TokenVideoMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 838E307E2655405F00F797AD /* TokenVideoMetadata.swift */; };
 		838E3082265548A300F797AD /* LocalizableExt.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8382896324FAB30900AD2BF4 /* LocalizableExt.strings */; };
+		839555C727D3A57A004455D8 /* FolderInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 839555C627D3A4A1004455D8 /* FolderInfo.swift */; };
+		839555C827D3A57B004455D8 /* FolderInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 839555C627D3A4A1004455D8 /* FolderInfo.swift */; };
+		839555C927D3E3CB004455D8 /* FolderInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 839555C627D3A4A1004455D8 /* FolderInfo.swift */; };
+		839555CB27D3F8AE004455D8 /* TokenFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 839555CA27D3F8AE004455D8 /* TokenFolder.swift */; };
+		839555CD27D40EB3004455D8 /* BaseFileItemInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 839555CC27D40EB3004455D8 /* BaseFileItemInfo.swift */; };
+		839555CE27D40EB3004455D8 /* BaseFileItemInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 839555CC27D40EB3004455D8 /* BaseFileItemInfo.swift */; };
+		839555CF27D40EB3004455D8 /* BaseFileItemInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 839555CC27D40EB3004455D8 /* BaseFileItemInfo.swift */; };
+		839555EE27D54687004455D8 /* du.c in Sources */ = {isa = PBXBuildFile; fileRef = 839555ED27D54687004455D8 /* du.c */; };
+		839555EF27D54687004455D8 /* du.c in Sources */ = {isa = PBXBuildFile; fileRef = 839555ED27D54687004455D8 /* du.c */; };
+		839555F027D547DB004455D8 /* du.c in Sources */ = {isa = PBXBuildFile; fileRef = 839555ED27D54687004455D8 /* du.c */; };
 		83A70FCF26523EFE00C8DB18 /* test.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 83A70FCE26523EFD00C8DB18 /* test.pdf */; };
 		83B1C1032655BDB300269E07 /* MenuTableView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 83B1C1052655BDB300269E07 /* MenuTableView.xib */; };
 		83C932C827B2E3AE00EF6134 /* Metadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C932C727B2E3AE00EF6134 /* Metadata.swift */; };
@@ -190,6 +200,10 @@
 		83C932D227B3A4B900EF6134 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83C932D127B3A4B900EF6134 /* JavaScriptCore.framework */; };
 		83C932D327B3A4C900EF6134 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83C932D127B3A4B900EF6134 /* JavaScriptCore.framework */; };
 		83CF5685264D93BD0063196F /* DPIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CF5684264D93BD0063196F /* DPIView.swift */; };
+		83D5B8BF27DA4CC10039648E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D5B8BE27DA4CC10039648E /* Log.swift */; };
+		83D5B8C027DA4CC10039648E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D5B8BE27DA4CC10039648E /* Log.swift */; };
+		83D5B8C127DA4CC10039648E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D5B8BE27DA4CC10039648E /* Log.swift */; };
+		83D5B8C227DA4CC10039648E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D5B8BE27DA4CC10039648E /* Log.swift */; };
 		83DD11C12645118D0063FCCA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 83DD11C52645118D0063FCCA /* InfoPlist.strings */; };
 		83E261BE265E7EA30073F716 /* OfficeInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E261BD265E7DB10073F716 /* OfficeInfo.swift */; };
 		83E261BF265E7EAA0073F716 /* OfficeInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83E261BD265E7DB10073F716 /* OfficeInfo.swift */; };
@@ -317,6 +331,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 833E0BEF2796DEB100DDCE0C;
 			remoteInfo = "libjpeg-turbo";
+		};
+		83D5B8D627DBE52B0039648E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83203D3224F0556500F8CBC0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 83D5B8D027DBE4FB0039648E;
+			remoteInfo = liblzma;
 		};
 		83E980DC2795555100796F2D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -875,6 +896,12 @@
 		838E307A26551A7F00F797AD /* TokenColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenColor.swift; sourceTree = "<group>"; };
 		838E307C2655389B00F797AD /* TokenMediaExtra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenMediaExtra.swift; sourceTree = "<group>"; };
 		838E307E2655405F00F797AD /* TokenVideoMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenVideoMetadata.swift; sourceTree = "<group>"; };
+		839555C627D3A4A1004455D8 /* FolderInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderInfo.swift; sourceTree = "<group>"; };
+		839555CA27D3F8AE004455D8 /* TokenFolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenFolder.swift; sourceTree = "<group>"; };
+		839555CC27D40EB3004455D8 /* BaseFileItemInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseFileItemInfo.swift; sourceTree = "<group>"; };
+		839555EC27D54687004455D8 /* du.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = du.h; sourceTree = "<group>"; };
+		839555ED27D54687004455D8 /* du.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = du.c; sourceTree = "<group>"; };
+		839555F127D54907004455D8 /* MediaInfo-FinderExtension-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MediaInfo-FinderExtension-Bridging-Header.h"; sourceTree = "<group>"; };
 		83A70FCE26523EFD00C8DB18 /* test.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = test.pdf; sourceTree = "<group>"; };
 		83AAAAE92658EE8200A6AAA9 /* FFMpegMediaUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FFMpegMediaUtils.swift; sourceTree = "<group>"; };
 		83AAAAEE2659378700A6AAA9 /* settings_menu_item.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings_menu_item.png; sourceTree = "<group>"; };
@@ -890,6 +917,10 @@
 		83C932D127B3A4B900EF6134 /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		83CF5684264D93BD0063196F /* DPIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPIView.swift; sourceTree = "<group>"; };
 		83D337542796A0F2000DB2C8 /* Makefile-libjpeg */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; path = "Makefile-libjpeg"; sourceTree = "<group>"; };
+		83D5B8BE27DA4CC10039648E /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
+		83D5B8CF27DBE3480039648E /* Makefile-liblzma */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; path = "Makefile-liblzma"; sourceTree = "<group>"; usesTabs = 1; };
+		83D5B8D827DCBE4C0039648E /* menu_folder.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = menu_folder.png; sourceTree = "<group>"; };
+		83D5B8D927DCBE4C0039648E /* settings_folders.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings_folders.png; sourceTree = "<group>"; };
 		83DD11B9264511520063FCCA /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		83DD11C42645118D0063FCCA /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		83DD11C6264511950063FCCA /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -1055,6 +1086,7 @@
 				8382896324FAB30900AD2BF4 /* LocalizableExt.strings */,
 				83203D5324F0558200F8CBC0 /* FinderSync.swift */,
 				832EEF37265D0E35000BA3F9 /* HelperWrapper.swift */,
+				839555F127D54907004455D8 /* MediaInfo-FinderExtension-Bridging-Header.h */,
 			);
 			path = "MediaInfo Finder Extension";
 			sourceTree = "<group>";
@@ -1137,8 +1169,10 @@
 				83E261BC265E72A70073F716 /* OpenOfficeInfo+ext.swift */,
 				83549C842668EB2000842279 /* ModelInfo.swift */,
 				83549C882668EB6000842279 /* ModelInfo+ext.swift */,
+				839555CC27D40EB3004455D8 /* BaseFileItemInfo.swift */,
 				83342CE82793034000FF3C12 /* ArchiveInfo.swift */,
 				83342CEC2793063900FF3C12 /* ArchiveInfo+ext.swift */,
+				839555C627D3A4A1004455D8 /* FolderInfo.swift */,
 			);
 			path = info;
 			sourceTree = "<group>";
@@ -1146,9 +1180,11 @@
 		832EEEF0265D097B000BA3F9 /* MediaInfoHelperXPC */ = {
 			isa = PBXGroup;
 			children = (
+				83D5B8BE27DA4CC10039648E /* Log.swift */,
 				832EEEFF265D09A9000BA3F9 /* MediaInfoHelperXPCProtocol.swift */,
 				832EEF02265D09DD000BA3F9 /* MediaInfoHelperXPC.swift */,
 				832EEF12265D0ACC000BA3F9 /* MediaInfoHelperXPCDelegate.swift */,
+				839555EB27D54664004455D8 /* utils */,
 				832EEF15265D0B05000BA3F9 /* main.swift */,
 				832EEF48265D1904000BA3F9 /* MediaInfoHelperXPC.entitlements */,
 				832EEEF7265D097C000BA3F9 /* Info.plist */,
@@ -2185,8 +2221,18 @@
 				83342CFD279348FA00FF3C12 /* TokenArchive.swift */,
 				83C932CB27B2F29100EF6134 /* TokenScript.swift */,
 				837CF2B427C7E8E90045F454 /* TokenAction.swift */,
+				839555CA27D3F8AE004455D8 /* TokenFolder.swift */,
 			);
 			path = Tokens;
+			sourceTree = "<group>";
+		};
+		839555EB27D54664004455D8 /* utils */ = {
+			isa = PBXGroup;
+			children = (
+				839555EC27D54687004455D8 /* du.h */,
+				839555ED27D54687004455D8 /* du.c */,
+			);
+			path = utils;
 			sourceTree = "<group>";
 		};
 		83A70FCD26523EEF00C8DB18 /* examples */ = {
@@ -2209,6 +2255,7 @@
 				834C320727B7D9EA00FCF528 /* LineNumberTextView.swift */,
 				8325DA7A27945835009BA3D8 /* Makefile-ffmpeg */,
 				8325DA7727944EDF009BA3D8 /* Makefile-libarchive */,
+				83D5B8CF27DBE3480039648E /* Makefile-liblzma */,
 				8325DA72279441DE009BA3D8 /* Makefile-libb2 */,
 				83D337542796A0F2000DB2C8 /* Makefile-libjpeg */,
 				8325DA70279404D5009BA3D8 /* Makefile-liblz4 */,
@@ -2222,27 +2269,29 @@
 		83FAEC542754F5D20066188F /* Assets */ = {
 			isa = PBXGroup;
 			children = (
-				83FAEC5A2754F6CB0066188F /* icon.png */,
 				8329E583264195ED006B4FB3 /* extensions.png */,
-				8373E77524FFE49C00793F70 /* settings_folder.png */,
-				8329E57E264162E1006B4FB3 /* settings_general.png */,
-				8373E77724FFE4B500793F70 /* settings_image.png */,
-				83AAAAEF2659381900A6AAA9 /* settings_video.png */,
-				83AAAAF12659384300A6AAA9 /* settings_audio.png */,
-				83AAAAF22659387B00A6AAA9 /* settings_pdf.png */,
-				83E261C62662C7C90073F716 /* settings_office.png */,
-				83AAAAEE2659378700A6AAA9 /* settings_menu_item.png */,
-				836AC3ED27B17B370029CDA7 /* settings_compressed.png */,
-				834C321427B9332200FCF528 /* script_editor.png */,
-				83341B1427BA3B1B008AE933 /* script_log.png */,
 				832518432659419A007466A9 /* grant_access.png */,
-				83DD11C726458AD90063FCCA /* menu.png */,
+				83FAEC5A2754F6CB0066188F /* icon.png */,
 				838C2EBC27D2992600A8C0E1 /* menu_archive.png */,
 				838C2EBA27D2992200A8C0E1 /* menu_audio.png */,
+				83D5B8D827DCBE4C0039648E /* menu_folder.png */,
 				838C2EBB27D2992500A8C0E1 /* menu_image.png */,
 				838C2EBD27D2992600A8C0E1 /* menu_office.png */,
 				838C2EB927D2992200A8C0E1 /* menu_pdf.png */,
 				838C2EBE27D2992600A8C0E1 /* menu_video.png */,
+				83DD11C726458AD90063FCCA /* menu.png */,
+				834C321427B9332200FCF528 /* script_editor.png */,
+				83341B1427BA3B1B008AE933 /* script_log.png */,
+				83AAAAF12659384300A6AAA9 /* settings_audio.png */,
+				836AC3ED27B17B370029CDA7 /* settings_compressed.png */,
+				8373E77524FFE49C00793F70 /* settings_folder.png */,
+				83D5B8D927DCBE4C0039648E /* settings_folders.png */,
+				8329E57E264162E1006B4FB3 /* settings_general.png */,
+				8373E77724FFE4B500793F70 /* settings_image.png */,
+				83AAAAEE2659378700A6AAA9 /* settings_menu_item.png */,
+				83E261C62662C7C90073F716 /* settings_office.png */,
+				83AAAAF22659387B00A6AAA9 /* settings_pdf.png */,
+				83AAAAEF2659381900A6AAA9 /* settings_video.png */,
 			);
 			path = Assets;
 			sourceTree = "<group>";
@@ -2291,6 +2340,7 @@
 				8330E4212792BB0000DB48C9 /* PBXTargetDependency */,
 				833420242792ED0400FF3C12 /* PBXTargetDependency */,
 				8334202B2792EF6400FF3C12 /* PBXTargetDependency */,
+				83D5B8D727DBE52B0039648E /* PBXTargetDependency */,
 			);
 			name = libarchive;
 			passBuildSettingsInEnvironment = 1;
@@ -2368,6 +2418,20 @@
 				83E980DD2795555100796F2D /* PBXTargetDependency */,
 			);
 			name = libwebp;
+			passBuildSettingsInEnvironment = 1;
+			productName = libwebp;
+		};
+		83D5B8D027DBE4FB0039648E /* liblzma */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "-f ./dependencies/Makefile-liblzma $(ACTION) VERBOSE=1";
+			buildConfigurationList = 83D5B8D327DBE4FB0039648E /* Build configuration list for PBXLegacyTarget "liblzma" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = "$(SRCROOT)";
+			dependencies = (
+			);
+			name = liblzma;
 			passBuildSettingsInEnvironment = 1;
 			productName = libwebp;
 		};
@@ -2529,6 +2593,7 @@
 				8330E41C2792BACA00DB48C9 /* liblz4 */,
 				8334201D2792ECED00FF3C12 /* libb2 */,
 				833420262792EF5200FF3C12 /* libzstd */,
+				83D5B8D027DBE4FB0039648E /* liblzma */,
 				833E0BEF2796DEB100DDCE0C /* libjpeg-turbo */,
 			);
 		};
@@ -2631,6 +2696,7 @@
 			files = (
 				83342CEB279303C200FF3C12 /* ArchiveInfo.swift in Sources */,
 				838E30772655080C00F797AD /* TokenPdfBox.swift in Sources */,
+				83D5B8BF27DA4CC10039648E /* Log.swift in Sources */,
 				838E30542653963D00F797AD /* String+ext.swift in Sources */,
 				83144CAA264AC603000E709B /* Token.swift in Sources */,
 				83E261C0265E7EAA0073F716 /* OfficeInfo.swift in Sources */,
@@ -2643,6 +2709,7 @@
 				838E307B26551A7F00F797AD /* TokenColor.swift in Sources */,
 				837CF2BE27C835DB0045F454 /* PaperInfo.swift in Sources */,
 				83144CA8264AC0A5000E709B /* TimeInterval+ext.swift in Sources */,
+				839555EE27D54687004455D8 /* du.c in Sources */,
 				837CF2D327CAB8300045F454 /* ImageVideoInfo.swift in Sources */,
 				83549C852668EB2000842279 /* ModelInfo.swift in Sources */,
 				83E261C5266046450073F716 /* TokenOfficeSize.swift in Sources */,
@@ -2653,6 +2720,8 @@
 				83144CA6264ABFEF000E709B /* MediaInfoItems.swift in Sources */,
 				838E307F2655405F00F797AD /* TokenVideoMetadata.swift in Sources */,
 				837CF2CF27CAB7D20045F454 /* AudioTrackInfo.swift in Sources */,
+				839555C827D3A57B004455D8 /* FolderInfo.swift in Sources */,
+				839555CD27D40EB3004455D8 /* BaseFileItemInfo.swift in Sources */,
 				837CF2B327C7E65E0045F454 /* TokenFile.swift in Sources */,
 				837CF2C527CA550A0045F454 /* LanguageInfo.swift in Sources */,
 				837CF2C327C914F80045F454 /* TokenLanguages.swift in Sources */,
@@ -2684,6 +2753,7 @@
 				838E306F2655073F00F797AD /* TokenDimensional.swift in Sources */,
 				832EEF3A265D0EB3000BA3F9 /* SettingsService.swift in Sources */,
 				83549C90266955FD00842279 /* TokenModelMetadata.swift in Sources */,
+				839555CB27D3F8AE004455D8 /* TokenFolder.swift in Sources */,
 				83C932D027B3010700EF6134 /* ScriptViewController.swift in Sources */,
 				837CF2C127C835E10045F454 /* DimensionalInfo.swift in Sources */,
 				834C320F27B7F50F00FCF528 /* Settings+ext.swift in Sources */,
@@ -2698,17 +2768,20 @@
 			files = (
 				83342CEA279303C200FF3C12 /* ArchiveInfo.swift in Sources */,
 				83203D5424F0558200F8CBC0 /* FinderSync.swift in Sources */,
+				83D5B8C027DA4CC10039648E /* Log.swift in Sources */,
 				83C932C927B2E3AE00EF6134 /* Metadata.swift in Sources */,
 				837CF2B927C8354B0045F454 /* FileInfo.swift in Sources */,
 				832EEF52265D38CA000BA3F9 /* BaseOfficeInfo.swift in Sources */,
 				838E305A2653D5BD00F797AD /* BaseInfo.swift in Sources */,
 				838E305D2653D5F300F797AD /* ImageInfoItem.swift in Sources */,
+				839555C927D3E3CB004455D8 /* FolderInfo.swift in Sources */,
 				837CF2C027C835E10045F454 /* DimensionalInfo.swift in Sources */,
 				83EEC1DE27CFB5DE0029423B /* AnyCodable.swift in Sources */,
 				83E5694C264A5BE900A14E96 /* MediaInfoItems.swift in Sources */,
 				838E30602653DBAC00F797AD /* PDFInfoItem.swift in Sources */,
 				837CF2D427CAB8300045F454 /* ImageVideoInfo.swift in Sources */,
 				836DF5A127C6A500005C9B00 /* NSMenuItem+ext.swift in Sources */,
+				839555F027D547DB004455D8 /* du.c in Sources */,
 				832EEF3D265D11A3000BA3F9 /* MediaInfoSettingsXPCProtocol.swift in Sources */,
 				832EEF4A265D230F000BA3F9 /* MediaInfoHelperXPCProtocol.swift in Sources */,
 				8386E6782502BC0F00FD8A46 /* Settings.swift in Sources */,
@@ -2723,6 +2796,7 @@
 				83144CA5264AB7DA000E709B /* Int+ext.swift in Sources */,
 				838E30662653E09500F797AD /* NSImage+ext.swift in Sources */,
 				832EEF38265D0E40000BA3F9 /* HelperWrapper.swift in Sources */,
+				839555CE27D40EB3004455D8 /* BaseFileItemInfo.swift in Sources */,
 				8329E58C2641D2CD006B4FB3 /* NSNotification_Name+Ext.swift in Sources */,
 				837CF2D027CAB7D20045F454 /* AudioTrackInfo.swift in Sources */,
 			);
@@ -2734,6 +2808,8 @@
 			files = (
 				832EEF00265D09A9000BA3F9 /* MediaInfoHelperXPCProtocol.swift in Sources */,
 				832EEF07265D0A2E000BA3F9 /* WebPImageUtils.swift in Sources */,
+				83D5B8C227DA4CC10039648E /* Log.swift in Sources */,
+				839555EF27D54687004455D8 /* du.c in Sources */,
 				832EEF04265D09FD000BA3F9 /* MediaInfoSettingsXPC.swift in Sources */,
 				837CF2B827C835450045F454 /* FileInfo.swift in Sources */,
 				83549C872668EB2000842279 /* ModelInfo.swift in Sources */,
@@ -2751,6 +2827,7 @@
 				837CF2C727CA550A0045F454 /* LanguageInfo.swift in Sources */,
 				832EEF30265D0CD2000BA3F9 /* NSNotification_Name+Ext.swift in Sources */,
 				832EEF16265D0B05000BA3F9 /* main.swift in Sources */,
+				839555C727D3A57A004455D8 /* FolderInfo.swift in Sources */,
 				83549C892668EB6000842279 /* ModelInfo+ext.swift in Sources */,
 				83E261BE265E7EA30073F716 /* OfficeInfo.swift in Sources */,
 				832EEF53265D38CB000BA3F9 /* BaseOfficeInfo.swift in Sources */,
@@ -2773,6 +2850,7 @@
 				832EEF2F265D0CA5000BA3F9 /* Settings.swift in Sources */,
 				832EEF3F265D11B8000BA3F9 /* MediaInfoSettingsXPCProtocol.swift in Sources */,
 				832EEF09265D0A3A000BA3F9 /* ImageUtils.swift in Sources */,
+				839555CF27D40EB3004455D8 /* BaseFileItemInfo.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2782,6 +2860,7 @@
 			files = (
 				833167282643C8ED007DB60C /* main.swift in Sources */,
 				832EEF40265D11B9000BA3F9 /* MediaInfoSettingsXPCProtocol.swift in Sources */,
+				83D5B8C127DA4CC10039648E /* Log.swift in Sources */,
 				832EEF36265D0DCA000BA3F9 /* MediaInfoSettingsXPCDelegate.swift in Sources */,
 				8331672A2643C93F007DB60C /* MediaInfoSettingsXPC.swift in Sources */,
 				833167352643CE11007DB60C /* Settings.swift in Sources */,
@@ -2868,6 +2947,11 @@
 			isa = PBXTargetDependency;
 			target = 833E0BEF2796DEB100DDCE0C /* libjpeg-turbo */;
 			targetProxy = 833E0BF52796DEC600DDCE0C /* PBXContainerItemProxy */;
+		};
+		83D5B8D727DBE52B0039648E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 83D5B8D027DBE4FB0039648E /* liblzma */;
+			targetProxy = 83D5B8D627DBE52B0039648E /* PBXContainerItemProxy */;
 		};
 		83E980DD2795555100796F2D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -3180,6 +3264,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "MediaInfo Finder Extension/MediaInfo-FinderExtension-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -3222,6 +3307,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "MediaInfo Finder Extension/MediaInfo-FinderExtension-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -3701,6 +3787,31 @@
 			};
 			name = Release;
 		};
+		83D5B8D427DBE4FB0039648E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEBUGGING_SYMBOLS = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		83D5B8D527DBE4FB0039648E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -3817,6 +3928,15 @@
 			buildConfigurations = (
 				8386E66F2502AB1600FD8A46 /* Debug */,
 				8386E6702502AB1600FD8A46 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		83D5B8D327DBE4FB0039648E /* Build configuration list for PBXLegacyTarget "liblzma" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				83D5B8D427DBE4FB0039648E /* Debug */,
+				83D5B8D527DBE4FB0039648E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

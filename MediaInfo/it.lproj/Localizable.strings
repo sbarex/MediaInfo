@@ -66,13 +66,15 @@
 "Subtitles" = "Sottotitoli";
 "Number of subtitles" = "Numero di sottotitoli";
 
-"File properies" = "Informazioni sul file";
+"File properties" = "Informazioni sul file";
 "File size" = "Dimensioni del file";
+"Allocated file size" = "Dimensione allocata del file";
 "File name" = "Nome del file";
 "File extension" = "Estensione del file";
 "Creation date" = "Data di crezione";
 "Modification date" = "Data di modifica";
 "Last access date" = "Data di ultimo accesso";
+"Calculating the size of the contained files with metadata can slow down the menu display. " = "Calcolare le dimensioni dei file contenuti con i metadati può rallentare la visualizzazione del menu.";
     
 "Actions" = "Azioni";
 "Open the file with an external app." = "Apri il file con un’applicazione esterna.";
@@ -147,7 +149,7 @@
 "Number of characters" = "Numero di caratteri";
 "Number of characters (spaces included)" = "Numero di caratteri (spazi inclusid)";
 "Sheets list" = "Lista dei fogli";
-"Application name" = "nom dell’applicazione";
+"Application name" = "Nome dell’applicazione";
 "Submenu with all keywords." = "Sottomenu con l’elenco delle parole chiave.";
 "Submenu with sheets name (for spreadsheet files)." = "Soottomenu con l’elenco dei foglio (per i foglio di calcolo)";
 "Number of words (for document files)." = "Numero di parole (per dumenti testuali)";
@@ -169,7 +171,16 @@
 "Plain files submenu" = "Menu dei file";
 "Plain files submenu (with icons)" = "Menu dei file (con icone)";
 "Number of files" = "Numero di file";
+"Number of processed files" = "Numero di file processati";
 "Uncompressed file size" = "Dimensione non compressa";
+
+"Files menu" = "Menu dei file";
+"Plain" = "Semplice";
+"Hierarchical" = "Gerarchico";
+"Show Icons" = "Mostra le icone";
+"Hide Icons" = "Nascondi le icone";
+"Files Summary" = "Riepilogo dei file";
+"%@ files (%@ processed)" = "%@ file (%@ processati)";
 
 "Scripts" = "Script";
 "Script" = "Script";
@@ -327,6 +338,9 @@
 "The action will copy the path into the cliboard." = "L’azione copierà negli appunti il percorso completo del file.";
 "This action will copy \"%@\" to the clipboard." = "L’azione copierà il testo \"%@\" negli appunti.";
 
+"Reveal in Finder" = "Mostra nel Finder";
+"The action will select the file in the Finder." = "L’azione selezionerà il file nel Finder.";
+
 // MARK: - ScriptViewController
 "Are you sure to replace the current script code?" = "Sicuro di sostituire il codice attuale?";
 "Replace" = "Sostituisci";
@@ -360,9 +374,9 @@
 "Warning" = "Attenzione";
 
 // MARK: BaseInfo+ext
-"If the script does not need the metadata it is recommended to insert the comment /* no-metadata */ as the first line to speed up the generation of the menu." = "Se lo script non ha bisogno di accedere ai metadati si consiglia in inserire come prima riga il commento /* no-metadata */ per velocizzare la generazione del menu.";
+"If the script needs to access the metadata you need to insert the comment /* require-metadata */ as the first line. This can slow down menu generation." = "Se lo script deve accedere ai metadati è necessario inserire come prima riga il commento /* require-metadata */. Questa impostazione può rallentare la generazione del menu.";
 
-"If the script does not need the metadata it is recommended to insert the comment /* no-deep-scan */ as the first line to speed up the generation of the menu." = "Se lo script non ha bisogno di accedere ai metadati si consiglia in inserire come prima riga il commento /* no-deep-scan */ per velocizzare la generazione del menu.";
+"If the script needs to access the metadata you need to insert the comment /* require-deep-scan */ as the first line. This can slow down menu generation." = "Se lo script deve accedere ai metadati è necessario inserire come prima riga il commento /* require-deep-scan */. Questa impostazione può rallentare la generazione del menu.";
 "Missing application path. Define the userInfo.application value with the full path of the application to use to open the file." = "Percorso dell’applicazione mancante. Definisci il valore userInfo.application con il percorso completo dell’applicazione da usare per aprire il file.";
 "Missing action name. Define the userInfo.code value with the name of the function to call." = "Nome dell’azione mancante. Definisci il valore userInfo.code con il nome della funzione da chiamare.";
 "The custom action will invoke the code `%@` but is not a global function name (%@). Define the userInfo.code value with the name of the function to call." = "L’azione personalizzata invocherà il codice `%@` ma non è un nome di funzione globale. Definisci il valore userInfo.code con il nome della funzione da chiamare.";

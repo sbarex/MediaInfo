@@ -89,13 +89,13 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
         
         switch placeholder {
         case "[[pages]]":
-            return self.formatCount(self.pagesCount, noneLabel: "No Page", singleLabel: "1 Page", manyLabel: "%@ Pages", isFilled: &isFilled, useEmptyData: useEmptyData)
+            return self.formatCount(self.pagesCount, noneLabel: "no Page", singleLabel: "1 Page", manyLabel: "%@ Pages", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[characters]]":
-            return self.formatCount(self.charactersCount, noneLabel: "Character", singleLabel: "1 Character", manyLabel: "%@ Characters", isFilled: &isFilled, useEmptyData: useEmptyData)
+            return self.formatCount(self.charactersCount, noneLabel: "no Character", singleLabel: "1 Character", manyLabel: "%@ Characters", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[characters-space]]":
-            return self.formatCount(self.charactersWithSpacesCount, noneLabel: "No Character (spaces included)", singleLabel: "1 Character (spaces included)", manyLabel: "%@ Characters (spaces included)", isFilled: &isFilled, useEmptyData: useEmptyData)
+            return self.formatCount(self.charactersWithSpacesCount, noneLabel: "mo Character (spaces included)", singleLabel: "1 Character (spaces included)", manyLabel: "%@ Characters (spaces included)", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[words]]":
-            return self.formatCount(self.wordsCount, noneLabel: "No Word", singleLabel: "1 Word", manyLabel: "%@ Words", isFilled: &isFilled, useEmptyData: useEmptyData)
+            return self.formatCount(self.wordsCount, noneLabel: "no Word", singleLabel: "1 Word", manyLabel: "%@ Words", isFilled: &isFilled, useEmptyData: useEmptyData)
     
         case "[[size:paper]]":
             if let s = Self.getPaperSize(width: width * 25.4, height: height * 25.4) {
@@ -179,7 +179,7 @@ class ExcelInfo: BaseOfficeInfo {
         
         switch placeholder {
         case "[[pages]]":
-            return self.formatCount(sheets.count, noneLabel: "No Sheet", singleLabel: "1 Sheet", manyLabel: "%d Sheets", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
+            return self.formatCount(sheets.count, noneLabel: "no Sheet", singleLabel: "1 Sheet", manyLabel: "%d Sheets", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
         default:
             return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         }
@@ -191,7 +191,7 @@ class ExcelInfo: BaseOfficeInfo {
                 return true
             }
             let n = self.sheets.count
-            let title: String = self.formatCount(n, noneLabel: "No Sheet", singleLabel: "1 Sheet", manyLabel: "%d Sheets", useEmptyData: true, formatAsString: false)
+            let title: String = self.formatCount(n, noneLabel: "no Sheet", singleLabel: "1 Sheet", manyLabel: "%d Sheets", useEmptyData: true, formatAsString: false)
             let mnu = self.createMenuItem(title: title, image: "no-image", settings: settings, representedObject: item)
             let submenu = NSMenu(title: title)
             for (i, sheet) in self.sheets.enumerated() {
@@ -258,7 +258,7 @@ class PowerpointInfo: BaseOfficeInfo {
         
         switch placeholder {
         case "[[pages]]":
-            return self.formatCount(slidesCount, noneLabel: "No Slide", singleLabel: "1 Slide", manyLabel: "%d Slides", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
+            return self.formatCount(slidesCount, noneLabel: "no Slide", singleLabel: "1 Slide", manyLabel: "%d Slides", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
         case "[[presentation-format]]":
             isFilled = !self.presentationFormat.isEmpty
             return self.presentationFormat

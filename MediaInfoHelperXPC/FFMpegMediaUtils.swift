@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import os.log
 
 let AV_NOPTS_VALUE = UInt64(0x8000000000000000) // Int64.max + 1
 let AV_TIME_BASE: Int64 = 1_000_000
@@ -314,16 +315,26 @@ func getFFMpegTime(t: Int64) -> Double? {
 }
 
 func getFFMpegVideoInfo(forFile file: URL) -> VideoInfo? {
+    let time = CFAbsoluteTimeGetCurrent()
+    os_log("Fetch info for video %{private}@ with FFMpeg…", log: OSLog.infoExtraction, type: .debug, file.path)
+    
     var pFormatCtx: UnsafeMutablePointer<AVFormatContext>! = initFFMpeg(forFile: file)
-    guard pFormatCtx != nil else { return nil }
+    guard pFormatCtx != nil else {
+        os_log("Unable to open the video %{private}@ with FFMpeg!", log: OSLog.infoExtraction, type: .error, file.path)
+        return nil
+    }
     
     defer {
         avformat_close_input(&pFormatCtx)
         avformat_free_context(pFormatCtx)
     }
     
+    os_log("Parsing media streams with FFMpeg…", log: OSLog.infoExtraction, type: .debug)
     let streams = getFFMpegMediaStreams(forFile: file, with: &pFormatCtx)
-    guard let v = streams.first(where: {$0 is VideoTrackInfo}) as? VideoTrackInfo else { return nil }
+    guard let v = streams.first(where: {$0 is VideoTrackInfo}) as? VideoTrackInfo else {
+        os_log("Parsing media streams with FFMpeg failed!", log: OSLog.infoExtraction, type: .error)
+        return nil
+    }
     
     let name: String? // A comma separated list of short names for the format.
     if let s = pFormatCtx.pointee.iformat.pointee.name {
@@ -363,6 +374,7 @@ func getFFMpegVideoInfo(forFile file: URL) -> VideoInfo? {
     
     let chapters = getFFMpegChapters(context: pFormatCtx)
     
+    os_log("Video info fetched with FFMpeg in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
     let video = VideoInfo(
         file: file,
         width: v.width, height: v.height,
@@ -384,16 +396,24 @@ func getFFMpegVideoInfo(forFile file: URL) -> VideoInfo? {
 }
 
 func getFFMpegAudioInfo(forFile file: URL) -> AudioInfo? {
+    let time = CFAbsoluteTimeGetCurrent()
+    os_log("Fetch info for audio %{private}@ with FFMpeg…", log: OSLog.infoExtraction, type: .debug, file.path)
+    
     var pFormatCtx: UnsafeMutablePointer<AVFormatContext>! = initFFMpeg(forFile: file)
-    guard pFormatCtx != nil else { return nil }
+    guard pFormatCtx != nil else {
+        os_log("Unable to open the audio %{private}@ with FFMpeg!", log: OSLog.infoExtraction, type: .error, file.path)
+        return nil
+    }
     
     defer {
         avformat_close_input(&pFormatCtx)
         avformat_free_context(pFormatCtx)
     }
     
+    os_log("Parsing media streams with FFMpeg…", log: OSLog.infoExtraction, type: .debug)
     let streams = getFFMpegMediaStreams(forFile: file, with: &pFormatCtx)
     guard let a = streams.first(where: {$0 is AudioTrackInfo}) as? AudioTrackInfo else {
+        os_log("Parsing media streams with FFMpeg failed!", log: OSLog.infoExtraction, type: .error)
         return nil
     }
     
@@ -421,6 +441,7 @@ func getFFMpegAudioInfo(forFile file: URL) -> AudioInfo? {
     
     let chapters = getFFMpegChapters(context: pFormatCtx)
     
+    os_log("Audio info fetched with FFMpeg in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
     let audio = AudioInfo(
         file: file,
         duration: duration ?? a.duration, start_time: start_time ?? a.start_time,
@@ -642,7 +663,10 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
 
 /// Get image info if the format is supported by coregraphics.
 func getFFMpegImageInfo(forFile file: URL) -> ImageInfo? {
+    let time = CFAbsoluteTimeGetCurrent()
+    os_log("Fetch info for image %{private}@ with FFMpeg…", log: OSLog.infoExtraction, type: .debug, file.path)
     guard let video = getFFMpegMediaStreams(forFile: file).first(where: {$0 is VideoTrackInfo}) as? VideoTrackInfo else {
+        os_log("Unable to open the image %{private}@ with FFMpeg!", log: OSLog.infoExtraction, type: .error, file.path)
         return nil
     }
     
@@ -657,5 +681,6 @@ func getFFMpegImageInfo(forFile file: URL) -> ImageInfo? {
         isAlpha = false
     }
     
+    os_log("Image info fetched with FFMpeg in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
     return ImageInfo(file: file, width: video.width, height: video.height, dpi: 0, colorMode: "", depth: 0, profileName: "", animated: video.frames > 1, withAlpha: isAlpha, colorTable: .regular, metadata: [:], metadataRaw: [:])
 }

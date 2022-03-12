@@ -7,7 +7,7 @@
 
 # MediaInfo - macOS Finder Sync Extension
 
-Extension to display information about multimedia (images, videos and audio), PDF, Office and compressed files in the Finder contextual menu.
+Extension to display information about multimedia (images, videos and audio), PDF, Office, compressed archives and folders in the Finder contextual menu.
 
 ![contextual menu](Assets/menu.png)
 
@@ -25,6 +25,7 @@ Extension to display information about multimedia (images, videos and audio), PD
     - [PDF documents](#pdf-documents)
     - [Office files](#office-files)
     - [Compressed archive files](#compressed-archive-files)
+    - [Folders](#folders)
   - [Scripting support](#scripting-support)
     - [Exposed data](#exposed-data)
     - [Inline scripts](#inline-scripts)
@@ -57,6 +58,7 @@ When you right-click on a file within a [monitored folder](#monitored-folders) t
 | Image menu example ![Image menu](Assets/menu_image.png) | Video menu example ![Video menu](Assets/menu_video.png) |
 | Audio menu example ![Video menu](Assets/menu_audio.png) | PDF menu example ![PDF menu](Assets/menu_pdf.png) |
 | Office menu example ![Office menu](Assets/menu_office.png) | Archive menu example ![Archive menu](Assets/menu_archive.png) | 
+| Folder menu example ![Folder menu](Assets/menu_folder.png) | |
 
 With the main application you can [customize the menu](#customize-the-menu-items). You can compose the file properties generating the menu items. It is also possible to use a [script code](#scripting-support) to format the menu items.
 
@@ -154,6 +156,7 @@ For every type o file there are some common informations:
 |**placeholder**|**description**|**example**|
 |:----|:----|:----|
 |file size|File size.|_5 Mb_|
+|file size (with metadata)|Total file size including all metadata.|_6 Mb_|
 |file name|Name of the file.|_image.jpg_|
 |file extension|Extension of the file.|_jpg_|
 |file creation date|Creation date of the file.|_Yesterday 12:45_|
@@ -200,8 +203,8 @@ Supported image formats:
 - `.pbm` formats
 - `.bpg` format (parsing the file header).
 
-Extracting metadata is a wasteful operation that can slow down the contextual menu display. For this they are only processed if metadata or script tokens are used. 
-If the script code does not require access to the metadata, it is possible to avoid their extraction by entering this comment at the beginning of the code: `/* no-metadata */` 
+Extracting metadata is a wasteful operation that can slow down the contextual menu display. For this they are only processed if a metadata token is used. 
+If you need to access metadata within a script, your code must have this comment at the beginning: `/* require-metadata */`. 
 
 ### Video files
 
@@ -323,7 +326,8 @@ The following file formats are supported: `.docx`, `.rtfx`, `.pptx`, `.odt`, `.o
 
 ![Office settings](Assets/settings_office.png)
 
-Extracting some metadata requires a deep scan of the main file. This can cause a delay in the display of the context menu of office files. For this reason, the deep scan is enabled only when requested by the chosen tokens or when script tokens are present. If the script code does not require access to the metadata, you can avoid its extraction by  placing this comment at the beginning of the code: `/* no-deep-scan */`
+Extracting some metadata requires a deep scan of the main file. This can cause a delay in the display of the context menu of office files. For this reason, the deep scan is enabled only when requested by the chosen tokens are present. 
+If you need to access metadata within a script, your code must have this comment at the beginning: `/* require-deep-scan */`
 
 Available information:
 |**placeholder**|**description**|**example**|**require deep scan**|
@@ -353,22 +357,53 @@ The following file formats are supported: `.zip`, `.rar`, `.7z`, `.tar`, `.pax`,
 
 ![Compressed archive settings](Assets/settings_compressed.png)
 
-You can limit the processed data with these options:
-|**option**|**description**|
-|:----|:----|
-|Max files|Overall maximum number of files to process from the compressed file.|
-|Max depth|Maximum depth number of subfolders.|
-|Max files per depth|Maximum number of files processed within a depth level.|
+With the `Max files` option you can set the maximum number of files to process from the compressed archive. Set to zero to disable the limit. Please note that **processing a lot of entries can slow down the menu generation**. Furthermore, **displaying many menu items is a heavy operation**.
 
-You can set to zero these option to disable the limit.
+The archive file parsing operation is automatically stopped if it takes too long.
 
 Available information:
 |**placeholder**|**description**|**example**|
 |:----|:----|:----|
 |number of files|Number of files and directories inside the archive. _Is not influenced by the max files options._|_15 files_|
-|files menu|Submenu with the structure of files inside the archive. It is possible to show also the icon of every files. _The items are limited according to the max files and depth options._||
-|plain files menu|Submenu with the list of files inside the archive. It is possible to show also the icon of every files. _The items are limited according to the max files and depth options._||
+|files menu|Submenu with the structure of files inside the archive. It is possible to show also the icon of each files. _The items are limited according to the max files and depth options._||
+|plain files menu|Submenu with the list of files inside the archive. It is possible to show also the icon of each files. _The items are limited according to the max files and depth options._||
 |uncompressed size|Uncompressed size of the archived data. Is not influenced by the max files options.|_8 Mb_|
+
+
+## Folders
+
+You can handle plain folders and even macOS bundles.
+
+![Folders settings](Assets/settings_folders.png)
+
+You can limit the processed data with these options:
+|**option**|**description**|
+|:----|:----|
+|Ignore hidden files||
+|Use generic icon|Use the standard icon associated to the file type instead of a customized icon.|
+|Max files|Overall maximum number of files to process.|
+|Max depth|Maximum depth of subfolders. Set to zero for no limit.|
+|Max files per depth|Maximum number of files processed within a depth level. Set to zero for no limit.|
+
+Processing the contents of a folder is a resource-intensive operation that can take time. **It is recommended to limit the number of files to be processed.** 
+
+Processing takes place in two steps: 
+- calculation of the total number of files and their occupation on disk. All files (including hidden files and those contained in bundles) are counted ignoring the settings on hidden files and bundles. 
+- extraction of the list of files according to the limits set in the preferences. 
+
+Each of these operations is aborted, returning a partial result, if it takes too long.
+
+The total number of files and the folder size are aquired only if the specific token is used. 
+If you need to access to the allocated size within a script, your code must begin with the comment `/* require-deep-scan */`. If is required to access only to the full size use the comment `/* require-fast-scan */` as the first line.
+
+Available information:
+|**placeholder**|**description**|**example**|
+|:----|:----|:----|
+|number of files|Number of files and directories (including hidden files and those contained within bundles). _Is not influenced by the max files, hidden files and bundle options._ Extracting this information can slow down menu generation and stop if it takes too long, returning a partial value.|_150 files_, _More than 1500 files_ (if the operation was interrupted)|
+|number of extracted files|Number of files and directories processed to be shows in the files menu.|_15 processed files_|
+|folder size|Size of all files inside the folder. _Is not influenced by the max files options._ The extraction of this info can slow down the menu generation and stop if it takes too long, returning a partial value.|_150 Mb_, _More than 430 Mb_ (if the operation was interrupted)|
+|allocated folder size|Size on disk of all files inside the folder (considering also the metadata and resource fork). _Is not influenced by the max files options._ The extraction of this info can slow down the menu generation and stop if it takes too long, returning a partial value.|_155 Mb_, _More than 450 Mb_ (if the operation was interrupted)|
+|files menu|Submenu of contained files. The menu can be hierarchical or plain (with indented items). It is possible to show the icon of each files. _The items are limited according to the max files and depth options._||
 
 
 # Scripting support
@@ -381,7 +416,7 @@ Since the environment is shared among all the scripts, **remember to be careful 
 
 The javascript environment will be reset every time a new contextual menu generation in reguired. So you cannot share data between menu generate for different files.
 
-Exceptions thrown during code execution are indicated by an exclamation icon. 
+Exceptions thrown during code execution are indicated by an exclamation icon inside the application. 
 
 I recommend enclosing the code inside an anonymous function: 
 
@@ -395,11 +430,6 @@ I recommend enclosing the code inside an anonymous function:
 })()
 ```  
 
-In the javascript environment, the `fileData` variable is an object that contains the data representation of the currently processed file. The variable `settings` have the current settings. 
-
-These two variables are locked and their properties cannot be changed (in strict mode, if you try to change one of their properties an exception is raised). _Any changes made to the `fileData` or` settings` will not affect the standard token process._
-
-
 ![Script editor](Assets/script_editor.png)
 
 There are three script tokes: inline, global, action. 
@@ -407,7 +437,13 @@ There are three script tokes: inline, global, action.
 
 ## Exposed data
 
-There are some common global variables:
+There are some common global variables.
+
+The `fileData` variable is an object that contains the data representation of the currently processed file. 
+The variable `settings` have the current settings. 
+
+These two variables are locked and their properties cannot be changed (in strict mode, if you try to change one of their properties an exception is raised). _Any changes made to the `fileData` or` settings` will not affect the standard token process._
+
 
 |var|type|description|
 |:--|:---|:----------|
@@ -418,8 +454,8 @@ There are some common global variables:
 |`currentItem`|Object|Reference to the processing menu item ```{index: 0, menuItem: {image: "", template: "[[filesize]]", fileType: 1, action: "default", userInfo: {key1: 1, key2: "value"} }```. Defined only during rendering phase, for the asynchronous function this value is not guaranteed to remain valid.|
 |`debugMode`|Bool|`True` if the code is executed inside the main application.| 
 |`macOS_version`|String|Current macOS version (like `"12.2.1"`).|
-_You cannot change the properties of `fileData` or `settings` to alter the data displayed by standard tokens._ 
 
+For a descriptions of `fileData` and `settings` properties see the [Common properties](#common-properties).
 
 ![Log console](Assets/script_log.png)
 
@@ -479,6 +515,7 @@ Each element in the returned array can be:
     - `"openWith"`: open the file with an application. You need to set the full path of the application in `userInfo["application"]`.
     - `"openSettings"`: open the MediaInfo settings application.
     - `"clipboard"`: copy the path to the clipboard.
+    - `"reveal"`: reveal a file on the Finder. You can set `userInfo["file"]` with the path of the file to reveal, otherwise the current file is used.
     - `"about"`: open the GitHub page of this project.
     - `"custom"`: perform a custom action. You need to set the function _name_ to be called in `userInfo["code"]`.
   - `items` (Array, optional) An array of the sub-elements. 
@@ -557,6 +594,7 @@ The `image` property can be:
 |`"shield"`|![person](Assets/images/shield.png)||
 |`"tag"`|![tag](Assets/images/tag.png)||
 |`"pencil"`|![pencil](Assets/images/pencil.png)||
+|`"exclamationmark"`|![exclamationmark](Assets/images/exclamationmark.png)||
 
 
 ## Custom action
@@ -707,7 +745,7 @@ Menu items created by a global script can have a custom action. You need to set 
 |`toBase64(string)`|String|Encode the argument to a base64 value.|
 |`fromBase64(string)`|String|Decode the argument from a base64 value.|
 |`formatTemplate(template: String)`|\[String, Bool\]|Format a template. Return an array, on index 0 the formatted result, the index 1 indicate if the return has some token filled.|
-|`systemExecSyng(command, [arguments])`|`{status: Int, output: String}`|Execute an external `command` passing the `arguments`. If invoked during menu formatting, **the command must finish as soon as possible in order not to slow down the display of the menu**. |
+|`systemExecSync(command, [arguments])`|`{status: Int, output: String}`|Execute an external `command` passing the `arguments`. If invoked during menu formatting, **the command must finish as soon as possible in order not to slow down the display**. The task is automatically stopped if it takes too long. |
  
 _Some standard tokens (such as scripts and open-width) encode the argument with the base64 standard._
 
@@ -802,7 +840,7 @@ fileData:
 |`fileData`.`metadata`.`TGA`|Array|TGA metadata.||
 |`fileData`.`metadataRaw`|Object|An object with the same properties of `fileData`.`metadata` with a JSON representation of the original metadata array. _Only dictionaries that can be converted to JSON are exported._ ||
 
-If no metadata token are used and all the script code begin with the comment `/* no-metadata */` the metadata will not be extracted.
+If a script require the metadata, add at the begin of the code the comment `/* require-metadata */`.
 Depending on the image type, not all metadata properties will be populated. 
 
 Every metadata group is an array of objects. Each object has three string properties: `code`, `value` and `label`. For a list of metadata codes see ImageIO - `CGImageProperties.h` on the Apple documentation.
@@ -992,6 +1030,9 @@ This is a limitation of the Apple API.
 
 - The Apple API allow to set only few option for each menu items: `title`, `tag`, `image` (automatically resized to 16x16 px), `indentationLevel`, `enabled`, `state`, `action` (the target is always the `FIFinderSync` instance). When the menu image is passed from the code to the System it will be reprocessed ad lose the template attribute. This prevent the B/W image to change the color from black to white when the menu item is selected.
 
+- When multiple Finder Extensions are enabled, there is no way to set in wich order the menu of every extension is positioned.
+
+- All menu items generated by the Finder Extensions are available only when all the extension complete the processing phase.
 
 ## Build from source
 

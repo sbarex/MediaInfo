@@ -38,6 +38,8 @@ class ViewController: NSViewController {
     @IBOutlet weak var officePopupButton: NSPopUpButton!
     @IBOutlet weak var modelPopupButton: NSPopUpButton!
     @IBOutlet weak var archivePopupButton: NSPopUpButton!
+    @IBOutlet weak var folderActionPopupButton: NSPopUpButton!
+    @IBOutlet weak var folderPopupButton: NSPopUpButton!
     
     @IBOutlet weak var tabView: NSTabView!
     
@@ -48,6 +50,7 @@ class ViewController: NSViewController {
     @IBOutlet weak var officeMenuTableView: MenuTableView!
     @IBOutlet weak var modelsMenuTableView: MenuTableView!
     @IBOutlet weak var archiveMenuTableView: MenuTableView!
+    @IBOutlet weak var folderMenuTableView: MenuTableView!
     
     @IBOutlet weak var enginesTableView: NSTableView!
     @IBOutlet weak var engineSegmentedControl: NSSegmentedControl!
@@ -132,6 +135,58 @@ class ViewController: NSViewController {
     @objc dynamic var maxFilesInDepth: Int = 30 {
         didSet {
             if oldValue != maxFilesInDepth {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    
+    @objc dynamic var isFolderHandled: Bool = true {
+        didSet {
+            if oldValue != isFolderHandled {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var isBundleHandled: Bool = true {
+        didSet {
+            if oldValue != isBundleHandled {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var folderUsesGenericIcon: Bool = true {
+        didSet {
+            if oldValue != folderUsesGenericIcon {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var folderSkippedHiddenFiles: Bool = true {
+        didSet {
+            if oldValue != folderSkippedHiddenFiles {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    
+    @objc dynamic var folderMaxFiles: Int = 200 {
+        didSet {
+            if oldValue != folderMaxFiles {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    
+    @objc dynamic var folderMaxFilesInDepth: Int = 0 {
+        didSet {
+            if oldValue != folderMaxFilesInDepth {
+                self.view.window?.isDocumentEdited = true
+            }
+        }
+    }
+    @objc dynamic var folderMaxDepth: Int = 0 {
+        didSet {
+            if oldValue != folderMaxDepth {
                 self.view.window?.isDocumentEdited = true
             }
         }
@@ -416,7 +471,6 @@ class ViewController: NSViewController {
         initJSConsole(info: modelsMenuTableView.example)
     }
     
-    
     internal func initArchiveTab() {
         archivePopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: "public.zip-archive").resized(to: NSSize(width: 24, height: 24))
         
@@ -435,6 +489,32 @@ class ViewController: NSViewController {
         initJSConsole(info: archiveMenuTableView.example)
     }
     
+    internal func initFolderTab() {
+        folderPopupButton.menu?.items.first?.image = NSWorkspace.shared.icon(forFileType: kUTTypeFolder as String).resized(to: NSSize(width: 24, height: 24))
+        
+        folderMenuTableView.getSettings = { self.getSettings() }
+        folderMenuTableView.supportedType = .folder
+        folderMenuTableView.sampleTokens = [
+            (label: NSLocalizedString("Files: ", comment: ""), tokens: [TokenFolder(mode: .files)]),
+            (label: NSLocalizedString("Extra: ", comment: ""), tokens: [TokenFile(mode: .filesize), TokenScript(mode: .inline(code: "")), TokenAction(mode: .app(path: ""))])
+        ]
+        folderMenuTableView.validTokens = [TokenFolder.self, TokenFile.self, TokenScript.self, TokenAction.self]
+        folderMenuTableView.example = FolderInfo(
+            folder: Bundle.main.bundleURL,
+            maxFiles: self.folderMaxFiles,
+            maxDepth: self.folderMaxDepth,
+            maxFilesInDepth: self.folderMaxFilesInDepth,
+            skipHidden: self.folderSkippedHiddenFiles,
+            skipBundle: !self.isBundleHandled,
+            useGenericIcon: self.folderUsesGenericIcon,
+            sizeMode: .full
+        )
+        
+        folderMenuTableView.example?.jsDelegate = self
+        folderMenuTableView.viewController = self
+        initJSConsole(info: folderMenuTableView.example)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -449,6 +529,7 @@ class ViewController: NSViewController {
         initOfficeTab()
         initModelTab()
         initArchiveTab()
+        initFolderTab()
         
         enginesTableView.registerForDraggedTypes([NSPasteboard.PasteboardType("private.table-row-engine")])
         updateEngineSegmentedControl()
@@ -499,6 +580,9 @@ class ViewController: NSViewController {
                 case .clipboard:
                     alert?.messageText = NSLocalizedString("Clipboard", comment: "")
                     alert?.informativeText = NSLocalizedString("The action will copy the path into the cliboard.", comment: "")
+                case .reveal:
+                    alert?.messageText = NSLocalizedString("Reveal in Finder", comment: "")
+                    alert?.informativeText = NSLocalizedString("The action will select the file in the Finder.", comment: "")
                 }
                 
                 if let alert = alert {
@@ -672,11 +756,25 @@ class ViewController: NSViewController {
         settings.modelsMenuItems = self.modelsMenuTableView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
         
         settings.isArchiveHandled = self.isArchiveHandled
-        settings.maxFilesInArchive = self.maxFilesInArchive
-        settings.maxDepthArchive = self.maxDepthArchive
-        settings.maxFilesInDepth = self.maxFilesInDepth
+        settings.archiveMaxFiles = self.maxFilesInArchive
+        settings.archiveMaxDepth = self.maxDepthArchive
+        settings.archiveMaxFilesInDepth = self.maxFilesInDepth
         settings.archiveMenuItems = self.archiveMenuTableView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
         
+        settings.isFolderHandled = self.isFolderHandled
+        settings.isBundleHandled = self.isBundleHandled
+        settings.folderMaxFiles = self.folderMaxFiles
+        settings.folderMaxDepth = self.folderMaxDepth
+        settings.folderMaxFilesInDepth = self.folderMaxFilesInDepth
+        settings.folderSkipHiddenFiles = self.folderSkippedHiddenFiles
+        settings.folderUsesGenericIcon = self.folderUsesGenericIcon
+        settings.folderMenuItems = self.folderMenuTableView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
+        switch self.folderActionPopupButton.indexOfSelectedItem {
+        case 0: settings.folderAction = .standard
+        case 1: settings.folderAction = .openFile
+        case 2: settings.folderAction = .revealFile
+        default: settings.folderAction = .standard
+        }
         settings.engines = self.engines
         
         switch self.actionPopupButton.indexOfSelectedItem {
@@ -704,8 +802,10 @@ class ViewController: NSViewController {
         }
         
         let settings = self.getSettings()
-        settings.refreshImageMetadataExtractionRequired()
-        settings.refreshOfficeDeepScanRequired()
+        for format in Settings.SupportedFile.allCases {
+            let items = settings.getMenuItems(for: format)
+            format.infoClass.updateSettings(settings, forItems: items)
+        }
         
         SettingsWrapper.setSettings(settings) { status in
             DispatchQueue.main.async {
@@ -777,11 +877,27 @@ class ViewController: NSViewController {
             self.modelsMenuTableView.tableView?.reloadData()
             
             self.isArchiveHandled = settings.isArchiveHandled
-            self.maxFilesInArchive = settings.maxFilesInArchive
-            self.maxDepthArchive = settings.maxDepthArchive
-            self.maxFilesInDepth = settings.maxFilesInDepth
+            self.maxFilesInArchive = settings.archiveMaxFiles
+            self.maxDepthArchive = settings.archiveMaxDepth
+            self.maxFilesInDepth = settings.archiveMaxFilesInDepth
             self.archiveMenuTableView.items = settings.archiveMenuItems.map({ MenuTableView.MenuItem(image: $0.image, template: $0.template)})
             self.archiveMenuTableView.tableView?.reloadData()
+            
+            self.isFolderHandled = settings.isFolderHandled
+            self.isBundleHandled = settings.isBundleHandled
+            self.folderMaxFiles = settings.folderMaxFiles
+            self.folderMaxFilesInDepth = settings.folderMaxFilesInDepth
+            self.folderMaxDepth = settings.folderMaxDepth
+            self.folderSkippedHiddenFiles = settings.folderSkipHiddenFiles
+            self.folderMenuTableView.items = settings.folderMenuItems.map({ MenuTableView.MenuItem(image: $0.image, template: $0.template)})
+            self.folderUsesGenericIcon = settings.folderUsesGenericIcon
+            switch settings.folderAction {
+            case .standard: self.folderActionPopupButton.selectItem(at: 0)
+            case .openFile: self.folderActionPopupButton.selectItem(at: 1)
+            case .revealFile: self.folderActionPopupButton.selectItem(at: 2)
+            }
+            
+            self.folderMenuTableView.tableView?.reloadData()
             
             switch settings.menuAction {
             case .none: self.actionPopupButton.selectItem(at: 0)
@@ -991,6 +1107,8 @@ extension ViewController: NSMenuDelegate {
             example = e
         } else if menu.identifier?.rawValue == "mnu_archive", let e = archiveMenuTableView.example {
             example = e
+        } else if menu.identifier?.rawValue == "mnu_folder", let e = folderMenuTableView.example {
+            example = e
         } else {
             return
         }
@@ -1024,7 +1142,7 @@ extension ViewController: NSMenuDelegate {
     }
 }
 
-// MARK: -
+// MARK: - JSDelegate
 extension ViewController: JSDelegate {
     func jsOpen(path: String, reply: @escaping (Bool)->Void) {
         systemActionInvoked = true
@@ -1145,7 +1263,7 @@ extension ViewController: JSDelegate {
             }
         }
         
-        let timeoutLimit: DispatchTime = .now() + 3
+        let timeoutLimit: DispatchTime = .now() + Settings.execSyncTimeout
         
         if !Thread.isMainThread {
             let r = inflightSemaphore.wait(timeout: timeoutLimit)
@@ -1153,7 +1271,6 @@ extension ViewController: JSDelegate {
                 status = -1
                 output = "Timeout"
             }
-            let _ = inflightSemaphore.wait(timeout: .distantFuture)
         } else {
             while inflightSemaphore.wait(timeout: .now()) == .timedOut {
                 RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0))

@@ -22,3 +22,6 @@
 [submodule "dependencies/libjpeg-turbo"]
 	path = dependencies/libjpeg-turbo
 	url = https://github.com/libjpeg-turbo/libjpeg-turbo
+[submodule "dependencies/xz"]
+	path = dependencies/xz
+	url = https://git.tukaani.org/xz.git

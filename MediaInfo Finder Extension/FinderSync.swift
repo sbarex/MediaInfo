@@ -7,8 +7,8 @@
 //
 
 import Cocoa
-// import Sparkle
 import FinderSync
+import os.log
 
 class FinderSync: FIFinderSync {/*
     var userDriver: SPUStandardUserDriver?
@@ -19,7 +19,11 @@ class FinderSync: FIFinderSync {/*
     override init() {
         super.init()
         
-        NSLog("MediaInfo FinderSync launched from %@", Bundle.main.bundlePath as NSString)
+        if #available(macOSApplicationExtension 11.0, *) {
+            Logger.finderExtension.debug("MediaInfo FinderSync - Launched from \(Bundle.main.bundlePath, privacy: .public)")
+        } else {
+            os_log("MediaInfo FinderSync - Launched from %{public}@", log: OSLog.finderExtension, type: .info, Bundle.main.bundlePath)
+        }
         
         refreshSettings()
         
@@ -109,7 +113,12 @@ class FinderSync: FIFinderSync {/*
             
             // let folders = Set(settings.folders.map({ self.convertNetworkSharedUrl($0) ?? $0 }))
             var folders = Set(settings.folders)
-            NSLog("MediaInfo FinderSync watching folders:\n %@", folders.map({ $0.path }).joined(separator: "\n"))
+            
+            if #available(macOSApplicationExtension 11.0, *) {
+                Logger.finderExtension.info("MediaInfo FinderSync - Watching folders:\n \(folders.map({ $0.path }).joined(separator: "\n"), privacy: .private)")
+            } else {
+                os_log("MediaInfo FinderSync - Watching folders:\n %{private}@", log: OSLog.finderExtension, type: .info, folders.map({ $0.path }).joined(separator: "\n"))
+            }
             
             if settings.handleExternalDisk {
                 let keys: [URLResourceKey] = [.volumeNameKey, .volumeIsRemovableKey, .volumeIsEjectableKey]
@@ -138,6 +147,7 @@ class FinderSync: FIFinderSync {/*
     }
     
     @objc func handleSettingsChanged(_ notification: Notification) {
+        os_log("MediaInfo FinderSync - Refreshing settings…", log: .finderExtension, type: .debug)
         refreshSettings()
     }
     
@@ -203,7 +213,13 @@ class FinderSync: FIFinderSync {/*
                 HelperWrapper.openFile(url: URL(string: "https://github.com/sbarex/MediaInfo")!) {_ in }
                 return
             case .open:
-                HelperWrapper.openFile(url: file) {_ in }
+                let f: URL
+                if let p = item.userInfo["file"] as? String {
+                    f = URL(fileURLWithPath: p)
+                } else {
+                    f = file
+                }
+                HelperWrapper.openFile(url: f) {_ in }
                 return
             case .openWith:
                 if let path = item.userInfo["application"] as? String, !path.isEmpty {
@@ -222,6 +238,14 @@ class FinderSync: FIFinderSync {/*
                         
                 pasteboard.setString(file.path, forType: NSPasteboard.PasteboardType.string)
                 return
+            case .reveal:
+                let f: URL
+                if let p = item.userInfo["file"] as? String {
+                    f = URL(fileURLWithPath: p)
+                } else {
+                    f = file
+                }
+                NSWorkspace.shared.activateFileViewerSelecting([f])
             }
         }
         
@@ -252,6 +276,15 @@ class FinderSync: FIFinderSync {/*
         // Specific menu item properties are used: title, action, image, and enabled. Starting in 10.11: tag, state, and indentationLevel also work, and submenus are allowed.
         
         currentFile = item
+        
+        let time = CFAbsoluteTimeGetCurrent()
+        
+        if #available(macOSApplicationExtension 11.0, *) {
+            Logger.finderExtension.debug("MediaInfo FinderSync - Start info extraction for \(item.path, privacy: .private)…")
+        } else {
+            os_log("MediaInfo FinderSync - Start info extraction for %{private}@…", log: OSLog.finderExtension, type: .debug, item.path)
+        }
+        
         if settings.isPDFHandled && (UTTypeConformsTo(uti as CFString, kUTTypePDF) || UTTypeConformsTo(uti as CFString, "com.adobe.illustrator.ai-image" as CFString)) {
             currentFileType = .pdf
             self.currentInfo = getInfoForPDF(atURL: item)
@@ -285,10 +318,17 @@ class FinderSync: FIFinderSync {/*
         } else if settings.isModelsHandled && UTTypeConformsTo(uti as CFString, "public.3d-content" as CFString) {
             currentFileType = .model
             currentInfo = getInfoForModel(atURL: item)
-        } else if settings.isArchiveHandled && (UTTypeConformsTo(uti as CFString, "public.zip-archive" as CFString) || UTTypeConformsTo(uti as CFString, "com.rarlab.rar-archive" as CFString) || UTTypeConformsTo(uti as CFString, "public.archive" as CFString) || UTTypeConformsTo(uti as CFString, "org.gnu.gnu-zip-archive" as CFString)) {
+        } else if settings.isArchiveHandled && ((UTTypeConformsTo(uti as CFString, kUTTypeZipArchive) || UTTypeConformsTo(uti as CFString, "com.rarlab.rar-archive" as CFString) || UTTypeConformsTo(uti as CFString, kUTTypeArchive) || UTTypeConformsTo(uti as CFString, kUTTypeGNUZipArchive) || UTTypeConformsTo(uti as CFString, kUTTypeBzip2Archive) || UTTypeConformsTo(uti as CFString, kUTTypeBzip2Archive) || UTTypeConformsTo(uti as CFString, "org.tukaani.xz-archive" as CFString))) && !(UTTypeConformsTo(uti as CFString, kUTTypeDiskImage)) {
             currentFileType = .archive
             currentInfo = getInfoForArchive(atURL: item)
-        } else {
+        } else if settings.isFolderHandled && UTTypeConformsTo(uti as CFString,
+                                                               kUTTypeFolder) {
+            currentFileType = .folder
+            currentInfo = getInfoForFolder(atURL: item)
+        } else if settings.isFolderHandled && settings.isBundleHandled && (UTTypeConformsTo(uti as CFString, kUTTypePackage) || UTTypeConformsTo(uti as CFString, kUTTypeBundle) || UTTypeConformsTo(uti as CFString, kUTTypeApplication) || UTTypeConformsTo(uti as CFString, kUTTypeApplicationBundle)) {
+           currentFileType = .folder
+           currentInfo = getInfoForFolder(atURL: item)
+       } else {
             currentFile = nil
             currentInfo = nil
             currentFileType = nil
@@ -302,18 +342,26 @@ class FinderSync: FIFinderSync {/*
             return nil
         }
         
+        if #available(macOSApplicationExtension 11.0, *) {
+            Logger.finderExtension.info("MediaInfo FinderSync - Info extracted in \(CFAbsoluteTimeGetCurrent() - time, privacy: .public) seconds.")
+        } else {
+            os_log("MediaInfo FinderSync - Info extracted in %{public}lf seconds.", log: OSLog.finderExtension, type: .info, CFAbsoluteTimeGetCurrent() - time)
+        }
+        
         return getMenu(for: info)
     }
     
-    /**
-     Sanitize the menu.
-     FinderSync transform NSMenuItem.separator to a normal NSMenuItem with empty title and disabled.
-     */
+    /// Sanitize the menu.
+    ///
+    /// When the Finder display the menu, NSMenuItem.separators are transformed into a normal NSMenuItem with empty title and disabled.
+    ///
+    /// This function replace the menu separators with a sequence of dash characters.
     func sanitizeMenu(_ menu: NSMenu?) {
         guard let menu = menu else { return }
         
         var n = -1
         var remove: [Int] = []
+        var separatorCount = 0
         for (i, item) in menu.items.enumerated() {
             if let m = item.submenu {
                 sanitizeMenu(m)
@@ -321,7 +369,8 @@ class FinderSync: FIFinderSync {/*
                     item.submenu = nil
                 }
             } else {
-                if item.title.isEmpty && !item.isEnabled {
+                if item.isSeparatorItem {
+                    separatorCount += 1
                     if n + 1 == i {
                         // Remove consecutive empty items.
                         remove.append(i)
@@ -332,41 +381,48 @@ class FinderSync: FIFinderSync {/*
         }
         for i in remove.reversed() {
             menu.removeItem(at: i)
+            separatorCount -= 1
         }
         
-        while let item = menu.items.last, item.title.isEmpty && !item.isEnabled {
-            // Remove last empty item
+        while let item = menu.items.last, item.isSeparatorItem {
+            // Remove last separator line
             menu.removeItem(item)
+            separatorCount -= 1
         }
+        
+        guard separatorCount > 0 else {
+            return
+        }
+        
+        // Replace the separators with a dashed line.
         
         let attributes: [NSAttributedString.Key : Any] = [.font: NSFont.systemFont(ofSize: NSFont.systemFontSize)]
         let dash = "─"
         let dash_size = (dash as NSString).size(withAttributes:attributes).width
+        let max_separator_length = 130
         
-        var fakeSeparator: ((NSMenu)->Void)? = nil
-        fakeSeparator = { menu in
-            let max_width = menu.items.reduce(0 as CGFloat, { tot, item in
-                var width = (item.title as NSString).size(withAttributes: attributes).width
-                if let image = item.image {
-                    width += image.size.width + 8
-                }
-                if item.submenu != nil {
-                    width += 24
-                }
-                return max(tot, width)
-            })
-            let length = min(100, Int(floor(max_width / dash_size)))
-            for item in menu.items {
-                if let m = item.submenu {
-                    fakeSeparator!(m)
-                } else {
-                    if item.title.isEmpty && !item.isEnabled {
-                        item.title = String(repeating: dash, count: length)
-                    }
-                }
+        /// Max  width of the menu items.
+        let max_width = menu.items.reduce(0 as CGFloat, { tot, item in
+            guard !item.isSeparatorItem else {
+                return tot
+            }
+            var width = item.title.isEmpty ? 0 : (item.title as NSString).size(withAttributes: attributes).width
+            if let image = item.image {
+                width += image.size.width + 8
+            }
+            if item.submenu != nil {
+                width += 24
+            }
+            return max(tot, width)
+        })
+        /// Number of dash char required to fill the max menu item width.
+        let length = min(max_separator_length, Int(floor(max_width / dash_size)))
+            
+        for item in menu.items {
+            if item.isSeparatorItem {
+                item.title = String(repeating: dash, count: length)
             }
         }
-        fakeSeparator!(menu)
     }
     
     var representedObjects: [Int: Any] = [:]
@@ -396,9 +452,30 @@ class FinderSync: FIFinderSync {/*
     }
     
     func getMenu(for info: BaseInfo) -> NSMenu? {
+        let time = CFAbsoluteTimeGetCurrent()
+        if #available(macOSApplicationExtension 11.0, *) {
+            Logger.finderExtension.debug("MediaInfo FinderSync - Generating the menu…")
+        } else {
+            os_log("MediaInfo FinderSync - Generating the menu…", log: OSLog.finderExtension, type: .debug)
+        }
+        defer {
+            if #available(macOSApplicationExtension 11.0, *) {
+                Logger.finderExtension.info("MediaInfo FinderSync - Menu generated in \(CFAbsoluteTimeGetCurrent() - time, privacy: .public) seconds.")
+            } else {
+                os_log("MediaInfo FinderSync - Menu generated in %{public}lf seconds.", log: OSLog.finderExtension, type: .info, CFAbsoluteTimeGetCurrent() - time)
+            }
+        }
+        
         let menu = info.getMenu(withSettings: settings)
+        
+        var time2 = CFAbsoluteTimeGetCurrent()
         sanitizeMenu(menu)
+        os_log("MediaInfo FinderSync - Menu sanitization took %{public}lf seconds", log: OSLog.finderExtension, type: .info, CFAbsoluteTimeGetCurrent()-time2)
+        
+        time2 = CFAbsoluteTimeGetCurrent()
         self.representedObjects = BaseInfo.preprocessMenu(menu)
+        os_log("MediaInfo FinderSync - Menu preprocessing took %{public}lf seconds", log: OSLog.finderExtension, type: .info, CFAbsoluteTimeGetCurrent()-time2)
+        
         return menu
     }
     
@@ -449,6 +526,10 @@ class FinderSync: FIFinderSync {/*
     func getInfoForArchive(atURL item: URL) -> ArchiveInfo? {
         return HelperWrapper.getArchiveInfo(for: item)
     }
+    
+    func getInfoForFolder(atURL item: URL) -> FolderInfo? {
+        return HelperWrapper.getFolderInfo(for: item)
+    }
 }
 
 // MARK: - JSDelegate
@@ -468,6 +549,7 @@ extension FinderSync: JSDelegate {
 
         var status: Int32 = 0
         var output: String = ""
+        var completed = false
         HelperWrapper.systemExec(command: command, arguments: arguments) { status1, output1 in
             defer {
                 inflightSemaphore.signal()
@@ -475,14 +557,30 @@ extension FinderSync: JSDelegate {
             
             status = status1
             output = output1
+            completed = true
         }
         
+        let timeoutLimit: DispatchTime = .now() + Settings.execSyncTimeout
+        
         if !Thread.isMainThread {
-            let r = inflightSemaphore.wait(timeout: .distantFuture)
-            print(r)
+            let r = inflightSemaphore.wait(timeout: timeoutLimit)
+            if r == .timedOut && !completed {
+                status = -1
+                output = "Timeout"
+                os_log("Timeout executing the sync command %{private}@", log: OSLog.finderExtension, type: .error, command)
+            }
+            // print(r)
         } else {
             while inflightSemaphore.wait(timeout: .now()) == .timedOut {
                 RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0))
+                if DispatchTime.now() >= timeoutLimit {
+                    if !completed {
+                        status = -1
+                        output = "Timeout"
+                        os_log("Timeout executing the sync command %{private}@", log: OSLog.finderExtension, type: .error, command)
+                    }
+                    break
+                }
             }
         }
         

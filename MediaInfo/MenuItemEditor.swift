@@ -90,6 +90,7 @@ class MenuItemEditor: NSViewController {
         
         Image(name: "3d", title: NSLocalizedString("3D model", comment: ""), alternateNames: ["3D"]),
         Image(name: "zip", title: NSLocalizedString("Compressed archive", comment: "")),
+        Image(name: "folder", title: NSLocalizedString("Folder", comment: "")),
         
         Image.separator(),
         
@@ -149,7 +150,6 @@ class MenuItemEditor: NSViewController {
         Image(name: "calendar", title: NSLocalizedString("Calendar", comment: "")),
         Image(name: "clipboard", title: NSLocalizedString("Clipboard", comment: "")),
         Image(name: "flag", title: NSLocalizedString("Flag", comment: "")),
-        Image(name: "folder", title: NSLocalizedString("Folder", comment: "")),
         Image(name: "abc", title: NSLocalizedString("ABC", comment: "")),
         Image(name: "exclamationmark", title: NSLocalizedString("Exclamation mark", comment: "")),
     ]

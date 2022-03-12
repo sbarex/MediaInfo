@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import os.log
 
 extension ArchivedFile {
     convenience init?(entry: OpaquePointer, format: String) {
@@ -24,18 +25,11 @@ extension ArchivedFile {
             return nil
         }
         
-        var link: String? = nil
         let type: ArchivedFileTypeEnum
         if filetype == FORMAT_AE_IFREG {
             type = .regular
-            if let s = String(cString: archive_entry_hardlink(entry)) {
-                link = s
-            }
         } else if filetype == FORMAT_AE_IFLNK {
             type = .symblink
-            if let s = String(cString: archive_entry_symlink(entry)) {
-                link = s
-            }
         } else if filetype == FORMAT_AE_IFSOCK {
             type = .socket
         } else if filetype == FORMAT_AE_IFCHR {
@@ -50,23 +44,14 @@ extension ArchivedFile {
             type = .unknown
         }
         
+        let hasSize = archive_entry_size_is_set(entry) != 0
+        let size = hasSize ? archive_entry_size(entry) : -1
+        let isEncrypted = archive_entry_is_encrypted(entry) != 0
         self.init(
             fullpath: f,
-            mode: String(cString: archive_entry_strmode(entry)) ?? "",
-            cDate: archive_entry_ctime_is_set(entry) != 0 ? archive_entry_ctime(entry) : (archive_entry_birthtime_is_set(entry) != 0 ? archive_entry_birthtime(entry) : 0),
-            mDate: archive_entry_mtime_is_set(entry) != 0 ? archive_entry_mtime(entry) : 0,
-            aDate: archive_entry_atime_is_set(entry) != 0 ? archive_entry_atime(entry) : 0,
             type: type,
-            size: (archive_entry_size_is_set(entry) != 0) ? archive_entry_size(entry) : 0,
-            format: format,
-            uid: archive_entry_uid(entry),
-            uidName: String(cString: archive_entry_uname_utf8(entry)),
-            gid: archive_entry_gid(entry),
-            gidName: String(cString: archive_entry_gname_utf8(entry)),
-            acl: String(cString: archive_entry_acl_to_text(entry, nil, 0)),
-            flags: String(cString: archive_entry_fflags_text(entry)) ?? "",
-            link: link,
-            encrypted: archive_entry_is_encrypted(entry) != 0
+            size: size >= 0 ? Int(size) : nil,
+            encrypted: isEncrypted
         )
     }
 }
@@ -77,17 +62,24 @@ enum ArchiveInfoError: Error {
 
 extension ArchiveInfo {
     convenience init(file: URL, limit: Int = 0) throws {
+        let time = CFAbsoluteTimeGetCurrent()
+        let timeoutLimit: CFAbsoluteTime = time + Settings.infoExtractionTimeout
+        
+        os_log("Fetch info for archive %{private}@ with LibArchive…", log: OSLog.infoExtraction, type: .debug, file.path)
+        
         let a = archive_read_new()
         defer {
             archive_read_free(a)
         }
         archive_read_support_filter_all(a)
         archive_read_support_format_all(a)
+        archive_read_support_format_empty(a)
+        archive_read_support_format_raw(a)
         
         let r = archive_read_open_filename(a, file.path, 10240)
         guard r == ARCHIVE_OK else {
             let s = String(cString: archive_error_string(a))
-            print("ARCHIVE ERROR: \(s ?? "")")
+            os_log("Archive error: %{public}@", log: OSLog.infoExtraction, type: .error, s ?? "")
             throw ArchiveInfoError.open_error(message: s, url: file)
         }
         
@@ -99,6 +91,10 @@ extension ArchiveInfo {
         var flatten_files: [ArchivedFile] = []
         var n_files = 0
         var files_size: Int64 = 0
+        var totalSizeIsLimited = false
+        var totalFileIsLimited = false
+        var limited = false
+        var hasSize = false
         while archive_read_next_header(a, &entry.pointee) == ARCHIVE_OK {
             guard let entry = entry.pointee else {
                 continue
@@ -108,12 +104,28 @@ extension ArchiveInfo {
                 if let file = ArchivedFile(entry: entry, format: String(cString: archive_format_name(a)) ?? "") {
                     flatten_files.append(file)
                 }
+            } else {
+                limited = true
             }
             
             archive_read_data_skip(a) // Not required: libarchive will invoke it automatically if you request the next header without reading the data for the last entry
             
             n_files += 1
-            files_size += (archive_entry_size_is_set(entry) != 0) ? archive_entry_size(entry) : 0
+            if archive_entry_size_is_set(entry) != 0 {
+                files_size += archive_entry_size(entry)
+                hasSize = true
+            } else {
+                totalSizeIsLimited = true
+            }
+            
+            let t = CFAbsoluteTimeGetCurrent()
+            guard t < timeoutLimit else {
+                os_log("Archive parsing was aborted due to a timeout!", log: OSLog.infoExtraction, type: .error)
+                
+                totalSizeIsLimited = true
+                totalFileIsLimited = true
+                break
+            }
         }
 
         flatten_files.sort { (a, b) -> Bool in
@@ -125,6 +137,19 @@ extension ArchiveInfo {
         
         let organized_files = ArchivedFile.reorganize(files: flatten_files)
         
-        self.init(file: file, compressionName: compressionName, files: organized_files, unlimitedFileCount: n_files, unlimitedFileSize: files_size)
+        let archive = ArchivedFile(fullpath: file.path, type: .regular, size: 0, encrypted: false)
+        archive.files = organized_files
+        
+        os_log("Archive info fetched with LibArchive in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
+        self.init(
+            file: file,
+            compressionName: compressionName,
+            archive: archive,
+            unlimitedFileCount: n_files,
+            unlimitedFileSize: hasSize ? Int(files_size) : -1,
+            isTotalSizePartial: totalSizeIsLimited,
+            isTotalFilePartial: totalFileIsLimited,
+            isPartial: limited
+        )
     }
 }

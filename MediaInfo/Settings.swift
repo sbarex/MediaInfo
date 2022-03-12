@@ -112,10 +112,21 @@ class Settings: Codable {
         case modelsTemplates
         
         case archiveHandled
-        case maxFilesInArchive
-        case maxFilesInDepth
-        case maxDepthArchive
+        case archiveMaxFiles
+        case archiveMaxFilesInDepth
+        case archiveMaxDepth
         case archiveTemplates
+        
+        case folderHandled
+        case bundleHandled
+        case folderMaxFiles
+        case folderMaxDepth
+        case folderMaxFilesInDepth
+        case folderSkipHiddenFiles
+        case folderUsesGenericIcon
+        case folderAction
+        case folderSizeMethod
+        case folderTemplates
         
         case menuAction
         case engines
@@ -127,7 +138,19 @@ class Settings: Codable {
         case script
     }
     
-    enum SupportedFile: Int, Codable {
+    enum FolderSizeMethod: Int, Codable {
+        case none
+        case fast
+        case full
+    }
+    
+    enum FolderAction: Int, Codable {
+        case standard = 0
+        case openFile
+        case revealFile
+    }
+    
+    enum SupportedFile: Int, Codable, CaseIterable {
         case none = 0
         case image
         case video
@@ -136,12 +159,17 @@ class Settings: Codable {
         case pdf
         case archive
         case model
+        case folder
         
         case videoTrakcs
         case audioTraks
     }
     
-    static let Version = 1.8
+    static let Version = 1.9
+    /// Maximum time (in seconds) to complete the execution of a synchronous task
+    static let execSyncTimeout: Double = 2
+    /// Maximum time (in seconds) to complete the analysis of a file
+    static let infoExtractionTimeout: Double = 2
     
     static func getStandardSettings() -> Settings {
         let settings = Settings(fromDict: [:])
@@ -264,6 +292,16 @@ class Settings: Codable {
             MenuItem(image: "", template: "[[about]]"),
         ]
         
+        settings.folderMenuItems = [
+            MenuItem(image: "target-icon", template: "[[file-name]]"),
+            MenuItem(image: "target-icon", template: "[[files-with-icon]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "pages", template: "[[n-files-all]]"),
+            MenuItem(image: "size", template: "[[filesize]] ([[filesize-full]] on disk)"),
+            MenuItem(image: "clipboard", template: "[[clipboard]]"),
+            MenuItem(image: "", template: "-"),
+            MenuItem(image: "", template: "[[about]]"),
+        ]
         return settings
     }
     
@@ -320,11 +358,25 @@ class Settings: Codable {
     var modelsMenuItems: [MenuItem] = []
     
     var isArchiveHandled = true
-    var maxFilesInArchive = 100
-    var maxDepthArchive = 10
-    var maxFilesInDepth = 30
+    var archiveMaxFiles = 100
+    var archiveMaxDepth = 10
+    var archiveMaxFilesInDepth = 30
     var archiveMenuItems: [MenuItem] = []
     
+    var isFolderHandled = true
+    var isBundleHandled = true
+    var folderMaxFiles = 200
+    var folderMaxDepth = 0
+    var folderMaxFilesInDepth = 0
+    var folderSkipHiddenFiles = true
+    var folderUsesGenericIcon = true
+    var folderAction: FolderAction = .revealFile
+    var folderSizeMethod: FolderSizeMethod = .fast
+    var folderMenuItems: [MenuItem] = []
+    var folderSortFoldersFirst: Bool {
+        let d = UserDefaults(suiteName: "com.apple.finder")
+        return d?.bool(forKey: "_FXSortFoldersFirst") ?? false
+    }
     var folders: [URL] = []
     var handleExternalDisk = false
     
@@ -376,10 +428,21 @@ class Settings: Codable {
         self.modelsMenuItems = try container.decode([MenuItem].self, forKey: .modelsTemplates)
         
         self.isArchiveHandled = try container.decode(Bool.self, forKey: .archiveHandled)
-        self.maxFilesInArchive = try container.decode(Int.self, forKey: .maxFilesInArchive)
-        self.maxDepthArchive = try container.decode(Int.self, forKey: .maxDepthArchive)
-        self.maxFilesInDepth = try container.decode(Int.self, forKey: .maxFilesInDepth)
+        self.archiveMaxFiles = try container.decode(Int.self, forKey: .archiveMaxFiles)
+        self.archiveMaxDepth = try container.decode(Int.self, forKey: .archiveMaxDepth)
+        self.archiveMaxFilesInDepth = try container.decode(Int.self, forKey: .archiveMaxFilesInDepth)
         self.archiveMenuItems = try container.decode([MenuItem].self, forKey: .archiveTemplates)
+        
+        self.isFolderHandled = try container.decode(Bool.self, forKey: .folderHandled)
+        self.isBundleHandled = try container.decode(Bool.self, forKey: .bundleHandled)
+        self.folderMaxFiles = try container.decode(Int.self, forKey: .folderMaxFiles)
+        self.folderMaxDepth = try container.decode(Int.self, forKey: .folderMaxDepth)
+        self.folderMaxFilesInDepth = try container.decode(Int.self, forKey: .folderMaxFilesInDepth)
+        self.folderSkipHiddenFiles = try container.decode(Bool.self, forKey: .folderSkipHiddenFiles)
+        self.folderUsesGenericIcon = try container.decode(Bool.self, forKey: .folderUsesGenericIcon)
+        self.folderAction = try container.decode(FolderAction.self, forKey: .folderAction)
+        self.folderSizeMethod = try container.decode(FolderSizeMethod.self, forKey: .folderSizeMethod)
+        self.folderMenuItems = try container.decode([MenuItem].self, forKey: .folderTemplates)
         
         self.menuAction = try container.decode(Action.self, forKey: .menuAction)
         self.engines = try container.decode([MediaEngine].self, forKey: .engines)
@@ -424,10 +487,21 @@ class Settings: Codable {
         try container.encode(self.modelsMenuItems, forKey: .modelsTemplates)
         
         try container.encode(self.isArchiveHandled, forKey: .archiveHandled)
-        try container.encode(self.maxFilesInArchive, forKey: .maxFilesInArchive)
-        try container.encode(self.maxDepthArchive, forKey: .maxDepthArchive)
-        try container.encode(self.maxFilesInDepth, forKey: .maxFilesInDepth)
+        try container.encode(self.archiveMaxFiles, forKey: .archiveMaxFiles)
+        try container.encode(self.archiveMaxDepth, forKey: .archiveMaxDepth)
+        try container.encode(self.archiveMaxFilesInDepth, forKey: .archiveMaxFilesInDepth)
         try container.encode(self.archiveMenuItems, forKey: .archiveTemplates)
+        
+        try container.encode(self.isFolderHandled, forKey: .folderHandled)
+        try container.encode(self.isBundleHandled, forKey: .bundleHandled)
+        try container.encode(self.folderMaxFiles, forKey: .folderMaxFiles)
+        try container.encode(self.folderMaxDepth, forKey: .folderMaxDepth)
+        try container.encode(self.folderMaxFilesInDepth, forKey: .folderMaxFilesInDepth)
+        try container.encode(self.folderSkipHiddenFiles, forKey: .folderSkipHiddenFiles)
+        try container.encode(self.folderUsesGenericIcon, forKey: .folderUsesGenericIcon)
+        try container.encode(self.folderAction, forKey: .folderAction)
+        try container.encode(self.folderSizeMethod, forKey: .folderSizeMethod)
+        try container.encode(self.folderMenuItems, forKey: .folderTemplates)
         
         try container.encode(self.menuAction, forKey: .menuAction)
         try container.encode(self.engines, forKey: .engines)
@@ -495,10 +569,25 @@ class Settings: Codable {
         self.modelsMenuItems = processItems(defaultsDomain["3d_items"])
         
         self.isArchiveHandled = defaultsDomain["archive_handled"] as? Bool ?? true
-        self.maxFilesInArchive = defaultsDomain["archive_max_files"] as? Int ?? 100
-        self.maxDepthArchive = defaultsDomain["archive_max_depth"] as? Int ?? 10
-        self.maxFilesInDepth = defaultsDomain["archive_max_files_in_depth"] as? Int ?? 30
+        self.archiveMaxFiles = defaultsDomain["archive_max_files"] as? Int ?? 100
+        self.archiveMaxDepth = defaultsDomain["archive_max_depth"] as? Int ?? 10
+        self.archiveMaxFilesInDepth = defaultsDomain["archive_max_files_in_depth"] as? Int ?? 30
         self.archiveMenuItems = processItems(defaultsDomain["archive_items"])
+        
+        self.isFolderHandled = defaultsDomain["folder_handled"] as? Bool ?? true
+        self.isBundleHandled = defaultsDomain["bundle_handled"] as? Bool ?? true
+        self.folderMaxFiles = defaultsDomain["folder_max_files"] as? Int ?? 200
+        self.folderMaxDepth = defaultsDomain["folder_max_depth"] as? Int ?? 10
+        self.folderMaxFilesInDepth = defaultsDomain["folder_max_files_in_depth"] as? Int ?? 50
+        self.folderSkipHiddenFiles = defaultsDomain["folder_skip_hidden_files"] as? Bool ?? true
+        self.folderSizeMethod = FolderSizeMethod(rawValue: defaultsDomain["folder_size_method"] as? Int ?? -1) ?? .fast
+        if let i = defaultsDomain["folder_action"] as? Int, let v = FolderAction(rawValue: i) {
+            self.folderAction = v
+        } else {
+            self.folderAction = .revealFile
+        }
+        self.folderUsesGenericIcon = defaultsDomain["folder_generic_icon"] as? Bool ?? true
+        self.folderMenuItems = processItems(defaultsDomain["folder_items"])
         
         if !self.isInfoOnMainItem {
             let standard = Self.getStandardSettings()
@@ -595,10 +684,21 @@ class Settings: Codable {
         dict["3d_items"] = self.modelsMenuItems.map({ return [$0.image, $0.template]})
         
         dict["archive_handled"] = self.isArchiveHandled
-        dict["archive_max_files"] = self.maxFilesInArchive
-        dict["archive_max_depth"] = self.maxDepthArchive
-        dict["archive_max_files_in_depth"] = self.maxFilesInDepth
+        dict["archive_max_files"] = self.archiveMaxFiles
+        dict["archive_max_depth"] = self.archiveMaxDepth
+        dict["archive_max_files_in_depth"] = self.archiveMaxFilesInDepth
         dict["archive_items"] = self.archiveMenuItems.map({ return [$0.image, $0.template]})
+        
+        dict["folder_handled"] = self.isFolderHandled
+        dict["bundle_handled"] = self.isBundleHandled
+        dict["folder_max_files"] = self.folderMaxFiles
+        dict["folder_max_depth"] = self.folderMaxDepth
+        dict["folder_max_files_in_depth"] = self.folderMaxFilesInDepth
+        dict["folder_skip_hidden_files"] = self.folderSkipHiddenFiles
+        dict["folder_generic_icon"] = self.folderUsesGenericIcon
+        dict["folder_action"] = self.folderAction.rawValue
+        dict["folder_size_method"] = self.folderSizeMethod.rawValue
+        dict["folder_items"] = self.folderMenuItems.map({ return [$0.image, $0.template]})
         
         dict["menu-action"] = self.menuAction.rawValue
         
@@ -628,6 +728,8 @@ class Settings: Codable {
             return self.pdfMenuItems
         case .archive:
             return self.archiveMenuItems
+        case .folder:
+            return self.folderMenuItems
         }
     }
     

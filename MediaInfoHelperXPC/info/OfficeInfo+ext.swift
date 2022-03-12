@@ -9,6 +9,7 @@
 import Foundation
 import ZIPFoundation
 import Kanna
+import os.log
 
 extension BaseOfficeInfo {
     static let officeNamespaces: [String: String] = [
@@ -67,6 +68,7 @@ extension BaseOfficeInfo {
             return nil
         }
     }
+    
     static func parseXMLText<T:LosslessStringConvertible>(t: String?) -> T? {
         if let i = t, let n = T(i) {
             return n
@@ -79,6 +81,9 @@ extension BaseOfficeInfo {
 // MARK: - WordInfo
 extension WordInfo {
     convenience init?(docx url: URL, deepScan: Bool) {
+        let time = CFAbsoluteTimeGetCurrent()
+        os_log("Fetch info for MS Word file %{private}@ (%{public}@)…", log: OSLog.infoExtraction, type: .debug, url.path, deepScan ? "with deep scan" : "without deep scan")
+        
         // App.xml
         // Template: Normal.dotm
         // TotalTime: 178
@@ -94,32 +99,39 @@ extension WordInfo {
         //
         
         guard let archive = Archive(url: url, accessMode: .read) else  {
+            os_log("Unable to decompress the file!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
         
         guard var properties = try? Self.parseOfficeCoreXML(archive: archive) else {
+            os_log("Unable to parse the core data!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
         
         guard let entryApp = archive["docProps/app.xml"] else {
+            os_log("Missing docProps/app.xml file!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
         
-        var s = ""
-        _ = try? archive.extract(entryApp, skipCRC32: true) { data in
-            s += String(data: data, encoding: .utf8) ?? ""
-        }
-        if !s.isEmpty, let app = try? Kanna.XML(xml: s, encoding: .utf8) {
-            var i: Int? = Self.parseXMLText(doc: app, query: "//ns:Pages")
-            properties["pages"] = i
-            i = Self.parseXMLText(doc: app, query: "//ns:Words")
-            properties["words"] = i
-            i = Self.parseXMLText(doc: app, query: "//ns:Characters")
-            properties["characters"] = i
-            i = Self.parseXMLText(doc: app, query: "//ns:CharactersWithSpaces")
-            properties["charactersWithSpaces"] = i
-            
-            properties["application"] = app.at_xpath("//ns:Application")?.text
+        do {
+            var s = ""
+            _ = try archive.extract(entryApp, skipCRC32: true) { data in
+                s += String(data: data, encoding: .utf8) ?? ""
+            }
+            if !s.isEmpty, let app = try? Kanna.XML(xml: s, encoding: .utf8) {
+                var i: Int? = Self.parseXMLText(doc: app, query: "//ns:Pages")
+                properties["pages"] = i
+                i = Self.parseXMLText(doc: app, query: "//ns:Words")
+                properties["words"] = i
+                i = Self.parseXMLText(doc: app, query: "//ns:Characters")
+                properties["characters"] = i
+                i = Self.parseXMLText(doc: app, query: "//ns:CharactersWithSpaces")
+                properties["charactersWithSpaces"] = i
+                
+                properties["application"] = app.at_xpath("//ns:Application")?.text
+            }
+        } catch {
+            os_log("Unable to extract the docProps/app.xml: %{public}@!", log: OSLog.infoExtraction, type: .error, error.localizedDescription)
         }
         
         let pages = properties["pages"] as? Int ?? 0
@@ -142,17 +154,22 @@ extension WordInfo {
         var width: Double = 0
         var height: Double = 0
         if deepScan, let entry = archive["word/document.xml"] {
-            var s = ""
-            _ = try? archive.extract(entry, skipCRC32: true) { data in
-                s += String(data: data, encoding: .utf8) ?? ""
-            }
-            // https://docs.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.pagesize?view=openxml-2.8.1
-            if !s.isEmpty, let document = try? Kanna.XML(xml: s, encoding: .utf8), let element = document.xpath("//w:pgSz", namespaces: Self.officeNamespaces).first {
-                width = (Self.parseXMLText(t: element["w"]) ?? 0) / 20 / 72
-                height = (Self.parseXMLText(t: element["h"]) ?? 0) / 20 / 72
+            do {
+                var s = ""
+                _ = try archive.extract(entry, skipCRC32: true) { data in
+                    s += String(data: data, encoding: .utf8) ?? ""
+                }
+                // https://docs.microsoft.com/en-us/dotnet/api/documentformat.openxml.wordprocessing.pagesize?view=openxml-2.8.1
+                if !s.isEmpty, let document = try? Kanna.XML(xml: s, encoding: .utf8), let element = document.xpath("//w:pgSz", namespaces: Self.officeNamespaces).first {
+                    width = (Self.parseXMLText(t: element["w"]) ?? 0) / 20 / 72
+                    height = (Self.parseXMLText(t: element["h"]) ?? 0) / 20 / 72
+                }
+            } catch {
+                os_log("Unable to process word/document.xml: %{public}@", log: OSLog.infoExtraction, type: .error, error.localizedDescription)
             }
         }
         
+        os_log("MS Word info fetched in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
         self.init(file: url, charactersCount: characters, charactersWithSpacesCount: charactersWithSpaces, wordsCount: words, pagesCount: pages, creator: creator, creationDate: creationDate, modified: lastModifiedBy, modificationDate: modifiedDate, title: title, subject: subject, keywords: keywords, description: description, application: application, width: width, height: height)
     }
 }
@@ -160,24 +177,34 @@ extension WordInfo {
 // MARK: - ExcelInfo
 extension ExcelInfo {
     convenience init?(xlsx url: URL, deepScan: Bool) {
+        let time = CFAbsoluteTimeGetCurrent()
+        os_log("Fetch info for MS Excel file %{private}@ (%{public}@)…", log: OSLog.infoExtraction, type: .debug, url.path, deepScan ? "with deep scan" : "without deep scan")
+        
         guard let archive = Archive(url: url, accessMode: .read) else {
+            os_log("Unable to decompress the file!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
         
         guard var properties = try? Self.parseOfficeCoreXML(archive: archive) else {
+            os_log("Unable to parse the core data!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
         
         guard let entryApp = archive["docProps/app.xml"] else {
+            os_log("Missing docProps/app.xml file!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
         
-        var s = ""
-        _ = try? archive.extract(entryApp, skipCRC32: true) { data in
-            s += String(data: data, encoding: .utf8) ?? ""
-        }
-        if !s.isEmpty, let app = try? Kanna.XML(xml: s, encoding: .utf8) {
-            properties["application"] = app.at_xpath("//ns:Application")?.text
+        do {
+            var s = ""
+            _ = try archive.extract(entryApp, skipCRC32: true) { data in
+                s += String(data: data, encoding: .utf8) ?? ""
+            }
+            if !s.isEmpty, let app = try? Kanna.XML(xml: s, encoding: .utf8) {
+                properties["application"] = app.at_xpath("//ns:Application")?.text
+            }
+        } catch {
+            os_log("Unable to extract the docProps/app.xml: %{public}@!", log: OSLog.infoExtraction, type: .error, error.localizedDescription)
         }
         
         let creator = properties["creator"] as? String ?? ""
@@ -209,10 +236,11 @@ extension ExcelInfo {
                     }
                 }
             } catch {
-                print("ubable to process xl/workbook.xml", error)
+                os_log("Unable to process xl/workbook.xml: %{public}@", log: OSLog.infoExtraction, type: .error, error.localizedDescription)
             }
         }
         
+        os_log("MS Excel info fetched in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
         self.init(file: url, creator: creator, creationDate: creationDate, modified: lastModifiedBy, modificationDate: modifiedDate, title: title, subject: subject, keywords: keywords, description: description, application: application, sheets: sheets)
     }
 }
@@ -220,24 +248,34 @@ extension ExcelInfo {
 // MARK: - PowerpointInfo
 extension PowerpointInfo {
     convenience init?(pptx url: URL, deepScan: Bool) {
+        let time = CFAbsoluteTimeGetCurrent()
+        os_log("Fetch info for MS PowerPoint file %{private}@ (%{public}@)…", log: OSLog.infoExtraction, type: .debug, url.path, deepScan ? "with deep scan" : "without deep scan")
+        
         guard let archive = Archive(url: url, accessMode: .read) else  {
+            os_log("Unable to decompress the file!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
         guard let entryApp = archive["docProps/app.xml"] else {
+            os_log("Missing docProps/app.xml file!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
         guard var properties: [String: AnyHashable?] = try? Self.parseOfficeCoreXML(archive: archive) else {
+            os_log("Unable to parse the core data!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
-        var s = ""
-        _ = try? archive.extract(entryApp, skipCRC32: true) { data in
-            s += String(data: data, encoding: .utf8) ?? ""
-        }
-        if !s.isEmpty, let app = try? Kanna.XML(xml: s, encoding: .utf8) {
-            properties["application"] = app.at_xpath("//ns:Application")?.text
-            properties["presentationFormat"] = app.at_xpath("//ns:PresentationFormat", namespaces: Self.officeNamespaces)?.text
-            let i: Int = Self.parseXMLText(doc: app, query: "//ns:Slides") ?? 0
-            properties["slides"] = i
+        do {
+            var s = ""
+            _ = try archive.extract(entryApp, skipCRC32: true) { data in
+                s += String(data: data, encoding: .utf8) ?? ""
+            }
+            if !s.isEmpty, let app = try? Kanna.XML(xml: s, encoding: .utf8) {
+                properties["application"] = app.at_xpath("//ns:Application")?.text
+                properties["presentationFormat"] = app.at_xpath("//ns:PresentationFormat", namespaces: Self.officeNamespaces)?.text
+                let i: Int = Self.parseXMLText(doc: app, query: "//ns:Slides") ?? 0
+                properties["slides"] = i
+            }
+        } catch {
+            os_log("Unable to extract the docProps/app.xml: %{public}@!", log: OSLog.infoExtraction, type: .error, error.localizedDescription)
         }
         
         let creator = properties["creator"] as? String ?? ""
@@ -255,6 +293,7 @@ extension PowerpointInfo {
         let presentationFormat = properties["presentationFormat"] as? String ?? ""
         let slidesCount = properties["slides"] as? Int ?? 0
 
+        os_log("MS PowerPoint info fetched in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
         self.init(file: url, creator: creator, creationDate: creationDate, modified: lastModifiedBy, modificationDate: modifiedDate, title: title, subject: subject, keywords: keywords, description: description, application: application, slidesCount: slidesCount, presentationFormat: presentationFormat)
     }
 }

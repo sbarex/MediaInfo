@@ -9,10 +9,15 @@
 import Foundation
 import CoreMedia
 import AVFoundation
+import os.log
 
 /// Get image info for format supported by system via the file metadata.
 func getMetadataImageInfo(forFile url: URL) -> ImageInfo? {
+    let time = CFAbsoluteTimeGetCurrent()
+    os_log("Fetch info for image %{private}@ with Metadata…", log: OSLog.infoExtraction, type: .debug, url.path)
+    
     guard let metadata = MDItemCreateWithURL(nil, url as CFURL) else {
+        os_log("Unable to open the image %{private}@ with Metadata!", log: OSLog.infoExtraction, type: .error, url.path)
         return nil
     }
     
@@ -45,12 +50,18 @@ func getMetadataImageInfo(forFile url: URL) -> ImageInfo? {
         alpha = CFBooleanGetValue((n as! CFBoolean))
     }
     
+    os_log("Image info fetched in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
     return ImageInfo(file: url, width: width, height: height, dpi: dpi, colorMode: colorSpace, depth: bit, profileName: "", animated: false, withAlpha: alpha, colorTable: .unknown, metadata: [:], metadataRaw: [:])
 }
 
 
 func getMetadataVideoInfo(forFile file: URL) -> VideoInfo? {
+    let time = CFAbsoluteTimeGetCurrent()
+    os_log("Fetch info for video %{private}@ with Metadata…", log: OSLog.infoExtraction, type: .debug, file.path)
+    
+    os_log("Parsing media streams with Metadata…", log: OSLog.infoExtraction, type: .debug)
     guard let metadata = MDItemCreateWithURL(nil, file as CFURL) else {
+        os_log("Parsing media streams with Metadata failed!", log: OSLog.infoExtraction, type: .error)
         return nil
     }
     let streams = getMetadataMediaStreams(forFile: file, withMetadata: metadata)
@@ -62,6 +73,7 @@ func getMetadataVideoInfo(forFile file: URL) -> VideoInfo? {
             CFNumberGetValue((n as! CFNumber), CFNumberType.doubleType, &duration)
         }
         
+        os_log("Video info fetched in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
         let video = VideoInfo(
             file: file,
             width: v.width, height: v.height,
@@ -83,11 +95,16 @@ func getMetadataVideoInfo(forFile file: URL) -> VideoInfo? {
         )
         return video
     } else {
+        os_log("Unable to parse the video %{private}@ with Metadata!", log: OSLog.infoExtraction, type: .error, file.path)
         return nil
     }
 }
 
 func getMetadataAudioInfo(forFile file: URL) -> AudioInfo? {
+    let time = CFAbsoluteTimeGetCurrent()
+    os_log("Fetch info for audio %{private}@ with Metadata…", log: OSLog.infoExtraction, type: .debug, file.path)
+    
+    os_log("Parsing media streams with Metadata…", log: OSLog.infoExtraction, type: .debug)
     guard let metadata = MDItemCreateWithURL(nil, file as CFURL) else {
         return nil
     }
@@ -99,6 +116,7 @@ func getMetadataAudioInfo(forFile file: URL) -> AudioInfo? {
         if let n = MDItemCopyAttribute(metadata, kMDItemDurationSeconds) {
             CFNumberGetValue((n as! CFNumber), CFNumberType.doubleType, &duration)
         }
+        os_log("Audio info fetched in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
         let audio = AudioInfo(
             file: file,
             duration: duration, start_time: -1,
@@ -114,6 +132,7 @@ func getMetadataAudioInfo(forFile file: URL) -> AudioInfo? {
         )
         return audio
     } else {
+        os_log("Unable to parse the audio %{private}@ with Metadata!", log: OSLog.infoExtraction, type: .error, file.path)
         return nil
     }
 }

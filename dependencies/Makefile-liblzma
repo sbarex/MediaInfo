@@ -1,0 +1,159 @@
+.DEFAULT_GOAL:=all
+
+# Output all commands.
+ifeq ($(VERBOSE),1)
+	SHELL=sh -xv
+endif
+
+bold := $(shell tput bold 2> /dev/null)
+normal := $(shell tput sgr0 2> /dev/null)
+
+ifeq ($(CURDIR),)
+	CURDIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+endif
+SOURCE_ROOT ?= ${CURDIR}
+SOURCE_ROOT := $(SOURCE_ROOT)/dependencies
+
+SPACE := $(null) $(null)
+CURRENT_DIR := $(subst $(SPACE),"\\ ",$(CURDIR))
+
+ifeq ($(BUILT_PRODUCTS_DIR),)
+	BUILD_DIR = ${CURRENT_DIR}/build
+else
+	BUILD_DIR = ${BUILT_PRODUCTS_DIR}
+endif
+
+ONLY_ACTIVE_ARCH ?= NO
+NATIVE_ARCH ?= $(shell uname -m)
+VALID_ARCHS = x86_64 arm64
+N_CPU = $(shell sysctl -n hw.physicalcpu)
+
+unexport INSTALL_DIR
+
+SDK_PATH = $(shell /usr/bin/xcrun --show-sdk-path)
+
+CFLAGS =
+LDFLAGS = -L${SDK_PATH}/usr/lib
+
+CFLAGS_x86_64 = -target x86_64-apple-macos10.14
+LDFLAGS_x86_64 = -target x86_64-apple-macos10.14
+
+CFLAGS_arm64 = -target arm64-apple-macos11
+LDFLAGS_arm64 = -target arm64-apple-macos11
+
+ifeq ($(CONFIGURATION),Debug)
+	CFLAGS_x86_64 += -g
+	CFLAGS_arm64 += -g
+else
+	CFLAGS_x86_64 += -DNDEBUG
+	CFLAGS_arm64 += -DNDEBUG
+endif
+
+liblzma_files := ${BUILD_DIR}/liblzma/$(NATIVE_ARCH)/lib/liblzma.a
+makefiles = ${BUILD_DIR}/liblzma/$(NATIVE_ARCH)/Makefile
+
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+ifeq ($(NATIVE_ARCH),x86_64)
+# build arm code
+		liblzma_files += ${BUILD_DIR}/liblzma/arm64/lib/liblzma.a
+		makefiles += ${BUILD_DIR}/liblzma/arm64/Makefile
+else
+# build intel code
+		liblzma_files += ${BUILD_DIR}/liblzma/x86_64/lib/liblzma.a
+		makefiles += ${BUILD_DIR}/liblzma/x86_64/Makefile
+endif
+endif
+
+check_arch :
+# 	@echo NATIVE_ARCH IS $(NATIVE_ARCH)
+ifeq ($(filter $(NATIVE_ARCH),$(VALID_ARCHS)),)
+		$(error "Current arch ${NATIVE_ARCH} is not supported! Valid archs are: ${VALID_ARCHS}")
+endif
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+		@echo "${bold}Building liblzma universal binary${normal}"
+else
+		@echo "${bold}Building liblzma for $(NATIVE_ARCH) architecture${normal}"
+endif
+	@echo "CURRENT_DIR: ${CURRENT_DIR}"
+	@echo "SOURCE_ROOT: ${SOURCE_ROOT}"
+	@echo "BUILD_DIR: ${BUILD_DIR}"
+
+clean:
+	@echo "${bold}Cleaning liblzma…${normal}"
+	
+	@rm -rf "${BUILD_DIR}/liblzma/" 2> /dev/null
+	@echo ""
+
+liblzma: $(makefiles) ${BUILD_DIR}/liblzma/lib/liblzma.a
+
+# Check if the source files are presents.
+source-liblzma : autogen ${SOURCE_ROOT}/xz/configure.ac ${SOURCE_ROOT}/xz/configure
+${SOURCE_ROOT}/xz/configure.ac :
+	@echo "${bold}Submodule update…${normal}"
+	cd "${SOURCE_ROOT}" && git submodule update --init
+
+# Autogen
+${SOURCE_ROOT}/xz/configure :
+	@echo ""
+	@echo "${bold}Autogen configuration files…${normal}"
+	cd "${SOURCE_ROOT}/xz" && PATH="/usr/local/bin:${PATH}" sh ./autogen.sh --no-po4a
+
+autogen:
+ifeq (, $(shell PATH="/usr/local/bin:${PATH}" which autoreconf))
+		$(error ${bold}No autoreconf in PATH${normal} ($(PATH)), ${bold}try install autogen tools with homebrew${normal})
+endif
+
+# Set Target-specific variables for arm64
+${BUILD_DIR}/liblzma/arm64/lib/liblzma.a : ARCH := arm64
+
+${BUILD_DIR}/liblzma/arm64/Makefile : CFLAGS := ${CFLAGS} ${CFLAGS_arm64}
+${BUILD_DIR}/liblzma/arm64/Makefile : LDFLAGS := ${LDFLAGS} ${LDFLAGS_arm64}
+${BUILD_DIR}/liblzma/arm64/Makefile : HOST := aarch64-apple-darwin
+${BUILD_DIR}/liblzma/arm64/Makefile : ARCH := arm64
+
+# Set Target-specific variables for x86_64
+${BUILD_DIR}/liblzma/x86_64/lib/liblzma.a : ARCH := x86_64
+
+${BUILD_DIR}/liblzma/x86_64/Makefile : CFLAGS := ${CFLAGS} ${CFLAGS_x86_64}
+${BUILD_DIR}/liblzma/x86_64/Makefile : LDFLAGS := ${LDFLAGS} ${LDFLAGS_x86_64}
+${BUILD_DIR}/liblzma/x86_64/Makefile : HOST := x86_64-apple-darwin
+${BUILD_DIR}/liblzma/x86_64/Makefile : ARCH := x86_64
+
+# Library configuration for a CPU architecture.
+$(makefiles) &:
+	@echo ""
+	@echo "${bold}liblzma configuration for ${ARCH} platform…${normal}"
+	@mkdir -p "${BUILD_DIR}/liblzma/${ARCH}"
+	@cd "${BUILD_DIR}/liblzma/${ARCH}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" ${SOURCE_ROOT}/xz/configure --host=${HOST} --prefix="${BUILD_DIR}/liblzma/${ARCH}" --enable-shared=no --enable-static=yes
+	${MAKE} -C "${BUILD_DIR}/liblzma/${ARCH}" -j${N_CPU} clean
+
+# Build the library for a CPU architecture.
+$(liblzma_files) :
+	@echo ""
+	@echo "${bold}Compiling liblzma for ${ARCH} platform…${normal}"
+	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${BUILD_DIR}/liblzma/${ARCH}" -j${N_CPU}
+
+	@echo ""
+	@echo "${bold}Installing liblzma for ${ARCH} platform on ${BUILD_DIR}/liblzma/${ARCH} …${normal}"
+	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${BUILD_DIR}/liblzma/${ARCH}" -j${N_CPU} install
+
+# Build the library.
+${BUILD_DIR}/liblzma/lib/liblzma.a : source-liblzma ${liblzma_files}
+	@mkdir -p "${BUILD_DIR}/liblzma/lib/"
+	@echo ""
+ifeq ($(ONLY_ACTIVE_ARCH),NO)
+		@echo "${bold}Creating liblzma universal library…${normal}"
+		lipo -create -output "${BUILD_DIR}/liblzma/lib/liblzma.a" "${BUILD_DIR}/liblzma/x86_64/lib/liblzma.a" "${BUILD_DIR}/liblzma/arm64/lib/liblzma.a"
+else
+		@echo "${bold}Creating liblzma library for ${NATIVE_ARCH} platform…${normal}"
+		@rm -f "${BUILD_DIR}/liblzma/lib/liblzma.a" > /dev/null
+		ln "${BUILD_DIR}/liblzma/${NATIVE_ARCH}/lib/liblzma.a" "${BUILD_DIR}/liblzma/lib/liblzma.a"
+endif
+	@rm -rf "${BUILD_DIR}/liblzma/include" > /dev/null
+	ln -s "${BUILD_DIR}/liblzma/${NATIVE_ARCH}/include" "${BUILD_DIR}/liblzma/include"
+	@echo ""
+	
+
+all: check_arch source-liblzma liblzma
+install: check_arch source-liblzma liblzma
+

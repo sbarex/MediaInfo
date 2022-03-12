@@ -60,7 +60,7 @@ class TokenOfficeMetadata: Token {
             case .characters: return NSLocalizedString("Number of characters", comment: "")
             case .charactersWithSpacesCount: return NSLocalizedString("Number of characters (spaces included)", comment: "")
             case .sheets: return NSLocalizedString("Sheets list", comment: "")
-            case .application: return NSLocalizedString("Application name", tableName: "LocalizableExt", comment: "")
+            case .application: return NSLocalizedString("Application name", tableName: "Localizable", comment: "")
             }
         }
         

@@ -180,21 +180,20 @@ extension BaseInfo {
 
 extension ImageInfo {
     @objc override func getScriptInfo(token: TokenScript) -> String {
-        if !token.code.hasPrefix("/* no-metadata */") {
-            return NSLocalizedString("If the script does not need the metadata it is recommended to insert the comment /* no-metadata */ as the first line to speed up the generation of the menu.", comment: "")
-        } else {
-            return super.getScriptInfo(token: token)
-        }
+        return NSLocalizedString("If the script needs to access the metadata you need to insert the comment /* require-metadata */ as the first line. This can slow down menu generation.", comment: "")
     }
 }
 
 
 extension BaseOfficeInfo {
     @objc override func getScriptInfo(token: TokenScript) -> String {
-        if !token.code.hasPrefix("/* no-deep-scan */") {
-            return NSLocalizedString("If the script does not need the metadata it is recommended to insert the comment /* no-deep-scan */ as the first line to speed up the generation of the menu.", comment: "")
-        } else {
-            return super.getScriptInfo(token: token)
-        }
+        return NSLocalizedString("If the script needs to access the metadata you need to insert the comment /* require-deep-scan */ as the first line. This can slow down menu generation.", comment: "")
+    }
+}
+
+
+extension FolderInfo {
+    @objc override func getScriptInfo(token: TokenScript) -> String {
+        return NSLocalizedString("If the script needs to access to the full size with metadata you need to insert the comment /* require-full-scan */ as the first line. This can slow down menu generation. If the script only need to access to the total number of files or to the total file size (without medatata), you need to insert the comment /* require-fast-scan */ as the first line. ", comment: "")
     }
 }

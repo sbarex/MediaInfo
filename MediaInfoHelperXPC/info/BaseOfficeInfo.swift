@@ -23,6 +23,31 @@ class BaseOfficeInfo: FileInfo {
         case application
     }
     
+    override class func updateSettings(_ settings: Settings, forItems items: [Settings.MenuItem]) {
+        for item in items {
+            if item.template.contains("[[size:") || item.template.contains("[[pages]]") || item.template.contains("[[sheets]]") {
+                settings.isOfficeDeepScan = true
+                return
+            } else if item.template.contains("[[script") {
+                let r = BaseInfo.splitTokens(in: item.template)
+                for result in r {
+                    let placeholder = String(item.template[Range(result.range, in: item.template)!])
+                    guard placeholder.hasPrefix("[[script-") else {
+                        continue
+                    }
+                    guard let code = String(placeholder.dropFirst(16).dropLast(2)).fromBase64() else {
+                        continue
+                    }
+                    if code.hasPrefix("/* require-deep-scan */") {
+                        settings.isOfficeDeepScan = true
+                        return
+                    }
+                }
+            }
+        }
+        settings.isOfficeDeepScan = false
+    }
+    
     // Dublin Core properties
     let creator: String
     let title: String
@@ -103,13 +128,13 @@ class BaseOfficeInfo: FileInfo {
         case "[[creation]]":
             var template = ""
             if !self.creator.isEmpty {
-                template += String(format: NSLocalizedString("Created by %@", tableName: "LocalizableExt",comment: ""), "[[creator]]")
+                template += String(format: NSLocalizedString("created by %@", tableName: "LocalizableExt",comment: ""), "[[creator]]")
             }
             if self.creationDate != nil {
                 if !self.creator.isEmpty {
                     template += " " + String(format: NSLocalizedString("on %@", tableName: "LocalizableExt",comment: ""), "[[creation-date]]")
                 } else {
-                    template += String(format: NSLocalizedString("Created on %@", tableName: "LocalizableExt",comment: ""), "[[creation-date]]")
+                    template += String(format: NSLocalizedString("created on %@", tableName: "LocalizableExt",comment: ""), "[[creation-date]]")
                 }
             }
             return self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: item ?? MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "", template: template)))
@@ -119,13 +144,13 @@ class BaseOfficeInfo: FileInfo {
         case "[[last-modification]]":
             var template = ""
             if !self.modified.isEmpty {
-                template += String(format: NSLocalizedString("Last saved by %@", tableName: "LocalizableExt", comment: ""), "[[last-author]]")
+                template += String(format: NSLocalizedString("last saved by %@", tableName: "LocalizableExt", comment: ""), "[[last-author]]")
             }
             if self.modificationDate != nil {
                 if !self.modified.isEmpty {
                     template += " " + String(format: NSLocalizedString("on %@", tableName: "LocalizableExt",comment: ""), "[[modification-date]]")
                 } else {
-                    template += String(format: NSLocalizedString("Last saved on %@", tableName: "LocalizableExt",comment: ""), "[[modification-date]]")
+                    template += String(format: NSLocalizedString("last saved on %@", tableName: "LocalizableExt",comment: ""), "[[modification-date]]")
                 }
             }
             return self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: item ?? MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "", template: template)))
@@ -171,7 +196,7 @@ class BaseOfficeInfo: FileInfo {
             guard n>0 || !settings.isEmptyItemsSkipped else {
                 return true
             }
-            let title = self.formatCount(n, noneLabel: "No Keyword", singleLabel: "1 Keyword", manyLabel: "%d Keywords", useEmptyData: !settings.isEmptyItemsSkipped, formatAsString: false)
+            let title = self.formatCount(n, noneLabel: "no Keyword", singleLabel: "1 Keyword", manyLabel: "%d Keywords", useEmptyData: !settings.isEmptyItemsSkipped, formatAsString: false)
             let mnu = self.createMenuItem(title: title, image: "no-image", settings: settings, representedObject: item)
             let submenu = NSMenu(title: title)
             for (i, k) in keywords.enumerated() {

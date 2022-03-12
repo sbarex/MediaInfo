@@ -169,9 +169,7 @@
 "gAy-XH-7VJ.title" = "OK";
 
 "hkM-Fc-2qh.title" = "Gestisci gli archivi compressi";
-"Fw5-Hp-WKw.title" = "Numero totale di file processabili";
-"K5p-FH-df2.title" = "Limite sotto livelli";
-"P3E-fJ-Jhx.title" = "Limite di file per cartella";
+"Fw5-Hp-WKw.title" = "Numero massimo di file processati:";
 
 "o81-Ld-5Eb.title" = "Annulla";
 "57J-bu-UG3.title" = "Salva";
@@ -189,3 +187,31 @@
 
 /* Class = "NSSegmentedCell"; Bip-Es-r1Y.ibShadowedToolTips[1] = "Move down."; ObjectID = "Bip-Es-r1Y"; */
 "Bip-Es-r1Y.ibShadowedToolTips[1]" = "Sposta in basso.";
+
+/* Class = "NSTabViewItem"; label = "Folder"; ObjectID = "rWf-pI-JY7"; */
+"rWf-pI-JY7.label" = "Cartelle";
+/* Class = "NSPopUpButton"; ibShadowedToolTip = "Test the Folder menu."; ObjectID = "FVx-ch-CRs"; */
+"FVx-ch-CRs.ibShadowedToolTip" = "Prova il menu delle cartelle.";
+
+/* Class = "NSButtonCell"; title = "Handle folders"; ObjectID = "xeL-TD-7I2"; */
+"xeL-TD-7I2.title" = "Gestisci le cartelle";
+/* Class = "NSButtonCell"; title = "Handle bundles"; ObjectID = "mUW-Uf-JEV"; */
+"mUW-Uf-JEV.title" = "Gestisci i bundle";
+/* Class = "NSButtonCell"; title = "Skip hidden files"; ObjectID = "K3N-A3-p1z"; */
+"K3N-A3-p1z.title" = "Ignora file nascosti";
+/* Class = "NSButtonCell"; title = "Use generic icons"; ObjectID = "CR9-pC-4tN"; */
+"CR9-pC-4tN.title" = "Usa icone generiche";
+"H32-Lj-ZxG.title" = "Numero massimo di file processati:";
+/* Class = "NSTextFieldCell"; title = "Max files per depth:"; ObjectID = "I0G-FL-f2b"; */
+"I0G-FL-f2b.title" = "Limite di file per cartella:";
+/* Class = "NSTextFieldCell"; title = "Max depth:"; ObjectID = "vkq-z1-YqB"; */
+"vkq-z1-YqB.title" = "Limite sotto livelli:";
+/* Class = "NSTextFieldCell"; title = "File action:"; ObjectID = "KWm-tx-hvy"; */
+"KWm-tx-hvy.title" = "Azione del file:";
+
+/* Class = "NSMenuItem"; title = "Standard"; ObjectID = "a1k-f4-2iM"; */
+"a1k-f4-2iM.title" = "Standard";
+/* Class = "NSMenuItem"; title = "Reveal"; ObjectID = "iAP-uK-SrU"; */
+"iAP-uK-SrU.title" = "Rivela nel Finder";
+/* Class = "NSMenuItem"; title = "Open"; ObjectID = "sFP-Hl-e8b"; */
+"sFP-Hl-e8b.title" = "Apri il file";

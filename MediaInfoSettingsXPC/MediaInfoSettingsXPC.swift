@@ -22,12 +22,6 @@ class MediaInfoSettingsXPC: NSObject, MediaInfoSettingsXPCProtocol {
         Settings.initDefaults()
     }
     
-    /*
-    func upperCaseString(_ string: String, withReply reply: @escaping (String) -> Void) {
-        let response = string.uppercased()
-        reply(response)
-    }
-    */
     func getSettings() -> Settings {
         return Settings(fromDomain: Settings.SharedDomainName)
     }

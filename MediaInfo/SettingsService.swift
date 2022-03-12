@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import os.log
 
 protocol SettingsService {
     static var XPCProtocol: Protocol { get }
@@ -41,8 +42,7 @@ extension SettingsService {
     
     static func initSettings(connection: NSXPCConnection) -> MediaInfoSettingsXPCProtocol? {
         let service = connection.synchronousRemoteObjectProxyWithErrorHandler { error in
-            NSLog("\(Self.serviceName) error: %@", error.localizedDescription)
-            print("Received error:", error)
+            os_log("MediaInfo - Settings %{public}@ error: %{public}@", log: OSLog.settingsXPC, type: .error, Self.serviceName, error.localizedDescription)
         } as? MediaInfoSettingsXPCProtocol
         return service
     }

@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import os.log
 
 class SettingsWrapper: SettingsService {
     static let serviceName = "org.sbarex.MediaInfoSettingsXPC"
@@ -17,8 +18,7 @@ class SettingsWrapper: SettingsService {
     
     static let service: MediaInfoSettingsXPCProtocol? = {
         let service = connection.synchronousRemoteObjectProxyWithErrorHandler { error in
-            NSLog("MediaInfoSettingsXPC error: %@", error.localizedDescription)
-            print("Received error:", error)
+            os_log("MediaInfo Settings - Error: %{public}@", log: OSLog.settingsXPC, type: .error, error.localizedDescription)
         } as? MediaInfoSettingsXPCProtocol
         return service
     }()

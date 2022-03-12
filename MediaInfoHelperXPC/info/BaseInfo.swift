@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import os.log
 import JavaScriptCore
 
 extension NSNotification.Name {
@@ -22,12 +23,15 @@ protocol JSExceptionDelegate: AnyObject {
     func onJSException(info: BaseInfo, exception: String?, atLine line: Int, forItem item: MenuItemInfo?)
 }
 
-protocol JSDelegate: AnyObject {
+protocol JSDelegate: SystemExecDelegate {
     func jsOpen(path: String, reply: @escaping (Bool)->Void)
     func jsOpen(path: String, with app: String, reply: @escaping (Bool, String?)->Void)
     func jsExec(command: String, arguments: [String], reply: @escaping (Int32, String)->Void)
     func jsRunApp(at path: String, reply: @escaping (Bool, String?)->Void)
     func jsCopyToClipboard(text: String) -> Bool
+}
+
+protocol SystemExecDelegate: AnyObject {
     func jsExecSync(command: String, arguments: [String]) -> (status: Int32, output: String)
 }
 
@@ -44,6 +48,7 @@ enum MenuAction: String, Codable {
     case about
     case custom
     case clipboard
+    case reveal
 }
 
 struct MenuItemInfo: Hashable, Encodable {
@@ -53,10 +58,11 @@ struct MenuItemInfo: Hashable, Encodable {
         case fileType
         case userInfo
         case action
+        case tag
     }
     
     static func == (lhs: MenuItemInfo, rhs: MenuItemInfo) -> Bool {
-        return lhs.fileType == rhs.fileType && lhs.index == rhs.index && lhs.menuItem == rhs.menuItem && lhs.userInfo == rhs.userInfo
+        return lhs.fileType == rhs.fileType && lhs.index == rhs.index && lhs.menuItem == rhs.menuItem && lhs.userInfo == rhs.userInfo && lhs.tag == rhs.tag
     }
     
     let index: Int
@@ -64,13 +70,15 @@ struct MenuItemInfo: Hashable, Encodable {
     let fileType: Settings.SupportedFile
     var userInfo: [String: AnyHashable]
     var action: MenuAction
+    var tag: Int
     
-    init (fileType: Settings.SupportedFile, index: Int, item: Settings.MenuItem, action: MenuAction = .standard, userInfo: [String: AnyHashable] = [:]) {
+    init (fileType: Settings.SupportedFile, index: Int, item: Settings.MenuItem, action: MenuAction = .standard, tag: Int = 0, userInfo: [String: AnyHashable] = [:]) {
         self.fileType = fileType
         self.index = index
         self.menuItem = item
         self.userInfo = userInfo
         self.action = action
+        self.tag = tag
     }
     
     func hash(into hasher: inout Hasher) {
@@ -78,6 +86,7 @@ struct MenuItemInfo: Hashable, Encodable {
         hasher.combine(index)
         hasher.combine(menuItem)
         hasher.combine(userInfo)
+        // hasher.combine(tag)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -92,6 +101,7 @@ struct MenuItemInfo: Hashable, Encodable {
         }
         try container.encode(userInfo, forKey: .userInfo)
         try container.encode(action, forKey: .action)
+        try container.encode(tag, forKey: .tag)
     }
 }
 
@@ -107,7 +117,7 @@ class BaseInfo: Codable {
     }()
     static let byteCountFormatter:ByteCountFormatter = {
         let formatter = ByteCountFormatter()
-        formatter.allowedUnits = [.useMB, .useKB, .useGB]
+        formatter.allowedUnits = [.useMB, .useKB, .useGB, .useBytes]
         formatter.countStyle = .file
         
         return formatter
@@ -215,6 +225,10 @@ class BaseInfo: Codable {
         }
     }
     
+    class func updateSettings(_ settings: Settings, forItems items: [Settings.MenuItem]) {
+        
+    }
+    
     var jsInitialized = false
     
     lazy var initJS: ((Settings)->JSContext?) = { settings in
@@ -266,6 +280,11 @@ class BaseInfo: Codable {
     /// - parameters:
     ///    - settings:
     func initJSContext(settings: Settings) -> JSContext? {
+        let time = CFAbsoluteTimeGetCurrent()
+        os_log("Initializing JS Context…", log: OSLog.menuGeneration, type: .debug)
+        defer {
+            os_log("JS Context initialized in %{public}lf seconds.", log: OSLog.menuGeneration, type: .info, CFAbsoluteTimeGetCurrent() - time)
+        }
         guard let context = JSContext() else {
             return nil
         }
@@ -274,7 +293,7 @@ class BaseInfo: Codable {
         encoder.userInfo[.exportStoredValues] = true
         
         context.exceptionHandler = { context, exception in
-            print(exception?.toString() ?? "JS exception!")
+            os_log("JS Exception: %{public}@", log: OSLog.menuGeneration, type: .error, exception?.toString() ?? "")
         }
        
         /*
@@ -605,7 +624,7 @@ delete fileJSONData;
         }
     }
     
-    func purgeString(_ text: String) -> String {
+    func purgeString(_ text: String, allowCapitalize: Bool = true) -> String {
         var text = text
         // Remove empty brackets: empty, or with only spaces, comma, semicolon or pipe.
         text = text.replacingOccurrences(of: #"\s*\([\s,;|]*\)"#, with: " ", options: .regularExpression)
@@ -618,10 +637,16 @@ delete fileJSONData;
         text = text.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
         // Trim spaces, comma, semicolon and pipe.
         text = text.trimmingCharacters(in: CharacterSet.whitespaces.union(CharacterSet(charactersIn: ",;|")))
-        // Capitalize first letter.
-        text = text.capitalizingFirstLetter()
+        if allowCapitalize {
+            // Capitalize first letter.
+            text = text.capitalizingFirstLetter()
+        }
         
         return text
+    }
+    
+    func placeholderAllowCapitalize(_ placeholder: String) -> Bool {
+        return true
     }
     
     /// Translate the placeholder inside the template
@@ -637,9 +662,13 @@ delete fileJSONData;
         var text = template
        
         isFilled = false
+        var allowCapitalize = true
         var isPlaceholderFilled = false
         for result in results {
             let placeholder = String(template[Range(result.range, in: template)!])
+            if result.range.location == 0 {
+                allowCapitalize = placeholderAllowCapitalize(placeholder)
+            }
             let r = processPlaceholder(placeholder, settings: settings, isFilled: &isPlaceholderFilled, forItem: item)
             if isPlaceholderFilled {
                 isFilled = true
@@ -647,7 +676,7 @@ delete fileJSONData;
             text = text.replacingOccurrences(of: placeholder, with: r)
         }
         
-        text = purgeString(text)
+        text = purgeString(text, allowCapitalize: allowCapitalize)
         
         return text
     }
@@ -670,8 +699,12 @@ delete fileJSONData;
         
         isFilled = false
         var isPlaceholderFilled = false
+        var allowCapitalize = true
         for result in results {
             let placeholder = String(template[Range(result.range, in: template)!])
+            if result.range.location == 0 {
+                allowCapitalize = placeholderAllowCapitalize(placeholder)
+            }
             let r = processPlaceholder(placeholder, settings: settings, isFilled: &isPlaceholderFilled, forItem: item)
             if isPlaceholderFilled {
                 isFilled = true
@@ -697,8 +730,12 @@ delete fileJSONData;
         
         // Trim spaces, comma, semicolon and pipe.
         text.trimCharacters(in: CharacterSet.whitespaces.union(CharacterSet(charactersIn: ",;|")))
-        // Capitalize first letter.
-        return text.capitalizingFirstLetter()
+        if allowCapitalize {
+            // Capitalize first letter.
+            return text.capitalizingFirstLetter()
+        } else {
+            return text
+        }
     }
     
     static func splitTokens(in template: String) -> [NSTextCheckingResult] {
@@ -762,7 +799,11 @@ delete fileJSONData;
                 hasher.combine(item.hasSubmenu)
                 
                 let key = hasher.finalize()
-                
+                if var info = item.representedObject as? MenuItemInfo {
+                    info.tag = item.tag
+                    item.representedObject = info
+                    item.tag = key
+                }
                 representedObjects[key] = item.representedObject
             }
             if item.hasSubmenu {
@@ -774,7 +815,12 @@ delete fileJSONData;
         }
         return representedObjects
     }
+    
     static func postprocessMenuItem(_ item: NSMenuItem, from data: [Int: Any]) -> Any? {
+        if item.tag != 0, let d = data[item.tag] {
+            return d
+        }
+        
         var hasher = Hasher()
         hasher.combine(item.tag)
         hasher.combine(item.title)

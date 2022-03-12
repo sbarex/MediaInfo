@@ -32,6 +32,32 @@ class ImageInfo: FileInfo, DimensionalInfo, PaperInfo {
         case float
     }
     
+    override class func updateSettings(_ settings: Settings, forItems items: [Settings.MenuItem]) {
+        super.updateSettings(settings, forItems: items)
+        for item in items {
+            if item.template.contains("[[metadata]]") {
+                settings.extractImageMetadata = true
+                return
+            } else if item.template.contains("[[script") {
+                let r = BaseInfo.splitTokens(in: item.template)
+                for result in r {
+                    let placeholder = String(item.template[Range(result.range, in: item.template)!])
+                    guard placeholder.hasPrefix("[[script-") else {
+                        continue
+                    }
+                    guard let code = String(placeholder.dropFirst(16).dropLast(2)).fromBase64() else {
+                        continue
+                    }
+                    if code.hasPrefix("/* require-metadata */") {
+                        settings.extractImageMetadata = true
+                        return
+                    }
+                }
+            }
+        }
+        settings.extractImageMetadata = false
+    }
+    
     static func getMetaClasses() -> [AnyClass] {
         return [
             MetadataBaseInfo.self,

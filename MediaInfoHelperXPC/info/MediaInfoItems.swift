@@ -179,7 +179,7 @@ extension ChaptersInfo {
         let useEmptyData = !settings.isEmptyItemsSkipped
         switch placeholder {
         case "[[chapters-count]]":
-            return self.formatCount(chapters.count, noneLabel: "No Chapter", singleLabel: "1 Chapter", manyLabel: "%d Chapters", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
+            return self.formatCount(chapters.count, noneLabel: "no Chapter", singleLabel: "1 Chapter", manyLabel: "%d Chapters", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
         default:
             return placeholder
         }
@@ -199,7 +199,7 @@ extension ChaptersInfo {
                 chapters_menu.addItem(self.createMenuItem(title: chapter.getTitle(index: i), image: "-", settings: settings, representedObject: info))
             }
             
-            let title = self.formatCount(chapters.count, noneLabel: "No Chapter", singleLabel: "1 Chapter", manyLabel: "%d Chapters", useEmptyData: true, formatAsString: false)
+            let title = self.formatCount(chapters.count, noneLabel: "no Chapter", singleLabel: "1 Chapter", manyLabel: "%d Chapters", useEmptyData: true, formatAsString: false)
             let mnu = self.createMenuItem(title: title, image: item.menuItem.image, settings: settings, representedObject: item)
             destination_sub_menu.addItem(mnu)
             destination_sub_menu.setSubmenu(chapters_menu, for: mnu)
@@ -351,11 +351,11 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
         case "[[language]]", "[[language-flag]]":
             return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         case "[[subtitles-count]]":
-            return self.formatCount(subtitles.count, noneLabel: "No Subtitle", singleLabel: "1 Subtitle", manyLabel: "%d Subtitles", isFilled: &isFilled, useEmptyData: useEmptyData)
+            return self.formatCount(subtitles.count, noneLabel: "no Subtitle", singleLabel: "1 Subtitle", manyLabel: "%d Subtitles", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[audio-count]]":
-            return self.formatCount(audioTracks.count, noneLabel: "No Audio track", singleLabel: "1 Audio track", manyLabel: "%d Audio tracks", isFilled: &isFilled, useEmptyData: useEmptyData)
+            return self.formatCount(audioTracks.count, noneLabel: "no Audio track", singleLabel: "1 Audio track", manyLabel: "%d Audio tracks", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[video-count]]":
-            return self.formatCount(videoTracks.count, noneLabel: "No Video track", singleLabel: "1 Video track", manyLabel: "%d Video tracks", isFilled: &isFilled, useEmptyData: useEmptyData)
+            return self.formatCount(videoTracks.count, noneLabel: "no Video track", singleLabel: "1 Video track", manyLabel: "%d Video tracks", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[chapters-count]]":
             return self.processPlaceholderChapters(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         case "[[engine]]":
@@ -380,7 +380,7 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
             
             let group_tracks = settings.isTracksGrouped // FIXME: rename
             let video_sub_menu: NSMenu
-            let title = self.formatCount(videoTracks.count, noneLabel: "No Video track", singleLabel: "1 Video track", manyLabel: "%d Video tracks", useEmptyData: true, formatAsString: false)
+            let title = self.formatCount(videoTracks.count, noneLabel: "no Video track", singleLabel: "1 Video track", manyLabel: "%d Video tracks", useEmptyData: true, formatAsString: false)
             if group_tracks {
                 video_sub_menu = NSMenu(title: title)
             } else {
@@ -418,7 +418,7 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
             
             let audio_sub_menu: NSMenu
             let group_tracks = settings.isTracksGrouped
-            let title = self.formatCount(audioTracks.count, noneLabel: "No Audio track", singleLabel: "1 Audio track", manyLabel: "%d Audio tracks", useEmptyData: true, formatAsString: false)
+            let title = self.formatCount(audioTracks.count, noneLabel: "no Audio track", singleLabel: "1 Audio track", manyLabel: "%d Audio tracks", useEmptyData: true, formatAsString: false)
             if group_tracks {
                 audio_sub_menu = NSMenu(title: title)
             } else {
@@ -458,7 +458,7 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
             let sub_menu_txt: NSMenu
             let group_tracks = settings.isTracksGrouped // FIXME: rename
             if group_tracks {
-                let title = self.formatCount(n, noneLabel: "No Subtitle", singleLabel: "1 Subtitle", manyLabel: "%d Subtitles", useEmptyData: true, formatAsString: false)
+                let title = self.formatCount(n, noneLabel: "no Subtitle", singleLabel: "1 Subtitle", manyLabel: "%d Subtitles", useEmptyData: true, formatAsString: false)
                 let mnu_txt = destination_sub_menu.addItem(withTitle: title, action: nil, keyEquivalent: "")
                 mnu_txt.image = self.getImage(for: "txt")
                 sub_menu_txt = NSMenu(title: title)

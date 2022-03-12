@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-
+import os.log
 
 class HelperWrapper: SettingsService {
     static let XPCProtocol: Protocol = MediaInfoHelperXPCProtocol.self
@@ -16,8 +16,7 @@ class HelperWrapper: SettingsService {
     
     static func initSettings(connection: NSXPCConnection) -> MediaInfoSettingsXPCProtocol? {
         let service = connection.synchronousRemoteObjectProxyWithErrorHandler { error in
-            NSLog("\(HelperWrapper.serviceName) error: %@", error.localizedDescription)
-            print("Received error:", error)
+            os_log("MediaInfo Helper - Error: %{public}@", log: OSLog.helperXPC, type: .error, error.localizedDescription)
         } as? MediaInfoHelperXPCProtocol
         return service
     }
@@ -84,6 +83,17 @@ class HelperWrapper: SettingsService {
         return archiveInfo
     }
     
+    static func getFolderInfo(for url: URL) -> FolderInfo? {
+        if #available(macOSApplicationExtension 11.0, *) {
+            Logger.finderExtension.debug("MediaInfo FinderSync - Fetching folder info…")
+        } else {
+            os_log("MediaInfo FinderSync - Fetching folder info…", log: OSLog.finderExtension, type: .debug)
+        }
+        
+        let info: FolderInfo? = Self.getInfoFromService(for: url, type: "folder")
+        return info
+    }
+    
     static internal func getInfoFromService<T: BaseInfo>(for url: URL, type: String) -> T? {
         guard let service = Self.service as? MediaInfoHelperXPCProtocol else {
             return nil
@@ -105,13 +115,13 @@ class HelperWrapper: SettingsService {
                 info = try decoder.decode(T.self, from: data)
             } catch {
                 let e = error
-                print(error, e)
+                os_log("MediaInfo Helper - Error: %{public}@", log: OSLog.helperXPC, type: .error, e.localizedDescription)
             }
         }
         
         if !Thread.isMainThread {
-            let r = inflightSemaphore.wait(timeout: .distantFuture)
-            print(r)
+            let _ = inflightSemaphore.wait(timeout: .distantFuture)
+            // print(r)
         } else {
             while inflightSemaphore.wait(timeout: .now()) == .timedOut {
                 RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0))
@@ -144,6 +154,7 @@ class HelperWrapper: SettingsService {
     
     static func systemExec(command: String, arguments: [String], reply: @escaping ((Int32, String) -> Void)) {
         guard let service = Self.service as? MediaInfoHelperXPCProtocol else {
+            reply(-1, "No MediaInfo Helper XPC process available.")
             return
         }
         service.systemExec(command: command, arguments: arguments, reply: reply)

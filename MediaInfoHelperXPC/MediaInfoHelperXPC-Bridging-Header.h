@@ -5,6 +5,8 @@
 #ifndef BridgeHeader_h
 #define BridgeHeader_h
 
+#include "utils/du.h"
+
 #import "webp/decode.h"
 
 #include "libavcodec/avcodec.h"

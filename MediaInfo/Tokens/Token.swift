@@ -31,6 +31,7 @@ extension NSPasteboard.PasteboardType {
     static let MITokenAudioTrackMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-audio-track-metadata")
     static let MITokenModelMetadata = NSPasteboard.PasteboardType(rawValue: "org.sbarex.model-metadata")
     static let MITokenArchiveTrack = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-archive-track")
+    static let MITokenFolderTrack = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-folder-track")
     static let MITokenScript = NSPasteboard.PasteboardType(rawValue: "org.sbarex.mi-token-script")
 }
 
@@ -90,6 +91,7 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
         case office
         case model
         case archive
+        case folder
     }
     
     enum Mode: Int, BaseMode {
@@ -192,7 +194,8 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
             TokenDuration.self,
             TokenColor.self,
             TokenLanguage.self, TokenLanguages.self,
-            TokenImageExtra.self, TokenMediaExtra.self,
+            TokenImageExtra.self,
+            TokenMediaExtra.self,
             TokenFile.self,
             TokenPrint.self,
             TokenPdfBox.self, TokenPdfMetadata.self,
@@ -202,7 +205,9 @@ class Token: NSObject, NSPasteboardWriting, NSPasteboardReading, BaseToken {
             TokenOfficeSize.self,
             TokenOfficeMetadata.self,
             TokenArchive.self,
-            TokenScript.self, TokenAction.self
+            TokenFolder.self,
+            TokenScript.self,
+            TokenAction.self
         ]
         var tokens: [Token] = []
         

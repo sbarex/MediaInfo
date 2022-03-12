@@ -9,6 +9,7 @@
 import Foundation
 import ZIPFoundation
 import Kanna
+import os.log
 
 extension BaseOfficeInfo {
     static let openOfficeNamespaces: [String: String] = [
@@ -69,7 +70,11 @@ extension BaseOfficeInfo {
 // MARK: - WordInfo
 extension WordInfo {
     convenience init?(odt url: URL, deepScan: Bool) {
+        let time = CFAbsoluteTimeGetCurrent()
+        os_log("Fetch info for OpenOffice text file %{private}@ (%{public}@)…", log: OSLog.infoExtraction, type: .debug, url.path, deepScan ? "with deep scan" : "without deep scan")
+        
         guard let archive = Archive(url: url, accessMode: .read) else  {
+            os_log("Unable to decompress the file!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
         
@@ -86,6 +91,7 @@ extension WordInfo {
                 charactersWithSpaces = Self.parseXMLText(t: stat["non-whitespace-character-count"]) ?? 0
             }
         }) else {
+            os_log("Unable to parse the core data!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
         
@@ -138,16 +144,21 @@ extension WordInfo {
         }
         
         if let styleMeta = archive["styles.xml"] {
-            var s = ""
-            _ = try? archive.extract(styleMeta, skipCRC32: true) { data in
-                s += String(data: data, encoding: .utf8) ?? ""
-            }
-            if !s.isEmpty, let styles = try? Kanna.XML(xml: s, encoding: .utf8), let node = styles.xpath("//office:automatic-styles/style:page-layout/style:page-layout-properties", namespaces: Self.openOfficeNamespaces).first {
-                width = convertLength(node["page-width"]) ?? 0
-                height = convertLength(node["page-height"]) ?? 0
+            do {
+                var s = ""
+                _ = try archive.extract(styleMeta, skipCRC32: true) { data in
+                    s += String(data: data, encoding: .utf8) ?? ""
+                }
+                if !s.isEmpty, let styles = try? Kanna.XML(xml: s, encoding: .utf8), let node = styles.xpath("//office:automatic-styles/style:page-layout/style:page-layout-properties", namespaces: Self.openOfficeNamespaces).first {
+                    width = convertLength(node["page-width"]) ?? 0
+                    height = convertLength(node["page-height"]) ?? 0
+                }
+            } catch {
+                os_log("Unable to parse styles.xml: %{public}@!", log: OSLog.infoExtraction, type: .error, error.localizedDescription)
             }
         }
         
+        os_log("OpenOffice text info fetched in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
         self.init(file: url, charactersCount: characters, charactersWithSpacesCount: charactersWithSpaces, wordsCount: words, pagesCount: pages, creator: creator, creationDate: creationDate, modified: lastModifiedBy, modificationDate: modifiedDate, title: title, subject: subject, keywords: keywords, description: description, application: application, width: width, height: height)
     }
 }
@@ -155,11 +166,16 @@ extension WordInfo {
 // MARK: - ExcelInfo
 extension ExcelInfo {
     convenience init?(ods url: URL, deepScan: Bool) {
+        let time = CFAbsoluteTimeGetCurrent()
+        os_log("Fetch info for OpenOffice spreadsheet file %{private}@ (%{public}@)…", log: OSLog.infoExtraction, type: .debug, url.path, deepScan ? "with deep scan" : "without deep scan")
+        
         guard let archive = Archive(url: url, accessMode: .read) else  {
+            os_log("Unable to decompress the file!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
         
         guard let properties = try? Self.parseOpenOfficeXML(archive: archive) else {
+            os_log("Unable to parse the core data!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
         
@@ -178,20 +194,25 @@ extension ExcelInfo {
         var sheets: [String] = []
         
         if deepScan, let entryContent = archive["content.xml"] {
-            var s = ""
-            _ = try? archive.extract(entryContent, skipCRC32: true) { data in
-                s += String(data: data, encoding: .utf8) ?? ""
-            }
-            if !s.isEmpty, let content = try? Kanna.XML(xml: s, encoding: .utf8) {
-                let tables = content.xpath("//office:body/office:spreadsheet/table:table", namespaces: Self.openOfficeNamespaces)
-                for n in tables {
-                    if let name = n["name"] {
-                        sheets.append(name)
+            do {
+                var s = ""
+                _ = try archive.extract(entryContent, skipCRC32: true) { data in
+                    s += String(data: data, encoding: .utf8) ?? ""
+                }
+                if !s.isEmpty, let content = try? Kanna.XML(xml: s, encoding: .utf8) {
+                    let tables = content.xpath("//office:body/office:spreadsheet/table:table", namespaces: Self.openOfficeNamespaces)
+                    for n in tables {
+                        if let name = n["name"] {
+                            sheets.append(name)
+                        }
                     }
                 }
+            } catch {
+                os_log("Unable to parse content.xml: %{public}@!", log: OSLog.infoExtraction, type: .error, error.localizedDescription)
             }
         }
             
+        os_log("OpenOffice spreadsheet info fetched in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
         self.init(file: url, creator: creator, creationDate: creationDate, modified: lastModifiedBy, modificationDate: modifiedDate, title: title, subject: subject, keywords: keywords, description: description, application: application, sheets: sheets)
     }
 }
@@ -199,11 +220,16 @@ extension ExcelInfo {
 // MARK: - PowerpointInfo
 extension PowerpointInfo {
     convenience init?(odp url: URL, deepScan: Bool) {
+        let time = CFAbsoluteTimeGetCurrent()
+        os_log("Fetch info for OpenOffice presentation file %{private}@ (%{public}@)…", log: OSLog.infoExtraction, type: .debug, url.path, deepScan ? "with deep scan" : "without deep scan")
+        
         guard let archive = Archive(url: url, accessMode: .read) else  {
+            os_log("Unable to decompress the file!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
         
         guard let properties = try? Self.parseOpenOfficeXML(archive: archive) else {
+            os_log("Unable to parse the core data!", log: OSLog.infoExtraction, type: .error)
             return nil
         }
         
@@ -222,15 +248,19 @@ extension PowerpointInfo {
         var slidesCount = 0
         
         if deepScan, let entryContent = archive["content.xml"] {
-            var s = ""
-            _ = try? archive.extract(entryContent, skipCRC32: true) { data in
-                s += String(data: data, encoding: .utf8) ?? ""
-            }
-            if !s.isEmpty, let content = try? Kanna.XML(xml: s, encoding: .utf8) {
-                slidesCount = content.xpath("//draw:page", namespaces: Self.openOfficeNamespaces).count
+            do {
+                var s = ""
+                _ = try archive.extract(entryContent, skipCRC32: true) { data in
+                    s += String(data: data, encoding: .utf8) ?? ""
+                }
+                if !s.isEmpty, let content = try? Kanna.XML(xml: s, encoding: .utf8) {
+                    slidesCount = content.xpath("//draw:page", namespaces: Self.openOfficeNamespaces).count
+                }
+            } catch {
+                os_log("Unable to parse content.xml: %{public}@!", log: OSLog.infoExtraction, type: .error, error.localizedDescription)
             }
         }
-        
+        os_log("OpenOffice presentation info fetched in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
         self.init(file: url, creator: creator, creationDate: creationDate, modified: lastModifiedBy, modificationDate: modifiedDate, title: title, subject: subject, keywords: keywords, description: description, application: application, slidesCount: slidesCount, presentationFormat: "")
     }
 }

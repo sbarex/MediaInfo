@@ -165,24 +165,24 @@ class ModelInfo: FileInfo {
         switch placeholder {
             
         case "[[mesh-count]]":
-            return self.formatCount(meshes.count, noneLabel: "No Mesh", singleLabel: "1 Mesh", manyLabel: "%@ Meshs", isFilled: &isFilled, useEmptyData: useEmptyData)
+            return self.formatCount(meshes.count, noneLabel: "no Mesh", singleLabel: "1 Mesh", manyLabel: "%@ Meshs", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[vertex]]":
-            return self.formatCount(vertexCount, noneLabel: "No Vertex", singleLabel: "1 Vertex", manyLabel: "%@ Vertices", isFilled: &isFilled, useEmptyData: useEmptyData)
+            return self.formatCount(vertexCount, noneLabel: "no Vertex", singleLabel: "1 Vertex", manyLabel: "%@ Vertices", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[normals]]":
             isFilled = self.hasNormals
-            return NSLocalizedString(self.hasNormals ? "With normals" : "Without normals", tableName: "LocalizableExt", comment: "")
+            return NSLocalizedString(self.hasNormals ? "with normals" : "without normals", tableName: "LocalizableExt", comment: "")
         case "[[tangents]]":
             isFilled = self.hasTangent
-            return NSLocalizedString(self.hasTangent ? "With tangents" : "Without tangents", tableName: "LocalizableExt", comment: "")
+            return NSLocalizedString(self.hasTangent ? "with tangents" : "without tangents", tableName: "LocalizableExt", comment: "")
         case "[[tex-coords]]":
             isFilled = self.hasTextureCoordinate
-            return NSLocalizedString(self.hasTextureCoordinate ? "With texture coordinates" : "Without texture coordinates", tableName: "LocalizableExt", comment: "")
+            return NSLocalizedString(self.hasTextureCoordinate ? "with texture coordinates" : "without texture coordinates", tableName: "LocalizableExt", comment: "")
         case "[[vertex-color]]":
             isFilled = self.hasVertexColor
-            return NSLocalizedString(self.hasVertexColor ? "With vertex colors" : "Without vertex colors", tableName: "LocalizableExt", comment: "")
+            return NSLocalizedString(self.hasVertexColor ? "with vertex colors" : "without vertex colors", tableName: "LocalizableExt", comment: "")
         case "[[occlusion]]":
             isFilled = self.hasOcclusion
-            return NSLocalizedString(self.hasOcclusion ? "With occlusion" : "Without occlusion", tableName: "LocalizableExt", comment: "")
+            return NSLocalizedString(self.hasOcclusion ? "with occlusion" : "without occlusion", tableName: "LocalizableExt", comment: "")
         default:
             return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         }
@@ -194,7 +194,7 @@ class ModelInfo: FileInfo {
                 return true
             }
             let n = self.meshes.count
-            let title = self.formatCount(n, noneLabel: "No Mesh", singleLabel: "1 Mesh", manyLabel: "%@ Meshes", useEmptyData: true)
+            let title = self.formatCount(n, noneLabel: "no Mesh", singleLabel: "1 Mesh", manyLabel: "%@ Meshes", useEmptyData: true)
             let mnu = self.createMenuItem(title: title, image: "3D", settings: settings, representedObject: item)
             let submenu = NSMenu(title: title)
             for mesh in self.meshes {
@@ -203,23 +203,23 @@ class ModelInfo: FileInfo {
                 let m = createMenuItem(title: mesh.name.isEmpty ? mesh.name : "Mesh", image: mesh.meshes.first?.imageName, settings: settings, representedObject: item)
                 submenu.addItem(m)
                 
-                let t = self.formatCount(mesh.vertexCount, noneLabel: "No Vertex", singleLabel: "1 Vertex", manyLabel: "%@ Vertices", useEmptyData: true)
+                let t = self.formatCount(mesh.vertexCount, noneLabel: "no vertex", singleLabel: "1 vertex", manyLabel: "%@ vertices", useEmptyData: true)
                 mesh_menu.addItem(createMenuItem(title: t, image: nil, settings: settings, representedObject: item))
                 mesh_menu.addItem(NSMenuItem.separator())
                 if mesh.hasNormals {
-                    mesh_menu.addItem(createMenuItem(title: "With normals", image: "3d_normal", settings: settings, representedObject: item))
+                    mesh_menu.addItem(createMenuItem(title: "with normals", image: "3d_normal", settings: settings, representedObject: item))
                 }
                 if mesh.hasTangent {
-                    mesh_menu.addItem(createMenuItem(title: "With tangents", image: "3d_tangent", settings: settings, representedObject: item))
+                    mesh_menu.addItem(createMenuItem(title: "with tangents", image: "3d_tangent", settings: settings, representedObject: item))
                 }
                 if mesh.hasVertexColor {
-                    mesh_menu.addItem(createMenuItem(title: "With vertex colors", image: "3d_color", settings: settings, representedObject: item))
+                    mesh_menu.addItem(createMenuItem(title: "with vertex colors", image: "3d_color", settings: settings, representedObject: item))
                 }
                 if mesh.hasTextureCoordinate {
-                    mesh_menu.addItem(createMenuItem(title: "With texture coordinates", image: "3d_uv", settings: settings, representedObject: item))
+                    mesh_menu.addItem(createMenuItem(title: "with texture coordinates", image: "3d_uv", settings: settings, representedObject: item))
                 }
                 if mesh.hasOcclusion {
-                    mesh_menu.addItem(createMenuItem(title: "With occlusion", image: "3d_occlusion", settings: settings, representedObject: item))
+                    mesh_menu.addItem(createMenuItem(title: "with occlusion", image: "3d_occlusion", settings: settings, representedObject: item))
                 }
                 
                 if n > 1 {

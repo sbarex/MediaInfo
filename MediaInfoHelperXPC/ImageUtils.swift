@@ -8,6 +8,7 @@
 
 import Foundation
 import ImageIO
+import os.log
 
 /*
 func get_file_size(_ url: URL) -> size_t {
@@ -20,12 +21,16 @@ func get_file_size(_ url: URL) -> size_t {
 
 /// Get image info for PBM image format.
 func getNetPBMImageInfo(forFile url: URL) -> ImageInfo? {
+    let time = CFAbsoluteTimeGetCurrent()
+    os_log("Fetch info for PBM image %{private}@…", log: OSLog.infoExtraction, type: .debug, url.path)
+    
     // Read file
     
     // open the file for reading
     // note: user should be prompted the first time to allow reading from this location
     guard let filePointer:UnsafeMutablePointer<FILE> = fopen(url.path,"r") else {
         // preconditionFailure("Could not open file at \(url.absoluteString)")
+        os_log("Unable to open the file %{private}@!", log: OSLog.infoExtraction, type: .error, url.path)
         return nil
     }
 
@@ -56,11 +61,13 @@ func getNetPBMImageInfo(forFile url: URL) -> ImageInfo? {
         if row == 0 {
             // Read the magic code.
             guard let s = String.init(cString:lineByteArrayPointer!, encoding: .ascii)?.trimmingCharacters(in: .whitespaces) else {
+                os_log("Missing PBM magic code!", log: OSLog.infoExtraction, type: .error)
                 return nil
             }
             
             if s.first != "P" && (s[s.index(s.startIndex, offsetBy: 1)] < "1" || s[s.index(s.startIndex, offsetBy: 1)] > "6") {
                 // No valid magic code founded.
+                os_log("Missing PBM magic code!", log: OSLog.infoExtraction, type: .error)
                 return nil
             }
             if s == "P1" || s == "P4" {
@@ -119,6 +126,7 @@ func getNetPBMImageInfo(forFile url: URL) -> ImageInfo? {
         bytesRead = getline(&lineByteArrayPointer, &lineCap, filePointer)
     }
     
+    os_log("Image PBN info fetched in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
     return ImageInfo(file: url, width: width, height: height, dpi: 0, colorMode: color, depth: depth, profileName: "", animated: false, withAlpha: false, colorTable: .regular, metadata: [:], metadataRaw: [:])
 }
 
@@ -240,6 +248,9 @@ func getBPGImageInfoFallback(forData data: Data) -> ImageInfo? {
 
 /// Get image info for svg file format.
 func getSVGImageInfo(forFile file: URL) -> ImageInfo? {
+    let time = CFAbsoluteTimeGetCurrent()
+    os_log("Fetch info for SVG image %{private}@…", log: OSLog.infoExtraction, type: .debug, file.path)
+    
     class XMLRealParser: NSObject, XMLParserDelegate {
         var width: Int?
         var height: Int?
@@ -269,14 +280,18 @@ func getSVGImageInfo(forFile file: URL) -> ImageInfo? {
         }
     }
     guard let parser = XMLParser(contentsOf: file) else {
+        os_log("Unable to parse the SVG file %{private}@!", log: OSLog.infoExtraction, type: .error, file.path)
         return nil
     }
+    
     let delegate = XMLRealParser()
     parser.delegate = delegate
     parser.parse()
     if let w = delegate.width, let h = delegate.height {
+        os_log("SVG Image info fetched in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
         return ImageInfo(file: file, width: w, height: h, dpi: 0, colorMode: "", depth: 24, profileName: "", animated: false, withAlpha: false, colorTable: .regular, metadata: [:], metadataRaw: [:])
     } else {
+        os_log("Unable to parse the SVG file!", log: OSLog.infoExtraction, type: .error)
         return nil
     }
 }

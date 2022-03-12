@@ -7,9 +7,13 @@
 //
 
 import Foundation
+import os.log
 
 /// Get image info for WebP image format.
 func getWebPImageInfo(forFile file: URL) -> ImageInfo? {
+    let time = CFAbsoluteTimeGetCurrent()
+    os_log("Fetch info for image %{private}@ with WebP…", log: OSLog.infoExtraction, type: .debug, file.path)
+    
     // Init WebP decoder
     var webp_cfg = WebPDecoderConfig()
     guard WebPInitDecoderConfig(&webp_cfg) != 0 else {
@@ -28,6 +32,7 @@ func getWebPImageInfo(forFile file: URL) -> ImageInfo? {
 
         return WebPGetFeatures(unsafeBufferPointer.baseAddress!, file_size, &webp_cfg.input) == VP8_STATUS_OK
     }) else {
+        os_log("Unable to decode the image with WebP!", log: OSLog.infoExtraction, type: .error)
         return nil
     }
 
@@ -38,6 +43,7 @@ func getWebPImageInfo(forFile file: URL) -> ImageInfo? {
         let unsafeBufferPointer = buffer.bindMemory(to: UInt8.self)
 
         return WebPIDecode(unsafeBufferPointer.baseAddress!, file_size, &webp_cfg) }) else {
+        os_log("Unable to decode the image with WebP!", log: OSLog.infoExtraction, type: .error)
         return nil
     }
     defer {
@@ -47,5 +53,6 @@ func getWebPImageInfo(forFile file: URL) -> ImageInfo? {
     let width: size_t = size_t(webp_cfg.input.width)
     let height: size_t = size_t(webp_cfg.input.height)
 
+    os_log("Image info fetched with WebP in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
     return ImageInfo(file: file, width: width, height: height, dpi: 0, colorMode: webp_cfg.input.has_alpha != 0 ? "RGBA" : "RGB", depth: webp_cfg.input.has_alpha != 0 ? 32 : 24, profileName: "", animated: webp_cfg.input.has_animation > 0, withAlpha: webp_cfg.input.has_alpha > 0, colorTable: .regular, metadata: [:], metadataRaw: [:])
 }

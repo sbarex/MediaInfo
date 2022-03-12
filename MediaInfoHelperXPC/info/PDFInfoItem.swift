@@ -297,7 +297,7 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
         self.allowsDocumentAssembly = pdf.allowsDocumentAssembly
         self.allowsDocumentChanges = pdf.allowsDocumentChanges
         self.allowsFormFieldEntry = pdf.allowsFormFieldEntry
-    */
+        */
         
         var page: CGPDFPage?
         if let p = pdf.page(at: 0) {
@@ -423,7 +423,7 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
         case "[[size]]", "[[width]]", "[[height]]", "[[ratio]]", "[[resolution]]":
             return self.processDimensionPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
         case "[[pages]]":
-            return formatCount(pagesCount, noneLabel: "No Page", singleLabel: "1 Page", manyLabel: "%@ Pages", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: true)
+            return formatCount(pagesCount, noneLabel: "no Page", singleLabel: "1 Page", manyLabel: "%@ Pages", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: true)
         case "[[locked]]":
             isFilled = self.isLocked
             return self.isLocked ? "🔒" : ""
@@ -432,7 +432,7 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
             return self.isEncrypted ? "🔑" : ""
         case "[[version]]":
             isFilled = !self.version.isEmpty
-            return String(format: NSLocalizedString("Version %@", tableName: "LocalizableExt", comment: ""), self.version)
+            return String(format: NSLocalizedString("version %@", tableName: "LocalizableExt", comment: ""), self.version)
         case "[[author]]":
             isFilled = !(self.author?.isEmpty ?? true)
             return self.author ?? self.formatND(useEmptyData: useEmptyData)
@@ -482,10 +482,10 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
                 s.append("🔑")
             }
             if !self.allowsCopying {
-                s.append(NSLocalizedString("No copy", tableName: "LocalizableExt", comment: ""))
+                s.append(NSLocalizedString("copy denied", tableName: "LocalizableExt", comment: ""))
             }
             if !self.allowsPrinting {
-                s.append(NSLocalizedString("No print", tableName: "LocalizableExt", comment: ""))
+                s.append(NSLocalizedString("print denied", tableName: "LocalizableExt", comment: ""))
             }
             isFilled = !s.isEmpty
             return s.joined(separator: " ")
