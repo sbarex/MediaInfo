@@ -3,6 +3,48 @@
     <channel>
         <title>MediaInfo</title> 
         <item>
+            <title>1.7.0</title>
+            <pubDate>ven, 22 apr 2022 16:52:00 +0100</pubDate>
+            <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.7.0/MediaInfo.zip" sparkle:version="20" sparkle:shortVersionString="1.7.0" type="application/octet-stream" sparkle:edSignature="WLvlLJFYBfJdOCLe/+jj7O25TAprUWa7sx85Mjaj54TRzDEwsLNGaMEdxURIgll0PZ3i8t9DtHes4HMB0XmjCg==" length="19362731" />
+            <description><![CDATA[
+                <h2>Release 1.7.0 (20)</h2>
+                <p>New features:</p>
+                <ul>
+                    <li>Support for folders and bundles.</li>
+                    <li>Support for handle custom file types.</li>
+                    <li>Ability to execute an external command while generating the menu. </li>
+                    <li>Support for these properties:</li>
+                    <ul>
+                        <li>Allocated file size (with medatata and resource fork).</li>
+                        <li>UTI, UTI description and UTI conforms to Type.</li>
+                        <li>File modes and ACL.</li>
+                        <li>Extended attributes.</li>
+                        <li>Archive compression summary and ratio.</li>
+                        <li>Responsive status per svg files.</li>
+                        <li>Total number of pixel (for images and videos).</li>
+                    </ul>
+                    <li>Option for format bytes and bits in decimal format (power of 1000).</li>
+                    <li>Custom action to reveal file in the Finder.</li>
+                    <li>New images: folder, info, exclamationmark, person_n, person_y, group_n, group_y, people.</li>
+                    <li>Changed the convention to enable access to the metadata from a script.</li>
+                    <li>New settings format.</li>
+                    <li>Minimun system requirements: macOS 10.15.</li>
+                </ul>
+
+                <p>Bugfix:</p>
+                <ul>
+                    <li>Better support for archive files.</li>
+                    <li>Fixed the size for files smaller than one Kb. </li>
+                    <li>Fixed external disk support.</li>
+                    <li>Fixed the bps formatting.</li>
+                </ul>
+
+                <p><a href="https://github.com/sbarex/MediaInfo/blob/master/CHANGELOG.md">See the complete changelog.</a></p>
+            ]]>
+            </description>
+        </item>
+        <item>
             <title>1.6.1</title>
             <pubDate>dom, 6 mar 2022 8:52:00 +0100</pubDate>
             <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
