@@ -12,17 +12,9 @@ class TokenScript: Token {
     enum Mode: Equatable, BaseMode {
         case inline(code: String)
         case global(code: String)
-        case action(code: String)
         
         static var pasteboardType: NSPasteboard.PasteboardType {
            return .MITokenScript
-        }
-        
-        var isAction: Bool {
-           switch self {
-           case .action: return true
-           default: return false
-           }
         }
         var isGlobal: Bool {
            switch self {
@@ -41,7 +33,6 @@ class TokenScript: Token {
            switch self {
            case .inline: return "<inline script>"
            case .global: return "<global script>"
-           case .action: return "<action script>"
            }
         }
         
@@ -49,7 +40,6 @@ class TokenScript: Token {
            switch self {
            case .inline: return NSLocalizedString("Inline script", comment: "")
            case .global: return NSLocalizedString("Global script", comment: "")
-           case .action: return NSLocalizedString("Action script", comment: "")
            }
         }
         
@@ -57,7 +47,6 @@ class TokenScript: Token {
             switch self {
             case .inline(let code): return "[[script-inline:\(code.toBase64())]]"
             case .global(let code): return "[[script-global:\(code.toBase64())]]"
-            case .action(let code): return "[[script-action:\(code.toBase64())]]"
             }
         }
         
@@ -65,7 +54,6 @@ class TokenScript: Token {
             switch self {
             case .inline: return NSLocalizedString("Inline script to compose with other tokens.", comment: "")
             case .global: return NSLocalizedString("Global script to generate multiple menu items.", comment: "")
-            case .action: return NSLocalizedString("Action script executed when a menu item is choosed.", comment: "")
             }
         }
         
@@ -83,8 +71,6 @@ class TokenScript: Token {
                 self = .inline(code: code.fromBase64() ?? "")
             } else if p[0] == "script-global" {
                 self = .global(code: code.fromBase64() ?? "")
-            } else if p[0] == "script-action" {
-                self = .action(code: code.fromBase64() ?? "")
             } else {
                 return nil
             }
@@ -104,8 +90,6 @@ class TokenScript: Token {
                 self = .inline(code: code)
             } else if t.hasPrefix("script-global:") {
                 self = .global(code: code)
-            } else if t.hasPrefix("script-action:") {
-                self = .action(code: code)
             } else {
                 return nil
             }
@@ -117,8 +101,6 @@ class TokenScript: Token {
                return "script-inline:\(code)"
            case .global(let code):
                return "script-global:\(code)"
-           case .action(let code):
-               return "script-action:\(code)"
            }
        }
     }
@@ -137,7 +119,6 @@ class TokenScript: Token {
         switch mode {
         case .inline: return false
         case .global: return true
-        case .action: return true
         }
     }
     
@@ -148,8 +129,6 @@ class TokenScript: Token {
                 return code
             case .global(let code):
                 return code
-            case .action(let code):
-                return code
             }
         }
         set {
@@ -158,8 +137,6 @@ class TokenScript: Token {
                 self.mode = Mode.inline(code: newValue)
             case .global:
                 self.mode = Mode.global(code: newValue)
-            case .action:
-                self.mode = Mode.action(code: newValue)
             }
         }
     }
@@ -191,9 +168,6 @@ class TokenScript: Token {
     }
     
     override func validate(with info: BaseInfo?) -> (info: String, warnings: String) {
-        guard !(self.mode as! Mode).isAction else {
-            return (info: "", warnings: "")
-        }
         if let info = info {
             let msg = info.getScriptInfo(token: self)
             return (info: msg, warnings: "")
@@ -208,9 +182,9 @@ class TokenScript: Token {
         menu.addItem(withTitle: NSLocalizedString("Script", comment: ""), action: nil, keyEquivalent: "")
         menu.addItem(NSMenuItem.separator())
         
-        let allCases = [Mode.inline(code: ""), Mode.global(code: ""), Mode.action(code: "")]
+        let allCases = [Mode.inline(code: ""), Mode.global(code: "")]
         for (i, item) in allCases.enumerated() {
-            let on = (mode.isInline && item.isInline) || (mode.isGlobal && item.isGlobal) || (mode.isAction && item.isAction)
+            let on = (mode.isInline && item.isInline) || (mode.isGlobal && item.isGlobal)
             menu.addItem(self.createMenuItem(title: item.title, state: on, tag: i, tooltip: item.tooltip))
         }
         if !self.isReadOnly {
@@ -230,8 +204,6 @@ class TokenScript: Token {
             return Mode.inline(code: code)
         case 1:
             return Mode.global(code: code)
-        case 2:
-            return Mode.action(code: code)
         default:
             return nil
         }
@@ -252,13 +224,11 @@ class TokenScript: Token {
         super.handleTokenMenu(sender)
     }
     
-    func editScript(action: ((TokenScript?)->Void)? = nil ) {
-        guard let vc = NSStoryboard.main?.instantiateController(withIdentifier: "ScriptEditorController") as? ScriptViewController else {
-            return
+    func editScript(action: ((String)->Void)? = nil ) {
+        ScriptViewController.editCode(self.code, mode: (self.mode as! Mode).isInline ? .inline : .global) { code in
+            self.code = code
+            action?(code)
         }
-        vc.token = self
-        vc.action = action
-        NSApplication.shared.keyWindow?.contentViewController?.presentAsModalWindow(vc)
     }
 }
 

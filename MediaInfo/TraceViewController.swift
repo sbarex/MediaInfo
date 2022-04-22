@@ -28,7 +28,7 @@ class TraceViewController: NSViewController {
         NotificationCenter.default.removeObserver(self, name: .JSException, object: nil)
     }
     
-    internal func appendInfoHead(_ info: BaseInfo, level: String, itemIndex index: Int) {
+    internal func appendInfoHead(_ info: BaseInfo?, level: String, itemIndex index: Int) {
         let d: String
         if #available(macOS 12.0, *) {
             d = Date().formatted(.iso8601)
@@ -47,20 +47,27 @@ class TraceViewController: NSViewController {
         } else {
             color = .secondaryLabelColor
         }
-        self.textView.textStorage?.append(NSAttributedString(string: "(\(d)) \(info) [mnu \(index)]:\n", attributes: [.foregroundColor: color]))
+        let type: String
+        if let info = info {
+            type = String(describing: info)
+        } else {
+            type = ""
+        }
+        self.textView.textStorage?.append(NSAttributedString(string: "(\(d)) \(type) [mnu \(index)]:\n", attributes: [.foregroundColor: color]))
     }
     
     @objc func handleJSConsole(_ notification : Notification) {
-        guard let info = notification.object as? (BaseInfo, String, AnyHashable) else {
+        guard let info = notification.object as? (Any, String, AnyHashable) else {
             return
         }
-        let index = info.0.jsContext?.objectForKeyedSubscript("templateItemIndex").toNumber().intValue ?? -1
+        let baseInfo = info.0 as? BaseInfo
+        let index = baseInfo?.jsContext?.objectForKeyedSubscript("templateItemIndex").toNumber().intValue ?? -1
         // let item = info.0.jsContext?.objectForKeyedSubscript("currentItem").toObject() as? MenuItemInfo
         
         DispatchQueue.main.async {
             let labelAttributes: [NSAttributedString.Key: AnyHashable] = [.foregroundColor: NSColor.labelColor]
             
-            self.appendInfoHead(info.0, level: info.1, itemIndex: index)
+            self.appendInfoHead(baseInfo, level: info.1, itemIndex: index)
             
             print("JSConsole \(info.0) [\(info.1) for menu item \(index)]: ", terminator: "")
             if let objects = info.2 as? [AnyHashable] {
@@ -91,13 +98,14 @@ class TraceViewController: NSViewController {
     }
     
     @objc func handleJSException(_ notification : Notification) {
-        guard let info = notification.object as? (BaseInfo, String?, Int, Int) else {
+        guard let info = notification.object as? (Any, String?, Int, Int) else {
             return
         }
         
+        let baseInfo = info.0 as? BaseInfo
         // let index = info.0.jsContext?.objectForKeyedSubscript("templateItemIndex").toNumber().intValue ?? -1
         
-        appendInfoHead(info.0, level: "error", itemIndex: info.3)
+        appendInfoHead(baseInfo, level: "error", itemIndex: info.3)
         
         textView.textStorage?.append(NSAttributedString(string: "Exception at line \(info.2):", attributes: [.foregroundColor: NSColor.systemRed]))
         textView.textStorage?.append(NSAttributedString(string: "\(info.1 ?? "")\n", attributes: [.foregroundColor: NSColor.labelColor]))

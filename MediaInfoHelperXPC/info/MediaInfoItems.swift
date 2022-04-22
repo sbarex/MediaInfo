@@ -13,12 +13,32 @@ protocol DurationInfo: BaseInfo {
     var duration: Double { get }
     var bitRate: Int64 { get }
     var start_time: Double { get }
-    func processDurationPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem: MenuItemInfo?) -> String
+    func processDurationPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem: MenuItemInfo?) -> String
 }
 
 extension DurationInfo {
-    func processDurationPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem: MenuItemInfo?) -> String {
-        let useEmptyData = !settings.isEmptyItemsSkipped
+    static func formatBits(_ bits: Int64, useDecimal: Bool) -> String {
+        var i = 0
+        var b = Double(bits)
+
+        let power: Double = useDecimal ? 1000 : 1024
+        while b > power {
+            b /= power
+            i += 1
+        }
+        
+        if i > 0 && b < 1.5 {
+            i -= 1
+        }
+        let j = round(Double(bits) / pow(power, Double(i)))
+        let n = Self.numberFormatter.string(from: NSNumber(value: j)) ?? "\(j)"
+        let bitUnits = ["bps", "kbps", "Mbps", "Gbps", "Tbps", "Pbps", "Ebps", "Zbps", "Ybps"]
+
+        return "\(n) \(bitUnits[i])"
+    }
+
+    func processDurationPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem: MenuItemInfo?) -> String {
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         switch placeholder {
         case "[[duration]]":
             isFilled = self.duration > 0
@@ -43,7 +63,7 @@ extension DurationInfo {
         case "[[bitrate]]":
             isFilled = self.bitRate > 0
             if self.bitRate > 0 {
-                return Self.byteCountFormatter.string(fromByteCount: self.bitRate) + "/s"
+                return Self.formatBits(self.bitRate, useDecimal: (self.globalSettings?.bitsFormat ?? .decimal) == .decimal)
             } else {
                 return self.formatND(useEmptyData: useEmptyData)
             }
@@ -61,12 +81,12 @@ protocol CodecInfo: BaseInfo {
     var encoder: String? { get }
     var isLossless: Bool? { get }
     
-    func processPlaceholderCodec(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String
+    func processPlaceholderCodec(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String
 }
 
 extension CodecInfo {
-    func processPlaceholderCodec(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        let useEmptyData = !settings.isEmptyItemsSkipped
+    func processPlaceholderCodec(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         switch placeholder {
         case "[[codec-short]]":
             isFilled = !self.codec_short_name.isEmpty
@@ -170,13 +190,13 @@ class Chapter: Codable {
 // MARK: - ChaptersInfo
 protocol ChaptersInfo: BaseInfo {
     var chapters: [Chapter] { get }
-    func processPlaceholderChapters(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String
-    func processSpecialChaptersMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool
+    func processPlaceholderChapters(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String
+    func processSpecialChaptersMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu) -> Bool
 }
 
 extension ChaptersInfo {
-    func processPlaceholderChapters(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        let useEmptyData = !settings.isEmptyItemsSkipped
+    func processPlaceholderChapters(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         switch placeholder {
         case "[[chapters-count]]":
             return self.formatCount(chapters.count, noneLabel: "no Chapter", singleLabel: "1 Chapter", manyLabel: "%d Chapters", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
@@ -185,7 +205,7 @@ extension ChaptersInfo {
         }
     }
     
-    func processSpecialChaptersMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+    func processSpecialChaptersMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu) -> Bool {
         switch item.menuItem.template {
         case "[[chapters]]":
             guard !self.chapters.isEmpty else {
@@ -196,11 +216,11 @@ extension ChaptersInfo {
             for (i, chapter) in self.chapters.enumerated() {
                 var info = item
                 info.userInfo["chapter_index"] = i
-                chapters_menu.addItem(self.createMenuItem(title: chapter.getTitle(index: i), image: "-", settings: settings, representedObject: info))
+                chapters_menu.addItem(self.createMenuItem(title: chapter.getTitle(index: i), image: "-", representedObject: info))
             }
             
             let title = self.formatCount(chapters.count, noneLabel: "no Chapter", singleLabel: "1 Chapter", manyLabel: "%d Chapters", useEmptyData: true, formatAsString: false)
-            let mnu = self.createMenuItem(title: title, image: item.menuItem.image, settings: settings, representedObject: item)
+            let mnu = self.createMenuItem(title: title, image: item.menuItem.image, representedObject: item)
             destination_sub_menu.addItem(mnu)
             destination_sub_menu.setSubmenu(chapters_menu, for: mnu)
             
@@ -262,10 +282,10 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
     let videoTracks: [VideoTrackInfo]
     let audioTracks: [AudioTrackInfo]
     let subtitles: [SubtitleTrackInfo]
-    let engine: MediaEngine
+    let engine: Settings.MediaEngine
     let videoTrack: VideoTrackInfo
     
-    override var infoType: Settings.SupportedFile { return .video }
+    override class var infoType: Settings.SupportedFile { return .video }
     override var standardMainItem: MenuItemInfo {
         var template = "[[size]], [[duration]]"
         if self.bitRate > 0 {
@@ -275,10 +295,10 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
             template += " ([[codec]])"
         }
         template += " [[languages-flag]]"
-        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "video", template: template))
+        return MenuItemInfo(fileType: Self.infoType, index: -1, item: Settings.MenuItem(image: "video", template: template))
     }
     
-    init(file: URL, width: Int, height: Int, duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, profile: String?, pixel_format: VideoTrackInfo.VideoPixelFormat?, color_space: VideoTrackInfo.VideoColorSpace?, field_order: VideoTrackInfo.VideoFieldOrder?, lang: String?, bitRate: Int64, fps: Double, frames: Int, title: String?, encoder: String?, isLossless: Bool?, chapters: [Chapter], video: [VideoTrackInfo], audio: [AudioTrackInfo], subtitles: [SubtitleTrackInfo], engine: MediaEngine) {
+    init(file: URL, width: Int, height: Int, duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, profile: String?, pixel_format: VideoTrackInfo.VideoPixelFormat?, color_space: VideoTrackInfo.VideoColorSpace?, field_order: VideoTrackInfo.VideoFieldOrder?, lang: String?, bitRate: Int64, fps: Double, frames: Int, title: String?, encoder: String?, isLossless: Bool?, chapters: [Chapter], video: [VideoTrackInfo], audio: [AudioTrackInfo], subtitles: [SubtitleTrackInfo], engine: Settings.MediaEngine) {
         
         self.videoTracks = video
         self.audioTracks = audio
@@ -304,7 +324,7 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         let i = try container.decode(Int.self, forKey: .engine)
-        self.engine = MediaEngine(rawValue: i)!
+        self.engine = Settings.MediaEngine(rawValue: i)!
         self.videoTrack = try container.decode(VideoTrackInfo.self, forKey: .track)
         self.chapters = try container.decode([Chapter].self, forKey: .chapters)
         self.videoTracks = try container.decode([VideoTrackInfo].self, forKey: .videoTracks)
@@ -331,6 +351,73 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
         }
     }
     
+    override func fetchMetadata(from metadata: MDItem) {
+        super.fetchMetadata(from: metadata)
+        
+        var i: Int = 0
+        if let m = MDItemCopyAttribute(metadata, kMDItemAudioBitRate), CFGetTypeID(m) == CFNumberGetTypeID() {
+            // {The audio bit rate. A CFNumber.
+            CFNumberGetValue((m as! CFNumber), CFNumberType.intType, &i)
+            self.spotlightMetadata[kMDItemAudioBitRate as String] = i
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemCodecs), CFGetTypeID(m) == CFArrayGetTypeID() {
+            // {The codecs used to encode/decode the media. A CFArray of CFStrings.
+            self.spotlightMetadata[kMDItemCodecs as String] = m as! [String]
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemDeliveryType), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {The delivery type. Values are “Fast start” or “RTSP”. A CFString.
+            self.spotlightMetadata[kMDItemDeliveryType as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemMediaTypes), CFGetTypeID(m) == CFArrayGetTypeID() {
+            // {The media types present in the content. A CFArray of CFStrings.
+            self.spotlightMetadata[kMDItemMediaTypes as String] = m as! [String]
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemStreamable), CFGetTypeID(m) == CFBooleanGetTypeID() {
+            // {Whether the content is prepared for streaming. A CFBoolean.
+            let b = CFBooleanGetValue((m as! CFBoolean))
+            self.spotlightMetadata[kMDItemStreamable as String] = NSLocalizedString(b ? "Yes" : "No", tableName: "LocalizableExt", comment: "")
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemTotalBitRate), CFGetTypeID(m) == CFNumberGetTypeID() {
+            // {The total bit rate, audio and video combined, of the media. A CFNumber.
+            CFNumberGetValue((m as! CFNumber), CFNumberType.intType, &i)
+            self.spotlightMetadata[kMDItemTotalBitRate as String] = i
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemVideoBitRate), CFGetTypeID(m) == CFNumberGetTypeID() {
+            // {The video bit rate. A CFNumber.
+            CFNumberGetValue((m as! CFNumber), CFNumberType.intType, &i)
+            self.spotlightMetadata[kMDItemVideoBitRate as String] = i
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemDirector), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {Directory of the movie. A CFString.
+            self.spotlightMetadata[kMDItemDirector as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemProducer), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {Producer of the content. A CFString.
+            self.spotlightMetadata[kMDItemProducer as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemGenre), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {Genre of the movie. A CFString.
+            self.spotlightMetadata[kMDItemGenre as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemPerformers), CFGetTypeID(m) == CFArrayGetTypeID() {
+            // {Performers in the movie. A CFArray of CFStrings.
+            self.spotlightMetadata[kMDItemPerformers as String] = m as! [String]
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemOriginalFormat), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {Original format of the movie. A CFString.
+            self.spotlightMetadata[kMDItemOriginalFormat as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemOriginalSource), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {Original source of the movie. A CFString.
+            self.spotlightMetadata[kMDItemOriginalSource as String] = m as! String
+        }
+    }
+    
+    override func initSettings(withItemSettings itemSettings: Settings.FormatSettings? = nil, globalSettings settings: Settings) {
+        super.initSettings(withItemSettings: itemSettings, globalSettings: settings)
+        self.videoTrack.initSettings(globalSettings: settings)
+    }
+    
     override func getImage(for name: String) -> NSImage? {
         if name == "flag", let img = self.flagImage {
             return img
@@ -339,17 +426,17 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        if let s = self.videoTrack.processVideoPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item) {
+    override internal func processPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        if let s = self.videoTrack.processVideoPlaceholder(placeholder, isFilled: &isFilled, forItem: item) {
             return s
         }
         
-        let useEmptyData = !settings.isEmptyItemsSkipped
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         switch placeholder {
         case "[[languages]]", "[[languages-flag]]", "[[language-count]]":
-            return processLanguagesPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item) ?? placeholder
+            return processLanguagesPlaceholder(placeholder, isFilled: &isFilled, forItem: item) ?? placeholder
         case "[[language]]", "[[language-flag]]":
-            return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return processLanguagePlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         case "[[subtitles-count]]":
             return self.formatCount(subtitles.count, noneLabel: "no Subtitle", singleLabel: "1 Subtitle", manyLabel: "%d Subtitles", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[audio-count]]":
@@ -357,17 +444,17 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
         case "[[video-count]]":
             return self.formatCount(videoTracks.count, noneLabel: "no Video track", singleLabel: "1 Video track", manyLabel: "%d Video tracks", isFilled: &isFilled, useEmptyData: useEmptyData)
         case "[[chapters-count]]":
-            return self.processPlaceholderChapters(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return self.processPlaceholderChapters(placeholder, isFilled: &isFilled, forItem: item)
         case "[[engine]]":
             isFilled = true
             return engine.label
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         }
     }
     
-    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
-        if self.processSpecialChaptersMenuItem(item, inMenu: destination_sub_menu, withSettings: settings) {
+    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu) -> Bool {
+        if self.processSpecialChaptersMenuItem(item, inMenu: destination_sub_menu) {
             return true
         }
         
@@ -378,7 +465,7 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
                 return true
             }
             
-            let group_tracks = settings.isTracksGrouped // FIXME: rename
+            let group_tracks = (self.globalSettings?.isTracksGrouped ?? true) // FIXME: rename
             let video_sub_menu: NSMenu
             let title = self.formatCount(videoTracks.count, noneLabel: "no Video track", singleLabel: "1 Video track", manyLabel: "%d Video tracks", useEmptyData: true, formatAsString: false)
             if group_tracks {
@@ -388,9 +475,9 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
             }
             for video in videoTracks {
                 video.initJS = { settings in
-                    return self.getJSContext(with: settings)
+                    return self.getJSContext()
                 }
-                guard let video_menu = video.getMenu(withSettings: settings) else {
+                guard let video_menu = video.getMenu(withItemSettings: self.globalSettings?.videoTrackSettings, globalSettings: self.globalSettings ?? Settings.getStandardSettings()) else {
                     continue
                 }
                 for (i, menu_item) in video_menu.items.enumerated() {
@@ -402,7 +489,7 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
                 }
             }
             if group_tracks {
-                if n == 1 && settings.isInfoOnMainItem && video_sub_menu.items.count == 1 {
+                if n == 1 && (self.globalSettings?.isInfoOnMainItem ?? false) && video_sub_menu.items.count == 1 {
                     destination_sub_menu.addItem(video_sub_menu.items.first!.copy() as! NSMenuItem)
                 } else {
                     let video_mnu = destination_sub_menu.addItem(withTitle: title, action: nil, keyEquivalent: "")
@@ -417,7 +504,7 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
             }
             
             let audio_sub_menu: NSMenu
-            let group_tracks = settings.isTracksGrouped
+            let group_tracks = (self.globalSettings?.isTracksGrouped ?? true)
             let title = self.formatCount(audioTracks.count, noneLabel: "no Audio track", singleLabel: "1 Audio track", manyLabel: "%d Audio tracks", useEmptyData: true, formatAsString: false)
             if group_tracks {
                 audio_sub_menu = NSMenu(title: title)
@@ -427,9 +514,9 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
             
             for audio in audioTracks {
                 audio.initJS = { settings in
-                    return self.getJSContext(with: settings)
+                    return self.getJSContext()
                 }
-                guard let audio_menu = audio.getMenu(withSettings: settings) else {
+                guard let audio_menu = audio.getMenu(withItemSettings: globalSettings?.audioTrackSettings, globalSettings: self.globalSettings ?? Settings.getStandardSettings()) else {
                     continue
                 }
                 for (i, menu_item) in audio_menu.items.enumerated() {
@@ -441,7 +528,7 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
                 }
             }
             if group_tracks {
-                if n == 1 && settings.isInfoOnMainItem && audio_sub_menu.items.count == 1 {
+                if n == 1 && (self.globalSettings?.isInfoOnMainItem ?? false) && audio_sub_menu.items.count == 1 {
                     destination_sub_menu.addItem(audio_sub_menu.items.first!.copy() as! NSMenuItem)
                 } else {
                     let audio_mnu = destination_sub_menu.addItem(withTitle: title, action: nil, keyEquivalent: "")
@@ -456,7 +543,7 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
             }
             
             let sub_menu_txt: NSMenu
-            let group_tracks = settings.isTracksGrouped // FIXME: rename
+            let group_tracks = (self.globalSettings?.isTracksGrouped ?? true) // FIXME: rename
             if group_tracks {
                 let title = self.formatCount(n, noneLabel: "no Subtitle", singleLabel: "1 Subtitle", manyLabel: "%d Subtitles", useEmptyData: true, formatAsString: false)
                 let mnu_txt = destination_sub_menu.addItem(withTitle: title, action: nil, keyEquivalent: "")
@@ -468,9 +555,9 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
             }
             for subtitle in subtitles {
                 subtitle.initJS = { settings in
-                    return self.getJSContext(with: settings)
+                    return self.getJSContext()
                 }
-                guard let subtitle_menu = subtitle.getMenu(withSettings: settings) else {
+                guard let subtitle_menu = subtitle.getMenu(globalSettings: self.globalSettings ?? Settings.getStandardSettings()) else {
                     continue
                 }
                 for (i, menu_item) in subtitle_menu.items.enumerated() {
@@ -483,7 +570,7 @@ class VideoInfo: FileInfo, MediaInfo, ChaptersInfo, LanguagesInfo {
                 }
             }
         default:
-            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu)
         }
         
         return true
@@ -534,15 +621,15 @@ class AudioInfo: FileInfo, MediaInfo, ChaptersInfo {
     }
     
     let chapters: [Chapter]
-    let engine: MediaEngine
+    let engine: Settings.MediaEngine
     let audioTrack: AudioTrackInfo
     
-    override var infoType: Settings.SupportedFile { return .audio }
+    override class var infoType: Settings.SupportedFile { return .audio }
     override var standardMainItem: MenuItemInfo {
-        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "audio", template: "")) // FIXME: template
+        return MenuItemInfo(fileType: Self.infoType, index: -1, item: Settings.MenuItem(image: "audio", template: "")) // FIXME: template
     }
     
-    init(file: URL, duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, lang: String?, bitRate: Int64, title: String?, encoder: String?, isLossless: Bool?, chapters: [Chapter], channels: Int, engine: MediaEngine) {
+    init(file: URL, duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, lang: String?, bitRate: Int64, title: String?, encoder: String?, isLossless: Bool?, chapters: [Chapter], channels: Int, engine: Settings.MediaEngine) {
         self.chapters = chapters
         self.engine = engine
         self.audioTrack = AudioTrackInfo(duration: duration, start_time: start_time, codec_short_name: codec_short_name, codec_long_name: codec_long_name, lang: lang, bitRate: bitRate, title: title, encoder: encoder, isLossless: isLossless, channels: channels)
@@ -552,7 +639,7 @@ class AudioInfo: FileInfo, MediaInfo, ChaptersInfo {
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let i = try container.decode(Int.self, forKey: .engine)
-        self.engine = MediaEngine(rawValue: i)!
+        self.engine = Settings.MediaEngine(rawValue: i)!
         self.chapters = try container.decode([Chapter].self, forKey: .chapters)
         self.audioTrack = try container.decode(AudioTrackInfo.self, forKey: .audioTrack)
         
@@ -572,6 +659,95 @@ class AudioInfo: FileInfo, MediaInfo, ChaptersInfo {
         }
     }
     
+    override func fetchMetadata(from metadata: MDItem) {
+        super.fetchMetadata(from: metadata)
+        var i: Int = 0
+        var d: Double = 0
+        
+        if let m = MDItemCopyAttribute(metadata, kMDItemAppleLoopDescriptors), CFGetTypeID(m) == CFArrayGetTypeID() {
+            // {Specifies multiple pieces of descriptive information about a loop. A CFArray of CFStrings.
+            self.spotlightMetadata[kMDItemAppleLoopDescriptors as String] = m as! [String]
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemAppleLoopsKeyFilterType), CFGetTypeID(m) == CFNumberGetTypeID() {
+            // {Specifies key filtering information about a loop. Loops are matched against projects that often in a major or minor key. A CFString.
+            self.spotlightMetadata[kMDItemAppleLoopsKeyFilterType as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemAppleLoopsLoopMode), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {Specifies how a file should be played. A CFString.
+            self.spotlightMetadata[kMDItemAppleLoopsLoopMode as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemAppleLoopsRootKey), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {Specifies the loop's original key. The key is the root note or tonic for the loop, and does not include the scale type. A CFString.
+            self.spotlightMetadata[kMDItemAppleLoopsRootKey as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemAudioChannelCount), CFGetTypeID(m) == CFNumberGetTypeID() {
+            // {Number of channels in the audio data contained in the file. A CFNumber.
+            CFNumberGetValue((m as! CFNumber), CFNumberType.intType, &i)
+            self.spotlightMetadata[kMDItemAudioChannelCount as String] = i
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemAudioEncodingApplication), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {The name of the application that encoded the data contained in the audio file. A CFString.
+            self.spotlightMetadata[kMDItemAudioEncodingApplication as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemAudioSampleRate), CFGetTypeID(m) == CFNumberGetTypeID() {
+            // {Sample rate of the audio data contained in the file. The sample rate is a float value representing hz (audio_frames/second). For example: 44100.0, 22254.54. A CFNumber.
+            CFNumberGetValue((m as! CFNumber), CFNumberType.doubleType, &d)
+            self.spotlightMetadata[kMDItemAudioSampleRate as String] = d
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemAudioTrackNumber), CFGetTypeID(m) == CFNumberGetTypeID() {
+            // {The track number of a song or composition when it is part of an album. A CFNumber (integer).
+            CFNumberGetValue((m as! CFNumber), CFNumberType.intType, &i)
+            self.spotlightMetadata[kMDItemAudioTrackNumber as String] = i
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemComposer), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {The composer of the music contained in the audio file. A CFString.
+            self.spotlightMetadata[kMDItemComposer as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemIsGeneralMIDISequence), CFGetTypeID(m) == CFBooleanGetTypeID() {
+            // {Indicates whether the MIDI sequence contained in the file is setup for use with a General MIDI device. A CFBoolean.
+            let b = CFBooleanGetValue((m as! CFBoolean))
+            self.spotlightMetadata[kMDItemIsGeneralMIDISequence as String] = NSLocalizedString(b ? "Yes" : "No", tableName: "LocalizableExt", comment: "")
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemKeySignature), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {The key of the music contained in the audio file. For example: C, Dm, F#m, Bb. A CFString.
+            self.spotlightMetadata[kMDItemKeySignature as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemLyricist), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {The lyricist, or text writer, of the music contained in the audio file. A CFString.
+            self.spotlightMetadata[kMDItemLyricist as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemMusicalGenre), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {The musical genre of the song or composition contained in the audio file. For example: Jazz, Pop, Rock, Classical. A CFString.
+            self.spotlightMetadata[kMDItemMusicalGenre as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemMusicalInstrumentCategory), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {Specifies the category of an instrument. A CFString.
+            self.spotlightMetadata[kMDItemMusicalInstrumentCategory as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemMusicalInstrumentName), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {Specifies the name of instrument relative to the instrument category. A CFString.
+            self.spotlightMetadata[kMDItemMusicalInstrumentName as String] = m as! String
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemRecordingDate), CFGetTypeID(m) == CFDateGetTypeID() {
+            // {The recording date of the song or composition.
+            self.spotlightMetadata[kMDItemRecordingDate as String] = m as! Date
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemRecordingYear), CFGetTypeID(m) == CFNumberGetTypeID() {
+            // {Indicates the year the item was recorded. For example, 1964, 2003, etc. A CFNumber.
+            CFNumberGetValue((m as! CFNumber), CFNumberType.intType, &i)
+            self.spotlightMetadata[kMDItemRecordingYear as String] = i
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemTempo), CFGetTypeID(m) == CFNumberGetTypeID() {
+            // {A float value that specifies the beats per minute of the music contained in the audio file. A CFNumber.
+            CFNumberGetValue((m as! CFNumber), CFNumberType.doubleType, &d)
+            self.spotlightMetadata[kMDItemTempo as String] = d
+        }
+        if let m = MDItemCopyAttribute(metadata, kMDItemTimeSignature), CFGetTypeID(m) == CFStringGetTypeID() {
+            // {The time signature of the musical composition contained in the audio/MIDI file. For example: "4/4", "7/8". A CFString.
+            self.spotlightMetadata[kMDItemTimeSignature as String] = m as! String
+        }
+    }
+    
     override func getImage(for name: String) -> NSImage? {
         if name == "flag", let img = self.flagImage {
             return img
@@ -580,28 +756,28 @@ class AudioInfo: FileInfo, MediaInfo, ChaptersInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        if let s = self.audioTrack.processAudioPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item) {
+    override internal func processPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        if let s = self.audioTrack.processAudioPlaceholder(placeholder, isFilled: &isFilled, forItem: item) {
             return s
         } else {
             switch placeholder {
             case "[[chapters-count]]":
-                return self.processPlaceholderChapters(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+                return self.processPlaceholderChapters(placeholder, isFilled: &isFilled, forItem: item)
             case "[[engine]]":
                 isFilled = true
                 return engine.label
             default:
-                return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+                return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
             }
         }
     }
     
-    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu) -> Bool {
         
-        if self.processSpecialChaptersMenuItem(item, inMenu: destination_sub_menu, withSettings: settings) {
+        if self.processSpecialChaptersMenuItem(item, inMenu: destination_sub_menu) {
             return true
         } else {
-            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu)
         }
     }
 }
@@ -623,7 +799,7 @@ class SubtitleTrackInfo: BaseInfo, LanguageInfo {
 
     override var standardMainItem: MenuItemInfo {
         let template = "[[title]] [[language-flag]]"
-        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "txt", template: template))
+        return MenuItemInfo(fileType: Self.infoType, index: -1, item: Settings.MenuItem(image: "txt", template: template))
     }
     
     init(title: String?, lang: String?) {
@@ -659,31 +835,34 @@ class SubtitleTrackInfo: BaseInfo, LanguageInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+    override internal func processPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         switch placeholder {
         case "[[title]]":
             isFilled = !(title?.isEmpty ?? true)
             return title ?? NSLocalizedString("Subtitle", comment: "")
         case "[[language]]", "[[language-flag]]":
-            return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return processLanguagePlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         }
     }
     
-    override func getStandardTitle(forSettings settings: Settings) -> String {
+    override func getStandardTitle() -> String {
         var item = standardMainItem
-        if !(self.lang?.isEmpty ?? true) && !settings.isIconHidden && flagImage != nil {
+        if !(self.lang?.isEmpty ?? true) && !(self.globalSettings?.isIconHidden ?? false) && flagImage != nil {
             let template = item.menuItem.template.replacingOccurrences(of: "[[language-flag]]", with: "")
             item = MenuItemInfo(fileType: item.fileType, index: item.index, item: Settings.MenuItem(image: item.menuItem.image, template: template))
         }
         
         var isFilled = false
-        let title: String = self.replacePlaceholders(in: item.menuItem.template, settings: settings, isFilled: &isFilled, forItem: item)
+        let title: String = self.replacePlaceholders(in: item.menuItem.template, isFilled: &isFilled, forItem: item)
         return isFilled ? title : ""
     }
     
-    override func getMenu(withSettings settings: Settings) -> NSMenu? {
+    override func getMenu(withItemSettings itemSettings: Settings.FormatSettings? = nil, globalSettings settings: Settings) -> NSMenu? {
+        self.globalSettings = settings
+        self.currentSettings = itemSettings
+        
         let menu = NSMenu(title: NSLocalizedString("Subtitle", comment: ""))
         menu.autoenablesItems = false
         
@@ -692,9 +871,9 @@ class SubtitleTrackInfo: BaseInfo, LanguageInfo {
         }
         
         let destination_sub_menu: NSMenu = menu
-        let title = self.getStandardTitle(forSettings: settings)
+        let title = self.getStandardTitle()
         if !title.isEmpty {
-            let mnu = createMenuItem(title: title, image: "txt", settings: settings, representedObject: self.standardMainItem)
+            let mnu = createMenuItem(title: title, image: "txt", representedObject: self.standardMainItem)
             if let image = self.flagImage {
                 mnu.image = image
             }

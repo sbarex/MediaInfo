@@ -13,6 +13,8 @@
 #include "libavformat/avformat.h"
 #include "libavformat/avlanguage.h"
 
+#import <sys/acl.h>
+
 #define MAX_DATA_SIZE ((1 << 30) - 1)
 
 #define BPG_HEADER_MAGIC 0x425047fb

@@ -108,6 +108,7 @@
 		83342CF927933B0800FF3C12 /* test.zip in Resources */ = {isa = PBXBuildFile; fileRef = 83342CF827933B0700FF3C12 /* test.zip */; };
 		83342CFC27933CBC00FF3C12 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8382894124F954B900AD2BF4 /* libiconv.tbd */; };
 		83342CFE279348FA00FF3C12 /* TokenArchive.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83342CFD279348FA00FF3C12 /* TokenArchive.swift */; };
+		8343746B27E67F8B00108CC8 /* CustomFormatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8343746A27E67F8B00108CC8 /* CustomFormatViewController.swift */; };
 		834C320927B7D9EB00FCF528 /* LineNumberTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 834C320727B7D9EA00FCF528 /* LineNumberTextView.swift */; };
 		834C320A27B7D9EB00FCF528 /* LineNumberGutter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 834C320827B7D9EB00FCF528 /* LineNumberGutter.swift */; };
 		834C320F27B7F50F00FCF528 /* Settings+ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 834C320E27B7F50E00FCF528 /* Settings+ext.swift */; };
@@ -199,6 +200,9 @@
 		83C932D027B3010700EF6134 /* ScriptViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C932CF27B3010700EF6134 /* ScriptViewController.swift */; };
 		83C932D227B3A4B900EF6134 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83C932D127B3A4B900EF6134 /* JavaScriptCore.framework */; };
 		83C932D327B3A4C900EF6134 /* JavaScriptCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83C932D127B3A4B900EF6134 /* JavaScriptCore.framework */; };
+		83CB6F2627EA479500BD9D23 /* URL+ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CB6F2527EA479500BD9D23 /* URL+ext.swift */; };
+		83CB6F2727EA479500BD9D23 /* URL+ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CB6F2527EA479500BD9D23 /* URL+ext.swift */; };
+		83CB6F2827EA479500BD9D23 /* URL+ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CB6F2527EA479500BD9D23 /* URL+ext.swift */; };
 		83CF5685264D93BD0063196F /* DPIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CF5684264D93BD0063196F /* DPIView.swift */; };
 		83D5B8BF27DA4CC10039648E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D5B8BE27DA4CC10039648E /* Log.swift */; };
 		83D5B8C027DA4CC10039648E /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83D5B8BE27DA4CC10039648E /* Log.swift */; };
@@ -825,6 +829,8 @@
 		83342CF62793395F00FF3C12 /* MediaInfo-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MediaInfo-Bridging-Header.h"; sourceTree = "<group>"; };
 		83342CF827933B0700FF3C12 /* test.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = test.zip; sourceTree = "<group>"; };
 		83342CFD279348FA00FF3C12 /* TokenArchive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenArchive.swift; sourceTree = "<group>"; };
+		8343746A27E67F8B00108CC8 /* CustomFormatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomFormatViewController.swift; sourceTree = "<group>"; };
+		83442067280AE2A8002143CA /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Main.strings; sourceTree = "<group>"; };
 		834C320727B7D9EA00FCF528 /* LineNumberTextView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineNumberTextView.swift; sourceTree = "<group>"; };
 		834C320827B7D9EB00FCF528 /* LineNumberGutter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LineNumberGutter.swift; sourceTree = "<group>"; };
 		834C320E27B7F50E00FCF528 /* Settings+ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Settings+ext.swift"; sourceTree = "<group>"; };
@@ -838,7 +844,6 @@
 		836116722645C27E00A7C560 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		836116742645C28300A7C560 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		8367E23724F6D8F200F7A06D /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		8367E23824F6DA7F00F7A06D /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Main.strings; sourceTree = "<group>"; };
 		836AC3ED27B17B370029CDA7 /* settings_compressed.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings_compressed.png; sourceTree = "<group>"; };
 		836DF59F27C6A4E1005C9B00 /* NSMenuItem+ext.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSMenuItem+ext.swift"; sourceTree = "<group>"; };
 		8373E77524FFE49C00793F70 /* settings_folder.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings_folder.png; sourceTree = "<group>"; };
@@ -915,6 +920,9 @@
 		83C932CB27B2F29100EF6134 /* TokenScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenScript.swift; sourceTree = "<group>"; };
 		83C932CF27B3010700EF6134 /* ScriptViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptViewController.swift; sourceTree = "<group>"; };
 		83C932D127B3A4B900EF6134 /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		83CB6F2527EA479500BD9D23 /* URL+ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+ext.swift"; sourceTree = "<group>"; };
+		83CB6F2927EB08B900BD9D23 /* settings_others.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings_others.png; sourceTree = "<group>"; };
+		83CB6F2A27EB08F000BD9D23 /* settings_others_editor.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings_others_editor.png; sourceTree = "<group>"; };
 		83CF5684264D93BD0063196F /* DPIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DPIView.swift; sourceTree = "<group>"; };
 		83D337542796A0F2000DB2C8 /* Makefile-libjpeg */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; path = "Makefile-libjpeg"; sourceTree = "<group>"; };
 		83D5B8BE27DA4CC10039648E /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
@@ -1063,6 +1071,7 @@
 				83203D4324F0556800F8CBC0 /* Main.storyboard */,
 				83B1C1052655BDB300269E07 /* MenuTableView.xib */,
 				838E306A26546A2800F797AD /* MenuTableView.swift */,
+				8343746A27E67F8B00108CC8 /* CustomFormatViewController.swift */,
 				837CF2C827CAA2E20045F454 /* ItemsEditorController.swift */,
 				8386E6762502BC0F00FD8A46 /* Settings.swift */,
 				834C320E27B7F50E00FCF528 /* Settings+ext.swift */,
@@ -1141,6 +1150,7 @@
 			isa = PBXGroup;
 			children = (
 				838E30642653E09500F797AD /* NSImage+ext.swift */,
+				83CB6F2527EA479500BD9D23 /* URL+ext.swift */,
 				83E569492649095600A14E96 /* TimeInterval+ext.swift */,
 				83144CA4264AB7DA000E709B /* Int+ext.swift */,
 				83E569472648656C00A14E96 /* String+ext.swift */,
@@ -2290,6 +2300,8 @@
 				8373E77724FFE4B500793F70 /* settings_image.png */,
 				83AAAAEE2659378700A6AAA9 /* settings_menu_item.png */,
 				83E261C62662C7C90073F716 /* settings_office.png */,
+				83CB6F2927EB08B900BD9D23 /* settings_others.png */,
+				83CB6F2A27EB08F000BD9D23 /* settings_others_editor.png */,
 				83AAAAF22659387B00A6AAA9 /* settings_pdf.png */,
 				83AAAAEF2659381900A6AAA9 /* settings_video.png */,
 			);
@@ -2720,10 +2732,12 @@
 				83144CA6264ABFEF000E709B /* MediaInfoItems.swift in Sources */,
 				838E307F2655405F00F797AD /* TokenVideoMetadata.swift in Sources */,
 				837CF2CF27CAB7D20045F454 /* AudioTrackInfo.swift in Sources */,
+				8343746B27E67F8B00108CC8 /* CustomFormatViewController.swift in Sources */,
 				839555C827D3A57B004455D8 /* FolderInfo.swift in Sources */,
 				839555CD27D40EB3004455D8 /* BaseFileItemInfo.swift in Sources */,
 				837CF2B327C7E65E0045F454 /* TokenFile.swift in Sources */,
 				837CF2C527CA550A0045F454 /* LanguageInfo.swift in Sources */,
+				83CB6F2627EA479500BD9D23 /* URL+ext.swift in Sources */,
 				837CF2C327C914F80045F454 /* TokenLanguages.swift in Sources */,
 				838E30792655083800F797AD /* TokenPdfMetadata.swift in Sources */,
 				838E306B26546A2800F797AD /* MenuTableView.swift in Sources */,
@@ -2773,6 +2787,7 @@
 				837CF2B927C8354B0045F454 /* FileInfo.swift in Sources */,
 				832EEF52265D38CA000BA3F9 /* BaseOfficeInfo.swift in Sources */,
 				838E305A2653D5BD00F797AD /* BaseInfo.swift in Sources */,
+				83CB6F2727EA479500BD9D23 /* URL+ext.swift in Sources */,
 				838E305D2653D5F300F797AD /* ImageInfoItem.swift in Sources */,
 				839555C927D3E3CB004455D8 /* FolderInfo.swift in Sources */,
 				837CF2C027C835E10045F454 /* DimensionalInfo.swift in Sources */,
@@ -2809,6 +2824,7 @@
 				832EEF00265D09A9000BA3F9 /* MediaInfoHelperXPCProtocol.swift in Sources */,
 				832EEF07265D0A2E000BA3F9 /* WebPImageUtils.swift in Sources */,
 				83D5B8C227DA4CC10039648E /* Log.swift in Sources */,
+				83CB6F2827EA479500BD9D23 /* URL+ext.swift in Sources */,
 				839555EF27D54687004455D8 /* du.c in Sources */,
 				832EEF04265D09FD000BA3F9 /* MediaInfoSettingsXPC.swift in Sources */,
 				837CF2B827C835450045F454 /* FileInfo.swift in Sources */,
@@ -2974,7 +2990,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				83203D4424F0556800F8CBC0 /* Base */,
-				8367E23824F6DA7F00F7A06D /* it */,
+				83442067280AE2A8002143CA /* it */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -3145,12 +3161,11 @@
 		83203D4B24F0556800F8CBC0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_ENTITLEMENTS = MediaInfo/MediaInfo.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
@@ -3173,8 +3188,8 @@
 					"$(BUILT_PRODUCTS_DIR)/libjpeg-turbo/lib",
 					"$(BUILT_PRODUCTS_DIR)/libpng/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 1.6.1;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = 1.7.0;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_BUNDLE_IDENTIFIER = org.sbarex.MediaInfo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3187,12 +3202,11 @@
 		83203D4C24F0556800F8CBC0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_ENTITLEMENTS = MediaInfo/MediaInfo.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
@@ -3215,8 +3229,8 @@
 					"$(BUILT_PRODUCTS_DIR)/libjpeg-turbo/lib",
 					"$(BUILT_PRODUCTS_DIR)/libpng/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 1.6.1;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = 1.7.0;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_BUNDLE_IDENTIFIER = org.sbarex.MediaInfo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3233,7 +3247,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_ASSET_PATHS = "MediaInfo\\ Finder\\ Extension/Assets_menu.xcassets";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -3257,8 +3271,8 @@
 					"$(BUILT_PRODUCTS_DIR)/libjpeg-turbo/lib",
 					"$(BUILT_PRODUCTS_DIR)/libpng/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 1.6.1;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = 1.7.0;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.sbarex.MediaInfo.Finder-Extension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3276,7 +3290,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_ASSET_PATHS = "MediaInfo\\ Finder\\ Extension/Assets_menu.xcassets";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -3300,8 +3314,8 @@
 					"$(BUILT_PRODUCTS_DIR)/libjpeg-turbo/lib",
 					"$(BUILT_PRODUCTS_DIR)/libpng/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 1.6.1;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = 1.7.0;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.sbarex.MediaInfo.Finder-Extension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3378,7 +3392,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				HEADER_SEARCH_PATHS = (
@@ -3404,8 +3418,8 @@
 					"$(BUILT_PRODUCTS_DIR)/libpng/lib",
 					"$(inherited)",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 1.6.1;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = 1.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = org.sbarex.MediaInfoHelperXPC;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -3423,7 +3437,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				HEADER_SEARCH_PATHS = (
@@ -3448,8 +3462,8 @@
 					"$(BUILT_PRODUCTS_DIR)/libpng/lib",
 					"$(inherited)",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 1.6.1;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = 1.7.0;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_BUNDLE_IDENTIFIER = org.sbarex.MediaInfoHelperXPC;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3574,7 +3588,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = MediaInfoSettingsXPC/Info.plist;
@@ -3585,8 +3599,8 @@
 					"@loader_path/../../../../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 1.6.1;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = 1.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = org.sbarex.MediaInfoSettingsXPC;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -3602,7 +3616,7 @@
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = MediaInfoSettingsXPC/Info.plist;
@@ -3613,8 +3627,8 @@
 					"@loader_path/../../../../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				MARKETING_VERSION = 1.6.1;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MARKETING_VERSION = 1.7.0;
 				OTHER_CODE_SIGN_FLAGS = "--timestamp";
 				PRODUCT_BUNDLE_IDENTIFIER = org.sbarex.MediaInfoSettingsXPC;
 				PRODUCT_NAME = "$(TARGET_NAME)";

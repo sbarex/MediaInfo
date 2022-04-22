@@ -11,8 +11,8 @@ import UniformTypeIdentifiers
 
 class TokenAction: Token {
     enum Mode: BaseMode {
-        case app(path: String)
         case defaultApp
+        case app(path: String)
         case openSettings
         case about
         case copyToClipboard
@@ -38,7 +38,7 @@ class TokenAction: Token {
         var placeholder: String {
             switch self {
             case .app(let path): return "[[open-with:\(path.toBase64())]]"
-            case .defaultApp: return "[[open-with-default]]"
+            case .defaultApp: return "[[open]]"
             case .openSettings: return "[[open-settings]]"
             case .about: return "[[about]]"
             case .copyToClipboard: return "[[clipboard]]"
@@ -53,7 +53,7 @@ class TokenAction: Token {
         }
         
         init?(placeholder: String) {
-            if placeholder == "[[open-with-default]]" {
+            if placeholder == "[[open]]" || placeholder == "[[open-with-default]]" {
                 self = .defaultApp
             } else if placeholder == "[[open-settings]]" {
                 self = .openSettings
@@ -78,7 +78,7 @@ class TokenAction: Token {
             guard type == Self.pasteboardType, let data = propertyList as? Data, let t = String(data: data, encoding: .utf8) else {
                 return nil
             }
-            if t == "open-with-default" {
+            if t == "open" {
                 self = .defaultApp
             } else if t == "open-settings" {
                 self = .openSettings
@@ -97,7 +97,7 @@ class TokenAction: Token {
         
         func pasteboardPropertyList(forType type: NSPasteboard.PasteboardType) -> Any? {
            switch self {
-           case .defaultApp: return "open-with-default"
+           case .defaultApp: return "open"
            case .openSettings: return "open-settings"
            case .about: return "about"
            case .copyToClipboard: return "clipboard"
@@ -190,8 +190,8 @@ class TokenAction: Token {
         
         let mnu = self.createMenuItem(title: Self.Mode.app(path: "").title, state: isOpenWith || isDefault, tag: -1, tooltip: Mode.app(path: "").tooltip)
         mnu.submenu = NSMenu()
-        mnu.submenu?.addItem(self.createMenuItem(title: Self.Mode.app(path: "").title, state: isOpenWith, tag: 0, tooltip: Mode.app(path: "").tooltip))
         mnu.submenu?.addItem(self.createMenuItem(title: Self.Mode.defaultApp.title, state: isDefault, tag: 1, tooltip: Mode.defaultApp.tooltip))
+        mnu.submenu?.addItem(self.createMenuItem(title: Self.Mode.app(path: "").title, state: isOpenWith, tag: 0, tooltip: Mode.app(path: "").tooltip))
         if !self.isReadOnly {
             mnu.submenu?.addItem(NSMenuItem.separator())
             mnu.submenu?.addItem(self.createMenuItem(title: NSLocalizedString("Choose the app…", comment: ""), state: false, tag: 10, tooltip: ""))

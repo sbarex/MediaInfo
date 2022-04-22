@@ -251,7 +251,7 @@ class MetadataExifInfo: MetadataBaseInfo {
             tags.append(initTag(for: kCGImagePropertyExifCompositeImage))
             tags.append(initTag(for: kCGImagePropertyExifSourceImageNumberOfCompositeImage))
             tags.append(initTag(for: kCGImagePropertyExifSourceExposureTimesOfCompositeImage))
-        } else if #available(macOS 10.15, *) {
+        } else {
             tags.append(initTag(for: kCGImagePropertyExifOffsetTime))
             tags.append(initTag(for: kCGImagePropertyExifOffsetTimeOriginal))
             tags.append(initTag(for: kCGImagePropertyExifOffsetTimeDigitized))
@@ -406,11 +406,9 @@ class MetadataGifInfo: MetadataBaseInfo {
             initTag(for: kCGImagePropertyGIFHasGlobalColorMap),
             initTag(for: kCGImagePropertyGIFUnclampedDelayTime)
         ]
-        if #available(macOS 10.15, *) {
-            tags.append(initTag(for: kCGImagePropertyGIFCanvasPixelWidth))
-            tags.append(initTag(for: kCGImagePropertyGIFCanvasPixelHeight))
-            tags.append(initTag(for: kCGImagePropertyGIFFrameInfoArray))
-        }
+        tags.append(initTag(for: kCGImagePropertyGIFCanvasPixelWidth))
+        tags.append(initTag(for: kCGImagePropertyGIFCanvasPixelHeight))
+        tags.append(initTag(for: kCGImagePropertyGIFFrameInfoArray))
         return tags
     }
     
@@ -436,19 +434,15 @@ class MetadataHeicsInfo: MetadataBaseInfo {
     }
     
     override class func getTags() -> [(code: CFString, label: String)] {
-        if #available(macOS 10.15, *) {
-            let tags = [
-                initTag(for: kCGImagePropertyHEICSLoopCount),
-                initTag(for: kCGImagePropertyHEICSDelayTime),
-                initTag(for: kCGImagePropertyHEICSUnclampedDelayTime),
-                initTag(for: kCGImagePropertyHEICSCanvasPixelWidth),
-                initTag(for: kCGImagePropertyHEICSCanvasPixelHeight),
-                initTag(for: kCGImagePropertyHEICSFrameInfoArray)
-            ]
-            return tags
-        } else {
-            return []
-        }
+        let tags = [
+            initTag(for: kCGImagePropertyHEICSLoopCount),
+            initTag(for: kCGImagePropertyHEICSDelayTime),
+            initTag(for: kCGImagePropertyHEICSUnclampedDelayTime),
+            initTag(for: kCGImagePropertyHEICSCanvasPixelWidth),
+            initTag(for: kCGImagePropertyHEICSCanvasPixelHeight),
+            initTag(for: kCGImagePropertyHEICSFrameInfoArray)
+        ]
+        return tags
     }
     
     required init?(code: CFString, value: AnyHashable) {
@@ -498,11 +492,9 @@ class MetadataPngInfo: MetadataBaseInfo {
             tags.append(initTag(for: kCGImagePropertyPNGPixelsAspectRatio))
         }
         
-        if #available(macOS 10.15, *) {
-            tags.append(initTag(for: kCGImagePropertyAPNGFrameInfoArray))
-            tags.append(initTag(for: kCGImagePropertyAPNGCanvasPixelWidth))
-            tags.append(initTag(for: kCGImagePropertyAPNGCanvasPixelHeight))
-        }
+        tags.append(initTag(for: kCGImagePropertyAPNGFrameInfoArray))
+        tags.append(initTag(for: kCGImagePropertyAPNGCanvasPixelWidth))
+        tags.append(initTag(for: kCGImagePropertyAPNGCanvasPixelHeight))
         
         return tags
     }

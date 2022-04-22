@@ -13,6 +13,8 @@
 "Height" = "Altezza";
 "Ratio" = "Proporzioni";
 "Resolution name" = "Nome della risoluzione";
+"Number of pixel" = "Numero di pixel";
+"Number of pixel (Mpx)" = "Numero di pixel (Mpx)";
 
 "Duration" = "Durata";
 "Duration (hh:mm:ss)" = "Durata (hh:mm:ss)";
@@ -74,7 +76,12 @@
 "Creation date" = "Data di crezione";
 "Modification date" = "Data di modifica";
 "Last access date" = "Data di ultimo accesso";
-"Calculating the size of the contained files with metadata can slow down the menu display. " = "Calcolare le dimensioni dei file contenuti con i metadati può rallentare la visualizzazione del menu.";
+"Uniform Type Identifier" = "Uniform Type Identifier";
+"Uniform Type Identifier conformances" = "Conformità dell’Uniform Type Identifier";
+"Uniform Type Identifier description" = "Descrizione del tipo di file";
+"Calculating the allocated size of the contained files can slow down the menu display." = "Il calcolo delle dimensioni allocate dei file può rallentare la visualizzazione del menu.";
+"Extended attributes" = "Attributi estesi";
+"Spotlight medadata" = "Metadati di Spotlight";
     
 "Actions" = "Azioni";
 "Open the file with an external app." = "Apri il file con un’applicazione esterna.";
@@ -173,20 +180,22 @@
 "Number of files" = "Numero di file";
 "Number of processed files" = "Numero di file processati";
 "Uncompressed file size" = "Dimensione non compressa";
+"Compression format" = "Formato di compressione";
+"Compression Summary" = "Riepilogo dell’archivio";
+"Compression ratio" = "Rapporto di compressione";
 
 "Files menu" = "Menu dei file";
 "Plain" = "Semplice";
 "Hierarchical" = "Gerarchico";
 "Show Icons" = "Mostra le icone";
 "Hide Icons" = "Nascondi le icone";
-"Files Summary" = "Riepilogo dei file";
+"File Summary" = "Riepilogo dei file";
 "%@ files (%@ processed)" = "%@ file (%@ processati)";
 
 "Scripts" = "Script";
 "Script" = "Script";
 "Inline script" = "Script in linea";
 "Global script" = "Script globale";
-"Action script" = "Script di azione";
 "Inline script to compose with other tokens." = "Script in linea da comporre con gli altri token.";
 "Global script to generate multiple menu items." = "Script globale per generare voci di menu multiple.";
 "Action script executed when a menu item is choosed." = "Script di azione eseguito alla selezione del menu.";
@@ -238,6 +247,11 @@
 "File size" = "Dimensioni del file";
 "Printer" = "Stampante";
 "Person" = "Persona";
+"Person (allow)" = "Persona (consenti)";
+"Person (deny)" = "Persona (nega)";
+"People" = "Persone";
+"Group (allow)" = "Groupp (consenti)";
+"Group (deny)" = "Groupp (nega)";
 "Speaker (mono or stereo)" = "Altoparlante (mono o stereo)";
 "Speaker (mono)" = "Altoparlante (mono)";
 "Speakers (stereo)" = "Altoparlanti (stereo)";
@@ -311,8 +325,6 @@
 "Metadata: " = "Metadati: ";
 "Files: " = "File: ";
 
-"No action script defined!" = "Nessuno script di azione definito!";
-
 "Finder extension not enabled!" = "Estensione del Finder non abilitata!";
 "Open System Settings" = "Apri le Preferenze di Sistema";
 
@@ -341,9 +353,19 @@
 "Reveal in Finder" = "Mostra nel Finder";
 "The action will select the file in the Finder." = "L’azione selezionerà il file nel Finder.";
 
+"all other files" = "Tutti i file";
+
 // MARK: - ScriptViewController
 "Are you sure to replace the current script code?" = "Sicuro di sostituire il codice attuale?";
 "Replace" = "Sostituisci";
+
+"Action trigger template" = "Modello per trigger di azione";
+"Validate trigger template" = "Modello per trigger di validazione";
+"Before render trigger template" = "Modello per trigger di pre formattazione";
+"Inline code template" = "Modello per codice inline";
+"Global code template" = "Modello per codice globale";
+"Inline code template" = "Modello per codice inline";
+"Global code template" = "Modello per codice globale";
 
 "Opening Settings" = "Apertura delle impostazioni";
 "The action will open this application." = "L’azione aprirà questa applicaizone.";
@@ -357,7 +379,6 @@
 "The action will execute a custom script." = "Verrà eseguito uno script specifico.";
 "This action will open the file with the default application." = "L’azione aprirà il file con l’applicazione predefinita.";
 "The action will run the general action script." = "L’azione eseguirarà lo script di azione globale.";
-"No action script defined!" = "Non è stato definito lo script di azione!";
 
 // MARK: - MenuTableView
 "Are you sure to remove this item?" = "Sicuro di eliminare questo elemento?";
@@ -372,8 +393,10 @@
 "JS Exception at line %d" = "Eccezione JS alla linea %d";
 
 "Warning" = "Attenzione";
+"Triggers" = "Trigger";
+"Triggers:" = "Trigger:";
 
-// MARK: BaseInfo+ext
+// MARK: - BaseInfo+ext
 "If the script needs to access the metadata you need to insert the comment /* require-metadata */ as the first line. This can slow down menu generation." = "Se lo script deve accedere ai metadati è necessario inserire come prima riga il commento /* require-metadata */. Questa impostazione può rallentare la generazione del menu.";
 
 "If the script needs to access the metadata you need to insert the comment /* require-deep-scan */ as the first line. This can slow down menu generation." = "Se lo script deve accedere ai metadati è necessario inserire come prima riga il commento /* require-deep-scan */. Questa impostazione può rallentare la generazione del menu.";

@@ -49,15 +49,15 @@ extension SettingsService {
     
     static func getSettings(withReply reply: @escaping (Settings) -> Void) {
         guard let service = Self.service else {
-            reply(Settings(fromDict: [:]))
+            reply(Settings.getStandardSettings())
             return
         }
         service.getSettings(refresh: true, withReply: { dict in
             guard let s = dict as? [String: AnyHashable] else {
-                reply(Settings(fromDict: [:]))
+                reply(Settings.getStandardSettings())
                 return
             }
-            reply(Settings(fromDict: s))
+            reply(Settings.instance(from: s))
         })
     }
     

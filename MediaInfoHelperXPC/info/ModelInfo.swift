@@ -137,10 +137,10 @@ class ModelInfo: FileInfo {
         return meshes.first(where: { $0.hasOcclusion }) != nil
     }
     
-    override var infoType: Settings.SupportedFile { return .model }
+    override class var infoType: Settings.SupportedFile { return .model }
     override var standardMainItem: MenuItemInfo {
         let template = "[[mesh]], [[vertex]]"
-        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "3d", template: template))
+        return MenuItemInfo(fileType: Self.infoType, index: -1, item: Settings.MenuItem(image: "3d", template: template))
     }
     
     init(file: URL, meshes: [Mesh]) {
@@ -160,8 +160,8 @@ class ModelInfo: FileInfo {
         try container.encode(self.meshes, forKey: .meshes)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        let useEmptyData = !settings.isEmptyItemsSkipped
+    override internal func processPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         switch placeholder {
             
         case "[[mesh-count]]":
@@ -184,42 +184,42 @@ class ModelInfo: FileInfo {
             isFilled = self.hasOcclusion
             return NSLocalizedString(self.hasOcclusion ? "with occlusion" : "without occlusion", tableName: "LocalizableExt", comment: "")
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         }
     }
     
-    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu) -> Bool {
         if item.menuItem.template == "[[meshes]]" {
             guard !self.meshes.isEmpty else {
                 return true
             }
             let n = self.meshes.count
             let title = self.formatCount(n, noneLabel: "no Mesh", singleLabel: "1 Mesh", manyLabel: "%@ Meshes", useEmptyData: true)
-            let mnu = self.createMenuItem(title: title, image: "3D", settings: settings, representedObject: item)
+            let mnu = self.createMenuItem(title: title, image: "3D", representedObject: item)
             let submenu = NSMenu(title: title)
             for mesh in self.meshes {
                 let mesh_menu = n > 1 ? NSMenu() : submenu
                 
-                let m = createMenuItem(title: mesh.name.isEmpty ? mesh.name : "Mesh", image: mesh.meshes.first?.imageName, settings: settings, representedObject: item)
+                let m = createMenuItem(title: mesh.name.isEmpty ? mesh.name : "Mesh", image: mesh.meshes.first?.imageName, representedObject: item)
                 submenu.addItem(m)
                 
                 let t = self.formatCount(mesh.vertexCount, noneLabel: "no vertex", singleLabel: "1 vertex", manyLabel: "%@ vertices", useEmptyData: true)
-                mesh_menu.addItem(createMenuItem(title: t, image: nil, settings: settings, representedObject: item))
+                mesh_menu.addItem(createMenuItem(title: t, image: nil, representedObject: item))
                 mesh_menu.addItem(NSMenuItem.separator())
                 if mesh.hasNormals {
-                    mesh_menu.addItem(createMenuItem(title: "with normals", image: "3d_normal", settings: settings, representedObject: item))
+                    mesh_menu.addItem(createMenuItem(title: "with normals", image: "3d_normal", representedObject: item))
                 }
                 if mesh.hasTangent {
-                    mesh_menu.addItem(createMenuItem(title: "with tangents", image: "3d_tangent", settings: settings, representedObject: item))
+                    mesh_menu.addItem(createMenuItem(title: "with tangents", image: "3d_tangent", representedObject: item))
                 }
                 if mesh.hasVertexColor {
-                    mesh_menu.addItem(createMenuItem(title: "with vertex colors", image: "3d_color", settings: settings, representedObject: item))
+                    mesh_menu.addItem(createMenuItem(title: "with vertex colors", image: "3d_color", representedObject: item))
                 }
                 if mesh.hasTextureCoordinate {
-                    mesh_menu.addItem(createMenuItem(title: "with texture coordinates", image: "3d_uv", settings: settings, representedObject: item))
+                    mesh_menu.addItem(createMenuItem(title: "with texture coordinates", image: "3d_uv", representedObject: item))
                 }
                 if mesh.hasOcclusion {
-                    mesh_menu.addItem(createMenuItem(title: "with occlusion", image: "3d_occlusion", settings: settings, representedObject: item))
+                    mesh_menu.addItem(createMenuItem(title: "with occlusion", image: "3d_occlusion", representedObject: item))
                 }
                 
                 if n > 1 {
@@ -231,7 +231,7 @@ class ModelInfo: FileInfo {
             
             return true
         } else {
-            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu)
         }
     }
 }

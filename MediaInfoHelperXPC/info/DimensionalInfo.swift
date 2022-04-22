@@ -27,6 +27,7 @@ protocol DimensionalInfo: BaseInfo {
     
     var width: Int { get }
     var height: Int { get }
+    var pixelCount: Int { get }
     
     var orientation: Orientation { get }
     var isLandscape: Bool { get }
@@ -38,7 +39,7 @@ protocol DimensionalInfo: BaseInfo {
     static func decodeDimension(from decoder: Decoder) throws -> (width: Int, height: Int)
     
     func getRatio(approximate: Bool) -> String?
-    func processDimensionPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String
+    func processDimensionPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String
     func getDimensionImage(for name: String) -> String?
 }
 
@@ -122,6 +123,10 @@ extension DimensionalInfo {
         return resolutions.first(where: { $1[0] == width && $1[1] == height })?.key
     }
     
+    var pixelCount: Int {
+        return width * height
+    }
+    
     var orientation: Orientation {
         return width < height ? .portrait : .landscape
     }
@@ -153,15 +158,17 @@ extension DimensionalInfo {
         return Self.getRatio(width: width, height: height, approximate: approximate)
     }
     
-    func processDimensionPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+    func processDimensionPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         switch placeholder {
         case "[[size]]":
             isFilled = true
-            if let w = Self.numberFormatter.string(from: NSNumber(integerLiteral: width)), let h = Self.numberFormatter.string(from: NSNumber(integerLiteral: height)) {
-               return "\(w) × \(h) \(self.unit)"
-           } else {
-               return "\(width) × \(height) \(self.unit)"
-           }
+            let w = Self.numberFormatter.string(from: NSNumber(integerLiteral: width)) ?? "\(width)"
+            let h = Self.numberFormatter.string(from: NSNumber(integerLiteral: height)) ?? "\(height)"
+            var s = "\(w) × \(h) \(self.unit)"
+            if let responsive = self.extra[.svg_responsive] as? Bool, responsive {
+                s += " ("+NSLocalizedString("responsive", tableName: "LocalizableExt", comment: "")+")"
+            }
+            return s
         case "[[width]]":
             if let w = Self.numberFormatter.string(from: NSNumber(integerLiteral: width)) {
                 return "\(w) \(self.unit)"
@@ -175,7 +182,7 @@ extension DimensionalInfo {
                 return "\(width)"
             }
         case "[[ratio]]":
-            guard let ratio = Self.getRatio(width: width, height: height, approximate: !settings.isRatioPrecise) else {
+            guard let ratio = Self.getRatio(width: width, height: height, approximate: !(self.globalSettings?.isRatioPrecise ?? false)) else {
                 isFilled = false
                 return ""
             }
@@ -184,6 +191,14 @@ extension DimensionalInfo {
         case "[[resolution]]":
             isFilled = true
             return Self.getResolutioName(width: width, height: height) ?? ""
+        case "[[pixel-count]]":
+            let n = self.pixelCount
+            isFilled = n > 0
+            return Self.numberFormatter.string(from: NSNumber(value: n)) ?? "\(n)"
+        case "[[mega-pixel]]":
+            let n = Double(self.pixelCount) / 1_000_000
+            isFilled = n > 0
+            return (Self.numberFormatter.string(from: NSNumber(value: n)) ?? "\(n)") + " Mpx"
         default:
             isFilled = false
             return ""

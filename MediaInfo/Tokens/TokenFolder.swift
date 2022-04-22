@@ -31,7 +31,7 @@ class TokenFolder: Token {
             case .fileCount: return NSLocalizedString("Number of files", comment: "")
             case .processedFileCount: return NSLocalizedString("Number of processed files", comment: "")
             case .fileCountSummary:
-                return NSLocalizedString("Files Summary", comment: "")
+                return NSLocalizedString("File Summary", comment: "")
             }
         }
         

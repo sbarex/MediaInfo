@@ -24,6 +24,12 @@
 "MediaInfo %@ (%@) developed by %@…" = "MediaInfo %@ (%@) sviluppato da %@…";
 "Copy path to the clipboard" = "Copia il percorso negli appunti";
 
+// MARK: - File info
+"Extended Attributes" = "Attributi estesi";
+"Access Control List" = "Lista di controllo degli accessi (ACL)";
+"dynamic" = "dinamico";
+"Spotlight" = "Spotlight";
+
 // MARK: - Image info
 "B/W" = "B/N";
 "animated" = "animata";
@@ -36,6 +42,7 @@
 "float colors" = "colori decimali";
 "%d dpi" = "%d dpi";
 "Metadata" = "Metadati";
+"responsive" = "responsive";
 
 // MARK: - LanguageInfo
 
@@ -86,8 +93,7 @@
 
 // MARK: - OfficeInfo
 "created by %@" = "creato da %@";
-"on %@" = "il %@";
-"created on %@" = "creato il %@";
+"created %@" = "creato %@";
 "last saved by %@" = "ultimo salvataggio di %@";
 "last saved on %@" = "ultimo salvataggio il %@";
 "no Keyword" = "nessuna parola chiave";

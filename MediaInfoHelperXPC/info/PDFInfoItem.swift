@@ -117,6 +117,29 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
              */
         }
         
+        var title: String {
+            switch self {
+            case .pt:
+                return "Size (pt)"
+            case .paper_pt:
+                return "Page format / Size (pt)"
+            case .cm:
+                return "Size (cm)"
+            case .paper_cm:
+                return "Page format / Size (cm)"
+            case .mm:
+                return "Size (mm)"
+            case .paper_mm:
+                return "Page format / Size (mm)"
+            case .inch:
+                return "Size (inch)"
+            case .paper_inch:
+                return "Page format / Size (inch)"
+            case .paper:
+                return "Page format"
+            }
+        }
+        
         var placeholder: String {
             switch self {
             case .pt: return "pt"
@@ -222,10 +245,10 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
     let mediaBox: CGRect
     let trimBox: CGRect
 
-    override var infoType: Settings.SupportedFile { return .pdf }
+    override class var infoType: Settings.SupportedFile { return .pdf }
     override var standardMainItem: MenuItemInfo {
         let template = "[[mediabox:cm]], [[pages]], [[security]]"
-        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "pdf", template: template))
+        return MenuItemInfo(fileType: Self.infoType, index: -1, item: Settings.MenuItem(image: "pdf", template: template))
     }
     
     override func getImage(for name: String) -> NSImage? {
@@ -417,11 +440,11 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        let useEmptyData = !settings.isEmptyItemsSkipped
+    override internal func processPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         switch placeholder {
         case "[[size]]", "[[width]]", "[[height]]", "[[ratio]]", "[[resolution]]":
-            return self.processDimensionPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return self.processDimensionPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         case "[[pages]]":
             return formatCount(pagesCount, noneLabel: "no Page", singleLabel: "1 Page", manyLabel: "%@ Pages", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: true)
         case "[[locked]]":
@@ -466,13 +489,13 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
             isFilled = !self.keywords.isEmpty
             return self.keywords.joined(separator: " ")
         case "[[mediabox]]":
-            return self.processPlaceholder("[[mediabox:pt]]", settings: settings, isFilled: &isFilled, forItem: item)
+            return self.processPlaceholder("[[mediabox:pt]]", isFilled: &isFilled, forItem: item)
         case "[[bleedbox]]":
-            return self.processPlaceholder("[[bleedbox:pt]]", settings: settings, isFilled: &isFilled, forItem: item)
+            return self.processPlaceholder("[[bleedbox:pt]]", isFilled: &isFilled, forItem: item)
         case "[[cropbox]]":
-            return self.processPlaceholder("[[cropbox:pt]]", settings: settings, isFilled: &isFilled, forItem: item)
+            return self.processPlaceholder("[[cropbox:pt]]", isFilled: &isFilled, forItem: item)
         case "[[artbox]]":
-            return self.processPlaceholder("[[artbox:pt]]", settings: settings, isFilled: &isFilled, forItem: item)
+            return self.processPlaceholder("[[artbox:pt]]", isFilled: &isFilled, forItem: item)
         case "[[security]]":
             var s: [String] = []
             if isLocked {
@@ -508,7 +531,7 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
                 isFilled = !self.artBox.isEmpty
                 return Self.formatBox(self.bounds(for: .artBox), placeholder: placeholder) ?? self.formatND(useEmptyData: useEmptyData)
             } else {
-                return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+                return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
             }
         }
     }

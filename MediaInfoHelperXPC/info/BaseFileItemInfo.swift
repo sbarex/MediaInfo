@@ -14,6 +14,7 @@ class BaseFileItemInfo: Codable {
     
     enum CodingKeys: String, CodingKey {
         case url
+        case path
         case icon
         case size
         case localizedName
@@ -274,7 +275,11 @@ class BaseFileItemInfo: Codable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(self.url, forKey: .url)
-        try container.encode(self.fileIcon?.tiffRepresentation, forKey: .icon)
+        if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
+            try container.encode(self.url.path, forKey: .path)
+        } else {
+            try container.encode(self.fileIcon?.tiffRepresentation, forKey: .icon)
+        }
         try container.encode(self.fileSize, forKey: .size)
         try container.encode(self.localizedName, forKey: .localizedName)
         try container.encode(self.isHidden, forKey: .isHidden)
@@ -347,11 +352,11 @@ protocol FilesContainer: FileInfo {
     var isTotalSizePartial: Bool { get }
     var isTotalFilePartial: Bool { get }
 
-    func processFilesPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String? 
+    func processFilesPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String?
     func fileAtPath(_ path: String) -> BaseFileItemInfo?
     
-    func formatFilesTitle(settings: Settings) -> String
-    func customizeFileMenuItem(item: MenuItemInfo, file: BaseFileItemInfo, settings: Settings) -> MenuItemInfo
+    func formatFilesTitle() -> String
+    func customizeFileMenuItem(item: MenuItemInfo, file: BaseFileItemInfo, action: MenuAction) -> MenuItemInfo
 }
 
 extension FilesContainer {
@@ -372,8 +377,8 @@ extension FilesContainer {
         return n
     }
     
-    internal func format_partial_menu(depth: Int, settings: Settings, item: MenuItemInfo) -> NSMenuItem {
-        let mnu = self.createMenuItem(title: "…", image: "no-space", settings: settings, representedObject: item)
+    internal func format_partial_menu(depth: Int, item: MenuItemInfo) -> NSMenuItem {
+        let mnu = self.createMenuItem(title: "…", image: "no-space", representedObject: item)
         mnu.isEnabled = false
         mnu.action = nil
         mnu.target = nil
@@ -381,12 +386,12 @@ extension FilesContainer {
         return mnu
     }
     
-    internal func format_files(title: String, files: [BaseFileItemInfo], isPartial: Bool, icons show_icons: Bool, plain: Bool, depth: Int, maxDepth: Int, maxFilesInDepth: Int, allowBundle: Bool, sortFoldersFirst: Bool, settings: Settings, item: MenuItemInfo) -> NSMenu {
+    internal func format_files(title: String, files: [BaseFileItemInfo], isPartial: Bool, icons show_icons: Bool, plain: Bool, depth: Int, maxDepth: Int, maxFilesInDepth: Int, allowBundle: Bool, sortFoldersFirst: Bool, item: MenuItemInfo, fileAction: MenuAction) -> NSMenu {
         let submenu = NSMenu(title: title)
         var n = 0
         for file in files {
-            let info = customizeFileMenuItem(item: item, file: file, settings: settings)
-            let m = self.createMenuItem(title: file.name, image: nil, settings: settings, representedObject: info)
+            let info = customizeFileMenuItem(item: item, file: file, action: fileAction)
+            let m = self.createMenuItem(title: file.name, image: nil, representedObject: info)
             if show_icons {
                 m.image = file.getIcon(size: NSSize(width: 16, height: 16))
             }
@@ -396,9 +401,9 @@ extension FilesContainer {
             submenu.addItem(m)
             
             if file.isDirectory {
-                let files_menu = format_files(title: file.name, files: file.getSortedFiles(foldersFirst: sortFoldersFirst), isPartial: file.isPartial, icons: show_icons, plain: plain, depth: depth + 1, maxDepth: maxDepth, maxFilesInDepth: maxFilesInDepth, allowBundle: allowBundle, sortFoldersFirst: sortFoldersFirst, settings: settings, item: item)
+                let files_menu = format_files(title: file.name, files: file.getSortedFiles(foldersFirst: sortFoldersFirst), isPartial: file.isPartial, icons: show_icons, plain: plain, depth: depth + 1, maxDepth: maxDepth, maxFilesInDepth: maxFilesInDepth, allowBundle: allowBundle, sortFoldersFirst: sortFoldersFirst, item: item, fileAction: fileAction)
                 if file.isPartial {
-                    files_menu.addItem(format_partial_menu(depth: plain ? depth : 0, settings: settings, item: item))
+                    files_menu.addItem(format_partial_menu(depth: plain ? depth : 0, item: item))
                 }
                 if plain {
                     for item in files_menu.items {
@@ -413,39 +418,41 @@ extension FilesContainer {
         return submenu
     }
     
-    func customizeFileMenuItem(item: MenuItemInfo, file: BaseFileItemInfo, settings: Settings) -> MenuItemInfo {
+    func customizeFileMenuItem(item: MenuItemInfo, file: BaseFileItemInfo, action: MenuAction) -> MenuItemInfo {
         var info = item
         info.userInfo["file"] = file.fullPath
+        info.action = action
         return info
     }
     
-    func formatFilesTitle(settings: Settings) -> String {
+    func formatFilesTitle() -> String {
         let n = self.unlimitedFileCount
-        let title = self.formatCount(n, noneLabel: "no file", singleLabel: self.isPartial ? "more than 1 file" : "1 file", manyLabel: self.isTotalFilePartial ? "more than %@ files" : "%@ files", useEmptyData: !settings.isEmptyItemsSkipped, formatAsString: true)
+        let title = self.formatCount(n, noneLabel: "no file", singleLabel: self.isPartial ? "more than 1 file" : "1 file", manyLabel: self.isTotalFilePartial ? "more than %@ files" : "%@ files", useEmptyData: !(self.globalSettings?.isEmptyItemsSkipped ?? true), formatAsString: true)
         return title
     }
     
-    func processFilesPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String? {
+    func processFilesPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String? {
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         switch placeholder {
         case "[[n-files]]":
             isFilled = self.unlimitedFileCount > 0
             if isTotalFilePartial {
-                return self.formatCount(self.unlimitedFileCount, noneLabel: "no file", singleLabel: "more than 1 file", manyLabel: "more than %@ files", isFilled: &isFilled, useEmptyData: !settings.isEmptyItemsSkipped, formatAsString: true)
+                return self.formatCount(self.unlimitedFileCount, noneLabel: "no file", singleLabel: "more than 1 file", manyLabel: "more than %@ files", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: true)
             } else {
-                return self.formatCount(self.unlimitedFileCount, noneLabel: "no file", singleLabel: "1 file", manyLabel: "%@ files", isFilled: &isFilled, useEmptyData: !settings.isEmptyItemsSkipped, formatAsString: true)
+                return self.formatCount(self.unlimitedFileCount, noneLabel: "no file", singleLabel: "1 file", manyLabel: "%@ files", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: true)
             }
         case "[[n-files-processed]]":
             let n = self.totalFilesCount
             isFilled = n > 0
-            return self.formatCount(n, noneLabel: "no processed file", singleLabel: "1 processed file", manyLabel: "%@ processed files", isFilled: &isFilled, useEmptyData: !settings.isEmptyItemsSkipped, formatAsString: true)
+            return self.formatCount(n, noneLabel: "no processed file", singleLabel: "1 processed file", manyLabel: "%@ processed files", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: true)
         case "[[n-files-all]]":
-            var s = self.processFilesPlaceholder("[[n-files]]", settings: settings, isFilled: &isFilled, forItem: item)!
+            var s = self.processFilesPlaceholder("[[n-files]]", isFilled: &isFilled, forItem: item)!
             let n = self.totalFilesCount
             if self.unlimitedFileCount == n {
                 return s
             }
             s += " ("
-            s += self.formatCount(n, noneLabel: "no processed file", singleLabel: "1 processed file", manyLabel: "%@ processed files", isFilled: &isFilled, useEmptyData: !settings.isEmptyItemsSkipped, formatAsString: true)
+            s += self.formatCount(n, noneLabel: "no processed file", singleLabel: "1 processed file", manyLabel: "%@ processed files", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: true)
             s += ")"
             isFilled = self.unlimitedFileCount > 0 || self.totalFilesCount > 0
             return s

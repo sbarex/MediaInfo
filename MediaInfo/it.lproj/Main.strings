@@ -175,9 +175,6 @@
 "57J-bu-UG3.title" = "Salva";
 
 "3ia-5X-Wg0.title" = "Testo a capo";
-"Tt7-eY-hRC.title" = "Modello per codice inline";
-"k8N-8k-h1C.title" = "Modello per codice globale";
-"FYU-jy-Vp5.title" = "Modello per codice di azione";
 
 "LEg-hA-WPD.title" = "OK";
 "lm6-fA-X4X.title" = "Annulla";
@@ -215,3 +212,55 @@
 "iAP-uK-SrU.title" = "Rivela nel Finder";
 /* Class = "NSMenuItem"; title = "Open"; ObjectID = "sFP-Hl-e8b"; */
 "sFP-Hl-e8b.title" = "Apri il file";
+
+/* Class = "NSTabViewItem"; label = "Others"; ObjectID = "VKT-MK-Kjc"; */
+"VKT-MK-Kjc.label" = "Altri";
+
+/* Class = "NSSegmentedCell"; oAy-6Q-e1P.ibShadowedToolTips[0] = "Add a new supported format."; ObjectID = "oAy-6Q-e1P"; */
+"oAy-6Q-e1P.ibShadowedToolTips[0]" = "Aggiungi un nuovo formato.";
+
+/* Class = "NSSegmentedCell"; oAy-6Q-e1P.ibShadowedToolTips[1] = "Remove the format."; ObjectID = "oAy-6Q-e1P"; */
+"oAy-6Q-e1P.ibShadowedToolTips[1]" = "Rimuovi il formato.";
+
+/* Class = "NSSegmentedCell"; oAy-6Q-e1P.ibShadowedToolTips[2] = "Edit…"; ObjectID = "oAy-6Q-e1P"; */
+"oAy-6Q-e1P.ibShadowedToolTips[2]" = "Modifica…";
+
+/* Class = "NSSegmentedCell"; oAy-6Q-e1P.ibShadowedToolTips[3] = "Duplicate"; ObjectID = "oAy-6Q-e1P"; */
+"oAy-6Q-e1P.ibShadowedToolTips[3]" = "Duplica.";
+
+/* Class = "NSSegmentedCell"; oAy-6Q-e1P.ibShadowedToolTips[4] = "Move up."; ObjectID = "oAy-6Q-e1P"; */
+"oAy-6Q-e1P.ibShadowedToolTips[4]" = "Sposta in alto.";
+
+/* Class = "NSSegmentedCell"; oAy-6Q-e1P.ibShadowedToolTips[5] = "Move down."; ObjectID = "oAy-6Q-e1P"; */
+"oAy-6Q-e1P.ibShadowedToolTips[5]" = "Sposta in basso.";
+
+"yEe-4R-TgP.ibShadowedToolTip" = "1024 byte corrispondono a 1 KB.";
+"tOF-U2-heF.ibShadowedToolTip" = "1000 byte corrispondono a 1 KB.";
+
+/* Class = "NSMenuItem"; ibShadowedToolTip = "Causes 1024 bytes to be shown as 1 KB."; ObjectID = "9ts-2P-DAC"; */
+"9ts-2P-DAC.ibShadowedToolTip" = "1024 bit corrispondono a 1 Kb.";
+/* Class = "NSMenuItem"; ibShadowedToolTip = "Causes 1000 bytes to be shown as 1 KB."; ObjectID = "isZ-Np-lv0"; */
+"isZ-Np-lv0.ibShadowedToolTip" = "1000 bit corrispondono a 1 Kb.";
+
+/* Class = "NSMenuItem"; title = "Decimal"; ObjectID = "isZ-Np-lv0"; */
+"isZ-Np-lv0.title" = "Decimale";
+/* Class = "NSMenuItem"; title = "Decimal"; ObjectID = "tOF-U2-heF"; */
+"tOF-U2-heF.title" = "Decimale";
+/* Class = "NSMenuItem"; title = "Binary"; ObjectID = "9ts-2P-DAC"; */
+"9ts-2P-DAC.title" = "Binario";
+/* Class = "NSMenuItem"; title = "Binary"; ObjectID = "yEe-4R-TgP"; */
+"yEe-4R-TgP.title" = "Binario";
+
+/* Class = "NSTextFieldCell"; title = "Format for bytes:"; ObjectID = "XSy-6g-yuc"; */
+"XSy-6g-yuc.title" = "Formattazione dei byte:";
+/* Class = "NSTextFieldCell"; title = "bits:"; ObjectID = "FTy-em-GsA"; */
+"FTy-em-GsA.title" = "bit:";
+
+/* Class = "NSMenuItem"; ibShadowedToolTip = "Use the macOS settings."; ObjectID = "e9L-1f-ttJ"; */
+"e9L-1f-ttJ.ibShadowedToolTip" = "Usa le impostazioni di macOS.";
+
+/* Class = "NSMenuItem"; title = "Default"; ObjectID = "e9L-1f-ttJ"; */
+"e9L-1f-ttJ.title" = "Standard";
+
+/* Class = "NSButtonCell"; title = "Metadata value on a submenu"; ObjectID = "dVk-N5-gxu"; */
+"dVk-N5-gxu.title" = "Valori dei metadata in sottomenu";

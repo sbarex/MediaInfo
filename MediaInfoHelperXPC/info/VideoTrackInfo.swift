@@ -421,7 +421,7 @@ class VideoTrackInfo: BaseInfo, DimensionalInfo, LanguageInfo, DurationInfo, Cod
     let height: Int
     let unit: String = "px"
     
-    override var infoType: Settings.SupportedFile { return .videoTrakcs }
+    override class var infoType: Settings.SupportedFile { return .videoTrakcs }
     override var standardMainItem: MenuItemInfo {
         var template = "[[size]], [[duration]]"
         if self.fps > 0 {
@@ -548,19 +548,19 @@ class VideoTrackInfo: BaseInfo, DimensionalInfo, LanguageInfo, DurationInfo, Cod
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        if let s = self.processVideoPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item) {
+    override internal func processPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        if let s = self.processVideoPlaceholder(placeholder, isFilled: &isFilled, forItem: item) {
             return s
         } else {
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         }
     }
     
-    internal func processVideoPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String? {
-        let useEmptyData = !settings.isEmptyItemsSkipped
+    internal func processVideoPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String? {
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         switch placeholder {
         case "[[duration]]", "[[seconds]]", "[[bitrate]]", "[[start-time]]", "[[start-time-s]]":
-            return processDurationPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return processDurationPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         case "[[frames]]":
             isFilled = true
             let s = Self.numberFormatter.string(from: NSNumber(value: frames)) ?? "\(frames)"
@@ -589,11 +589,11 @@ class VideoTrackInfo: BaseInfo, DimensionalInfo, LanguageInfo, DurationInfo, Cod
             isFilled = !(self.title?.isEmpty ?? true)
             return self.title ?? self.formatND(useEmptyData: useEmptyData)
         case "[[codec]]", "[[codec-long]]", "[[codec-short]]", "[[compression]]", "[[encoder]]":
-            return self.processPlaceholderCodec(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return self.processPlaceholderCodec(placeholder, isFilled: &isFilled, forItem: item)
         case "[[language]]", "[[language-flag]]":
-            return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
-        case "[[size]]", "[[width]]", "[[height]]", "[[ratio]]", "[[resolution]]":
-            return self.processDimensionPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return processLanguagePlaceholder(placeholder, isFilled: &isFilled, forItem: item)
+        case "[[size]]", "[[width]]", "[[height]]", "[[ratio]]", "[[resolution]]", "[[pixel-count]]", "[[mega-pixel]]":
+            return self.processDimensionPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         default:
             return nil
         }

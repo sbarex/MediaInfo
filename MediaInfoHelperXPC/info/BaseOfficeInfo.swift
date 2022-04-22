@@ -26,7 +26,7 @@ class BaseOfficeInfo: FileInfo {
     override class func updateSettings(_ settings: Settings, forItems items: [Settings.MenuItem]) {
         for item in items {
             if item.template.contains("[[size:") || item.template.contains("[[pages]]") || item.template.contains("[[sheets]]") {
-                settings.isOfficeDeepScan = true
+                settings.officeSettings.deepScan = true
                 return
             } else if item.template.contains("[[script") {
                 let r = BaseInfo.splitTokens(in: item.template)
@@ -39,13 +39,13 @@ class BaseOfficeInfo: FileInfo {
                         continue
                     }
                     if code.hasPrefix("/* require-deep-scan */") {
-                        settings.isOfficeDeepScan = true
+                        settings.officeSettings.deepScan = true
                         return
                     }
                 }
             }
         }
-        settings.isOfficeDeepScan = false
+        settings.officeSettings.deepScan = false
     }
     
     // Dublin Core properties
@@ -63,9 +63,9 @@ class BaseOfficeInfo: FileInfo {
     
     let application: String
     
-    override var infoType: Settings.SupportedFile { return .office }
+    override class var infoType: Settings.SupportedFile { return .office }
     override var standardMainItem: MenuItemInfo {
-        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "office", template: "")) // FIXME: template
+        return MenuItemInfo(fileType: Self.infoType, index: -1, item: Settings.MenuItem(image: "office", template: "")) // FIXME: template
     }
     
     init(file: URL, creator: String, creationDate: Date?, modified: String, modificationDate: Date?, title: String, subject: String, keywords: [String], description: String, application: String) {
@@ -118,8 +118,8 @@ class BaseOfficeInfo: FileInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        let useEmptyData = !settings.isEmptyItemsSkipped
+    override internal func processPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         
         switch placeholder {
         case "[[creator]]":
@@ -132,12 +132,12 @@ class BaseOfficeInfo: FileInfo {
             }
             if self.creationDate != nil {
                 if !self.creator.isEmpty {
-                    template += " " + String(format: NSLocalizedString("on %@", tableName: "LocalizableExt",comment: ""), "[[creation-date]]")
+                    template += ", [[creation-date]]"
                 } else {
-                    template += String(format: NSLocalizedString("created on %@", tableName: "LocalizableExt",comment: ""), "[[creation-date]]")
+                    template += String(format: NSLocalizedString("created %@", tableName: "LocalizableExt", comment: ""), "[[creation-date]]")
                 }
             }
-            return self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: item ?? MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "", template: template)))
+            return self.replacePlaceholders(in: template, isFilled: &isFilled, forItem: item ?? MenuItemInfo(fileType: Self.infoType, index: -1, item: Settings.MenuItem(image: "", template: template)))
         case "[[last-author]]":
             isFilled = !self.modified.isEmpty
             return self.modified
@@ -148,12 +148,12 @@ class BaseOfficeInfo: FileInfo {
             }
             if self.modificationDate != nil {
                 if !self.modified.isEmpty {
-                    template += " " + String(format: NSLocalizedString("on %@", tableName: "LocalizableExt",comment: ""), "[[modification-date]]")
+                    template += ", [[modification-date]]"
                 } else {
-                    template += String(format: NSLocalizedString("last saved on %@", tableName: "LocalizableExt",comment: ""), "[[modification-date]]")
+                    template += String(format: NSLocalizedString("last saved %@", tableName: "LocalizableExt",comment: ""), "[[modification-date]]")
                 }
             }
-            return self.replacePlaceholders(in: template, settings: settings, isFilled: &isFilled, forItem: item ?? MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "", template: template)))
+            return self.replacePlaceholders(in: template, isFilled: &isFilled, forItem: item ?? MenuItemInfo(fileType: Self.infoType, index: -1, item: Settings.MenuItem(image: "", template: template)))
         case "[[title]]":
             isFilled = !self.title.isEmpty
             return self.title
@@ -186,23 +186,23 @@ class BaseOfficeInfo: FileInfo {
             isFilled = false
             return ""
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         }
     }
     
-    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu) -> Bool {
         if item.menuItem.template == "[[keywords]]" {
             let n = self.keywords.count
-            guard n>0 || !settings.isEmptyItemsSkipped else {
+            guard n>0 || !(self.globalSettings?.isEmptyItemsSkipped ?? true) else {
                 return true
             }
-            let title = self.formatCount(n, noneLabel: "no Keyword", singleLabel: "1 Keyword", manyLabel: "%d Keywords", useEmptyData: !settings.isEmptyItemsSkipped, formatAsString: false)
-            let mnu = self.createMenuItem(title: title, image: "no-image", settings: settings, representedObject: item)
+            let title = self.formatCount(n, noneLabel: "no Keyword", singleLabel: "1 Keyword", manyLabel: "%d Keywords", useEmptyData: !(self.globalSettings?.isEmptyItemsSkipped ?? true), formatAsString: false)
+            let mnu = self.createMenuItem(title: title, image: "no-image", representedObject: item)
             let submenu = NSMenu(title: title)
             for (i, k) in keywords.enumerated() {
                 var info = item
                 info.userInfo["keyword_index"] = i
-                let mnu = createMenuItem(title: k, image: "-", settings: settings, representedObject: info)
+                let mnu = createMenuItem(title: k, image: "-", representedObject: info)
                 submenu.addItem(mnu)
             }
             mnu.submenu = submenu
@@ -211,7 +211,7 @@ class BaseOfficeInfo: FileInfo {
             
             return true
         } else {
-            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu)
         }
     }
 }

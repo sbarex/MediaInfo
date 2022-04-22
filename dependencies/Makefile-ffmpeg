@@ -35,8 +35,8 @@ SDK_PATH = $(shell /usr/bin/xcrun --show-sdk-path)
 CFLAGS = -I${BUILD_DIR}/libpng/include -Wno-unused-function -Wno-unneeded-internal-declaration -Wno-unused-variable
 LDFLAGS = -L${BUILD_DIR}/libpng/lib -L${SDK_PATH}/usr/lib -lz
 
-CFLAGS_x86_64 = -target x86_64-apple-macos10.14
-LDFLAGS_x86_64 = -target x86_64-apple-macos10.14
+CFLAGS_x86_64 = -target x86_64-apple-macos10.15
+LDFLAGS_x86_64 = -target x86_64-apple-macos10.15
 
 CFLAGS_arm64 = -target arm64-apple-macos11
 LDFLAGS_arm64 = -target arm64-apple-macos11

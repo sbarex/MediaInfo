@@ -30,10 +30,10 @@ class FolderInfo: FileInfo, FilesContainer {
         var has_file_size = false
         var has_file_count = false
         for item in items {
-            if item.template.contains("[[filesize-full]]") {
-                settings.folderSizeMethod = .full
+            if item.template.contains("[[file-size-full]]") || item.template.contains("[[filesize-full]]") {
+                settings.folderSettings.sizeMethod = .full
                 return
-            } else if item.template.contains("[[filesize]]") {
+            } else if item.template.contains("[[filesize]]") || item.template.contains("[[file-size]]") {
                 has_file_size = true
             } else if item.template.contains("[[n-files]]") {
                 has_file_count = true
@@ -48,7 +48,7 @@ class FolderInfo: FileInfo, FilesContainer {
                         continue
                     }
                     if code.hasPrefix("/* require-full-scan */ ") {
-                        settings.folderSizeMethod = .full
+                        settings.folderSettings.sizeMethod = .full
                         return
                     } else if code.hasPrefix("/* require-fast-scan */ ") {
                         has_file_size = true
@@ -58,9 +58,9 @@ class FolderInfo: FileInfo, FilesContainer {
             }
         }
         if has_file_size || has_file_count {
-            settings.folderSizeMethod = .fast
+            settings.folderSettings.sizeMethod = .fast
         } else {
-            settings.folderSizeMethod = .none
+            settings.folderSettings.sizeMethod = .none
         }
     }
     
@@ -315,10 +315,10 @@ class FolderInfo: FileInfo, FilesContainer {
     let unlimitedFileSize: Int
     let unlimitedFullFileSize: Int
     
-    override var infoType: Settings.SupportedFile { return .folder }
+    override class var infoType: Settings.SupportedFile { return .folder }
     override var standardMainItem: MenuItemInfo {
         let template = "[[file-name]]"
-        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "target-icon", template: template))
+        return MenuItemInfo(fileType: Self.infoType, index: -1, item: Settings.MenuItem(image: "target-icon", template: template))
     }
     
     convenience init(
@@ -383,7 +383,7 @@ class FolderInfo: FileInfo, FilesContainer {
     func customizeFileMenuItem(item: MenuItemInfo, file: BaseFileItemInfo, settings: Settings) -> MenuItemInfo {
         var info = item
         info.userInfo["file"] = file.fullPath
-        switch settings.folderAction {
+        switch settings.folderSettings.action {
         case .standard:
             break
         case .openFile:
@@ -395,17 +395,19 @@ class FolderInfo: FileInfo, FilesContainer {
     }
     
     // MARK: -
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        if let s = self.processFilesPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item) {
+    override internal func processPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        if let s = self.processFilesPlaceholder(placeholder, isFilled: &isFilled, forItem: item) {
             return s
         } else {
+            let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
             switch placeholder {
             case "[[file-name]]":
                 isFilled = true
                 return self.mainFile.localizedName ?? self.file.lastPathComponent
-            case "[[filesize]]":
+            case "[[file-size]]", "[[filesize]]":
                 isFilled = self.unlimitedFileSize > 0
                 if unlimitedFileSize >= 0 {
+                    Self.byteCountFormatter.countStyle = (self.globalSettings?.bytesFormat ?? .standard).countStyle
                     let f = Self.byteCountFormatter.string(fromByteCount: Int64(unlimitedFileSize))
                     if self.isTotalPartial {
                         return String(format: NSLocalizedString("more than %@", comment: ""), f)
@@ -413,11 +415,12 @@ class FolderInfo: FileInfo, FilesContainer {
                         return f
                     }
                 } else {
-                    return self.formatND(useEmptyData: !settings.isEmptyItemsSkipped)
+                    return self.formatND(useEmptyData: useEmptyData)
                 }
-            case "[[filesize-full]]":
+            case "[[file-size-full]]", "[[filesize-full]]":
                 isFilled = self.unlimitedFullFileSize > 0
                 if unlimitedFullFileSize > 0 {
+                    Self.byteCountFormatter.countStyle = (self.globalSettings?.bytesFormat ?? .standard).countStyle
                     let f = Self.byteCountFormatter.string(fromByteCount: Int64(unlimitedFullFileSize))
                     if self.isTotalPartial {
                         return String(format: NSLocalizedString("more than %@", comment: ""), f)
@@ -425,15 +428,15 @@ class FolderInfo: FileInfo, FilesContainer {
                         return f
                     }
                 } else {
-                    return self.formatND(useEmptyData: !settings.isEmptyItemsSkipped)
+                    return self.formatND(useEmptyData: useEmptyData)
                 }
             default:
-                return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+                return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
             }
         }
     }
     
-    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu) -> Bool {
         switch item.menuItem.template {
         case "[[files]]", "[[files-with-icon]]", "[[files-plain]]", "[[files-plain-with-icon]]":
             guard !self.mainFile.files.isEmpty else {
@@ -443,11 +446,30 @@ class FolderInfo: FileInfo, FilesContainer {
             let show_icons = item.menuItem.template == "[[files-with-icon]]" || item.menuItem.template == "[[files-plain-with-icon]]"
             let plain = item.menuItem.template == "[[files-plain]]" || item.menuItem.template == "[[files-plain-with-icon]]"
             
-            let title = self.formatFilesTitle(settings: settings)
-            
-            let submenu = format_files(title: title, files: mainFile.getSortedFiles(foldersFirst: settings.folderSortFoldersFirst), isPartial: mainFile.isPartial, icons: show_icons, plain: plain, depth: 0, maxDepth: settings.folderMaxDepth, maxFilesInDepth: settings.folderMaxFilesInDepth, allowBundle: settings.isBundleHandled, sortFoldersFirst: settings.folderSortFoldersFirst, settings: settings, item: item)
-            let mnu = self.createMenuItem(title: title, image: item.menuItem.image, settings: settings, representedObject: item)
-            if (mnu.image == nil || item.menuItem.image.isEmpty || item.menuItem.image == "target-icon") && !settings.isIconHidden {
+            let title = self.formatFilesTitle()
+            let action: MenuAction
+            switch (self.currentSettings as? Settings.FolderSettings)?.action ?? .standard {
+            case .standard: action = .standard
+            case .openFile: action = .open
+            case .revealFile: action = .reveal
+            }
+            let folderSettings = self.currentSettings as? Settings.FolderSettings
+            let submenu = format_files(
+                title: title,
+                files: mainFile.getSortedFiles(foldersFirst: folderSettings?.sortFoldersFirst ?? false),
+                isPartial: mainFile.isPartial,
+                icons: show_icons,
+                plain: plain,
+                depth: 0,
+                maxDepth: folderSettings?.maxDepth ?? 0,
+                maxFilesInDepth: folderSettings?.maxFilesInDepth ?? 0,
+                allowBundle: folderSettings?.isBundleEnabled ?? false,
+                sortFoldersFirst: folderSettings?.sortFoldersFirst ?? false,
+                item: item,
+                fileAction: action
+            )
+            let mnu = self.createMenuItem(title: title, image: item.menuItem.image, representedObject: item)
+            if (mnu.image == nil || item.menuItem.image.isEmpty || item.menuItem.image == "target-icon") && !(self.globalSettings?.isIconHidden ?? false) {
                 mnu.image = self.mainFile.displayIcon?.resized(to: NSSize(width: 16, height: 16))
             }
             destination_sub_menu.addItem(mnu)
@@ -455,7 +477,7 @@ class FolderInfo: FileInfo, FilesContainer {
             
             return true
         default:
-            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu)
         }
     }
 }

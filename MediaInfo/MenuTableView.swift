@@ -14,7 +14,6 @@ class MenuTableView: NSView {
             case none
             case inline
             case global
-            case action
         }
         
         var image: String
@@ -59,6 +58,24 @@ class MenuTableView: NSView {
     @IBOutlet weak var tagButton: NSButton!
     @IBOutlet weak var segmentedControl: NSSegmentedControl!
     
+    @IBOutlet weak var triggerLabel: NSTextField!
+    @IBOutlet weak var triggerDisclosureButton: NSButton!
+    @IBOutlet weak var triggersView: NSView!
+    
+    @IBOutlet weak var triggerValidateSwitch: NSSwitch!
+    @IBOutlet weak var triggerValidateEditButton: NSButton!
+    @IBOutlet weak var triggerValidateExceptionButton: NSButton!
+    
+    @IBOutlet weak var triggerBeforeRenderSwitch: NSSwitch!
+    @IBOutlet weak var triggerBeforeRenderEditButton: NSButton!
+    @IBOutlet weak var triggerBeforeRenderExceptionButton: NSButton!
+    
+    @IBOutlet weak var triggerActionSwitch: NSSwitch!
+    @IBOutlet weak var triggerActionEditButton: NSButton!
+    @IBOutlet weak var triggerActionExceptionButton: NSButton!
+    
+    @IBOutlet weak var heighConstraint: NSLayoutConstraint!
+    
     @objc dynamic var isTagHidden = true {
         didSet {
             guard oldValue != isTagHidden else {
@@ -73,10 +90,61 @@ class MenuTableView: NSView {
         }
     }
     
+    var isTriggerHidden: Bool = true
+    
     var sampleTokens: [MenuItemEditor.TokenSample] = []
     var validTokens: [Token.Type] = []
+     
+    var formatSettings: Settings.FormatSettings? {
+        didSet {
+            self.items = formatSettings?.templates.map({ MenuTableView.MenuItem(image: $0.image, template: $0.template)}) ?? []
+            self.tableView?.reloadData()
+            
+            triggerValidateSwitch.state = (formatSettings?.hasActiveTrigger(.validate) ?? false) ? .on : .off
+            triggerValidateEditButton.isEnabled = triggerValidateSwitch.state == .on
+            
+            triggerActionSwitch.state = (formatSettings?.hasActiveTrigger(.action) ?? false) ? .on : .off
+            triggerActionEditButton.isEnabled = triggerActionSwitch.state == .on
+            
+            triggerBeforeRenderSwitch.state = (formatSettings?.hasActiveTrigger(.beforeRender) ?? false) ? .on : .off
+            triggerBeforeRenderEditButton.isEnabled = triggerBeforeRenderSwitch.state == .on
+            
+            triggers_error_validate = nil
+            triggers_error_before_render = nil
+            triggers_error_action = nil
+            
+            if let formatSettings = formatSettings {
+                isTriggerHidden = !formatSettings.allowTriggers || formatSettings.triggers.isEmpty
+                hideTriggers(animated: false)
+                triggersView.isHidden = isTriggerHidden || !formatSettings.allowTriggers
+                triggerDisclosureButton.isHidden = !formatSettings.allowTriggers
+                triggerLabel.isHidden = !formatSettings.allowTriggers
+            } else {
+                isTriggerHidden = true
+                hideTriggers(animated: false)
+                triggersView.isHidden = true
+                triggerDisclosureButton.isHidden = true
+                triggerLabel.isHidden = true
+            }
+        }
+    }
     
-    var items: [MenuItem] = []
+    fileprivate var items: [MenuItem] = []
+    var triggers_error_validate: BaseInfo.JSTriggerError? {
+        didSet {
+            self.triggerValidateExceptionButton.isHidden = triggers_error_validate == nil
+        }
+    }
+    var triggers_error_action: BaseInfo.JSTriggerError?{
+        didSet {
+            self.triggerActionExceptionButton.isHidden = triggers_error_action == nil
+        }
+    }
+    var triggers_error_before_render: BaseInfo.JSTriggerError?{
+        didSet {
+            self.triggerBeforeRenderExceptionButton.isHidden = triggers_error_before_render == nil
+        }
+    }
     
     var example: BaseInfo? {
         didSet {
@@ -87,7 +155,7 @@ class MenuTableView: NSView {
     var supportedType: Token.SupportedType = .image
     weak var viewController: ViewController?
     
-    var getSettings: ()->Settings = { return Settings(fromDict: [:]) }
+    var getSettings: ()->Settings = { return Settings.getStandardSettings() }
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -110,6 +178,11 @@ class MenuTableView: NSView {
         
         tableView.doubleAction = #selector(self.handleTableDoubleClick(_:))
         tableView.registerForDraggedTypes([NSPasteboard.PasteboardType("private.table-row")])
+        
+        hideTriggers(animated: false)
+        
+        triggerDisclosureButton.isHidden = !(formatSettings?.allowTriggers ?? false)
+        triggerLabel.isHidden = !(formatSettings?.allowTriggers ?? false)
     }
     
     @IBAction func handleTableDoubleClick(_ sender: NSTableView) {
@@ -129,6 +202,7 @@ class MenuTableView: NSView {
                 self.tableView.beginUpdates()
                 
                 self.items.remove(at: index)
+                self.formatSettings?.templates.remove(at: index)
                 self.tableView.removeRows(at: IndexSet(integer: index), withAnimation: .slideUp)
                 
                 self.tableView.endUpdates()
@@ -145,7 +219,8 @@ class MenuTableView: NSView {
             }
             tableView.beginUpdates()
             tableView.moveRow(at: index, to: index - 1)
-            items.move(from: index, to: index - 1)
+            self.items.move(from: index, to: index - 1)
+            self.formatSettings?.templates.move(from: index, to: index - 1)
             if index == 1 {
                 tableView.reloadData(forRowIndexes: IndexSet(0...1), columnIndexes: IndexSet(integer: 0))
             }
@@ -158,7 +233,8 @@ class MenuTableView: NSView {
             }
             tableView.beginUpdates()
             tableView.moveRow(at: index, to: index + 1)
-            items.move(from: index, to: index + 1)
+            self.items.move(from: index, to: index + 1)
+            self.formatSettings?.templates.move(from: index, to: index + 1)
             if index == 0 {
                 tableView.reloadData(forRowIndexes: IndexSet(0...1), columnIndexes: IndexSet(integer: 0))
             }
@@ -175,6 +251,41 @@ class MenuTableView: NSView {
         self.refreshItems(example: self.example, force: true, settings: self.getSettings())
         tableView.reloadData()
         tableView.endUpdates()
+    }
+    
+    @IBAction func handleDisclosureButton(_ sender: Any) {
+        self.isTriggerHidden = !self.isTriggerHidden
+        hideTriggers(animated: true)
+    }
+    
+    @IBAction func handleTriggerEnable(_ sender: NSButton) {
+        guard let formatSettings = self.formatSettings else {
+            return
+        }
+        guard let name = Settings.TriggerName(rawValue: sender.tag) else {
+            return
+        }
+        if formatSettings.triggers[name] == nil {
+            formatSettings.triggers[name] = Settings.Trigger(code: "")
+        }
+        let trigger = formatSettings.triggers[name]!
+        trigger.isEnabled = !trigger.isEnabled
+        let triggerSwitch: NSSwitch
+        let triggerEditButton: NSButton
+        switch name {
+        case .validate:
+            triggerSwitch = triggerValidateSwitch
+            triggerEditButton = triggerValidateEditButton
+        case .beforeRender:
+            triggerSwitch = triggerBeforeRenderSwitch
+            triggerEditButton = triggerBeforeRenderEditButton
+        case .action:
+            triggerSwitch = triggerActionSwitch
+            triggerEditButton = triggerActionEditButton
+        }
+        triggerEditButton.isEnabled = trigger.isEnabled
+        triggerSwitch.state = trigger.isEnabled ? .on : .off
+        self.contentView.window?.isDocumentEdited = true
     }
     
     func confirmRemoveItem(action: @escaping ()->Void) {
@@ -215,15 +326,19 @@ class MenuTableView: NSView {
             if row >= 0 {
                 self.items[row].image = image
                 self.items[row].template = self.getTemplate(fromTokens: tokens)
+                self.formatSettings?.templates[row].image = image
+                self.formatSettings?.templates[row].template = self.getTemplate(fromTokens: tokens)
                 self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integersIn: 0...1))
             } else {
                 let index = self.tableView.selectedRow
                 if index >= 0 {
                     self.items.insert(MenuItem(image: image, template: self.getTemplate(fromTokens: tokens)), at: index+1)
+                    self.formatSettings?.templates.insert(Settings.MenuItem(image: image, template: self.getTemplate(fromTokens: tokens)), at: index+1)
                     self.tableView.insertRows(at: IndexSet(integer: index+1), withAnimation: .slideDown)
                     self.tableView.selectRowIndexes(IndexSet(integer: index+1), byExtendingSelection: false)
                 } else {
                     self.items.append(MenuItem(image: image, template: self.getTemplate(fromTokens: tokens)))
+                    self.formatSettings?.templates.append(Settings.MenuItem(image: image, template: self.getTemplate(fromTokens: tokens)))
                     self.tableView.insertRows(at: IndexSet(integer: self.items.count - 1), withAnimation: .slideDown)
                 }
             }
@@ -250,10 +365,49 @@ class MenuTableView: NSView {
     }
     
     func refreshItems(example: BaseInfo?, force: Bool = false, settings: Settings) {
+        do {
+            try execTriggerValidate()
+            self.triggers_error_validate = nil
+        } catch {
+            if let error = error as? BaseInfo.JSTriggerError {
+                self.triggers_error_validate = error
+            }
+        }
+        do {
+            try execTriggerBeforeRender()
+            self.triggers_error_before_render = nil
+        } catch {
+            if let error = error as? BaseInfo.JSTriggerError {
+                self.triggers_error_before_render = error
+            }
+        }
+        
         for (i, item) in self.items.enumerated() {
             self.refreshItem(item, atIndex: i, force: force, example: example, settings: settings)
         }
     }
+    
+    func execTriggerValidate() throws {
+        guard let example = example else {
+            return
+        }
+        let url : URL
+        if let example = example as? FileInfo {
+            url = example.file
+        } else {
+            url = Bundle.main.bundleURL
+        }
+        _ = try type(of: example).evaluateTriggerValidate(self.formatSettings?.triggers[.validate], for: url, globalSettings: self.getSettings(), jsDelegate: example.jsDelegate)
+    }
+    
+    func execTriggerBeforeRender() throws {
+        guard let example = example else {
+            return
+        }
+        example.initSettings(globalSettings: self.getSettings())
+        _ = try example.evaluateTriggerBeforeRender()
+    }
+    
     func refreshItem(_ item: MenuItem, atIndex i: Int, force: Bool = false, example: BaseInfo?, settings: Settings) {
         if item.info == nil || force {
             item.info = []
@@ -274,7 +428,6 @@ class MenuTableView: NSView {
                         switch token.mode as! TokenScript.Mode {
                         case .inline: item.scriptType = .inline
                         case .global: item.scriptType = .global
-                        case .action: item.scriptType = .action
                         }
                     }
                 }
@@ -283,10 +436,11 @@ class MenuTableView: NSView {
         
         if item.formatted == nil || force {
             if let example = example {
-                let info = MenuItemInfo(fileType: example.infoType, index: i, item: Settings.MenuItem(image: item.image, template: item.template))
+                example.initSettings(globalSettings: settings)
+                let info = MenuItemInfo(fileType: type(of: example).infoType, index: i, item: Settings.MenuItem(image: item.image, template: item.template))
                 
                 var isFilled = false
-                item.formatted = example.replacePlaceholders(in: item.template, settings: settings, attributes: [.underlineStyle: NSUnderlineStyle.single.rawValue], isFilled: &isFilled, forItem: info)
+                item.formatted = example.replacePlaceholders(in: item.template, attributes: [.underlineStyle: NSUnderlineStyle.single.rawValue], isFilled: &isFilled, forItem: info)
                 item.isFilled = isFilled
                 
                 if !isFilled {
@@ -297,6 +451,149 @@ class MenuTableView: NSView {
                 item.isFilled = false
             }
         }
+    }
+    
+    func hideTriggers(animated: Bool) {
+        self.triggerDisclosureButton.state = isTriggerHidden ? .off : .on
+        
+        let heightValue: CGFloat = isTriggerHidden ? 0 : 72
+        
+        if animated {
+            NSAnimationContext.runAnimationGroup({ (context) -> Void in
+                self.triggersView.isHidden = false
+                self.triggerLabel.stringValue = NSLocalizedString(self.isTriggerHidden ? "Triggers" : "Triggers:", comment: "")
+                
+                context.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeInEaseOut)
+                self.heighConstraint.animator().constant = heightValue
+            }, completionHandler: { () -> Void in
+                // animation completed
+                if heightValue == 0 {
+                    self.triggersView.isHidden = true
+                }
+            })
+        } else {
+            self.triggerLabel.stringValue = NSLocalizedString(self.isTriggerHidden ? "Triggers" : "Triggers:", comment: "")
+            self.heighConstraint.constant = heightValue
+            self.triggersView.isHidden = heightValue == 0
+        }
+    }
+    
+    @IBAction func handleTriggerEditor(_ sender: NSButton) {
+        guard let name = Settings.TriggerName(rawValue: sender.tag) else {
+            return
+        }
+        presentTriggerEditor(name: name)
+    }
+    
+    func presentTriggerEditor(name: Settings.TriggerName) {
+        guard let formatSettings = formatSettings else {
+            return
+        }
+        if formatSettings.triggers[name] == nil {
+            formatSettings.triggers[name] = Settings.Trigger(code: "")
+        }
+        let trigger = formatSettings.triggers[name]!
+        let code = trigger.code
+        switch name {
+        case .validate:
+            ScriptViewController.editCode(code, mode: .validate) { code in
+                trigger.code = code
+                trigger.isEnabled = !code.isEmpty
+                self.triggerValidateSwitch.state = trigger.isEnabled ? .on : .off
+                self.triggerValidateEditButton.isEnabled = !code.isEmpty
+                do {
+                    try self.execTriggerValidate()
+                    self.triggers_error_validate = nil
+                } catch {
+                    if let error = error as? BaseInfo.JSTriggerError {
+                        self.triggers_error_validate = error
+                    }
+                }
+                self.contentView.window?.isDocumentEdited = true
+            }
+        case .beforeRender:
+            ScriptViewController.editCode(code, mode: .beforeRender) { code in
+                trigger.code = code
+                trigger.isEnabled = !code.isEmpty
+                self.triggerBeforeRenderSwitch.state = trigger.isEnabled ? .on : .off
+                self.triggerBeforeRenderEditButton.isEnabled = !code.isEmpty
+                do {
+                    try self.execTriggerBeforeRender()
+                    self.triggers_error_before_render = nil
+                } catch {
+                    if let error = error as? BaseInfo.JSTriggerError {
+                        self.triggers_error_before_render = error
+                    }
+                }
+                self.contentView.window?.isDocumentEdited = true
+            }
+        case .action:
+            ScriptViewController.editCode(code, mode: .action) { code in
+                trigger.code = code
+                trigger.isEnabled = !code.isEmpty
+                self.triggerActionSwitch.state = trigger.isEnabled ? .on : .off
+                self.triggerActionEditButton.isEnabled = !code.isEmpty
+                do {
+                    self.example?.initSettings(globalSettings: self.getSettings())
+                    try self.example?.evaluateTriggerAction(selectedItem: nil)
+                    self.triggers_error_action = nil
+                } catch {
+                    if let error = error as? BaseInfo.JSTriggerError {
+                        self.triggers_error_action = error
+                    }
+                }
+                self.contentView.window?.isDocumentEdited = true
+            }
+        }
+    }
+    
+    @IBAction func handleTriggerExceptionButton(_ sender: NSButton) {
+        let exception: BaseInfo.JSTriggerError?
+        let triggerName: Settings.TriggerName
+        if sender.tag == 1 {
+            exception = triggers_error_validate
+            triggerName = .validate
+        } else if sender.tag == 2 {
+            exception = triggers_error_before_render
+            triggerName = .beforeRender
+        } else if sender.tag == 3 {
+            exception = triggers_error_action
+            triggerName = .action
+        } else {
+            return
+        }
+        guard let exception = exception else {
+            return
+        }
+
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Warning", comment: "")
+        alert.alertStyle = .critical
+        
+        switch exception {
+        case .jsInitError:
+            alert.messageText = "JS Init error"
+        case .exception(let info):
+            if info.line >= 0 {
+                alert.messageText = String(format: NSLocalizedString("JS Exception at line %d", comment: ""), info.line) + ": "
+            } else {
+                alert.messageText = NSLocalizedString("JS Exception", comment: "")
+            }
+            alert.informativeText = info.message
+        case .invalidResult:
+            alert.messageText = "Invalid returned value"
+            switch triggerName {
+            case .validate:
+                alert.informativeText = "The validate trigger must return a boolean value."
+            case .beforeRender:
+                alert.informativeText = "The before render trigger must null or an array of menu item templates."
+            case .action:
+                break
+            }
+             
+        }
+        alert.addButton(withTitle: NSLocalizedString("OK", comment: "")).keyEquivalent = "\r"
+        alert.runModal()
     }
 }
 
@@ -316,15 +613,16 @@ extension MenuTableView: NSTableViewDelegate {
             cell?.line = item.line
             cell?.info = item.info
             
-            if item.scriptType == .global || item.scriptType == .action, item.template.hasPrefix("[[script-global:") || item.template.hasPrefix("[[script-action:") {
+            if item.scriptType == .global, item.template.hasPrefix("[[script-global:") {
                 cell?.editButton.image = NSImage(named: "applescript")
                 cell?.editButton.toolTip = NSLocalizedString("Edit the script…", comment: "")
                 cell?.editAction = {
-                        let tokens = self.getTokens(from: item.template)
-                    (tokens.first as? TokenScript)?.editScript(action: { _ in
+                    let tokens = self.getTokens(from: item.template)
+                    (tokens.first as? TokenScript)?.editScript(action: { code in
                         item.template = self.getTemplate(fromTokens: tokens)
+                        self.formatSettings?.templates[row].template = item.template
                         item.info = nil
-                        self.window?.isDocumentEdited = true
+                        self.contentView.window?.isDocumentEdited = true
                         self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integersIn: 0...1))
                     })
                 }
@@ -332,11 +630,11 @@ extension MenuTableView: NSTableViewDelegate {
                 cell?.editButton.image = NSImage(named: "folder")
                 cell?.editButton.toolTip = NSLocalizedString("Choose the application…", comment: "")
                 cell?.editAction = {
-                        let tokens = self.getTokens(from: item.template)
-                    (tokens.first as? TokenAction)?.editPath(action: { _ in
+                    let tokens = self.getTokens(from: item.template)
+                    (tokens.first as? TokenAction)?.editPath(action: { code in
                         item.template = self.getTemplate(fromTokens: tokens)
                         item.info = nil
-                        self.window?.isDocumentEdited = true
+                        self.contentView.window?.isDocumentEdited = true
                         self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integersIn: 0...1))
                     })
                 }
@@ -351,7 +649,7 @@ extension MenuTableView: NSTableViewDelegate {
                         vc.title = NSLocalizedString("Video track menu items", comment: "")
                         vc.itemsView.supportedType = .video
                         vc.itemsView.getSettings = self.getSettings
-                        vc.itemsView.items = self.getSettings().videoTracksMenuItems.map({ MenuTableView.MenuItem(image: $0.image, template: $0.template)})
+                        vc.itemsView.formatSettings = self.getSettings().videoTrackSettings
                         vc.itemsView.sampleTokens = [
                             (label: NSLocalizedString("Size: ", comment: ""), tokens: [TokenDimensional(mode: .widthHeight)]),
                             (label: NSLocalizedString("Length: ", comment: ""), tokens: [TokenDuration(mode: .hours)]),
@@ -363,11 +661,9 @@ extension MenuTableView: NSTableViewDelegate {
                         vc.itemsView.example = (self.example as? VideoInfo)?.videoTrack
                     }
                     vc.onSave = { vc in
-                        self.viewController?.videoTracksMenuItems = vc.itemsView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
+                        self.contentView.window?.isDocumentEdited = true
                     }
                     NSApplication.shared.keyWindow?.contentViewController?.presentAsModalWindow(vc)
-                    
-                    self.window?.isDocumentEdited = true
                 }
             } else if item.template == "[[audio]]" {
                 cell?.editButton.image = NSImage(named: "contextualmenu.and.cursorarrow")
@@ -379,7 +675,7 @@ extension MenuTableView: NSTableViewDelegate {
                         vc.title = NSLocalizedString("Audio track menu items", comment: "")
                         vc.itemsView.supportedType = .audio
                         vc.itemsView.getSettings = self.getSettings
-                        vc.itemsView.items = self.getSettings().audioTracksMenuItems.map({ MenuTableView.MenuItem(image: $0.image, template: $0.template)})
+                        vc.itemsView.formatSettings = self.getSettings().audioTrackSettings
                         vc.itemsView.sampleTokens = [
                             (label: NSLocalizedString("Length: ", comment: ""), tokens: [TokenDuration(mode: .hours)]),
                             (label: NSLocalizedString("Language: ", comment: ""), tokens: [TokenLanguage(mode: .flag)]),
@@ -391,11 +687,9 @@ extension MenuTableView: NSTableViewDelegate {
                         vc.itemsView.example = (self.example as? VideoInfo)?.audioTracks.first
                     }
                     vc.onSave = { vc in
-                        self.viewController?.audioTracksMenuItems = vc.itemsView.items.map({ Settings.MenuItem(image: $0.image, template: $0.template)})
+                        self.contentView.window?.isDocumentEdited = true
                     }
                     NSApplication.shared.keyWindow?.contentViewController?.presentAsModalWindow(vc)
-                    
-                    self.window?.isDocumentEdited = true
                 }
             } else {
                 cell?.editAction = nil
@@ -407,7 +701,8 @@ extension MenuTableView: NSTableViewDelegate {
         // cell?.isIndented = row > 0 && settings.useFirstItemAsMain
         let attributedString: NSMutableAttributedString
         
-        let info = MenuItemInfo(fileType: example?.infoType ?? .none, index: row, item: Settings.MenuItem(image: item.image, template: item.template))
+        let infoType = example != nil ? type(of: example!).infoType : .none
+        let info = MenuItemInfo(fileType: infoType, index: row, item: Settings.MenuItem(image: item.image, template: item.template))
         
         if isTagHidden, let s = item.formatted {
             attributedString = NSMutableAttributedString(attributedString: s)
@@ -478,6 +773,7 @@ extension MenuTableView: NSTableViewDataSource {
             
             tableView.moveRow(at: oldRow, to: newRow)
             self.items.move(from: oldRow, to: newRow)
+            self.formatSettings?.templates.move(from: oldRow, to: newRow)
             
             if settings.isUsingFirstItemAsMain {
                 if oldRow == 0 {
@@ -501,8 +797,10 @@ extension MenuTableView: NSTableViewDataSource {
     func tableViewSelectionDidChange(_ notification: Notification) {
         updateSegmentedControl()
     }
+    
 }
 
+// MARK: - JSExceptionDelegate
 extension MenuTableView: JSExceptionDelegate {
     func onJSException(info: BaseInfo, exception: String?, atLine line: Int, forItem item: MenuItemInfo?) {
         guard let itemIndex = item?.index else {
@@ -520,7 +818,7 @@ extension MenuTableView: JSExceptionDelegate {
     }
 }
 
-// MARK: -
+// MARK: - Extensions
 extension NSResponder {
     public var parentViewController: NSViewController? {
         return nextResponder as? NSViewController ?? nextResponder?.parentViewController
@@ -639,3 +937,4 @@ class MenuTokensCell: NSTableCellView {
         }
     }
 }
+

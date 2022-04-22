@@ -23,7 +23,7 @@ class MediaInfoSettingsXPC: NSObject, MediaInfoSettingsXPCProtocol {
     }
     
     func getSettings() -> Settings {
-        return Settings(fromDomain: Settings.SharedDomainName)
+        return Settings.instance(fromDomain: Settings.SharedDomainName)
     }
     
     func getSettings(refresh: Bool, withReply reply: @escaping (NSDictionary) -> Void) {
@@ -35,8 +35,8 @@ class MediaInfoSettingsXPC: NSObject, MediaInfoSettingsXPCProtocol {
     
     func setSetting(_ settings_dict: NSDictionary, withReply reply: @escaping (Bool) -> Void) {
         if let dict = settings_dict as? [String: AnyHashable] {
-            let settings = Settings(fromDomain: Settings.SharedDomainName)
-            settings.refresh(fromDict: dict)
+            let settings = Settings.instance(fromDomain: Settings.SharedDomainName)
+            settings.update(from: dict)
             reply(settings.synchronize())
         } else {
             reply(false)

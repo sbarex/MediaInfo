@@ -129,7 +129,7 @@ class TokenPdfBox: Token {
         menu.addItem(NSMenuItem.separator())
         
         for unit in PDFInfo.PrintUnit.allCases {
-            menu.addItem(self.createMenuItem(title: unit.displayString, state: self.unit == unit, tag: unit.rawValue, tooltip: ""))
+            menu.addItem(self.createMenuItem(title: unit.title, state: self.unit == unit, tag: unit.rawValue, tooltip: ""))
         }
         
         return menu

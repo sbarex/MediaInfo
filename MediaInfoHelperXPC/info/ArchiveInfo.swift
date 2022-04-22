@@ -55,6 +55,7 @@ class ArchivedFile: BaseFileItemInfo {
         case typeLabel
         case isEncrypted
         case isAbsolute
+        case format
     }
     
     //MARK: - Properties
@@ -79,11 +80,11 @@ class ArchivedFile: BaseFileItemInfo {
     }
     
     let type: ArchivedFileTypeEnum
-    
+    let format: String
     let isEncrypted: Bool
     
     // MARK: - Init    
-    init(fullpath: String, type: ArchivedFileTypeEnum, size: Int?, encrypted: Bool = false) {
+    init(fullpath: String, type: ArchivedFileTypeEnum, size: Int?, encrypted: Bool = false, format: String = "") {
         var path = fullpath
         
         if path.hasPrefix("./") {
@@ -94,6 +95,7 @@ class ArchivedFile: BaseFileItemInfo {
         
         self.type = type
         self.isEncrypted = encrypted
+        self.format = format
         
         let url = URL(fileURLWithPath: path, isDirectory: type == .directory, relativeTo: URL(fileURLWithPath: "/"))
         super.init(
@@ -114,6 +116,7 @@ class ArchivedFile: BaseFileItemInfo {
         self.originalPath = try container.decode(String.self, forKey: .originalPath)
         self.type = ArchivedFileTypeEnum(rawValue: try container.decode(Int.self, forKey: .type))!
         self.isEncrypted = try container.decode(Bool.self, forKey: .isEncrypted)
+        self.format = try container.decode(String.self, forKey: .format)
         try super.init(from: decoder)
     }
     
@@ -122,6 +125,7 @@ class ArchivedFile: BaseFileItemInfo {
         try container.encode(self.originalPath, forKey: .originalPath)
         try container.encode(self.type.rawValue, forKey: .type)
         try container.encode(self.isEncrypted, forKey: .isEncrypted)
+        try container.encode(self.format, forKey: .format)
         try super.encode(to: encoder)
         
         if let b = encoder.userInfo[.exportStoredValues] as? Bool, b {
@@ -193,6 +197,15 @@ class ArchivedFile: BaseFileItemInfo {
 
 // MARK: -
 class ArchiveInfo: FileInfo, FilesContainer {
+    static let percentFormatter: NumberFormatter = {
+        let numberFormatter = NumberFormatter()
+        numberFormatter.allowsFloats = true
+        numberFormatter.numberStyle = .percent
+        numberFormatter.maximumFractionDigits = 1
+        
+        return numberFormatter
+    }()
+    
     enum CodingKeys: String, CodingKey {
         case compressionName
         case archive
@@ -213,10 +226,10 @@ class ArchiveInfo: FileInfo, FilesContainer {
     let isTotalFilePartial: Bool
     let isPartial: Bool
     
-    override var infoType: Settings.SupportedFile { return .archive }
+    override class var infoType: Settings.SupportedFile { return .archive }
     override var standardMainItem: MenuItemInfo {
-        let template = "[[filesize]] ([[uncompressed-size]]), [[n-files]]"
-        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "zip", template: template))
+        let template = "[[file-size]] ([[uncompressed-size]]), [[n-files]]"
+        return MenuItemInfo(fileType: Self.infoType, index: -1, item: Settings.MenuItem(image: "zip", template: template))
     }
     
     
@@ -257,30 +270,57 @@ class ArchiveInfo: FileInfo, FilesContainer {
     }
 
     // MARK: -
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        if let s = self.processFilesPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item) {
+    override internal func processPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        if let s = self.processFilesPlaceholder(placeholder, isFilled: &isFilled, forItem: item) {
             return s
         } else {
+            let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
             switch placeholder {
-            case "[[compression-method]]":
-                isFilled = !self.compressionName.isEmpty
+            case "[[compression-format]]":
+                isFilled = !self.compressionName.isEmpty && self.compressionName != "none"
                 return self.compressionName
             case "[[uncompressed-size]]":
                 isFilled = self.unlimitedFileSize > 0
                 if self.unlimitedFileSize < 0 {
                     return NSLocalizedString("unknown uncompressed size", tableName: "LocalizableExt", comment: "")
                 } else if self.isTotalSizePartial {
+                    Self.byteCountFormatter.countStyle = (self.globalSettings?.bytesFormat ?? .standard).countStyle
                     return String(format: NSLocalizedString("more than %@ uncompressed", tableName: "LocalizableExt", comment: ""), Self.byteCountFormatter.string(fromByteCount: Int64(self.unlimitedFileSize)))
                 } else {
+                    Self.byteCountFormatter.countStyle = (self.globalSettings?.bytesFormat ?? .standard).countStyle
                     return String(format: NSLocalizedString("%@ uncompressed", tableName: "LocalizableExt", comment: ""), Self.byteCountFormatter.string(fromByteCount: Int64(self.unlimitedFileSize)))
                 }
+            case "[[compression-ratio]]":
+                if self.unlimitedFileSize <= 0 || self.isTotalSizePartial {
+                    isFilled = false
+                    return self.formatND(useEmptyData: useEmptyData)
+                } else {
+                    let ratio = Double(self.unlimitedFileSize) / Double(self.fileSize)
+                    if let p = Self.percentFormatter.string(from: ratio as NSNumber) {
+                        isFilled = true
+                        return p
+                    } else {
+                        isFilled = false
+                        return self.formatERR(useEmptyData: useEmptyData)
+                    }
+                }
+            case "[[compression-summary]]":
+                var s = self.processPlaceholder("[[file-size]]", isFilled: &isFilled, forItem: item)
+                s += " = "
+                s += self.processPlaceholder("[[uncompressed-size]]", isFilled: &isFilled, forItem: item)
+                let ratio = self.processPlaceholder("[[compression-ratio]]", isFilled: &isFilled, forItem: item)
+                if isFilled {
+                    s += " (\(ratio))"
+                }
+                isFilled = true
+                return s
             default:
-                return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+                return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
             }
         }
     }
     
-    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu) -> Bool {
         switch item.menuItem.template {
         case "[[files]]", "[[files-with-icon]]", "[[files-plain]]", "[[files-plain-with-icon]]":
             guard !self.mainFile.files.isEmpty else {
@@ -290,21 +330,34 @@ class ArchiveInfo: FileInfo, FilesContainer {
             let show_icons = item.menuItem.template == "[[files-with-icon]]" || item.menuItem.template == "[[files-plain-with-icon]]"
             let plain = item.menuItem.template == "[[files-plain]]" || item.menuItem.template == "[[files-plain-with-icon]]"
             
-            let title = self.formatFilesTitle(settings: settings)
+            let title = self.formatFilesTitle()
             
-            let submenu = format_files(title: title, files: mainFile.files, isPartial: mainFile.isPartial, icons: show_icons, plain: plain, depth: 0, maxDepth: 0, maxFilesInDepth: 0, allowBundle: false, sortFoldersFirst: settings.folderSortFoldersFirst, settings: settings, item: item)
+            let submenu = format_files(
+                title: title,
+                files: mainFile.files,
+                isPartial: mainFile.isPartial,
+                icons: show_icons,
+                plain: plain,
+                depth: 0,
+                maxDepth: 0,
+                maxFilesInDepth: 0,
+                allowBundle: false,
+                sortFoldersFirst: (self.currentSettings as? Settings.ArchiveSettings)?.sortFoldersFirst ?? false,
+                item: item,
+                fileAction: .standard
+            )
             if self.mainFile.files.count == 1 && !plain {
                 let mnu = submenu.items.first!.copy(with: .none) as! NSMenuItem
                 destination_sub_menu.addItem(mnu)
             } else {
-                let mnu = self.createMenuItem(title: title, image: self.standardMainItem.menuItem.image, settings: settings, representedObject: item)
+                let mnu = self.createMenuItem(title: title, image: self.standardMainItem.menuItem.image, representedObject: item)
                 destination_sub_menu.addItem(mnu)
                 destination_sub_menu.setSubmenu(submenu, for: mnu)
             }
             
             return true
         default:
-            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu)
         }
     }
 }

@@ -19,7 +19,7 @@ protocol LanguageInfo: BaseInfo {
     /// Get an image 32 x 32 px of the country flag.
     func getImageOfFlag() -> NSImage?
     
-    func processLanguagePlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String
+    func processLanguagePlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String
     static func getCountryFlag(lang: String?) -> String?
 }
 
@@ -44,8 +44,8 @@ extension LanguageInfo {
         return Self.getCountryFlag(lang: self.lang)
     }
     
-    func processLanguagePlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        let useEmptyData = !settings.isEmptyItemsSkipped
+    func processLanguagePlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         switch placeholder {
         case "[[language-count]]":
             if let lang = self.lang {
@@ -124,12 +124,12 @@ extension LanguageInfo {
 protocol LanguagesInfo: LanguageInfo {
     var languages: [String] { get }
     
-    func processLanguagesPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String?
+    func processLanguagesPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String?
 }
 
 extension LanguagesInfo {
-    func processLanguagesPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String? {
-        let useEmptyData = !settings.isEmptyItemsSkipped
+    func processLanguagesPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String? {
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         switch placeholder {
         case "[[language-count]]":
             return formatCount(languages.count, noneLabel: "no Language", singleLabel: "1 Language", manyLabel: "%d Languages", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
@@ -140,7 +140,7 @@ extension LanguagesInfo {
             isFilled = !languages.isEmpty
             return isFilled ? languages.map({ Self.getCountryFlag(lang: $0) ?? "🏳" }).joined(separator: " ") : ""
         case "[[language-flag]]", "[[language]]":
-            return self.processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return self.processLanguagePlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         default:
             return nil
         }

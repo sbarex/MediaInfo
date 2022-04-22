@@ -30,6 +30,8 @@ import Foundation
     func getArchiveInfo(for item: URL, withReply reply: @escaping (NSData?)->Void)
     func getFolderInfo(for item: URL, withReply reply: @escaping (NSData?)->Void)
     
+    func getFileInfo(for item: URL, withReply reply: @escaping (NSData?)->Void)
+    
     func getWebPVersion(reply: @escaping (String)->Void)
     
     func openFile(url: URL, reply: @escaping ((Bool)->Void))

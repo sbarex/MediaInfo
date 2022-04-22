@@ -33,6 +33,8 @@ extension Settings.SupportedFile {
             return VideoTrackInfo.self
         case .audioTraks:
             return AudioTrackInfo.self
+        case .others:
+            return FileInfo.self
         }
     }
 }

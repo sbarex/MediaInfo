@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import UniformTypeIdentifiers
 
 class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
     func getInfo(for item: URL, type: String, withReply reply: @escaping (NSData?)->Void) {
@@ -44,6 +45,9 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
         case "folder":
             getFolderInfo(for: item, withReply: reply)
             
+        case "file":
+            getFileInfo(for: item, withReply: reply)
+            
         default:
             reply(nil)
         }
@@ -52,21 +56,21 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
     func getImageInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
         let image_info: ImageInfo
         let settings = self.settings ?? self.getSettings()
-        
-        if let info = getCGImageInfo(forFile: item, processMetadata: settings.extractImageMetadata) {
+        if let info = getCGImageInfo(forFile: item, processMetadata: settings.imageSettings.extractMetadata) {
             image_info = info
         } else {
             guard let uti = try? item.resourceValues(forKeys: [.typeIdentifierKey]).typeIdentifier else {
                 reply(nil)
                 return
             }
+            
             if UTTypeConformsTo(uti as CFString, "public.pbm" as CFString), let info = getNetPBMImageInfo(forFile: item) {
                 image_info = info
-            } else if UTTypeConformsTo(uti as CFString, "public.webp" as CFString), let info = getWebPImageInfo(forFile: item) {
+            } else if UTTypeConformsTo(uti as CFString, "public.webp" as CFString) || UTTypeConformsTo(uti as CFString, "org.webmproject.webp" as CFString), let info = getWebPImageInfo(forFile: item) {
                 image_info = info
             } /*else if UTTypeConformsTo(uti as CFString, "fr.whine.bpg" as CFString) || item.pathExtension == "bpg", let info = getBPGImageInfo(forFile: item) {
                 image_info = info
-            } */else if UTTypeConformsTo(uti as CFString, "public.svg-image" as CFString), let info = getSVGImageInfo(forFile: item) {
+            } */else if UTTypeConformsTo(uti as CFString, "public.svg-image" as CFString) || UTTypeConformsTo(uti as CFString, kUTTypeScalableVectorGraphics), let info = getSVGImageInfo(forFile: item) {
                 image_info = info
             } else if let info = getFFMpegImageInfo(forFile: item) {
                 image_info = info
@@ -164,7 +168,7 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
     
     func getWordInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
         let settings = self.settings ?? self.getSettings()
-        guard let doc_info = WordInfo(docx: item, deepScan: settings.isOfficeDeepScan) else {
+        guard let doc_info = WordInfo(docx: item, deepScan: settings.officeSettings.deepScan) else {
             reply(nil)
             return
         }
@@ -176,7 +180,7 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
     
     func getExcelInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
         let settings = self.settings ?? self.getSettings()
-        guard let xls_info = ExcelInfo(xlsx: item, deepScan: settings.isOfficeDeepScan) else {
+        guard let xls_info = ExcelInfo(xlsx: item, deepScan: settings.officeSettings.deepScan) else {
             reply(nil)
             return
         }
@@ -188,7 +192,7 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
     
     func getPowerpointInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
         let settings = self.settings ?? self.getSettings()
-        guard let xppt_info = PowerpointInfo(pptx: item, deepScan: settings.isOfficeDeepScan) else {
+        guard let xppt_info = PowerpointInfo(pptx: item, deepScan: settings.officeSettings.deepScan) else {
             reply(nil)
             return
         }
@@ -200,7 +204,7 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
     
     func getOpenDocumentInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
         let settings = self.settings ?? self.getSettings()
-        guard let odt_info = WordInfo(odt: item, deepScan: settings.isOfficeDeepScan) else {
+        guard let odt_info = WordInfo(odt: item, deepScan: settings.officeSettings.deepScan) else {
             reply(nil)
             return
         }
@@ -212,7 +216,7 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
     
     func getOpenSpreadsheetInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
         let settings = self.settings ?? self.getSettings()
-        guard let ods_info = ExcelInfo(ods: item, deepScan: settings.isOfficeDeepScan) else {
+        guard let ods_info = ExcelInfo(ods: item, deepScan: settings.officeSettings.deepScan) else {
             reply(nil)
             return
         }
@@ -224,7 +228,7 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
     
     func getOpenPresentationInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
         let settings = self.settings ?? self.getSettings()
-        guard let odp_info = PowerpointInfo(odp: item, deepScan: settings.isOfficeDeepScan) else {
+        guard let odp_info = PowerpointInfo(odp: item, deepScan: settings.officeSettings.deepScan) else {
             reply(nil)
             return
         }
@@ -250,7 +254,7 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
     }
     
     func getArchiveInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
-        guard let archive_info = try? ArchiveInfo(file: item, limit: self.settings?.archiveMaxFiles ?? 0) else {
+        guard let archive_info = try? ArchiveInfo(file: item, limit: self.settings?.archiveSettings.maxFiles ?? 0) else {
             reply(nil)
             return
         }
@@ -263,15 +267,22 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
     func getFolderInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
         let info = FolderInfo(
             folder: item,
-            maxFiles: self.settings?.folderMaxFiles ?? 200,
-            maxDepth: self.settings?.folderMaxDepth ?? 10,
-            maxFilesInDepth: self.settings?.folderMaxFilesInDepth ?? 50,
-            skipHidden: self.settings?.folderSkipHiddenFiles ?? true,
-            skipBundle: !(self.settings?.isBundleHandled ?? false),
-            useGenericIcon: self.settings?.folderUsesGenericIcon ?? true,
-            sizeMode: self.settings?.folderSizeMethod ?? .fast
+            maxFiles: self.settings?.folderSettings.maxFiles ?? 200,
+            maxDepth: self.settings?.folderSettings.maxDepth ?? 10,
+            maxFilesInDepth: self.settings?.folderSettings.maxFilesInDepth ?? 50,
+            skipHidden: self.settings?.folderSettings.skipHiddenFiles ?? true,
+            skipBundle: !(self.settings?.folderSettings.isBundleEnabled ?? false),
+            useGenericIcon: self.settings?.folderSettings.usesGenericIcon ?? true,
+            sizeMode: self.settings?.folderSettings.sizeMethod ?? .fast
         )
         
+        let encoder = JSONEncoder()
+        let data = try? encoder.encode(info)
+        reply(data as NSData?)
+    }
+    
+    func getFileInfo(for item: URL, withReply reply: @escaping (NSData?)->Void) {
+        let info = FileInfo(file: item)
         let encoder = JSONEncoder()
         let data = try? encoder.encode(info)
         reply(data as NSData?)
@@ -288,30 +299,18 @@ class MediaInfoHelperXPC: MediaInfoSettingsXPC, MediaInfoHelperXPCProtocol {
             reply(false, nil)
             return
         }
-        if #available(macOS 10.15, *) {
-            let conf = NSWorkspace.OpenConfiguration()
-            conf.activates = true
-            NSWorkspace.shared.open([url], withApplicationAt: URL(fileURLWithPath: path), configuration: conf) { app, error in
-                reply(app != nil, error?.localizedDescription)
-            }
-        } else {
-            systemExec(command: "/usr/bin/open", arguments: ["-a", path, url.path]) { status, output in
-                reply(status == 0, status != 0 ? output : nil)
-            }
+        let conf = NSWorkspace.OpenConfiguration()
+        conf.activates = true
+        NSWorkspace.shared.open([url], withApplicationAt: URL(fileURLWithPath: path), configuration: conf) { app, error in
+            reply(app != nil, error?.localizedDescription)
         }
     }
     
     func openApplication(at url: URL, reply: @escaping ((Bool, String?)->Void)) {
-        if #available(macOS 10.15, *) {
-            let conf = NSWorkspace.OpenConfiguration()
-            conf.activates = true
-            NSWorkspace.shared.openApplication(at: url, configuration: conf) { app, error in
-                reply(app != nil, error?.localizedDescription)
-            }
-        } else {
-            systemExec(command: "/usr/bin/open", arguments: ["-a", url.path]) { status, output in
-                reply(status == 0, status != 0 ? output : nil)
-            }
+        let conf = NSWorkspace.OpenConfiguration()
+        conf.activates = true
+        NSWorkspace.shared.openApplication(at: url, configuration: conf) { app, error in
+            reply(app != nil, error?.localizedDescription)
         }
     }
     

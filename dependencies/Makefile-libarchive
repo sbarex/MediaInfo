@@ -35,8 +35,8 @@ SDK_PATH = $(shell /usr/bin/xcrun --show-sdk-path)
 CFLAGS = -I${BUILD_DIR}/liblz4/include -I${BUILD_DIR}/libb2/include -I${BUILD_DIR}/libzstd/include -I${BUILD_DIR}/liblzma/include
 LDFLAGS = -L${BUILD_DIR}/liblz4 -L${BUILD_DIR}/libb2 -L${BUILD_DIR}/libzstd -L${BUILD_DIR}/liblzma/lib -L${SDK_PATH}/usr/lib
 
-CFLAGS_x86_64 = -target x86_64-apple-macos10.14
-LDFLAGS_x86_64 = -target x86_64-apple-macos10.14
+CFLAGS_x86_64 = -target x86_64-apple-macos10.15
+LDFLAGS_x86_64 = -target x86_64-apple-macos10.15
 
 CFLAGS_arm64 = -target arm64-apple-macos11
 LDFLAGS_arm64 = -target arm64-apple-macos11

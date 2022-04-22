@@ -161,15 +161,13 @@ func getCGImageInfo(forFile url: URL, processMetadata: Bool) -> ImageInfo? {
                 metadata["GIF"] = meta
             }
         }
-        if #available(macOS 10.15, *) {
-            if let i: CFDictionary = getKey(kCGImagePropertyHEICSDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
-                if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
-                    metadata_raw["HEICS"] = s
-                }
-                let meta = ImageInfo.parseHeicsDictionary(dict: dict)
-                if !meta.isEmpty {
-                    metadata["HEICS"] = meta
-                }
+        if let i: CFDictionary = getKey(kCGImagePropertyHEICSDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
+            if JSONSerialization.isValidJSONObject(dict), let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []), let s = String(data: jsonData, encoding: .utf8) {
+                metadata_raw["HEICS"] = s
+            }
+            let meta = ImageInfo.parseHeicsDictionary(dict: dict)
+            if !meta.isEmpty {
+                metadata["HEICS"] = meta
             }
         }
         if let i: CFDictionary = getKey(kCGImagePropertyPNGDictionary, inDictionary: img_properties), let dict = i as? [CFString: AnyHashable] {
@@ -547,11 +545,7 @@ func getCMMediaStreams(forFile file: URL) -> [BaseInfo] {
             let formatDescriptions = track.formatDescriptions as! [CMFormatDescription]
             var mediaType: FourCharCode?
             if let formatDesc = formatDescriptions.first {
-                if #available(macOS 10.15, *) {
-                    mediaType = formatDesc.mediaSubType.rawValue
-                } else {
-                    mediaType = CMFormatDescriptionGetMediaSubType(formatDesc)
-                }
+                mediaType = formatDesc.mediaSubType.rawValue
             }
             
             let v = VideoTrackInfo(
@@ -582,11 +576,7 @@ func getCMMediaStreams(forFile file: URL) -> [BaseInfo] {
                 if let basic = CMAudioFormatDescriptionGetStreamBasicDescription(formatDesc) {
                     channels = Int(basic.pointee.mChannelsPerFrame)
                 }
-                if #available(macOS 10.15, *) {
-                    mediaType = formatDesc.mediaSubType.rawValue
-                } else {
-                    mediaType = CMFormatDescriptionGetMediaSubType(formatDesc)
-                }
+                mediaType = formatDesc.mediaSubType.rawValue
             }
             
             let a = AudioTrackInfo(

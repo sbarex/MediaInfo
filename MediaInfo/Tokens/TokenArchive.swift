@@ -18,7 +18,10 @@ class TokenArchive: Token {
         case processedFileCount
         case fileCountSummary
         
+        case compressionMethod
         case uncompressedSize
+        case compressionSummary
+        case compressionRatio
         
         static var pasteboardType: NSPasteboard.PasteboardType {
             return .MITokenArchiveTrack
@@ -33,8 +36,10 @@ class TokenArchive: Token {
             case .filesPlainWithIcon: return NSLocalizedString("Plain files submenu (with icons)", comment: "")
             case .fileCount: return NSLocalizedString("Number of files", comment: "")
             case .processedFileCount: return NSLocalizedString("Number of processed files", comment: "")
-            case .fileCountSummary:
-                return NSLocalizedString("Files Summary", comment: "")
+            case .fileCountSummary: return NSLocalizedString("File Summary", comment: "")
+            case .compressionMethod: return NSLocalizedString("Compression format", comment: "")
+            case .compressionSummary: return NSLocalizedString("Compression Summary", comment: "")
+            case .compressionRatio: return NSLocalizedString("Compression ratio", comment: "")
             }
         }
         
@@ -45,6 +50,11 @@ class TokenArchive: Token {
             case .processedFileCount: return String(format: NSLocalizedString("%@ processed files", tableName: "LocalizableExt", comment: ""), "10")
             case .fileCountSummary:
                 return String(format: NSLocalizedString("%@ files (%@ processed)", comment: ""), "200", "180")
+            case .compressionSummary:
+                return String(format: NSLocalizedString("%@ = %@", comment: ""), "1Mb", String(format: NSLocalizedString("%@ uncompressed", tableName: "LocalizableExt", comment: ""), "3Mb"))+" (66%)"
+            case .compressionRatio:
+                return "66%"
+            case .compressionMethod: return "gzip"
             default:
                 return self.title
             }
@@ -52,7 +62,6 @@ class TokenArchive: Token {
         
         var placeholder: String {
             switch self {
-            // case .compressionMethod: return "[[compression-method]]"
             case .files: return "[[files]]"
             case .filesWithIcon: return "[[files-with-icon]]"
             case .filesPlain: return "[[files-plain]]"
@@ -61,13 +70,15 @@ class TokenArchive: Token {
             case .processedFileCount: return "[[n-files-processed]]"
             case .fileCountSummary: return "[[n-files-all]]"
             
+            case .compressionMethod: return "[[compression-format]]"
             case .uncompressedSize: return "[[uncompressed-size]]"
+            case .compressionSummary: return "[[compression-summary]]"
+            case .compressionRatio: return "[[compression-ratio]]"
             }
         }
         
         init?(placeholder: String) {
             switch placeholder {
-            // case "[[compression-method]]": self = .compressionMethod
             case "[[files]]": self = .files
             case "[[files-with-icon]]": self = .filesWithIcon
             case "[[files-plain]]": self = .filesPlain
@@ -77,7 +88,10 @@ class TokenArchive: Token {
             case "[[n-files-processed]]": self = .processedFileCount
             case "[[n-files-all]]": self = .fileCountSummary
                 
+            case "[[compression-format]]": self = .compressionMethod
             case "[[uncompressed-size]]": self = .uncompressedSize
+            case "[[compression-summary]]": self = .compressionSummary
+            case "[[compression-ratio]]": self = .compressionRatio
                 
             default: return nil
             }

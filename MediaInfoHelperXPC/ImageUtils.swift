@@ -254,25 +254,61 @@ func getSVGImageInfo(forFile file: URL) -> ImageInfo? {
     class XMLRealParser: NSObject, XMLParserDelegate {
         var width: Int?
         var height: Int?
+        var isResponsive = false
+        func parseLength(_ length: String) -> Int? {
+            let suffix = length.suffix(2)
+            guard let v = Double(length.dropLast(2)) else {
+                return nil
+            }
+            let scale: Double
+            switch suffix {
+            case "px":
+                scale = 1
+            case "pt":
+                scale = 12/16 // 12pt = 16px
+            case "pc":
+                scale = 16 // 1pica = 12pt = 16px
+            case "em":
+                scale = 16 // 1em = 12pt = 16px
+            case "in":
+                scale = 72 * 12 / 16 // 1inch = 72pt = (72*12)/16px
+            case "mm":
+                scale = 1 / 25.4 * (72 * 12 / 16)
+            case "cm":
+                scale = 1 / 2.54 * (72 * 12 / 16)
+            default:
+                scale = 1
+            }
+            return Int(round(v * scale))
+        }
+        
         func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
             if elementName == "svg" {
                 defer {
                     parser.abortParsing()
                 }
-                if let v = attributeDict["width"], let vv = Int(v) {
+                if let v = attributeDict["width"], let vv = self.parseLength(v) {
                     self.width = vv
+                    self.isResponsive = false
+                    os_log("SVG width: %{public}d.", log: OSLog.infoExtraction, type: .info, vv)
                 }
-                if let v = attributeDict["height"], let vv = Int(v) {
+                if let v = attributeDict["height"], let vv = self.parseLength(v) {
                     self.height = vv
+                    self.isResponsive = false
+                    os_log("SVG height: %{public}d.", log: OSLog.infoExtraction, type: .info, vv)
                 }
-                if self.width == nil || self.height == nil, let viewBox = attributeDict["viewBox"] {
-                    let components = viewBox.split(separator: viewBox.contains(",") ? "," : " ")
-                    guard components.count == 4 else {
-                        return
-                    }
-                    if let w = Float(components[2].trimmingCharacters(in: .whitespaces)), let h = Float(components[2].trimmingCharacters(in: .whitespaces)) {
-                        self.width = Int(round(w))
-                        self.height = Int(round(h))
+                if self.width == nil || self.height == nil {
+                    self.isResponsive = true
+                    if let viewBox = attributeDict["viewBox"] {
+                        os_log("SVG viewbox: %{public}@.", log: OSLog.infoExtraction, type: .info, viewBox)
+                        let components = viewBox.split(separator: viewBox.contains(",") ? "," : " ")
+                        guard components.count == 4 else {
+                            return
+                        }
+                        if let w = Float(components[2].trimmingCharacters(in: .whitespaces)), let h = Float(components[2].trimmingCharacters(in: .whitespaces)) {
+                            self.width = Int(round(w))
+                            self.height = Int(round(h))
+                        }
                     }
                 }
                 
@@ -289,7 +325,10 @@ func getSVGImageInfo(forFile file: URL) -> ImageInfo? {
     parser.parse()
     if let w = delegate.width, let h = delegate.height {
         os_log("SVG Image info fetched in %{public}lf seconds.", log: OSLog.infoExtraction, type: .info, CFAbsoluteTimeGetCurrent() - time)
-        return ImageInfo(file: file, width: w, height: h, dpi: 0, colorMode: "", depth: 24, profileName: "", animated: false, withAlpha: false, colorTable: .regular, metadata: [:], metadataRaw: [:])
+        let info = ImageInfo(file: file, width: w, height: h, dpi: 0, colorMode: "", depth: 24, profileName: "", animated: false, withAlpha: false, colorTable: .regular, metadata: [:], metadataRaw: [:])
+        info.extra[.svg_responsive] = delegate.isResponsive
+        
+        return info
     } else {
         os_log("Unable to parse the SVG file!", log: OSLog.infoExtraction, type: .error)
         return nil

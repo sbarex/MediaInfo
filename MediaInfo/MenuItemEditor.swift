@@ -100,6 +100,11 @@ class MenuItemEditor: NSViewController {
         Image(name: "size", title: NSLocalizedString("File size", comment: "")),
         Image(name: "print", title: NSLocalizedString("Printer", comment: ""), alternateNames: ["printer"]),
         Image(name: "person", title: NSLocalizedString("Person", comment: "")),
+        Image(name: "person_y", title: NSLocalizedString("Person (allow)", comment: ""), indent: 1),
+        Image(name: "person_n", title: NSLocalizedString("Person (deny)", comment: ""), indent: 1),
+        Image(name: "people", title: NSLocalizedString("People", comment: "")),
+        Image(name: "group_y", title: NSLocalizedString("Group (allow)", comment: ""), indent: 1),
+        Image(name: "group_n", title: NSLocalizedString("Group (deny)", comment: ""), indent: 1),
         Image(name: "speaker", title: NSLocalizedString("Speaker (mono or stereo)", comment: "")),
         Image(name: "speaker_mono", title: NSLocalizedString("Speaker (mono)", comment: ""), indent: 1),
         Image(name: "speaker_stereo", title: NSLocalizedString("Speakers (stereo)", comment: ""), indent: 1),
@@ -150,6 +155,7 @@ class MenuItemEditor: NSViewController {
         Image(name: "calendar", title: NSLocalizedString("Calendar", comment: "")),
         Image(name: "clipboard", title: NSLocalizedString("Clipboard", comment: "")),
         Image(name: "flag", title: NSLocalizedString("Flag", comment: "")),
+        Image(name: "info", title: NSLocalizedString("Info", comment: "")),
         Image(name: "abc", title: NSLocalizedString("ABC", comment: "")),
         Image(name: "exclamationmark", title: NSLocalizedString("Exclamation mark", comment: "")),
     ]
@@ -157,6 +163,11 @@ class MenuItemEditor: NSViewController {
     static func getImage(named name: String) -> Image? {
         if let image = images.first(where: { $0.isValid(for: name) }) {
             return image
+        }
+        if #available(macOS 11.0, *) {
+            if let _ = NSImage(systemSymbolName: name, accessibilityDescription: nil) {
+                return Image(name: name, title: name)
+            }
         }
         return nil
     }
@@ -211,8 +222,15 @@ class MenuItemEditor: NSViewController {
                 imagePopupButton.menu?.addItem(item)
             }
         }
-        
-        
+        /*
+        if #available(macOS 11.0, *) {
+            imagePopupButton.menu?.addItem(NSMenuItem.separator())
+            let mnu = NSMenuItem(title: "Other…", action: nil, keyEquivalent: "")
+            
+            mnu.image = NSImage(systemSymbolName: "ellipsis", accessibilityDescription: nil)
+            imagePopupButton.menu?.addItem(mnu)
+        }
+        */
         let size = self.tableView(self.tableView, sizeToFitWidthOfColumn: 0)
         tableView.tableColumns[0].width = size
         

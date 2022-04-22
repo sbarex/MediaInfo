@@ -26,7 +26,7 @@ class ImageVideoInfo: FileInfo, DimensionalInfo, CodecInfo {
     let isLossless: Bool?
     let encoder: String?
     
-    override var infoType: Settings.SupportedFile { return .image }
+    override class var infoType: Settings.SupportedFile { return .image }
     
     init(file: URL, width: Int, height: Int, codec_short_name: String, codec_long_name: String?, isLossless: Bool?, encoder: String?) {
         self.codec_short_name = codec_short_name
@@ -70,14 +70,14 @@ class ImageVideoInfo: FileInfo, DimensionalInfo, CodecInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+    override internal func processPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
         switch placeholder {
         case "[[codec]]", "[[codec-long]]", "[[codec-short]]", "[[compression]]", "[[encoder]]":
-            return self.processPlaceholderCodec(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
-        case "[[size]]", "[[width]]", "[[height]]", "[[ratio]]", "[[resolution]]":
-            return self.processDimensionPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return self.processPlaceholderCodec(placeholder, isFilled: &isFilled, forItem: item)
+        case "[[size]]", "[[width]]", "[[height]]", "[[ratio]]", "[[resolution]]", "[[pixel-count]]", "[[mega-pixel]]":
+            return self.processDimensionPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         }
     }
 }

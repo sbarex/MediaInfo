@@ -2,7 +2,7 @@
 //  du.c
 //  MediaInfo
 //
-//  Created by Simone Baldissini on 06/03/22.
+//  Created by Sbarex on 06/03/22.
 //  Copyright © 2022 sbarex. All rights reserved.
 //
 

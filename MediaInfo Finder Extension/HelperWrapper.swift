@@ -84,18 +84,25 @@ class HelperWrapper: SettingsService {
     }
     
     static func getFolderInfo(for url: URL) -> FolderInfo? {
-        if #available(macOSApplicationExtension 11.0, *) {
+        if #available(macOS 11.0, *) {
             Logger.finderExtension.debug("MediaInfo FinderSync - Fetching folder info…")
         } else {
-            os_log("MediaInfo FinderSync - Fetching folder info…", log: OSLog.finderExtension, type: .debug)
+            os_log("MediaInfo FinderSync - Fetching folder info of %{private}@…", log: OSLog.finderExtension, type: .debug, url.path)
         }
         
         let info: FolderInfo? = Self.getInfoFromService(for: url, type: "folder")
         return info
     }
     
+    static func getFileInfo(for url: URL) -> FileInfo? {
+        os_log("MediaInfo FinderSync - Fetching file info of %{private}@…", log: OSLog.finderExtension, type: .debug, url.path)
+        let info: FileInfo? = Self.getInfoFromService(for: url, type: "file")
+        return info
+    }
+    
     static internal func getInfoFromService<T: BaseInfo>(for url: URL, type: String) -> T? {
         guard let service = Self.service as? MediaInfoHelperXPCProtocol else {
+            os_log("MediaInfo FinderSync - Missing communication with XPC Helper process!", log: OSLog.finderExtension, type: .error)
             return nil
         }
         

@@ -32,7 +32,7 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
     
     override var standardMainItem: MenuItemInfo {
         let template = "[[size:paper:cm]], [[title]], [[pages]]"
-        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "doc", template: template))
+        return MenuItemInfo(fileType: Self.infoType, index: -1, item: Settings.MenuItem(image: "doc", template: template))
     }
     
     init(file: URL, charactersCount: Int, charactersWithSpacesCount: Int, wordsCount: Int, pagesCount: Int, creator: String, creationDate: Date?, modified: String, modificationDate: Date?, title: String, subject: String, keywords: [String], description: String, application: String, width: Double, height: Double) {
@@ -84,8 +84,8 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        let useEmptyData = !settings.isEmptyItemsSkipped
+    override internal func processPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         
         switch placeholder {
         case "[[pages]]":
@@ -110,7 +110,7 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
                 isFilled = true
                 return s
             } else {
-                return self.processPlaceholder("[[size:"+placeholder.suffix(4), settings: settings, isFilled: &isFilled, forItem: item)
+                return self.processPlaceholder("[[size:"+placeholder.suffix(4), isFilled: &isFilled, forItem: item)
             }
         case "[[size:cm]]", "[[size:mm]]", "[[size:in]]":
             guard width > 0 && height > 0 else {
@@ -130,7 +130,7 @@ class WordInfo: BaseOfficeInfo, PaperInfo {
             isFilled = true
             return "\(w) × \(h) \(unit.label)"
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         }
     }
 }
@@ -145,7 +145,7 @@ class ExcelInfo: BaseOfficeInfo {
     
     override var standardMainItem: MenuItemInfo {
         let template = "[[title]], [[pages]]"
-        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "xls", template: template))
+        return MenuItemInfo(fileType: Self.infoType, index: -1, item: Settings.MenuItem(image: "xls", template: template))
     }
     
     init(file: URL, creator: String, creationDate: Date?, modified: String, modificationDate: Date?, title: String, subject: String, keywords: [String], description: String, application: String, sheets: [String]) {
@@ -174,37 +174,37 @@ class ExcelInfo: BaseOfficeInfo {
         return Self.getImage(for: name)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        let useEmptyData = !settings.isEmptyItemsSkipped
+    override internal func processPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         
         switch placeholder {
         case "[[pages]]":
             return self.formatCount(sheets.count, noneLabel: "no Sheet", singleLabel: "1 Sheet", manyLabel: "%d Sheets", isFilled: &isFilled, useEmptyData: useEmptyData, formatAsString: false)
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         }
     }
     
-    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu, withSettings settings: Settings) -> Bool {
+    override internal func processSpecialMenuItem(_ item: MenuItemInfo, inMenu destination_sub_menu: NSMenu) -> Bool {
         if item.menuItem.template == "[[sheets]]" || item.menuItem.template == "[[pages]]" && !self.sheets.isEmpty {
             guard !self.sheets.isEmpty else {
                 return true
             }
             let n = self.sheets.count
             let title: String = self.formatCount(n, noneLabel: "no Sheet", singleLabel: "1 Sheet", manyLabel: "%d Sheets", useEmptyData: true, formatAsString: false)
-            let mnu = self.createMenuItem(title: title, image: "no-image", settings: settings, representedObject: item)
+            let mnu = self.createMenuItem(title: title, image: "no-image", representedObject: item)
             let submenu = NSMenu(title: title)
             for (i, sheet) in self.sheets.enumerated() {
                 var info =  item
                 info.userInfo["sheet_index"] = i
-                submenu.addItem(createMenuItem(title: sheet, image: "-", settings: settings, representedObject: info))
+                submenu.addItem(createMenuItem(title: sheet, image: "-", representedObject: info))
             }
             destination_sub_menu.addItem(mnu)
             destination_sub_menu.setSubmenu(submenu, for: mnu)
             
             return true
         } else {
-            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu, withSettings: settings)
+            return super.processSpecialMenuItem(item, inMenu: destination_sub_menu)
         }
     }
 }
@@ -221,7 +221,7 @@ class PowerpointInfo: BaseOfficeInfo {
     
     override var standardMainItem: MenuItemInfo {
         let template = "[[title]], [[pages]]"
-        return MenuItemInfo(fileType: self.infoType, index: -1, item: Settings.MenuItem(image: "ppt", template: template))
+        return MenuItemInfo(fileType: Self.infoType, index: -1, item: Settings.MenuItem(image: "ppt", template: template))
     }
     
     init(file: URL, creator: String, creationDate: Date?, modified: String, modificationDate: Date?, title: String, subject: String, keywords: [String], description: String, application: String, slidesCount: Int, presentationFormat: String) {
@@ -253,8 +253,8 @@ class PowerpointInfo: BaseOfficeInfo {
         return Self.getImage(for: name)
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        let useEmptyData = !settings.isEmptyItemsSkipped
+    override internal func processPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         
         switch placeholder {
         case "[[pages]]":
@@ -263,7 +263,7 @@ class PowerpointInfo: BaseOfficeInfo {
             isFilled = !self.presentationFormat.isEmpty
             return self.presentationFormat
         default:
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         }
     }
 }

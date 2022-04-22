@@ -2,7 +2,7 @@
 //  NSMenuItem+ext.swift
 //  MediaInfo
 //
-//  Created by Simone Baldissini on 15/02/22.
+//  Created by Sbarex on 15/02/22.
 //  Copyright © 2022 sbarex. All rights reserved.
 //
 

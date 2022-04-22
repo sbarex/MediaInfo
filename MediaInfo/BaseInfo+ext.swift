@@ -13,22 +13,42 @@ extension BaseInfo {
     static func replacePlaceholderFake(_ placeholder: String, settings: Settings, forItem item: MenuItemInfo?) -> String {
         let r: String
         if placeholder.hasPrefix("[[script-global:") {
-            r = "<global script>"
+            r = "<"+NSLocalizedString("Global script", comment: "")+">"
         } else if placeholder.hasPrefix("[[script-inline:") {
-            r = "<inline script>"
-        } else if placeholder.hasPrefix("[[script-action:") {
-            r = "<action script>"
+            r = "<"+NSLocalizedString("Inline script", comment: "")+">"
         } else if placeholder.hasPrefix("[[open-with:") {
             guard let path = String(placeholder.dropFirst(12).dropLast(2)).fromBase64(), !path.isEmpty else {
-                return "<open with>"
+                return NSLocalizedString("Open with…", comment: "")
             }
-            r = "<open with: \(path)>"
-        } else if placeholder.hasPrefix("[[open-with-default]]") {
-            r = "<open with default app>"
+            r = String(format: NSLocalizedString("Open with %@…", comment: ""), path)
+        } else if placeholder == "[[open-with-default]]" || placeholder == "[[open]]" {
+            r = NSLocalizedString("Open with the default app", comment: "")
         } else if placeholder == "[[about]]" {
-            r = "<about…>"
+            r = NSLocalizedString("About…", comment: "")
         } else if placeholder == "[[clipboard]]" {
-            r = "<copy path to the clipboard…>"
+            r = NSLocalizedString("Copy path to the clipboard", tableName: "LocalizableExt", comment: "")
+        } else if placeholder == "[[uti]]" {
+            r = NSLocalizedString("Uniform Type Identifier", comment: "")
+        } else if placeholder == "[[uti-conforms]]" {
+            r = "<"+NSLocalizedString("Uniform Type Identifier conformances", comment: "")+">"
+        } else if placeholder == "[[files]]" {
+            r = "<"+NSLocalizedString("Files submenu", comment: "")+">"
+        } else if placeholder == "[[files-with-icon]]" {
+            r = "<"+NSLocalizedString("Files submenu (with icons)", comment: "")+">"
+        } else if placeholder == "[[files-plain]]" {
+            r = "<"+NSLocalizedString("Plain files submenu", comment: "")+">"
+        } else if placeholder == "[[files-plain-with-icon]]" {
+            r = "<"+NSLocalizedString("Plain files submenu (with icons)", comment: "")+">"
+        } else if placeholder == "[[ext-attributes]]" {
+            r = "<"+NSLocalizedString("Extended Attributes", tableName: "LocalizableExt", comment: "")+">"
+        } else if placeholder == "[[file-modes:acl]]" {
+            r = "- rw- r-- r-- <\(NSLocalizedString("Access Control List", tableName: "LocalizableExt", comment: ""))>"
+        } else if placeholder == "[[file-modes:ext-attrs]]" {
+            r = "- rw- r-- r-- <\(NSLocalizedString("Extended Attributes", tableName: "LocalizableExt", comment: ""))>"
+        } else if placeholder == "[[file-modes:acl:ext-attrs]]" {
+            r = "- rw- r-- r-- <\(NSLocalizedString("Access Control List", tableName: "LocalizableExt", comment: ""))> & <\(NSLocalizedString("Extended Attributes", tableName: "LocalizableExt", comment: ""))>"
+        } else if placeholder == "[[acl]]" {
+            r = "<- rw- r-- r-->"
         } else {
             r = "<" + placeholder.trimmingCharacters(in: CharacterSet(charactersIn: "[]")) + ">"
         }
@@ -74,13 +94,9 @@ extension BaseInfo {
             if placeholder.hasPrefix("[[script-") {
                 var isGlobal = false
                 var isInline = false
-                var isAction = false
                 if placeholder.hasPrefix("[[script-global:") {
                     r = "<" + NSLocalizedString("Global script", comment: "") + ">"
                     isGlobal = true
-                } else if placeholder.hasPrefix("[[script-action:") {
-                    r = "<" + NSLocalizedString("Action script", comment: "") + ">"
-                    isAction = true
                 } else  {
                     r = "<" + NSLocalizedString("Inline script", comment: "") + ">"
                     isInline = true
@@ -88,11 +104,7 @@ extension BaseInfo {
                 if let code = String(placeholder.dropFirst(16).dropLast(2)).fromBase64(), !code.isEmpty {
                     // Evaluate the code to check execution error.
                     do {
-                        if isAction {
-                            self.initAction(context: self.getJSContext(with: settings), selectedItem: nil, settings: settings)
-                        }
-                        
-                        if let result = try evaluateScript(code: code, forItem: item, settings: settings) {
+                        if let result = try evaluateScript(code: code, forItem: item) {
                             if isGlobal && result.isArray {
                                 var check: (([Any])->Void)! = nil
                                 check = { result in
@@ -112,7 +124,7 @@ extension BaseInfo {
                                                     self.jsExceptionDelegate?.onJSException(info: self, exception: NSLocalizedString("Missing action name. Define the userInfo.code value with the name of the function to call. ", comment: ""), atLine: -1, forItem: item)
                                                     break
                                                 }
-                                                let r = try? self.evaluateScript(code: "typeof globalThis['\(code)']", forItem: item, settings: settings)
+                                                let r = try? self.evaluateScript(code: "typeof globalThis['\(code)']", forItem: item)
                                                 let typeof = r?.toString() ?? ""
                                                 if typeof != "function" {
                                                     self.jsExceptionDelegate?.onJSException(info: self, exception: String(format: NSLocalizedString("The custom action will invoke the code `%@` but is not a global function name (%@). Define the userInfo.code value with the name of the function to call.", comment: ""), code, typeof), atLine: -1, forItem: item)
@@ -144,20 +156,28 @@ extension BaseInfo {
                     return NSMutableAttributedString(string: NSLocalizedString("Open with…", comment: ""), attributes: attributes)
                 }
                 let name = URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
-                r = NSLocalizedString(String(format: NSLocalizedString("Open with %@…", comment: ""), name), comment: "")
-            } else if placeholder.hasPrefix("[[open-with-default]]") {
+                r = String(format: NSLocalizedString("Open with %@…", comment: ""), name)
+            } else if placeholder == "[[open-with-default]]" || placeholder == "[[open]]" {
                 if let me = self as? FileInfo, let url = NSWorkspace.shared.urlForApplication(toOpen: me.file) {
                     let name = URL(fileURLWithPath: url.path).deletingPathExtension().lastPathComponent
-                    r = NSLocalizedString(String(format: NSLocalizedString("Open with %@…", comment: ""), name), comment: "")
+                    r = String(format: NSLocalizedString("Open with %@…", comment: ""), name)
                 } else {
                     r = NSLocalizedString("Open…", comment: "")
                 }
-            } else if placeholder.hasPrefix("[[open-settings]]") {
+            } else if placeholder == "[[open-settings]]" {
                 r = NSLocalizedString("MediaInfo Settings…", tableName: "LocalizableExt", comment: "")
-            } else if placeholder.hasPrefix("[[about]]") {
+            } else if placeholder == "[[about]]" {
                 let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
                 let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
                 r = String(format: NSLocalizedString("MediaInfo %@ (%@) developed by %@…", tableName: "LocalizableExt", comment: ""), version, build, "SBAREX")
+            } else if placeholder.hasPrefix("[[acl]]"), let me = self as? FileInfo {
+                r = "<\(me.getFormattedMode(withExtra: true, withACL: false))>"
+            } else if placeholder == "[[file-modes:acl]]", let me = self as? FileInfo {
+                r = "\(me.getFormattedMode(withExtra: true, withACL: false)) <\(NSLocalizedString("Access Control List", tableName: "LocalizableExt", comment: ""))>"
+            } else if placeholder == "[[file-modes:ext-attrs]]", let me = self as? FileInfo {
+                r = "\(me.getFormattedMode(withExtra: false, withACL: true)) <\(NSLocalizedString("Extended Attributes", tableName: "LocalizableExt", comment: ""))>"
+            } else if placeholder == "[[file-modes:acl:ext-attrs]]", let me = self as? FileInfo {
+                r = "\(me.getFormattedMode(withExtra: false, withACL: false)) <\(NSLocalizedString("Access Control List", tableName: "LocalizableExt", comment: ""))> & <\(NSLocalizedString("Extended Attributes", tableName: "LocalizableExt", comment: ""))>"
             } else {
                 r = Self.replacePlaceholderFake(placeholder, settings: settings, forItem: item)
             }
@@ -195,5 +215,24 @@ extension BaseOfficeInfo {
 extension FolderInfo {
     @objc override func getScriptInfo(token: TokenScript) -> String {
         return NSLocalizedString("If the script needs to access to the full size with metadata you need to insert the comment /* require-full-scan */ as the first line. This can slow down menu generation. If the script only need to access to the total number of files or to the total file size (without medatata), you need to insert the comment /* require-fast-scan */ as the first line. ", comment: "")
+    }
+}
+
+class FakeFileInfo: FileInfo {
+    init(file: URL, fileSize: Int64, fileSizeFull: Int64, fileCreationDate: Date?, fileModificationDate: Date?, fileAccessDate: Date?, uti: String, utiConformsToType: [String]) {
+        super.init(file: file)
+        
+        self.file = file
+        self.fileSize = fileSize
+        self.fileSizeFull = fileSizeFull
+        self.fileCreationDate = fileCreationDate
+        self.fileModificationDate = fileModificationDate
+        self.fileAccessDate = fileAccessDate
+        self.uti = uti
+        self.utiConformsToType = utiConformsToType
+    }
+    
+    required init(from decoder: Decoder) throws {
+        try super.init(from: decoder)
     }
 }

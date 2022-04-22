@@ -43,7 +43,7 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
         return channels == 2
     }
     
-    override var infoType: Settings.SupportedFile { return .audioTraks }
+    override class var infoType: Settings.SupportedFile { return .audioTraks }
     override var standardMainItem: MenuItemInfo {
         var template = "[[duration]]"
         if self.bitRate > 0 {
@@ -120,23 +120,23 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
         }
     }
     
-    override internal func processPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
-        if let s = self.processAudioPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item) {
+    override internal func processPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String {
+        if let s = self.processAudioPlaceholder(placeholder, isFilled: &isFilled, forItem: item) {
             return s
         } else {
-            return super.processPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         }
     }
     
-    internal func processAudioPlaceholder(_ placeholder: String, settings: Settings, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String? {
-        let useEmptyData = !settings.isEmptyItemsSkipped
+    internal func processAudioPlaceholder(_ placeholder: String, isFilled: inout Bool, forItem item: MenuItemInfo?) -> String? {
+        let useEmptyData = !(self.globalSettings?.isEmptyItemsSkipped ?? true)
         switch placeholder {
         case "[[duration]]", "[[seconds]]", "[[bitrate]]", "[[start-time]]", "[[start-time-s]]":
-            return processDurationPlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return processDurationPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         case "[[codec]]", "[[codec-long]]", "[[codec-short]]":
-            return self.processPlaceholderCodec(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return self.processPlaceholderCodec(placeholder, isFilled: &isFilled, forItem: item)
         case "[[language]]", "[[language-flag]]":
-            return processLanguagePlaceholder(placeholder, settings: settings, isFilled: &isFilled, forItem: item)
+            return processLanguagePlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         case "[[title]]":
             if let title = self.title, !title.isEmpty {
                 return title

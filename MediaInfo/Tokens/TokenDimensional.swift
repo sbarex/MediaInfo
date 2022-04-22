@@ -15,6 +15,8 @@ class TokenDimensional: Token {
         case height
         case ratio
         case resolution
+        case pixelCount
+        case megapixel
         
         static var pasteboardType: NSPasteboard.PasteboardType {
             return .MITokenDimensional
@@ -27,6 +29,8 @@ class TokenDimensional: Token {
             case .height: return NSLocalizedString("Height", comment: "")
             case .ratio: return NSLocalizedString("Ratio", comment: "")
             case .resolution: return NSLocalizedString("Resolution name", comment: "")
+            case .pixelCount: return NSLocalizedString("Number of pixel", comment: "")
+            case .megapixel: return NSLocalizedString("Number of pixel (Mpx)", comment: "")
             }
         }
         
@@ -37,6 +41,8 @@ class TokenDimensional: Token {
             case .height: return "1080 px"
             case .ratio: return "16 : 9"
             case .resolution: return "FullHD"
+            case .pixelCount: return "786432"
+            case .megapixel: return "0.78 Mpx"
             }
         }
         
@@ -47,6 +53,8 @@ class TokenDimensional: Token {
             case .height: return "[[height]]"
             case .ratio: return "[[ratio]]"
             case .resolution: return "[[resolution]]"
+            case .pixelCount: return "[[pixel-count]]"
+            case .megapixel: return "[[mega-pixel]]"
             }
         }
         
@@ -57,6 +65,8 @@ class TokenDimensional: Token {
             case "[[height]]": self = .height
             case "[[ratio]]": self = .ratio
             case "[[resolution]]": self = .resolution
+            case "[[pixel-count]]": self = .pixelCount
+            case "[[mega-pixel]]": self = .megapixel
             default: return nil
             }
         }

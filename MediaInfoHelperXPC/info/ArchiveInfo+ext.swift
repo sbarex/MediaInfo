@@ -51,7 +51,8 @@ extension ArchivedFile {
             fullpath: f,
             type: type,
             size: size >= 0 ? Int(size) : nil,
-            encrypted: isEncrypted
+            encrypted: isEncrypted,
+            format: format
         )
     }
 }
@@ -95,6 +96,7 @@ extension ArchiveInfo {
         var totalFileIsLimited = false
         var limited = false
         var hasSize = false
+        
         while archive_read_next_header(a, &entry.pointee) == ARCHIVE_OK {
             guard let entry = entry.pointee else {
                 continue
@@ -133,7 +135,17 @@ extension ArchiveInfo {
         }
         
         // let compressionCode = archive_filter_code(a, 0)
-        let compressionName = String(cString: archive_filter_name(a, 0)) ?? ""
+        var compressionNames: [String] = []
+        for i in Int32(0) ..< archive_filter_count(a) {
+            if let s = String(cString: archive_filter_name(a, i)), s != "none" {
+                compressionNames.append(s)
+            }
+        }
+        let compressionName = compressionNames.joined(separator: " / ")
+        
+        if compressionName == "gzip" && flatten_files.count==1 && flatten_files.first!.name == "data" {
+            flatten_files.first!.url = flatten_files.first!.url.deletingLastPathComponent().appendingPathComponent(file.deletingPathExtension().lastPathComponent)
+        }
         
         let organized_files = ArchivedFile.reorganize(files: flatten_files)
         

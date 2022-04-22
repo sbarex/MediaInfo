@@ -9,23 +9,27 @@
 import Foundation
 
 extension Settings {
-    convenience init(fromDomain name: String) {
+    static func instance(fromDomain name: String) -> Settings {
         let defaults = UserDefaults.standard
         // Remember that macOS store the precerences inside a cache. If you manual edit the preferences file you need to reset this cache:
         // $ killall -u $USER cfprefsd
         let defaultsDomain = defaults.persistentDomain(forName: name) as? [String: AnyHashable] ?? [:]
         
-        self.init(fromDict: defaultsDomain)
+        let instance = Self.instance(from: defaultsDomain)
         
         if defaultsDomain["version"] as? Double == nil {
             let stdSettings = Self.getStandardSettings()
-            imageMenuItems = stdSettings.imageMenuItems
-            videoMenuItems = stdSettings.videoMenuItems
-            audioMenuItems = stdSettings.audioMenuItems
-            pdfMenuItems = stdSettings.pdfMenuItems
-            officeMenuItems = stdSettings.officeMenuItems
-            archiveMenuItems = stdSettings.archiveMenuItems
+            instance.imageSettings = stdSettings.imageSettings
+            instance.videoSettings = stdSettings.videoSettings
+            instance.videoTrackSettings = stdSettings.videoTrackSettings
+            instance.audioTrackSettings = stdSettings.audioTrackSettings
+            instance.audioSettings = stdSettings.audioSettings
+            instance.pdfSettings = stdSettings.pdfSettings
+            instance.officeSettings = stdSettings.officeSettings
+            instance.archiveSettings = stdSettings.archiveSettings
+            instance.folderSettings = stdSettings.folderSettings
         }
+        return instance
     }
     
     static func initDefaults() {

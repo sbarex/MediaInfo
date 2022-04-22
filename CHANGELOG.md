@@ -2,8 +2,35 @@ Changelog
 =======
 
 
+### 1.7.0 (20)
+New features:
+- Support for folders and bundles.
+- Support for handle custom file types.
+- Ability to execute an external command while generating the menu. 
+- Support for these properties:
+  - Allocated file size (with medatata and resource fork).
+  - UTI, UTI description and UTI conforms to Type.
+  - File modes and ACL.
+  - Extended attributes.
+  - Archive compression summary and ratio.
+  - Responsive status per svg files.
+  - Total number of pixel (for images and videos).
+- Option for format bytes and bits in decimal format (power of 1000).
+- Custom action to reveal file in the Finder.
+- New images: folder, info, exclamationmark, person_n, person_y, group_n, group_y, people.
+- Changed the convention to enable access to the metadata from a script.
+- New settings format.
+- Minimun system requirements: macOS 10.15.
+
+Bugfix:
+- Better support for archive files.
+- Fixed the size for files smaller than one Kb. 
+- Fixed external disk support.
+- Fixed the bps formatting.
+
+
 ### 1.6.1 (19)
-- Better UI and code cleanup.
+New features:
 - Support for these properties:
   - file creation date
   - file modification date
@@ -12,28 +39,34 @@ Changelog
   - Open with the default app
   - Open with a specific app
   - Copy path to the clipboard
-  - Open the main app to change the settings
+  - Open the MediaInfo app to change the settings
   - About MediaInfo
 - Option to genarate menu items from code that execute custom actions.
 - Option to define a script to handle the menu action.
 - New images: calendar, flag, gear, script, clipboard and option to use the current file icon.
+
+Bugfix:
+- Better UI and code cleanup.
 - Fixed bug on the FFMpeg duration extraction.
 
 
 ### 1.6.0 (18)
+New features:
 - New supported files:
-    - Compressed archive files
-    - Adobe Illustrator `.ai` files (as _PDF_)
-    - Video `.trec` files (Camtasia recording)
+  - Compressed archive files
+  - Adobe Illustrator `.ai` files (as _PDF_)
+  - Video `.trec` files (Camtasia recording)
 - New image properties:
-    - Profile name
-    - Alpha channel
-    - Metadata from Exif
+  - Profile name
+  - Alpha channel
+  - Metadata from Exif
 - Support to customize the menu items with a javascript code.
 - Support for auto monitor external disk.
+- Sparkle updated to release 2.0.
+
+Bugfix:
 - Bugfix on menu sanification.
 - Bugfix for open selected file.
-- Sparkle updated to release 2.0.
 
 
 ### 1.5.4

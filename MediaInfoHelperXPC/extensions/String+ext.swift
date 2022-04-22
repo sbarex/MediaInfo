@@ -290,6 +290,44 @@ extension String {
         }
         self.init(cString: cString)
     }
+    
+    /// Convert `CamelCase` to `Camel Case`, `FSItem` to `FS Item`.
+    func camelCaseToWords() -> String {
+        let s = self
+                    .replacingOccurrences(of: "([A-Z])",
+                                          with: " $1",
+                                          options: .regularExpression,
+                                          range: range(of: self))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .capitalized // If input is in llamaCase
+        /*
+        let s = unicodeScalars.reduce("") {
+            if CharacterSet.uppercaseLetters.contains($1) {
+                if $0.count > 0 {
+                    return ($0 + " " + String($1))
+                }
+            }
+            return $0 + String($1)
+        }*/
+        var s2 = ""
+        var isCapitalLetter = true
+        for w in s.split(separator: " ") {
+            if w == w.uppercased() {
+                if !isCapitalLetter {
+                    s2 += " "
+                }
+                isCapitalLetter = true
+                s2 += w
+            } else {
+                if let last = s2.last, last != " " && last != "_" && last != "-" {
+                    s2 += " "
+                }
+                s2 += w
+                isCapitalLetter = false
+            }
+        }
+        return s2
+    }
 }
 
 // https://stackoverflow.com/questions/32305891/index-of-a-substring-in-a-string-with-swift
