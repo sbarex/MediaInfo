@@ -2,7 +2,39 @@
 <rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
     <channel>
         <title>MediaInfo</title> 
-        
+        <item>
+            <title>1.6.1</title>
+            <pubDate>dom, 6 mar 2022 8:52:00 +0100</pubDate>
+            <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.6.1/MediaInfo.zip" sparkle:version="19" sparkle:shortVersionString="1.6.1" type="application/octet-stream" sparkle:edSignature="e4yrhFPcQ0rrRqt7VYb8IlmHb5kISYpstJ93rYpEmdrfUpmpYhI85D0pDkUi5qTRtNxXFMfBhmSq2/MaEftRBw==" length="21751938" />
+            <description><![CDATA[
+                <h2>Release 1.6.1 (19)</h2>
+                <ul>
+                    <li>Better UI and code cleanup.</li>
+                    <li>Support for these properties:</li>
+                    <ul>
+                        <li>file creation date</li>
+                        <li>file modification date</li>
+                        <li>file last access date</li>
+                    </ul>
+                    <li>New special menu items:</li>
+                    <ul>
+                        <li>Open with the default app</li>
+                        <li>Open with a specific app</li>
+                        <li>Copy path to the clipboard</li>
+                        <li>Open the main app to change the settings</li>
+                        <li>About MediaInfo</li>
+                    </ul>
+                    <li>Option to genarate menu items from code that execute custom actions.</li>
+                    <li>Option to define a script to handle the menu action.</li>
+                    <li>New images: calendar, flag, gear, script, clipboard and option to use the current file icon.</li>
+                    <li>Fixed bug on the FFMpeg duration extraction.</li>
+                </ul>
+
+                <p><a href="https://github.com/sbarex/MediaInfo/blob/master/CHANGELOG.md">See the complete changelog.</a></p>
+            ]]>
+            </description>
+        </item>
         <item>
             <title>1.6.0</title>
             <pubDate>dom, 13 feb 2022 21:14:00 +0100</pubDate>
