@@ -3,6 +3,40 @@
     <channel>
         <title>MediaInfo</title> 
         <item>
+            <title>1.7.1</title>
+            <pubDate>dom, 22 gen 2023 21:17:00 +0100</pubDate>
+            <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.7.1/MediaInfo.zip" sparkle:version="21" sparkle:shortVersionString="1.7.1" type="application/octet-stream" sparkle:edSignature="p55OgFuc0+4+RWbnSj9tmjuFg3Msg56iKnDCpuJLRhD8sOkRZzusUtcGySIx/F9xWQGpV5xVGe4DX0imHuJ0AQ==" length="20776453" />
+            <description><![CDATA[
+                <h2>Release 1.7.1 (21)</h2>
+                <p>New features:</p>
+                <ul>
+                    <li>Audio sample rate.</li>
+                    <li>Dependencies updated:</li>
+                    <ul>
+                        <li>ffmpeg from 4.4 to 5.1.2</li>
+                        <li>libwebp from 1.2.1 to 1.3.0</li>
+                        <li>libarchive from 3.5.2 to 3.6.2</li>
+                        <li>libpng from 1.6.38 to 1.6.40</li>
+                        <li>libjpeg-turbo from 2.1.3 to 2.1.5</li>
+                        <li>lz4 from 1.9.3 to 1.9.4</li>
+                        <li>xz from 5.3.2alpha to 5.4.1</li>
+                        <li>zstd from 1.5.2 to 1.5.3</li>
+                    </ul>
+                </ul>
+
+                <p>Bugfix:</p>
+                <ul>
+                    <li>Support for Xcode 14.</li>
+                    <li>Fixed some tags not displaying.</li>
+                </ul>
+
+                <p><a href="https://github.com/sbarex/MediaInfo/blob/master/CHANGELOG.md">See the complete changelog.</a></p>
+            ]]>
+            </description>
+        </item>
+        
+        <item>
             <title>1.7.0</title>
             <pubDate>ven, 22 apr 2022 16:52:00 +0100</pubDate>
             <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
