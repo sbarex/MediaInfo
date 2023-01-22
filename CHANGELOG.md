@@ -2,6 +2,24 @@ Changelog
 =======
 
 
+### 1.7.1 (21)
+New features:
+- Audio sample rate.
+- Dependencies updated:
+    - ffmpeg from 4.4 to 5.1.2
+    - libwebp from 1.2.1 to 1.3.0
+    - libarchive from 3.5.2 to 3.6.2
+    - libpng from 1.6.38 to 1.6.40
+    - libjpeg-turbo from 2.1.3 to 2.1.5
+    - lz4 from 1.9.3 to 1.9.4
+    - xz from 5.3.2alpha to 5.4.1
+    - zstd from 1.5.2 to 1.5.3
+
+Bugfix:
+- Support for Xcode 14 
+- Fixed some tags not displaying
+
+
 ### 1.7.0 (20)
 New features:
 - Support for folders and bundles.

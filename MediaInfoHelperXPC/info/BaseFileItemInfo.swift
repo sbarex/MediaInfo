@@ -164,25 +164,36 @@ class BaseFileItemInfo: Codable {
         return badgedFileIcon
     }
     
+    fileprivate var _uti: Any? = nil
+    
     @available(macOS 11.0, *)
-    private(set) lazy var uti: UTType = {
-        if self.isApplication {
-            return UTType.application
-        } else if self.isPackage {
-            return UTType.package
-        } else if self.isDirectory {
-            return UTType.folder
-        } else if self.isAlias {
-            return UTType.aliasFile // UTType.symbolicLink
-        } else {
-            let file_ext = self.url.pathExtension
-            if file_ext.isEmpty {
-                return UTType.item
-            } else {
-                return UTType(filenameExtension: file_ext) ?? UTType.item
+    private(set) var uti: UTType {
+        get {
+            if _uti == nil {
+                if self.isApplication {
+                    _uti = UTType.application
+                } else if self.isPackage {
+                    _uti = UTType.package
+                } else if self.isDirectory {
+                    _uti = UTType.folder
+                } else if self.isAlias {
+                    _uti = UTType.aliasFile // UTType.symbolicLink
+                } else {
+                    let file_ext = self.url.pathExtension
+                    if file_ext.isEmpty {
+                        _uti = UTType.item
+                    } else {
+                        _uti = UTType(filenameExtension: file_ext) ?? UTType.item
+                    }
+                }
             }
+            return (_uti as? UTType) ?? UTType.data
         }
-    }()
+        set {
+            _uti = newValue
+        }
+        
+    }
     
     @available(macOS, deprecated: 12.0, message: "Use uti instead.")
     private(set) lazy var uti_identifier: String = {

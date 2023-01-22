@@ -170,14 +170,16 @@ extension DimensionalInfo {
             }
             return s
         case "[[width]]":
+            isFilled = width > 0
             if let w = Self.numberFormatter.string(from: NSNumber(integerLiteral: width)) {
                 return "\(w) \(self.unit)"
             } else {
                 return "\(width)"
             }
         case "[[height]]":
+            isFilled = height > 0
             if let h = Self.numberFormatter.string(from: NSNumber(integerLiteral: height)) {
-                    return "\(h) \(self.unit)"
+                return "\(h) \(self.unit)"
             } else {
                 return "\(width)"
             }
@@ -189,7 +191,7 @@ extension DimensionalInfo {
             isFilled = true
             return ratio
         case "[[resolution]]":
-            isFilled = true
+            isFilled = width > 0 && height > 0
             return Self.getResolutioName(width: width, height: height) ?? ""
         case "[[pixel-count]]":
             let n = self.pixelCount

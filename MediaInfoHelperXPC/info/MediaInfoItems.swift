@@ -620,6 +620,10 @@ class AudioInfo: FileInfo, MediaInfo, ChaptersInfo {
         return audioTrack.isLossless
     }
     
+    var sampleRate: Double? {
+        return self.spotlightMetadata[kMDItemAudioSampleRate as String] as? Double
+    }
+    
     let chapters: [Chapter]
     let engine: Settings.MediaEngine
     let audioTrack: AudioTrackInfo
@@ -629,10 +633,10 @@ class AudioInfo: FileInfo, MediaInfo, ChaptersInfo {
         return MenuItemInfo(fileType: Self.infoType, index: -1, item: Settings.MenuItem(image: "audio", template: "")) // FIXME: template
     }
     
-    init(file: URL, duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, lang: String?, bitRate: Int64, title: String?, encoder: String?, isLossless: Bool?, chapters: [Chapter], channels: Int, engine: Settings.MediaEngine) {
+    init(file: URL, duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, lang: String?, bitRate: Int64, sampleRate: Double?, title: String?, encoder: String?, isLossless: Bool?, chapters: [Chapter], channels: Int, engine: Settings.MediaEngine) {
         self.chapters = chapters
         self.engine = engine
-        self.audioTrack = AudioTrackInfo(duration: duration, start_time: start_time, codec_short_name: codec_short_name, codec_long_name: codec_long_name, lang: lang, bitRate: bitRate, title: title, encoder: encoder, isLossless: isLossless, channels: channels)
+        self.audioTrack = AudioTrackInfo(duration: duration, start_time: start_time, codec_short_name: codec_short_name, codec_long_name: codec_long_name, lang: lang, bitRate: bitRate, sampleRate: sampleRate, title: title, encoder: encoder, isLossless: isLossless, channels: channels)
         super.init(file: file)
     }
     
@@ -766,6 +770,18 @@ class AudioInfo: FileInfo, MediaInfo, ChaptersInfo {
             case "[[engine]]":
                 isFilled = true
                 return engine.label
+            case "[[sample-rate]]":
+                if let sampleRate = self.sampleRate {
+                    isFilled = true;
+                    if sampleRate > 1000 {
+                        return String(format: "%.1f kHz", sampleRate/1000)
+                    } else {
+                        return String(format: "%.1f Hz", sampleRate)
+                    }
+                } else {
+                    isFilled = false
+                    return "? Hz"
+                }
             default:
                 return super.processPlaceholder(placeholder, isFilled: &isFilled, forItem: item)
             }

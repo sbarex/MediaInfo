@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "833420262792EF5200FF3C12"
-               BuildableName = "libzstd"
-               BlueprintName = "libzstd"
+               BlueprintIdentifier = "833167162643C84B007DB60C"
+               BuildableName = "MediaInfo Settings XPC.xpc"
+               BlueprintName = "MediaInfo Settings XPC"
                ReferencedContainer = "container:MediaInfo.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -50,9 +50,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "833420262792EF5200FF3C12"
-            BuildableName = "libzstd"
-            BlueprintName = "libzstd"
+            BlueprintIdentifier = "833167162643C84B007DB60C"
+            BuildableName = "MediaInfo Settings XPC.xpc"
+            BlueprintName = "MediaInfo Settings XPC"
             ReferencedContainer = "container:MediaInfo.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

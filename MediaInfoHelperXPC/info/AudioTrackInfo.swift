@@ -17,6 +17,7 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
         case lang
         case langFlag
         case bitRate
+        case sampleRate
         case title
         case encoder
         case isLossless
@@ -32,6 +33,7 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
         return self.getImageOfFlag()
     }()
     let bitRate: Int64
+    let sampleRate: Double?
     let title: String?
     let encoder: String?
     let isLossless: Bool?
@@ -59,7 +61,7 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
         return MenuItemInfo(fileType: Settings.SupportedFile.audioTraks, index: -1, item: Settings.MenuItem(image: "audio", template: template))
     }
     
-    init(duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, lang: String?, bitRate: Int64, title: String?, encoder: String?, isLossless: Bool?, channels: Int) {
+    init(duration: Double, start_time: Double, codec_short_name: String, codec_long_name: String?, lang: String?, bitRate: Int64, sampleRate: Double?, title: String?, encoder: String?, isLossless: Bool?, channels: Int) {
         self.duration = duration
         self.start_time = start_time
         self.codec_short_name = codec_short_name
@@ -70,6 +72,7 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
         self.title = title
         self.encoder = encoder
         self.channels = channels
+        self.sampleRate = sampleRate
         super.init()
     }
     
@@ -81,6 +84,7 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
         self.codec_long_name = try container.decode(String?.self, forKey: .codecLongName)
         self.lang = try container.decode(String?.self, forKey: .lang)
         self.bitRate = try container.decode(Int64.self, forKey: .bitRate)
+        self.sampleRate = try container.decode(Double.self, forKey: .sampleRate)
         self.title = try container.decode(String?.self, forKey: .title)
         self.encoder = try container.decode(String?.self, forKey: .encoder)
         self.isLossless = try container.decode(Bool?.self, forKey: .isLossless)
@@ -99,6 +103,7 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
         try container.encode(self.codec_long_name, forKey: .codecLongName)
         try container.encode(self.lang, forKey: .lang)
         try container.encode(self.bitRate, forKey: .bitRate)
+        try container.encode(self.sampleRate, forKey: .sampleRate)
         try container.encode(self.title, forKey: .title)
         try container.encode(self.encoder, forKey: .encoder)
         try container.encode(self.isLossless, forKey: .isLossless)
@@ -139,6 +144,7 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
             return processLanguagePlaceholder(placeholder, isFilled: &isFilled, forItem: item)
         case "[[title]]":
             if let title = self.title, !title.isEmpty {
+                isFilled = true
                 return title
             } else {
                 return formatND(useEmptyData: useEmptyData)
@@ -155,6 +161,17 @@ class AudioTrackInfo: BaseInfo, LanguageInfo, DurationInfo, CodecInfo {
                 return NSLocalizedString("stereo", tableName: "LocalizableExt", comment: "")
             } else {
                 return String(format: NSLocalizedString("%d Channels", tableName: "LocalizableExt", comment: ""), channels)
+            }
+        case "[[sample-rate]]":
+            if let sampleRate = self.sampleRate {
+                isFilled = true
+                if sampleRate > 1000 {
+                    return String(format: "%.1f kHz", sampleRate / 1000)
+                } else {
+                    return String(format: "%.1f Hz", sampleRate)
+                }
+            } else {
+                return nil
             }
         default:
             return nil

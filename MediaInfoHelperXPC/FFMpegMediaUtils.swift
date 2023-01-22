@@ -448,6 +448,7 @@ func getFFMpegAudioInfo(forFile file: URL) -> AudioInfo? {
         codec_short_name: name ?? a.codec_short_name, codec_long_name: long_name ?? a.codec_long_name,
         lang: lang ?? a.lang,
         bitRate: a.bitRate,
+        sampleRate: a.sampleRate,
         title: title ?? a.title, encoder: encoder ?? a.encoder,
         isLossless: a.isLossless,
         chapters: chapters,
@@ -487,13 +488,22 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
         guard let st = pFormatCtx.pointee.streams[i]?.pointee else {
             continue
         }
-        var avctx = avcodec_alloc_context3(nil)
+        let codec: UnsafePointer<AVCodec>?
+        
+        if let codec_id = pFormatCtx.pointee.streams[i]?.pointee.codecpar?.pointee.codec_id {
+            codec = avcodec_find_decoder(codec_id)
+        } else {
+            codec = nil;
+        }
+        
+        var avctx = avcodec_alloc_context3(codec)
         if avctx == nil {
             continue
         }
         defer {
             avcodec_free_context(&avctx)
         }
+        
         avcodec_parameters_to_context(avctx, st.codecpar)
         
         let start_time: Int64 = getFFMpegTime(t: st.start_time)
@@ -618,7 +628,7 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
             
             let bits_per_sample = av_get_bits_per_sample(avctx!.pointee.codec_id)
             if bits_per_sample > 0 {
-                bit_rate = Int64(avctx!.pointee.sample_rate * avctx!.pointee.channels)
+                bit_rate = Int64(avctx!.pointee.sample_rate * avctx!.pointee.ch_layout.nb_channels)
                 if bit_rate > INT64_MAX / Int64(bits_per_sample) {
                     bit_rate = 0
                 } else {
@@ -628,15 +638,33 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
                 bit_rate = avctx!.pointee.bit_rate
             }
             
+            var sampleRate: Double? = nil
+            if let sample_rate = avctx?.pointee.sample_rate {
+                sampleRate = Double(sample_rate)
+            }
+            /*
+            if let supported_samplerates = avctx!.pointee.codec?.pointee.supported_samplerates {
+                var p = 0
+                var best_samplerate: Int32 = 0
+                var sr = supported_samplerates.advanced(by: p).pointee
+                while sr > 0 {
+                    p += 1
+                    let sr = supported_samplerates.advanced(by: p).pointee
+                    best_samplerate = max(sr, best_samplerate)
+                }
+                sampleRate = Double(best_samplerate)
+            }
+            */
             let a = AudioTrackInfo(
                 duration: Double(duration) * time_factor,
                 start_time: Double(start_time) * time_factor,
                 codec_short_name: codec_short_name, codec_long_name: codec_long_name,
                 lang: lang,
                 bitRate: bit_rate,
+                sampleRate: sampleRate,
                 title: title, encoder: encoder,
                 isLossless: isLossless,
-                channels: Int(avctx!.pointee.channels)
+                channels: Int(avctx!.pointee.ch_layout.nb_channels)
             )
             streams.append(a)
             

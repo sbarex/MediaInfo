@@ -123,6 +123,7 @@ func getMetadataAudioInfo(forFile file: URL) -> AudioInfo? {
             codec_short_name: a.codec_short_name, codec_long_name: a.codec_long_name,
             lang: a.lang,
             bitRate: a.bitRate,
+            sampleRate: a.sampleRate, 
             title: title ?? a.title,
             encoder: a.encoder,
             isLossless: a.isLossless,
@@ -202,7 +203,10 @@ func getMetadataMediaStreams(forFile file: URL, withMetadata metadata: MDItem) -
     if let n = MDItemCopyAttribute(metadata, kMDItemAudioChannelCount) {
         CFNumberGetValue((n as! CFNumber), CFNumberType.sInt64Type, &channels)
     }
-    
+    var sampleRate: Double = 0
+    if let n = MDItemCopyAttribute(metadata, kMDItemAudioSampleRate) {
+        CFNumberGetValue((n as! CFNumber), CFNumberType.sInt64Type, &sampleRate)
+    }
     
     for (i, type) in types.enumerated() {
         let codec = i < codecs.count ? codecs[i] : ""
@@ -210,7 +214,6 @@ func getMetadataMediaStreams(forFile file: URL, withMetadata metadata: MDItem) -
         
         switch type {
         case "Video":
-            
             let v = VideoTrackInfo(
                 width: width, height: height,
                 duration: duration,
@@ -232,6 +235,7 @@ func getMetadataMediaStreams(forFile file: URL, withMetadata metadata: MDItem) -
                 codec_short_name: codec, codec_long_name: nil,
                 lang: lang,
                 bitRate: audioBitRate,
+                sampleRate: sampleRate,
                 title: nil, encoder: nil,
                 isLossless: nil,
                 channels: channels

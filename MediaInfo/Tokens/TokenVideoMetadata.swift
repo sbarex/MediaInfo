@@ -124,6 +124,7 @@ class TokenAudioTrackMetadata: Token {
     enum Mode: Int, CaseIterable, BaseMode {
         case title
         case encoder
+        case sampleRate
         
         static var pasteboardType: NSPasteboard.PasteboardType {
             return .MITokenAudioTrackMetadata
@@ -133,6 +134,7 @@ class TokenAudioTrackMetadata: Token {
             switch self {
             case .title: return NSLocalizedString("Title", comment: "")
             case .encoder: return NSLocalizedString("Encoder", comment: "")
+            case .sampleRate: return NSLocalizedString("Sample Rate", comment: "")
             }
         }
         
@@ -140,6 +142,7 @@ class TokenAudioTrackMetadata: Token {
             switch self {
             case .title: return "title"
             case .encoder: return "encoder"
+            case .sampleRate: return "sample rate"
             }
         }
         
@@ -147,6 +150,7 @@ class TokenAudioTrackMetadata: Token {
             switch self {
             case .title: return "[[title]]"
             case .encoder: return "[[encoder]]"
+            case .sampleRate: return "[[sample-rate]]"
             }
         }
         
@@ -154,6 +158,7 @@ class TokenAudioTrackMetadata: Token {
             switch placeholder {
             case "[[title]]": self = .title
             case "[[encoder]]": self = .encoder
+            case "[[sample-rate]]": self = .sampleRate
             default: return nil
             }
         }
@@ -208,6 +213,7 @@ class TokenAudioMetadata: Token {
         case chaptersCount
         case channels
         case channels_name
+        case sampleRate
         
         static var pasteboardType: NSPasteboard.PasteboardType {
             return .MITokenAudioMetadata
@@ -221,6 +227,7 @@ class TokenAudioMetadata: Token {
             case .chapters: return NSLocalizedString("Chapters list", comment: "")
             case .channels: return NSLocalizedString("Number of channels", comment: "")
             case .channels_name: return NSLocalizedString("Channels", comment: "")
+            case .sampleRate: return NSLocalizedString("Sample Rate", comment: "")
             }
         }
         
@@ -232,6 +239,7 @@ class TokenAudioMetadata: Token {
             case .chapters: return NSLocalizedString("Chapters list", comment: "")
             case .channels: return String(format: NSLocalizedString("%d channels", tableName: "LocalizableExt", comment: ""), 2)
             case .channels_name: return NSLocalizedString("stereo", tableName: "LocalizableExt", comment: "")
+            case .sampleRate: return NSLocalizedString("Sample Rate", comment: "")
             }
         }
         
@@ -243,6 +251,7 @@ class TokenAudioMetadata: Token {
             case .chapters: return "[[chapters]]"
             case .channels: return "[[channels]]"
             case .channels_name: return "[[channels-name]]"
+            case .sampleRate: return "[[sample-rate]]"
             }
         }
         
@@ -261,6 +270,7 @@ class TokenAudioMetadata: Token {
             case "[[chapters-count]]": self = .chaptersCount
             case "[[channels]]": self = .channels
             case "[[channels-name]]": self = .channels_name
+            case "[[sample-rate]]": self = .sampleRate
             default: return nil
             }
         }

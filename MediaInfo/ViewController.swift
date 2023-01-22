@@ -609,7 +609,7 @@ class ViewController: NSViewController {
                     VideoTrackInfo(width: 1920, height: 1080, duration: 3600, start_time: 0, codec_short_name: "Codec", codec_long_name: "Codec long name", profile: "Main", pixel_format: VideoTrackInfo.VideoPixelFormat.argb, color_space: nil, field_order: VideoTrackInfo.VideoFieldOrder.progressive, lang: nil, bitRate: 1024*1024, fps: 24, frames: 3600*25, title: nil, encoder: nil, isLossless: nil)
                 ],
                 audio: [
-                    AudioTrackInfo(duration: 3600, start_time: 0, codec_short_name: "mp3", codec_long_name: "MP3 (MPEG audio layer 3)", lang: "EN", bitRate: 512*1025, title: "Audio title", encoder: "Encoder", isLossless: false, channels: 2)
+                    AudioTrackInfo(duration: 3600, start_time: 0, codec_short_name: "mp3", codec_long_name: "MP3 (MPEG audio layer 3)", lang: "EN", bitRate: 512*1025, sampleRate: 44100, title: "Audio title", encoder: "Encoder", isLossless: false, channels: 2)
                 ], subtitles: [
                     SubtitleTrackInfo(title: "English subtitle", lang: "EN"),
                     SubtitleTrackInfo(title: "Sottitoli in italiano", lang: "IT"),
@@ -645,6 +645,7 @@ class ViewController: NSViewController {
                 codec_short_name: "mp3", codec_long_name: "MP3 (MPEG audio layer 3)",
                 lang: "EN",
                 bitRate: 512*1024,
+                sampleRate: 44100,
                 title: "Audio title", encoder: "Encoder",
                 isLossless: false,
                 chapters: [],

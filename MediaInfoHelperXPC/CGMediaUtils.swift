@@ -490,6 +490,7 @@ func getCMMediaInfo(forFile file: URL) -> MediaInfo? {
             codec_short_name: a.codec_short_name, codec_long_name: a.codec_long_name,
             lang: a.lang,
             bitRate: a.bitRate,
+            sampleRate: a.sampleRate,
             title: title ?? a.title,
             encoder: encoder ?? a.encoder,
             isLossless: a.isLossless,
@@ -572,9 +573,11 @@ func getCMMediaStreams(forFile file: URL) -> [BaseInfo] {
             
             var channels = -1
             var mediaType: FourCharCode? = nil
+            var sampleRate: Double? = nil
             if let formatDesc = formatDescriptions.first {
                 if let basic = CMAudioFormatDescriptionGetStreamBasicDescription(formatDesc) {
                     channels = Int(basic.pointee.mChannelsPerFrame)
+                    sampleRate = basic.pointee.mSampleRate
                 }
                 mediaType = formatDesc.mediaSubType.rawValue
             }
@@ -585,6 +588,7 @@ func getCMMediaStreams(forFile file: URL) -> [BaseInfo] {
                 codec_long_name: longCodecForVideoCode(mediaType),
                 lang: lang,
                 bitRate: Int64(track.estimatedDataRate),
+                sampleRate: sampleRate, 
                 title: title,
                 encoder: encoder,
                 isLossless: nil,

@@ -107,6 +107,7 @@
 "Number of channels" = "Numero di canali";
 "Channels" = "Canali";
 "Mono, Stereo, or number of channels." = "Mono, Stereo, o numbero di canali.";
+"Sample Rate" = "Frequenza di campionamento";
 
 "Resolution & Print" = "Risoluzione & Stampa";
 "Resolution (dpi)" = "Risoluzione (dpi)";

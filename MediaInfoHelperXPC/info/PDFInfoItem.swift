@@ -513,8 +513,10 @@ class PDFInfo: FileInfo, DimensionalInfo, PaperInfo {
             isFilled = !s.isEmpty
             return s.joined(separator: " ")
         case "[[allows-copy]]":
+            isFilled = true
             return NSLocalizedString(self.allowsCopying ? "Yes" : "No", comment: "")
         case "[[allows-print]]":
+            isFilled = true
             return NSLocalizedString(self.allowsPrinting ? "Yes" : "No", comment: "")
         default:
             if placeholder.hasPrefix("[[mediabox:") {
