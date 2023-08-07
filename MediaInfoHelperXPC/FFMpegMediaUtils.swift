@@ -563,10 +563,16 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
         */
         
         var duration: Int64 = getFFMpegTime(t: st.duration)
-        if duration < 0 {
-            duration = mainDuration >= 0 ? mainDuration : 0
-        }
+        
         let time_factor = av_q2d(st.time_base)
+        
+        var d_duration: Double
+        if duration < 0 {
+            duration = mainDuration > 0 ? mainDuration : 0
+            d_duration = Double(duration) / Double(AV_TIME_BASE) // seconds
+        } else {
+            d_duration = Double(duration) * time_factor
+        }
         
         switch avctx!.pointee.codec_type {
         case AVMEDIA_TYPE_VIDEO:
@@ -599,17 +605,35 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
                 profile = nil
             }
             
-            var frames = st.nb_frames
-            if frames == 0 && st.avg_frame_rate.num != 0 {
-                frames = Int64((Double(duration) / (Double(st.avg_frame_rate.num) / Double(st.avg_frame_rate.den))).rounded())
-            }
-            
             let bit_rate = avctx!.pointee.bit_rate
             let fps = st.avg_frame_rate.den != 0 && st.avg_frame_rate.num != 0 ? av_q2d(st.avg_frame_rate) : 0 // 24 fps
             
+            var frames = st.nb_frames
+            if frames == 0 {
+                var found = false
+                for i in 0 ..< Int(st.metadata.pointee.count) {
+                    let tag = st.metadata.pointee.elems.advanced(by: i).pointee
+                    switch String(cString: tag.key)?.uppercased()  {
+                    case "NUMBER_OF_FRAMES":
+                        if let v = Int64(String(cString: tag.value)) {
+                            frames = v
+                        }
+                        found = true
+                    default:
+                        break
+                    }
+                    if found {
+                        break
+                    }
+                }
+                if !found && fps != 0 {
+                    frames = Int64((Double(duration) / fps).rounded())
+                }
+            }
+            
             let v = VideoTrackInfo(
                 width: width, height: height,
-                duration: Double(duration) * time_factor,
+                duration: d_duration,
                 start_time: Double(start_time) * time_factor,
                 codec_short_name: codec_short_name, codec_long_name: codec_long_name,
                 profile: profile,
@@ -656,7 +680,7 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
             }
             */
             let a = AudioTrackInfo(
-                duration: Double(duration) * time_factor,
+                duration: d_duration,
                 start_time: Double(start_time) * time_factor,
                 codec_short_name: codec_short_name, codec_long_name: codec_long_name,
                 lang: lang,

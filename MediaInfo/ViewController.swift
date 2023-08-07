@@ -1720,6 +1720,18 @@ extension FakeJSDelegate {
             case .clipboard:
                 alert?.messageText = NSLocalizedString("Clipboard", comment: "")
                 alert?.informativeText = NSLocalizedString("The action will copy the path into the cliboard.", comment: "")
+            case .export:
+                let pasteboard = NSPasteboard.general
+                pasteboard.declareTypes([NSPasteboard.PasteboardType.string], owner: nil)
+                
+                let e = JSONEncoder()
+                e.outputFormatting = .prettyPrinted
+                if let data = try? e.encode(info) {
+                    let s = String(data: data, encoding: .utf8)!
+                    pasteboard.setString(s, forType: NSPasteboard.PasteboardType.string)
+                    print(s)
+                }
+                return
             case .reveal:
                 alert?.messageText = NSLocalizedString("Reveal in Finder", comment: "")
                 alert?.informativeText = NSLocalizedString("The action will select the file in the Finder.", comment: "")

@@ -980,6 +980,7 @@ class Settings: Codable {
             MenuItem(image: "pages", template: "[[n-files-all]]"),
             MenuItem(image: "size", template: "[[file-size]] ([[filesize-full]] on disk)"),
             MenuItem(image: "clipboard", template: "[[clipboard]]"),
+            MenuItem(image: "export", template: "[[export]]"),
             MenuItem(image: "", template: "-"),
             MenuItem(image: "", template: "[[about]]"),
         ]
@@ -989,6 +990,7 @@ class Settings: Codable {
             MenuItem(image: "target-icon", template: "[[file-name]]"),
             MenuItem(image: "", template: "[[open]]"),
             MenuItem(image: "clipboard", template: "[[clipboard]]"),
+            MenuItem(image: "export", template: "[[export]]"),
             MenuItem(image: "", template: "-"),
             MenuItem(image: "size", template: "[[file-size]]"),
             MenuItem(image: "", template: "-"),

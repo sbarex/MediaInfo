@@ -763,6 +763,15 @@ class FileInfo: BaseInfo {
             }
             destination_sub_menu.addItem(mnu)
             return true
+        case "[[export]]":
+            let mnu = self.createMenuItem(title: NSLocalizedString("Export info to the clipboard…", tableName: "LocalizableExt", comment: ""), image: item.menuItem.image, representedObject: item)
+            if let info = mnu.representedObject as? MenuItemInfo {
+                var info2 = info
+                info2.action = .export
+                mnu.representedObject = info2
+            }
+            destination_sub_menu.addItem(mnu)
+            return true
         case "[[uti-conforms]]":
             if !self.utiConformsToType.isEmpty {
                 let mnu = self.createMenuItem(title: self.uti, image: item.menuItem.image, representedObject: item)

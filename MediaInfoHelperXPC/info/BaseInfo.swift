@@ -57,6 +57,7 @@ enum MenuAction: String, Codable {
     case about
     case custom
     case clipboard
+    case export
     case reveal
 }
 

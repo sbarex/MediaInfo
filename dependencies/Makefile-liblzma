@@ -96,7 +96,7 @@ ${SOURCE_ROOT}/xz/configure.ac :
 ${SOURCE_ROOT}/xz/configure :
 	@echo ""
 	@echo "${bold}Autogen configuration files…${normal}"
-	cd "${SOURCE_ROOT}/xz" && PATH="/usr/local/bin:${PATH}" sh ./autogen.sh --no-po4a
+	cd "${SOURCE_ROOT}/xz" && PATH="/usr/local/bin:${PATH}" sh ./autogen.sh --no-po4a --no-doxygen
 
 autogen:
 ifeq (, $(shell PATH="/usr/local/bin:${PATH}" which autoreconf))

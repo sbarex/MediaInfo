@@ -23,6 +23,7 @@
 "MediaInfo Settings…" = "Impostazioni di MediaInfo…";
 "MediaInfo %@ (%@) developed by %@…" = "MediaInfo %@ (%@) sviluppato da %@…";
 "Copy path to the clipboard" = "Copia il percorso negli appunti";
+"Export info to the clipboard…" = "Esporta le informazioni negli appunti…";
 
 // MARK: - File info
 "Extended Attributes" = "Attributi estesi";

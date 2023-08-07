@@ -2,6 +2,21 @@ Changelog
 =======
 
 
+### 1.7.2 (22)
+New features:
+- New action to export info as json to clipboard.
+- Dependencies updated:
+    - ffmpeg to 6.0.0
+    - libarchive to 3.7.2dev
+    - libjpeg-turbo to 3.0.0
+    - lz4
+    - xz to 5.4.4
+    - zstd to 1.5.5
+
+Bugfix:
+- Fixed media duration and frames count for the ffmpeg engine. 
+
+
 ### 1.7.1 (21)
 New features:
 - Audio sample rate.

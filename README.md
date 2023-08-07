@@ -491,6 +491,7 @@ For each file type there are some special menu items with a predefined action:
 |settings…|``[[open-settings]]``|Menu item for open the MediaInfo application to customize settings. |_MediaInfo Settings…_|
 |about…|``[[about]]``|Menu item for opening the GitHub page of this project. |_MediaInfo 1.6.1 (19) developed by SBAREX…_|
 |copy to the clipboard…|``[[clipboard]]``|Menu item for copying the path to the clipboard. ||
+|export info to the clipboard…|``[[export]]``|Menu item for copying the file info (as json) to the clipboard. ||
 
 
 ## Inline actions
@@ -638,6 +639,7 @@ Each element in the returned array can be:
     - `"openWith"`: open the file with an application. You need to set the full path of the application in `userInfo["application"]`.
     - `"openSettings"`: open the MediaInfo settings application.
     - `"clipboard"`: copy the path to the clipboard.
+    - `"export"`: copy the file info to the clipboard.
     - `"reveal"`: reveal a file on the Finder. You can set `userInfo["file"]` with the path of the file to reveal, otherwise the current file is used.
     - `"about"`: open the GitHub page of this project.
     - `"custom"`: perform a custom action. You need to set the function _name_ to be called in `userInfo["code"]`.

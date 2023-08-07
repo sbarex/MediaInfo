@@ -13,6 +13,12 @@
 
 #include "libarchive/include/archive.h"
 #include "libarchive/include/archive_entry.h"
+
+#include "libzstd/include/zstd.h"
+#include "liblz4/include/lz4.h"
+
+#include "ffmpeg/include/libavutil/ffversion.h"
+
 #define FORMAT_AE_IFMT      0170000
 #define FORMAT_AE_IFREG     0100000
 #define FORMAT_AE_IFLNK     0120000

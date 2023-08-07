@@ -27,6 +27,8 @@ extension BaseInfo {
             r = NSLocalizedString("About…", comment: "")
         } else if placeholder == "[[clipboard]]" {
             r = NSLocalizedString("Copy path to the clipboard", tableName: "LocalizableExt", comment: "")
+        } else if placeholder == "[[export]]" {
+            r = NSLocalizedString("Export info to the clipboard…", tableName: "LocalizableExt", comment: "")
         } else if placeholder == "[[uti]]" {
             r = NSLocalizedString("Uniform Type Identifier", comment: "")
         } else if placeholder == "[[uti-conforms]]" {

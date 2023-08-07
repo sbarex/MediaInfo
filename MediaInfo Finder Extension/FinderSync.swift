@@ -15,6 +15,7 @@ class FinderSync: FIFinderSync {/*
     var updater: SPUUpdater?*/
     
     var settings: Settings = Settings.getStandardSettings()
+    var badgeIdentifiers: [String: (NSImage, String)] = [:]
     
     override init() {
         super.init()
@@ -26,7 +27,7 @@ class FinderSync: FIFinderSync {/*
         }
         
         // Set up images for our badge identifiers. For demonstration purposes, this uses off-the-shelf images.
-        // FIFinderSyncController.default().setBadgeImage(NSImage(named: NSImage.colorPanelName)!, label: "Status One" , forBadgeIdentifier: "One")
+        FIFinderSyncController.default().setBadgeImage(NSImage(named: NSImage.colorPanelName)!, label: "Status One" , forBadgeIdentifier: "One")
         // FIFinderSyncController.default().setBadgeImage(NSImage(named: NSImage.cautionName)!, label: "Status Two", forBadgeIdentifier: "Two")
         
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(self.handleSettingsChanged(_:)), name: .MediaInfoSettingsChanged, object: nil)
@@ -154,24 +155,55 @@ class FinderSync: FIFinderSync {/*
         // The user is now seeing the container's contents.
         // If they see it in more than one view at a time, we're only told once.
         // NSLog("beginObservingDirectoryAtURL: %@", url.path as NSString)
+        
+        // Record the URL of every item that has received a badge.
+        // Your app must to continue to monitor the state of these items and update their badges as necessary. When an item’s state changes, update its badge by calling setBadgeIdentifier:forURL:.
     }
     
     
     override func endObservingDirectory(at url: URL) {
         // The user is no longer seeing the container's contents.
         // NSLog("endObservingDirectoryAtURL: %@", url.path as NSString)
+        
+        // when the user closes the folder. Delete all the URLs for the badged items inside that folder and stop monitoring their state.
     }
     
-    /*
     override func requestBadgeIdentifier(for url: URL) {
+        // MARK: TODO implementare in maniera asincrona e monitorare i file visibili per aggiornare il badge nel caso vengano modificati.
+        return;
+        
         NSLog("requestBadgeIdentifierForURL: %@", url.path as NSString)
         
+        guard let uti = try? url.resourceValues(forKeys: [.typeIdentifierKey]).typeIdentifier else {
+            return
+        }
+        /*
         // For demonstration purposes, this picks one of our two badges, or no badge at all, based on the filename.
         let whichBadge = abs(url.path.hash) % 3
         let badgeIdentifier = ["", "One", "Two"][whichBadge]
-        FIFinderSyncController.default().setBadgeIdentifier(badgeIdentifier, for: url)
+        */
+
+        if settings.imageSettings.isEnabled && UTTypeConformsTo(uti as CFString, kUTTypeImage) {
+            guard let info = getInfoForImage(atURL: url) else {
+                return
+            }
+            let label = String(format: "%d x %d px", info.width, info.height)
+            
+            if !self.badgeIdentifiers.keys.contains(label) {
+                let image: NSImage
+                if #available(macOSApplicationExtension 11.0, *) {
+                    image = NSImage(systemSymbolName: "ruler", accessibilityDescription: nil)!
+                } else {
+                    image = NSImage(named: NSImage.infoName)!
+                }
+                self.badgeIdentifiers[label] = (image, label)
+                FIFinderSyncController.default().setBadgeImage(image, label: label , forBadgeIdentifier: label)
+            }
+            FIFinderSyncController.default().setBadgeIdentifier(label, for: url)
+        } else {
+            return
+        }
     }
-    */
     
     // MARK: - Menu and toolbar item support
     
@@ -235,6 +267,19 @@ class FinderSync: FIFinderSync {/*
                         
                 pasteboard.setString(file.path, forType: NSPasteboard.PasteboardType.string)
                 return
+            case .export:
+                if let info = self.currentInfo {
+                    let pasteboard = NSPasteboard.general
+                    pasteboard.declareTypes([NSPasteboard.PasteboardType.string], owner: nil)
+                    
+                    let e = JSONEncoder()
+                    e.outputFormatting = .prettyPrinted
+                    if let data = try? e.encode(info) {
+                        let s = String(data: data, encoding: .utf8)!
+                        pasteboard.setString(s, forType: NSPasteboard.PasteboardType.string)
+                        print(s)
+                    }
+                }
             case .reveal:
                 let f: URL
                 if let p = item.userInfo["file"] as? String {

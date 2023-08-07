@@ -16,6 +16,7 @@ class TokenAction: Token {
         case openSettings
         case about
         case copyToClipboard
+        case exportInfo
         
         static var pasteboardType: NSPasteboard.PasteboardType {
             return .MITokenAction
@@ -28,6 +29,7 @@ class TokenAction: Token {
             case .openSettings: return NSLocalizedString("MediaInfo Settings…", tableName: "LocalizableExt", comment: "")
             case .about: return NSLocalizedString("About…", comment: "")
             case .copyToClipboard: return NSLocalizedString("Copy path to the clipboard", tableName: "LocalizableExt", comment: "")
+            case .exportInfo: return NSLocalizedString("Export info to the clipboard…", tableName: "LocalizableExt", comment: "")
             }
         }
         
@@ -42,6 +44,7 @@ class TokenAction: Token {
             case .openSettings: return "[[open-settings]]"
             case .about: return "[[about]]"
             case .copyToClipboard: return "[[clipboard]]"
+            case .exportInfo: return "[[export]]"
             }
         }
         
@@ -61,6 +64,8 @@ class TokenAction: Token {
                 self = .about
             } else if placeholder == "[[clipboard]]" {
                 self = .copyToClipboard
+            } else if placeholder == "[[export]]" {
+                self = .exportInfo
             } else {
                 guard placeholder.hasPrefix("[[open-with:") else {
                     return nil
@@ -86,6 +91,8 @@ class TokenAction: Token {
                 self = .about
             } else if t == "clipboard" {
                 self = .copyToClipboard
+            } else if t == "export" {
+                self = .exportInfo
             } else {
                 guard t.hasPrefix("open-with:") else {
                     return nil
@@ -101,6 +108,7 @@ class TokenAction: Token {
            case .openSettings: return "open-settings"
            case .about: return "about"
            case .copyToClipboard: return "clipboard"
+           case .exportInfo: return "export"
            case .app(let path):
                return "open-with:\(path)"
            }
@@ -180,12 +188,14 @@ class TokenAction: Token {
         var isAbout = false
         var isClipboard = false
         var isSettings = false
+        var isExport = false
         switch self.mode as! Mode {
         case .app: isOpenWith = true
         case .defaultApp: isDefault = true
         case .openSettings: isSettings = true
         case .about: isAbout = true
         case .copyToClipboard: isClipboard = true
+        case .exportInfo: isExport = true
         }
         
         let mnu = self.createMenuItem(title: Self.Mode.app(path: "").title, state: isOpenWith || isDefault, tag: -1, tooltip: Mode.app(path: "").tooltip)
@@ -201,6 +211,7 @@ class TokenAction: Token {
         
         menu.addItem(self.createMenuItem(title: Self.Mode.openSettings.title, state: isSettings, tag: 2, tooltip: Mode.openSettings.tooltip))
         menu.addItem(self.createMenuItem(title: Self.Mode.copyToClipboard.title, state: isClipboard, tag: 4, tooltip: Mode.copyToClipboard.tooltip))
+        menu.addItem(self.createMenuItem(title: Self.Mode.exportInfo.title, state: isExport, tag: 5, tooltip: Mode.exportInfo.tooltip))
         menu.addItem(self.createMenuItem(title: Self.Mode.about.title, state: isAbout, tag: 3, tooltip: Mode.about.tooltip))
         
         return menu
@@ -221,6 +232,8 @@ class TokenAction: Token {
             return Mode.about
         case 4:
             return Mode.copyToClipboard
+        case 5:
+            return Mode.exportInfo
         default:
             return nil
         }
