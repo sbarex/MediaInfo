@@ -3,6 +3,39 @@
     <channel>
         <title>MediaInfo</title> 
         <item>
+            <title>1.7.2</title>
+            <pubDate>lun, 7 ago 2023 22:53:00 +0100</pubDate>
+            <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.7.2/MediaInfo.zip" 
+                sparkle:version="22" sparkle:shortVersionString="1.7.2" type="application/octet-stream" 
+                sparkle:edSignature="iKasuTtCfATEXvP1ItwPa54AeWCQED9SG89IYro5+3FXCL7LAN9Hm7fxeIFOvchvVzO3yaAAGIcU6ZfoB83oDA==" length="21109674" />
+            <description><![CDATA[
+                <h2>Release 1.7.2 (22)</h2>
+                <p>New features:</p>
+                <ul>
+                    <li>New action to export info as json to clipboard.</li>
+                    <li>Dependencies updated:</li>
+                    <ul>
+                        <li>fffmpeg to 6.0.0</li>
+                        <li>libarchive to 3.7.2dev</li>
+                        <li>libjpeg-turbo to 3.0.0</li>
+                        <li>lz4</li>
+                        <li>xz to 5.4.4</li>
+                        <li>zstd to 1.5.5</li>
+                    </ul>
+                </ul>
+
+                <p>Bugfix:</p>
+                <ul>
+                    <li>Fixed media duration and frames count for the ffmpeg engine. </li>
+                </ul>
+
+                <p><a href="https://github.com/sbarex/MediaInfo/blob/master/CHANGELOG.md">See the complete changelog.</a></p>
+            ]]>
+            </description>
+        </item>
+        
+        <item>
             <title>1.7.1</title>
             <pubDate>dom, 22 gen 2023 21:17:00 +0100</pubDate>
             <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
