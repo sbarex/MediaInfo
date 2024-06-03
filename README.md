@@ -1,5 +1,7 @@
 [![counter](https://img.shields.io/github/downloads/sbarex/mediainfo/latest/total)](https://github.com/sbarex/mediainfo/releases) [![counter](https://img.shields.io/github/downloads/sbarex/mediainfo/total)](https://github.com/sbarex/mediainfo/releases)
 
+[![buy me a coffee](https://img.buymeacoffee.com/button-api/?text=Buy+me+a+coffee&emoji=&slug=sbarex&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff")](https://www.buymeacoffee.com/sbarex)
+
 <p align="center">
   <img src="Assets/icon.png" width="128" height="128" alt="logo" />
 </p>
@@ -12,6 +14,8 @@ Extension to display information about multimedia (images, videos and audio), PD
 ![contextual menu](Assets/menu.png)
 
 > **MediaInfo is distributed in the hope that it will be useful but WITHOUT ANY WARRANTY.**
+
+If you like this application and find it useful, [buy me a coffee](https://www.buymeacoffee.com/sbarex)!
 
   - [Behavior](#behavior)
   - [Installation](#installation)
