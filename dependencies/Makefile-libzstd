@@ -1,5 +1,7 @@
 .DEFAULT_GOAL:=all
 
+ZSTD_VERSION = v1.5.6
+
 # Output all commands.
 ifeq ($(VERBOSE),1) 
 	SHELL=sh -xv
@@ -69,9 +71,10 @@ ifeq ($(ONLY_ACTIVE_ARCH),NO)
 else
 		@echo "${bold}Building libzstd for $(NATIVE_ARCH) architecture${normal}"
 endif
-	@echo "CURRENT_DIR: ${CURRENT_DIR}"
-	@echo "SOURCE_ROOT: ${SOURCE_ROOT}"
-	@echo "BUILD_DIR: ${BUILD_DIR}"
+	@echo "CURRENT_DIR: ${bold}${CURRENT_DIR}${normal}"
+	@echo "SOURCE_ROOT: ${bold}${SOURCE_ROOT}${normal}"
+	@echo "BUILD_DIR:   ${bold}${BUILD_DIR}${normal}"
+	@echo "LIB VERSION: ${bold}${ZSTD_VERSION}${normal}"
 
 # Check if the lib lz4 exists.
 lz4 : ${BUILD_DIR}/liblz4/liblz4.a
@@ -88,15 +91,24 @@ clean:
 	@rm -rf "${BUILD_DIR}/libzstd/" 2> /dev/null
 	@echo ""
 
-libzstd: ${BUILD_DIR}/libzstd/libzstd.a
+# main library
+libzstd: git ${BUILD_DIR}/libzstd/libzstd.a
 
-${BUILD_DIR}/libzstd/libzstd.a : source-zstd
+
+# Checkout the repository tag.
+git : ${SOURCE_ROOT}/zstd/Makefile
+# @echo "check tag…"
+ifneq ($(shell git -C "${SOURCE_ROOT}/zstd" describe --tags | xargs), ${ZSTD_VERSION})
+	@echo "${bold}Checkout git to tag ${ZSTD_VERSION}${normal}"
+	git -C "${SOURCE_ROOT}/zstd" checkout "${ZSTD_VERSION}" --force
+else
+	@echo "GIT TAG:     ${bold}${ZSTD_VERSION}${normal}"
+endif
 
 # Check if the source files are presents.
-source-zstd: ${SOURCE_ROOT}/zstd/Makefile
 ${SOURCE_ROOT}/zstd/Makefile :
 	@echo "${bold}Submodule update…${normal}"
-	cd "${SOURCE_ROOT}" && git submodule update --init
+	git -C "${SOURCE_ROOT}" submodule update --init zstd
 
 # Set Target-specific variables for arm64
 ${BUILD_DIR}/libzstd/arm64/lib/libzstd.a : ZSTD_INSTALL_DIR = ${BUILD_DIR}/libzstd/arm64
@@ -110,7 +122,7 @@ ${BUILD_DIR}/libzstd/x86_64/lib/libzstd.a : CFLAGS := ${CFLAGS} ${CFLAGS_x86_64}
 ${BUILD_DIR}/libzstd/x86_64/lib/libzstd.a : LDFLAGS := ${LDFLAGS} ${LDFLAGS_x86_64}
 ${BUILD_DIR}/libzstd/x86_64/lib/libzstd.a : ARCH := x86_64
 
-$(libzstd_files) : 
+$(libzstd_files) :
 	@echo ""
 	@echo "${bold}Building libzstd for ${ARCH} platform into ${ZSTD_INSTALL_DIR} ($@)…${normal}"
 	
@@ -142,6 +154,5 @@ endif
 	@echo ""
 	
 
-all: check_arch lz4 source-zstd libzstd
-install: check_arch lz4 source-zstd libzstd
-
+all: check_arch lz4 git libzstd
+install: check_arch lz4 git libzstd

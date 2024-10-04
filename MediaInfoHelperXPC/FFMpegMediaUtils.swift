@@ -16,20 +16,15 @@ extension VideoTrackInfo.VideoPixelFormat {
     init?(pix_fmt: AVPixelFormat) {
         switch pix_fmt {
         case AV_PIX_FMT_NONE: return nil
+            
         case AV_PIX_FMT_YUV420P: self = .yuv420p
         case AV_PIX_FMT_YUYV422: self = .yuyv422
-        case AV_PIX_FMT_YVYU422: self = .yvyu422
-        case AV_PIX_FMT_Y210LE: self = .y210le
-        case AV_PIX_FMT_Y210BE: self = .y210be
         case AV_PIX_FMT_RGB24: self = .rgb24
         case AV_PIX_FMT_BGR24: self = .bgr24
-        case AV_PIX_FMT_X2RGB10LE: self = .x2rgb10le
-        case AV_PIX_FMT_X2RGB10BE: self = .x2rgb10be
         case AV_PIX_FMT_YUV422P: self = .yuv422p
         case AV_PIX_FMT_YUV444P: self = .yuv444p
         case AV_PIX_FMT_YUV410P: self = .yuv410p
         case AV_PIX_FMT_YUV411P: self = .yuv411p
-        case AV_PIX_FMT_YUVJ411P: self = .yuvj411p
         case AV_PIX_FMT_GRAY8: self = .gray
         case AV_PIX_FMT_MONOWHITE: self = .monow
         case AV_PIX_FMT_MONOBLACK: self = .monob
@@ -37,7 +32,6 @@ extension VideoTrackInfo.VideoPixelFormat {
         case AV_PIX_FMT_YUVJ420P: self = .yuvj420p
         case AV_PIX_FMT_YUVJ422P: self = .yuvj422p
         case AV_PIX_FMT_YUVJ444P: self = .yuvj444p
-        case AV_PIX_FMT_XVMC: self = .xvmc
         case AV_PIX_FMT_UYVY422: self = .uyvy422
         case AV_PIX_FMT_UYYVYY411: self = .uyyvyy411
         case AV_PIX_FMT_BGR8: self = .bgr8
@@ -48,31 +42,73 @@ extension VideoTrackInfo.VideoPixelFormat {
         case AV_PIX_FMT_RGB4_BYTE: self = .rgb4_byte
         case AV_PIX_FMT_NV12: self = .nv12
         case AV_PIX_FMT_NV21: self = .nv21
+
         case AV_PIX_FMT_ARGB: self = .argb
         case AV_PIX_FMT_RGBA: self = .rgba
         case AV_PIX_FMT_ABGR: self = .abgr
         case AV_PIX_FMT_BGRA: self = .bgra
-        case AV_PIX_FMT_0RGB: self = .zero_rgb
-        case AV_PIX_FMT_RGB0: self = .rgb0
-        case AV_PIX_FMT_0BGR: self = .zero_bgr
-        case AV_PIX_FMT_BGR0: self = .bgr0
-        case AV_PIX_FMT_GRAY9BE: self = .gray9be
-        case AV_PIX_FMT_GRAY9LE: self = .gray9le
-        case AV_PIX_FMT_GRAY10BE: self = .gray10be
-        case AV_PIX_FMT_GRAY10LE: self = .gray10le
-        case AV_PIX_FMT_GRAY12BE: self = .gray12be
-        case AV_PIX_FMT_GRAY12LE: self = .gray12le
-        case AV_PIX_FMT_GRAY14BE: self = .gray14be
-        case AV_PIX_FMT_GRAY14LE: self = .gray14le
+
         case AV_PIX_FMT_GRAY16BE: self = .gray16be
         case AV_PIX_FMT_GRAY16LE: self = .gray16le
         case AV_PIX_FMT_YUV440P: self = .yuv440p
         case AV_PIX_FMT_YUVJ440P: self = .yuvj440p
-        case AV_PIX_FMT_YUV440P10LE: self = .yuv440p10le
-        case AV_PIX_FMT_YUV440P10BE: self = .yuv440p10be
-        case AV_PIX_FMT_YUV440P12LE: self = .yuv440p12le
-        case AV_PIX_FMT_YUV440P12BE: self = .yuv440p12be
         case AV_PIX_FMT_YUVA420P: self = .yuva420p
+        case AV_PIX_FMT_RGB48BE: self = .rgb48be
+        case AV_PIX_FMT_RGB48LE: self = .rgb48le
+
+        case AV_PIX_FMT_RGB565BE: self = .rgb565be
+        case AV_PIX_FMT_RGB565LE: self = .rgb565le
+        case AV_PIX_FMT_RGB555BE: self = .rgb555be
+        case AV_PIX_FMT_RGB555LE: self = .rgb555le
+
+        case AV_PIX_FMT_BGR565BE: self = .bgr565be
+        case AV_PIX_FMT_BGR565LE: self = .bgr565le
+        case AV_PIX_FMT_BGR555BE: self = .bgr555be
+        case AV_PIX_FMT_BGR555LE: self = .bgr555le
+
+
+        case AV_PIX_FMT_VAAPI: self = .vaapi
+
+        case AV_PIX_FMT_YUV420P16LE: self = .yuv420p16le
+        case AV_PIX_FMT_YUV420P16BE: self = .yuv420p16be
+        case AV_PIX_FMT_YUV422P16LE: self = .yuv422p16le
+        case AV_PIX_FMT_YUV422P16BE: self = .yuv422p16be
+        case AV_PIX_FMT_YUV444P16LE: self = .yuv444p16le
+        case AV_PIX_FMT_YUV444P16BE: self = .yuv444p16be
+        case AV_PIX_FMT_DXVA2_VLD: self = .dxva2_vld
+
+        case AV_PIX_FMT_RGB444LE: self = .rgb444le
+        case AV_PIX_FMT_RGB444BE: self = .rgb444be
+        case AV_PIX_FMT_BGR444LE: self = .bgr444le
+        case AV_PIX_FMT_BGR444BE: self = .bgr444be
+        case AV_PIX_FMT_YA8: self = .ya8
+
+        case AV_PIX_FMT_Y400A: self = .Y400A
+        case AV_PIX_FMT_GRAY8A: self = .GRAY8A
+
+        case AV_PIX_FMT_BGR48BE: self = .bgr48be
+        case AV_PIX_FMT_BGR48LE: self = .bgr48le
+
+        case AV_PIX_FMT_YUV420P9BE: self = .yuv420p9be
+        case AV_PIX_FMT_YUV420P9LE: self = .yuv420p9le
+        case AV_PIX_FMT_YUV420P10BE: self = .yuv420p10be
+        case AV_PIX_FMT_YUV420P10LE: self = .yuv420p10le
+        case AV_PIX_FMT_YUV422P10BE: self = .yuv422p10be
+        case AV_PIX_FMT_YUV422P10LE: self = .yuv422p10le
+        case AV_PIX_FMT_YUV444P9BE: self = .yuv444p9be
+        case AV_PIX_FMT_YUV444P9LE: self = .yuv444p9le
+        case AV_PIX_FMT_YUV444P10BE: self = .yuv444p10be
+        case AV_PIX_FMT_YUV444P10LE: self = .yuv444p10le
+        case AV_PIX_FMT_YUV422P9BE: self = .yuv422p9be
+        case AV_PIX_FMT_YUV422P9LE: self = .yuv422p9le
+        case AV_PIX_FMT_GBRP: self = .gbrp
+        case AV_PIX_FMT_GBR24P: self = .gbr24p
+        case AV_PIX_FMT_GBRP9BE: self = .gbrp9be
+        case AV_PIX_FMT_GBRP9LE: self = .gbrp9le
+        case AV_PIX_FMT_GBRP10BE: self = .gbrp10be
+        case AV_PIX_FMT_GBRP10LE: self = .gbrp10le
+        case AV_PIX_FMT_GBRP16BE: self = .gbrp16be
+        case AV_PIX_FMT_GBRP16LE: self = .gbrp16le
         case AV_PIX_FMT_YUVA422P: self = .yuva422p
         case AV_PIX_FMT_YUVA444P: self = .yuva444p
         case AV_PIX_FMT_YUVA420P9BE: self = .yuva420p9be
@@ -93,80 +129,161 @@ extension VideoTrackInfo.VideoPixelFormat {
         case AV_PIX_FMT_YUVA422P16LE: self = .yuva422p16le
         case AV_PIX_FMT_YUVA444P16BE: self = .yuva444p16be
         case AV_PIX_FMT_YUVA444P16LE: self = .yuva444p16le
-        case AV_PIX_FMT_RGB48BE: self = .rgb48be
-        case AV_PIX_FMT_RGB48LE: self = .rgb48le
-        case AV_PIX_FMT_RGBA64BE: self = .rgba64be
-        case AV_PIX_FMT_RGBA64LE: self = .rgba64le
-        case AV_PIX_FMT_RGB565BE: self = .rgb565be
-        case AV_PIX_FMT_RGB565LE: self = .rgb565le
-        case AV_PIX_FMT_RGB555BE: self = .rgb555be
-        case AV_PIX_FMT_RGB555LE: self = .rgb555le
-        case AV_PIX_FMT_RGB444BE: self = .rgb444be
-        case AV_PIX_FMT_RGB444LE: self = .rgb444le
-        case AV_PIX_FMT_BGR48BE: self = .bgr48be
-        case AV_PIX_FMT_BGR48LE: self = .bgr48le
-        case AV_PIX_FMT_BGRA64BE: self = .bgra64be
-        case AV_PIX_FMT_BGRA64LE: self = .bgra64le
-        case AV_PIX_FMT_BGR565BE: self = .bgr565be
-        case AV_PIX_FMT_BGR565LE: self = .bgr565le
-        case AV_PIX_FMT_BGR555BE: self = .bgr555be
-        case AV_PIX_FMT_BGR555LE: self = .bgr555le
-        case AV_PIX_FMT_BGR444BE: self = .bgr444be
-        case AV_PIX_FMT_BGR444LE: self = .bgr444le
-        case AV_PIX_FMT_VAAPI: self = .vaapi
-        case AV_PIX_FMT_YUV420P9LE: self = .yuv420p9le
-        case AV_PIX_FMT_YUV420P9BE: self = .yuv420p9be
-        case AV_PIX_FMT_YUV420P10LE: self = .yuv420p10le
-        case AV_PIX_FMT_YUV420P10BE: self = .yuv420p10be
-        case AV_PIX_FMT_YUV420P12LE: self = .yuv420p12le
-        case AV_PIX_FMT_YUV420P12BE: self = .yuv420p12be
-        case AV_PIX_FMT_YUV420P14LE: self = .yuv420p14le
-        case AV_PIX_FMT_YUV420P14BE: self = .yuv420p14be
-        case AV_PIX_FMT_YUV420P16LE: self = .yuv420p16le
-        case AV_PIX_FMT_YUV420P16BE: self = .yuv420p16be
-        case AV_PIX_FMT_YUV422P9LE: self = .yuv422p9le
-        case AV_PIX_FMT_YUV422P9BE: self = .yuv422p9be
-        case AV_PIX_FMT_YUV422P10LE: self = .yuv422p10le
-        case AV_PIX_FMT_YUV422P10BE: self = .yuv422p10be
-        case AV_PIX_FMT_YUV422P12LE: self = .yuv422p12le
-        case AV_PIX_FMT_YUV422P12BE: self = .yuv422p12be
-        case AV_PIX_FMT_YUV422P14LE: self = .yuv422p14le
-        case AV_PIX_FMT_YUV422P14BE: self = .yuv422p14be
-        case AV_PIX_FMT_YUV422P16LE: self = .yuv422p16le
-        case AV_PIX_FMT_YUV422P16BE: self = .yuv422p16be
-        case AV_PIX_FMT_YUV444P16LE: self = .yuv444p16le
-        case AV_PIX_FMT_YUV444P16BE: self = .yuv444p16be
-        case AV_PIX_FMT_YUV444P10LE: self = .yuv444p10le
-        case AV_PIX_FMT_YUV444P10BE: self = .yuv444p10be
-        case AV_PIX_FMT_YUV444P9LE: self = .yuv444p9le
-        case AV_PIX_FMT_YUV444P9BE: self = .yuv444p9be
-        case AV_PIX_FMT_YUV444P12LE: self = .yuv444p12le
-        case AV_PIX_FMT_YUV444P12BE: self = .yuv444p12be
-        case AV_PIX_FMT_YUV444P14LE: self = .yuv444p14le
-        case AV_PIX_FMT_YUV444P14BE: self = .yuv444p14be
-        case AV_PIX_FMT_D3D11VA_VLD: self = .d3d11va_vld
-        case AV_PIX_FMT_DXVA2_VLD: self = .dxva2_vld
-        case AV_PIX_FMT_YA8: self = .ya8
-        case AV_PIX_FMT_YA16LE: self = .ya16le
-        case AV_PIX_FMT_YA16BE: self = .ya16be
-        case AV_PIX_FMT_VIDEOTOOLBOX: self = .videotoolbox_vld
-        case AV_PIX_FMT_GBRP: self = .gbrp
-        case AV_PIX_FMT_GBRP9LE: self = .gbrp9le
-        case AV_PIX_FMT_GBRP9BE: self = .gbrp9be
-        case AV_PIX_FMT_GBRP10LE: self = .gbrp10le
-        case AV_PIX_FMT_GBRP10BE: self = .gbrp10be
-        case AV_PIX_FMT_GBRP12LE: self = .gbrp12le
-        case AV_PIX_FMT_GBRP12BE: self = .gbrp12be
-        case AV_PIX_FMT_GBRP14LE: self = .gbrp14le
-        case AV_PIX_FMT_GBRP14BE: self = .gbrp14be
-        case AV_PIX_FMT_GBRP16LE: self = .gbrp16le
-        case AV_PIX_FMT_GBRP16BE: self = .gbrp16be
-        case AV_PIX_FMT_GBRAP: self = .gbrap
-        case AV_PIX_FMT_GBRAP16LE: self = .gbrap16le
-        case AV_PIX_FMT_GBRAP16BE: self = .gbrap16be
+
         case AV_PIX_FMT_VDPAU: self = .vdpau
+
         case AV_PIX_FMT_XYZ12LE: self = .xyz12le
         case AV_PIX_FMT_XYZ12BE: self = .xyz12be
+        case AV_PIX_FMT_NV16: self = .nv16
+        case AV_PIX_FMT_NV20LE: self = .nv20le
+        case AV_PIX_FMT_NV20BE: self = .nv20be
+
+        case AV_PIX_FMT_RGBA64BE: self = .rgba64be
+        case AV_PIX_FMT_RGBA64LE: self = .rgba64le
+        case AV_PIX_FMT_BGRA64BE: self = .bgra64be
+        case AV_PIX_FMT_BGRA64LE: self = .bgra64le
+
+        case AV_PIX_FMT_YVYU422: self = .yvyu422
+
+        case AV_PIX_FMT_YA16BE: self = .ya16be
+        case AV_PIX_FMT_YA16LE: self = .ya16le
+
+        case AV_PIX_FMT_GBRAP: self = .gbrap
+        case AV_PIX_FMT_GBRAP16BE: self = .gbrap16be
+        case AV_PIX_FMT_GBRAP16LE: self = .gbrap16le
+
+        case AV_PIX_FMT_QSV: self = .QSV
+        case AV_PIX_FMT_MMAL: self = .MMAL
+
+        case AV_PIX_FMT_D3D11VA_VLD: self = .d3d11va_vld
+        case AV_PIX_FMT_CUDA: self = .CUDA
+
+        case AV_PIX_FMT_0RGB: self = .zero_rgb
+        case AV_PIX_FMT_RGB0: self = .rgb0
+        case AV_PIX_FMT_0BGR: self = .zero_bgr
+        case AV_PIX_FMT_BGR0: self = .bgr0
+
+        case AV_PIX_FMT_YUV420P12BE: self = .yuv420p12be
+        case AV_PIX_FMT_YUV420P12LE: self = .yuv420p12le
+        case AV_PIX_FMT_YUV420P14BE: self = .yuv420p14be
+        case AV_PIX_FMT_YUV420P14LE: self = .yuv420p14le
+        case AV_PIX_FMT_YUV422P12BE: self = .yuv422p12be
+        case AV_PIX_FMT_YUV422P12LE: self = .yuv422p12le
+        case AV_PIX_FMT_YUV422P14BE: self = .yuv422p14be
+        case AV_PIX_FMT_YUV422P14LE: self = .yuv422p14le
+        case AV_PIX_FMT_YUV444P12BE: self = .yuv444p12be
+        case AV_PIX_FMT_YUV444P12LE: self = .yuv444p12le
+        case AV_PIX_FMT_YUV444P14BE: self = .yuv444p14be
+        case AV_PIX_FMT_YUV444P14LE: self = .yuv444p14le
+        case AV_PIX_FMT_GBRP12BE: self = .gbrp12be
+        case AV_PIX_FMT_GBRP12LE: self = .gbrp12le
+        case AV_PIX_FMT_GBRP14BE: self = .gbrp14be
+        case AV_PIX_FMT_GBRP14LE: self = .gbrp14le
+        case AV_PIX_FMT_YUVJ411P: self = .yuvj411p
+
+        case AV_PIX_FMT_BAYER_BGGR8: self = .BAYER_BGGR8
+        case AV_PIX_FMT_BAYER_RGGB8: self = .BAYER_RGGB8
+        case AV_PIX_FMT_BAYER_GBRG8: self = .BAYER_GBRG8
+        case AV_PIX_FMT_BAYER_GRBG8: self = .BAYER_GRBG8
+        case AV_PIX_FMT_BAYER_BGGR16LE: self = .BAYER_BGGR16LE
+        case AV_PIX_FMT_BAYER_BGGR16BE: self = .BAYER_BGGR16BE
+        case AV_PIX_FMT_BAYER_RGGB16LE: self = .BAYER_RGGB16LE
+        case AV_PIX_FMT_BAYER_RGGB16BE: self = .BAYER_RGGB16BE
+        case AV_PIX_FMT_BAYER_GBRG16LE: self = .BAYER_GBRG16LE
+        case AV_PIX_FMT_BAYER_GBRG16BE: self = .BAYER_GBRG16BE
+        case AV_PIX_FMT_BAYER_GRBG16LE: self = .BAYER_GRBG16LE
+        case AV_PIX_FMT_BAYER_GRBG16BE: self = .BAYER_GRBG16BE
+
+        case AV_PIX_FMT_YUV440P10LE: self = .yuv440p10le
+        case AV_PIX_FMT_YUV440P10BE: self = .yuv440p10be
+        case AV_PIX_FMT_YUV440P12LE: self = .yuv440p12le
+        case AV_PIX_FMT_YUV440P12BE: self = .yuv440p12be
+        case AV_PIX_FMT_AYUV64LE: self = .AYUV64LE
+        case AV_PIX_FMT_AYUV64BE: self = .AYUV64BE
+
+        case AV_PIX_FMT_VIDEOTOOLBOX: self = .videotoolbox_vld
+
+        case AV_PIX_FMT_P010LE: self = .P010LE
+        case AV_PIX_FMT_P010BE: self = .P010BE
+        case AV_PIX_FMT_GBRAP12BE: self = .GBRAP12BE
+        case AV_PIX_FMT_GBRAP12LE: self = .GBRAP12LE
+        case AV_PIX_FMT_GBRAP10BE: self = .GBRAP10BE
+        case AV_PIX_FMT_GBRAP10LE: self = .GBRAP10LE
+        case AV_PIX_FMT_MEDIACODEC: self = .MEDIACODEC
+
+        case AV_PIX_FMT_GRAY12BE: self = .gray12be
+        case AV_PIX_FMT_GRAY12LE: self = .gray12le
+        case AV_PIX_FMT_GRAY10BE: self = .gray10be
+        case AV_PIX_FMT_GRAY10LE: self = .gray10le
+
+        case AV_PIX_FMT_P016LE: self = .P016LE
+        case AV_PIX_FMT_P016BE: self = .P016BE
+        case AV_PIX_FMT_D3D11: self = .D3D11
+
+        case AV_PIX_FMT_GRAY9BE: self = .gray9be
+        case AV_PIX_FMT_GRAY9LE: self = .gray9le
+
+        case AV_PIX_FMT_GBRPF32BE: self = .GBRPF32BE
+        case AV_PIX_FMT_GBRPF32LE: self = .GBRPF32LE
+        case AV_PIX_FMT_GBRAPF32BE: self = .GBRAPF32BE
+        case AV_PIX_FMT_GBRAPF32LE: self = .GBRAPF32LE
+        case AV_PIX_FMT_DRM_PRIME: self = .DRM_PRIME
+        case AV_PIX_FMT_OPENCL: self = .OPENCL
+
+        case AV_PIX_FMT_GRAY14BE: self = .gray14be
+        case AV_PIX_FMT_GRAY14LE: self = .gray14le
+
+        case AV_PIX_FMT_GRAYF32BE: self = .GRAYF32BE
+        case AV_PIX_FMT_GRAYF32LE: self = .GRAYF32LE
+        case AV_PIX_FMT_YUVA422P12BE: self = .YUVA422P12BE
+        case AV_PIX_FMT_YUVA422P12LE: self = .YUVA422P12LE
+        case AV_PIX_FMT_YUVA444P12BE: self = .YUVA444P12BE
+        case AV_PIX_FMT_YUVA444P12LE: self = .YUVA444P12LE
+        case AV_PIX_FMT_NV24: self = .NV24
+        case AV_PIX_FMT_NV42: self = .NV42
+        case AV_PIX_FMT_VULKAN: self = .VULKAN
+            
+        case AV_PIX_FMT_Y210BE: self = .y210be
+        case AV_PIX_FMT_Y210LE: self = .y210le
+
+        case AV_PIX_FMT_X2RGB10LE: self = .x2rgb10le
+        case AV_PIX_FMT_X2RGB10BE: self = .x2rgb10le
+            
+        case AV_PIX_FMT_X2BGR10LE: self = .X2BGR10LE
+        case AV_PIX_FMT_X2BGR10BE: self = .X2BGR10BE
+        case AV_PIX_FMT_P210BE: self = .P210BE
+        case AV_PIX_FMT_P210LE: self = .P210LE
+        case AV_PIX_FMT_P410BE: self = .P410BE
+        case AV_PIX_FMT_P410LE: self = .P410LE
+        case AV_PIX_FMT_P216BE: self = .P216BE
+        case AV_PIX_FMT_P216LE: self = .P216LE
+        case AV_PIX_FMT_P416BE: self = .P416BE
+        case AV_PIX_FMT_P416LE: self = .P416LE
+        case AV_PIX_FMT_VUYA: self = .VUYA
+        case AV_PIX_FMT_RGBAF16BE: self = .RGBAF16BE
+        case AV_PIX_FMT_RGBAF16LE: self = .RGBAF16LE
+        case AV_PIX_FMT_VUYX: self = .VUYX
+        case AV_PIX_FMT_P012LE: self = .P012LE
+        case AV_PIX_FMT_P012BE: self = .P012BE
+        case AV_PIX_FMT_Y212BE: self = .Y212BE
+        case AV_PIX_FMT_Y212LE: self = .Y212LE
+        case AV_PIX_FMT_XV30BE: self = .XV30BE
+        case AV_PIX_FMT_XV30LE: self = .XV30LE
+        case AV_PIX_FMT_XV36BE: self = .XV36BE
+        case AV_PIX_FMT_XV36LE: self = .XV36LE
+        case AV_PIX_FMT_RGBF32BE: self = .RGBF32BE
+        case AV_PIX_FMT_RGBF32LE: self = .RGBF32LE
+        case AV_PIX_FMT_RGBAF32BE: self = .RGBAF32BE
+        case AV_PIX_FMT_RGBAF32LE: self = .RGBAF32LE
+        case AV_PIX_FMT_P212BE: self = .P212BE
+        case AV_PIX_FMT_P212LE: self = .P212LE
+        case AV_PIX_FMT_P412BE: self = .P412BE
+        case AV_PIX_FMT_P412LE: self = .P412LE
+        case AV_PIX_FMT_GBRAP14BE: self = .GBRAP14BE
+        case AV_PIX_FMT_GBRAP14LE: self = .GBRAP14LE
+        case AV_PIX_FMT_D3D12: self = .D3D12
+        case AV_PIX_FMT_NB: self = .NB
+        
         default: return nil
         }
     }
@@ -490,7 +607,7 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
         }
         let codec: UnsafePointer<AVCodec>?
         
-        if let codec_id = pFormatCtx.pointee.streams[i]?.pointee.codecpar?.pointee.codec_id {
+        if let codec_id = st.codecpar?.pointee.codec_id {
             codec = avcodec_find_decoder(codec_id)
         } else {
             codec = nil;
@@ -652,7 +769,11 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
             
             let bits_per_sample = av_get_bits_per_sample(avctx!.pointee.codec_id)
             if bits_per_sample > 0 {
+//#if HAVE_CH_LAYOUT
                 bit_rate = Int64(avctx!.pointee.sample_rate * avctx!.pointee.ch_layout.nb_channels)
+//#else
+//                bit_rate = Int64(avctx!.pointee.channels)
+//#endif
                 if bit_rate > INT64_MAX / Int64(bits_per_sample) {
                     bit_rate = 0
                 } else {
@@ -679,6 +800,12 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
                 sampleRate = Double(best_samplerate)
             }
             */
+            let channels: Int
+//#if HAVE_CH_LAYOUT
+            channels = Int(avctx!.pointee.ch_layout.nb_channels)
+//#else
+//            channels = Int(avctx!.pointee.channels)
+//#endif
             let a = AudioTrackInfo(
                 duration: d_duration,
                 start_time: Double(start_time) * time_factor,
@@ -688,7 +815,7 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
                 sampleRate: sampleRate,
                 title: title, encoder: encoder,
                 isLossless: isLossless,
-                channels: Int(avctx!.pointee.ch_layout.nb_channels)
+                channels: channels
             )
             streams.append(a)
             

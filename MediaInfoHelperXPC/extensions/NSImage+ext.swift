@@ -44,5 +44,12 @@ extension NSImage {
         self.size = oldSize
         return image
     }
+    
+    static func imageFromSymbol(_ name: String) -> NSImage? {
+        guard name.starts(with: "!") else {
+            return nil
+        }
+        return NSImage(systemSymbolName: String(name.dropFirst()), accessibilityDescription: nil)
+    }
 }
 

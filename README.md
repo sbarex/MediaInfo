@@ -15,6 +15,7 @@ Extension to display information about multimedia (images, videos and audio), PD
 
   - [Behavior](#behavior)
   - [Installation](#installation)
+    - [Note for macOS Sequoia](#note-for-macos-sequoia)
   - [Settings](#settings)
     - [Monitored folders](#monitored-folders)
     - [General](#general)
@@ -106,6 +107,27 @@ This will resolve the error of an unsigned/damaged application when launching th
 > **When the monitored folders are changed or when the Finder Sync extension is restarted, the System may display a confirmation warning to allow read access to the files of the monitored folders. _Access must be granted for the Finder extension to work._**
 
 ![Grant access](Assets/grant_access.png)
+
+## Note for macOS Sequoia
+
+Since macOS 15 Sequoia de Finder Extension is not available in the System Settings and cannot be easily enabled or disabled.
+
+There's currently [no official update or solution from Apple](https://forums.developer.apple.com/forums/thread/756683).
+
+You can use the [FinderSyncer utility](https://zigz.ag/FinderSyncer/) to visual handle all Finder Extensions, or manually with these Terminal.app commands:
+
+
+```sh
+pluginkit -m CFBundleIdentifier=org.sbarex.MediaInfo.Finder-Extension -vv 
+```
+
+Copy the value of UUID that has a format similar to XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX and then execute the following code using the UUID copied:
+
+```sh
+pluginkit -e "use" -u "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+```
+
+Replace `"use"` with `"ignore"` if you want to disable the extension.
 
 
 # Settings

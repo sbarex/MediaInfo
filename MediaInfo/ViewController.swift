@@ -9,6 +9,7 @@
 import Cocoa
 import FinderSync
 import UniformTypeIdentifiers
+import ExtensionKit
 
 class WindowController: NSWindowController, NSWindowDelegate {
     func windowShouldClose(_ sender: NSWindow) -> Bool {
@@ -798,9 +799,23 @@ class ViewController: NSViewController {
                 // p.informativeText = "The finder sync extension is not enabled."
                 p.alertStyle = .warning
                 p.addButton(withTitle: NSLocalizedString("Open System Settings", comment: ""))
-                p.addButton(withTitle: NSLocalizedString("Ignore", comment: ""))
-                if p.runModal() == .alertFirstButtonReturn {
+                p.addButton(withTitle: NSLocalizedString("Ignore", comment: "")).keyEquivalent = "\u{1b}" // esc
+                
+                let os = ProcessInfo().operatingSystemVersion
+                switch (os.majorVersion, os.minorVersion, os.patchVersion) {
+                case (15, 0, _):
+                    p.addButton(withTitle: NSLocalizedString("Note on macOS Sequoia…", comment: ""))
+                default:
+                    break
+                }
+                
+                switch p.runModal() {
+                case .alertFirstButtonReturn:
                     FIFinderSyncController.showExtensionManagementInterface()
+                case .alertThirdButtonReturn:
+                    NSWorkspace.shared.open(URL(string: "https://github.com/sbarex/MediaInfo/blob/master/README.md#note-for-macos-sequoia")!)
+                default:
+                    break;
                 }
             }
         }
@@ -992,7 +1007,29 @@ class ViewController: NSViewController {
     }
     
     @IBAction func openSystemPreferences(_ sender: Any) {
-        FIFinderSyncController.showExtensionManagementInterface()
+        let os = ProcessInfo().operatingSystemVersion
+        switch (os.majorVersion, os.minorVersion, os.patchVersion) {
+        case (15, 0, _):
+            let panel = NSAlert()
+            panel.alertStyle = .warning
+            panel.informativeText = NSLocalizedString("On macOS Sequoia 15.0 the System interface to handle the Finder Extension is missing!", comment: "")
+            panel.addButton(withTitle: NSLocalizedString("Show more info…", comment: "")).keyEquivalent = "\r"
+            panel.addButton(withTitle: NSLocalizedString("Open System Settings", comment: ""))
+            panel.addButton(withTitle: NSLocalizedString("Cancel", comment: "")).keyEquivalent = "\u{1b}" // esc
+            
+            switch panel.runModal() {
+            case .alertFirstButtonReturn:
+                NSWorkspace.shared.open(URL(string: "https://github.com/sbarex/MediaInfo/blob/master/README.md#note-for-macos-sequoia")!)
+            case .alertSecondButtonReturn:
+                FIFinderSyncController.showExtensionManagementInterface()
+            case .alertThirdButtonReturn:
+                break;
+            default:
+                break
+            }
+        default:
+            FIFinderSyncController.showExtensionManagementInterface()
+        }
     }
     
     func getTemplate(fromTokens tokens: [Token]) -> String {

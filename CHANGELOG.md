@@ -2,6 +2,24 @@ Changelog
 =======
 
 
+### 1.7.3 (23)
+New features:
+- Information about macOS Sequoia.
+- Ability to use any symbol as menu item image (use Apple SF Symbols app to see all available symbols).
+- Dependencies updated:
+    - libarchive to 3.7.6
+    - ffmpeg to 7.0.2
+    - libwebp to 1.4.0
+    - libpng to 1.6.44
+    - lib turbo jpeg to 3.0.90
+    - lz4 to 1.10.0
+    - xz to 5.6.2
+    - zstd to 1.5.6
+
+Bugfix:
+- relinked libraries to work on macOS Sequoia (not tested in previous macOS!)
+
+
 ### 1.7.2 (22)
 New features:
 - New action to export info as json to clipboard.

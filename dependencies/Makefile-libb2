@@ -1,7 +1,9 @@
 .DEFAULT_GOAL:=all
 
+B2_VERSION = v0.98.1
+
 # Output all commands.
-ifeq ($(VERBOSE),1) 
+ifeq ($(VERBOSE),1)
 	SHELL=sh -xv
 endif
 
@@ -49,18 +51,18 @@ else
 	CFLAGS_arm64 += -DNDEBUG
 endif
 
-libb2_files = ${BUILD_DIR}/libb2/$(NATIVE_ARCH)/lib/libb2.a
-makefiles = ${BUILD_DIR}/libb2/$(NATIVE_ARCH)/Makefile 
+libb2_files := ${BUILD_DIR}/libb2/$(NATIVE_ARCH)/lib/libb2.a
+makefiles = ${BUILD_DIR}/libb2/$(NATIVE_ARCH)/Makefile
 
 ifeq ($(ONLY_ACTIVE_ARCH),NO)
 ifeq ($(NATIVE_ARCH),x86_64)
 # build arm code
 		libb2_files += ${BUILD_DIR}/libb2/arm64/lib/libb2.a
-		makefiles += ${BUILD_DIR}/libb2/arm64/Makefile 
+		makefiles += ${BUILD_DIR}/libb2/arm64/Makefile
 else
 # build intel code
 		libb2_files += ${BUILD_DIR}/libb2/x86_64/lib/libb2.a
-		makefiles += ${BUILD_DIR}/libb2/x86_64/Makefile 
+		makefiles += ${BUILD_DIR}/libb2/x86_64/Makefile
 endif
 endif
 
@@ -70,16 +72,17 @@ ifeq ($(filter $(NATIVE_ARCH),$(VALID_ARCHS)),)
 		$(error "Current arch ${NATIVE_ARCH} is not supported! Valid archs are: ${VALID_ARCHS}")
 endif
 ifeq ($(ONLY_ACTIVE_ARCH),NO)
-		@echo "${bold}Building libb2 universal binary${normal}"
+		@echo "${bold}Building libb2 ${B2_VERSION} universal binary${normal}"
 else
-		@echo "${bold}Building libb2 for $(NATIVE_ARCH) architecture${normal}"
+		@echo "${bold}Building libb2 ${B2_VERSION} for $(NATIVE_ARCH) architecture${normal}"
 endif
-	@echo "CURRENT_DIR: ${CURRENT_DIR}"
-	@echo "SOURCE_ROOT: ${SOURCE_ROOT}"
-	@echo "BUILD_DIR: ${BUILD_DIR}"
+	@echo "CURRENT_DIR: ${bold}${CURRENT_DIR}${normal}"
+	@echo "SOURCE_ROOT: ${bold}${SOURCE_ROOT}${normal}"
+	@echo "BUILD_DIR:   ${bold}${BUILD_DIR}${normal}"
+	@echo "LIB VERSION: ${bold}${B2_VERSION}${normal}"
 
 # Check if the lib lz4 exists.
-liblz4 : $(makefiles) ${BUILD_DIR}/liblz4/liblz4.a
+liblz4 : ${BUILD_DIR}/liblz4/liblz4.a
 ${BUILD_DIR}/liblz4/liblz4.a : 
 	@echo ""
 	@echo "${bold}Creating liblz4…${normal}"
@@ -92,18 +95,27 @@ clean:
 	@rm -rf "${BUILD_DIR}/libb2/" 2> /dev/null
 	@echo ""
 
-libb2: ${BUILD_DIR}/libb2/libb2.a
+# Checkout the repository tag.
+git : ${SOURCE_ROOT}/zstd/Makefile
+# @echo "check tag…"
+ifneq ($(shell git -C "${SOURCE_ROOT}/libb2" describe --tags | xargs), ${B2_VERSION})
+	@echo "${bold}Checkout git to tag ${B2_VERSION}${normal}"
+	git -C "${SOURCE_ROOT}/libb2" checkout "${B2_VERSION}" --force
+else
+	@echo "GIT TAG:     ${bold}${B2_VERSION}${normal}"
+endif
 
-${BUILD_DIR}/libb2/libb2.a : source-b2
+libb2: git ${BUILD_DIR}/libb2/libb2.a
 
 # Check if the source files are presents.
 source-b2 : autogen ${SOURCE_ROOT}/libb2/configure.ac ${SOURCE_ROOT}/libb2/configure
+
 ${SOURCE_ROOT}/libb2/configure.ac :
 	@echo "${bold}Submodule update…${normal}"
-	cd "${SOURCE_ROOT}" && git submodule update --init
+	git -C "${SOURCE_ROOT}" submodule update --init && git -C "${SOURCE_ROOT}/libb2" checkout "${B2_VERSION}" --force
 
 # Autogen
-${SOURCE_ROOT}/libb2/configure :
+${SOURCE_ROOT}/libb2/configure : 
 	@echo ""
 	@echo "${bold}Autogen configuration files…${normal}"
 	cd "${SOURCE_ROOT}/libb2" && PATH="/usr/local/bin:${PATH}" sh ./autogen.sh
@@ -134,20 +146,21 @@ ${BUILD_DIR}/libb2/x86_64/Makefile : HOST := x86_64-apple-darwin
 ${BUILD_DIR}/libb2/x86_64/Makefile : ARCH := x86_64
 
 # Library configuration for a CPU architecture.
-$(makefiles) : 
+$(makefiles) :
 	@echo ""
-	@echo "${bold}libb2 configuration for ${ARCH} platform…${normal}"
+	@echo "${bold}libb2 ${B2_VERSION} configuration for ${ARCH} platform…${normal}"
 	@mkdir -p "${B2_INSTALL_DIR}"
 	@cd "${B2_INSTALL_DIR}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" ${SOURCE_ROOT}/libb2/configure --host=${HOST} --prefix="${B2_INSTALL_DIR}" --enable-shared=no --enable-static=yes
+	${MAKE} -C "${B2_INSTALL_DIR}" -j${N_CPU} clean
 
 # Build the library for a CPU architecture.
-$(libb2_files) : 
+$(libb2_files) : $(makefiles)
 	@echo ""
-	@echo "${bold}Compiling libb2 for ${ARCH} platform…${normal}"
+	@echo "${bold}Compiling libb2 ${B2_VERSION} for ${ARCH} platform…${normal}"
 	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${B2_INSTALL_DIR}" -j${N_CPU}
 
 	@echo ""
-	@echo "${bold}Installing libb2 for ${ARCH} platform on ${B2_INSTALL_DIR} …${normal}"
+	@echo "${bold}Installing libb2 ${B2_VERSION} for ${ARCH} platform on ${B2_INSTALL_DIR} …${normal}"
 	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${B2_INSTALL_DIR}" -j${N_CPU} install
 
 # Build the library.
@@ -155,10 +168,10 @@ ${BUILD_DIR}/libb2/libb2.a : ${libb2_files}
 	@mkdir -p "${BUILD_DIR}/libb2"
 	@echo ""
 ifeq ($(ONLY_ACTIVE_ARCH),NO)
-		@echo "${bold}Creating libb2 universal library…${normal}"
+		@echo "${bold}Creating libb2 ${B2_VERSION} universal library…${normal}"
 		lipo -create -output "${BUILD_DIR}/libb2/libb2.a" "${BUILD_DIR}/libb2/x86_64/lib/libb2.a" "${BUILD_DIR}/libb2/arm64/lib/libb2.a"
 else
-		@echo "${bold}Creating libb2 library for ${NATIVE_ARCH} platform…${normal}"
+		@echo "${bold}Creating libb2 ${B2_VERSION} library for ${NATIVE_ARCH} platform…${normal}"
 		@rm -f "${BUILD_DIR}/libb2/libb2.a" > /dev/null
 		ln "${BUILD_DIR}/libb2/${NATIVE_ARCH}/lib/libb2.a" "${BUILD_DIR}/libb2/libb2.a"
 endif
@@ -167,6 +180,5 @@ endif
 	@echo ""
 	
 
-all: check_arch liblz4 source-b2 libb2
-install: check_arch liblz4 source-b2 libb2
-
+all: check_arch liblz4 git source-b2 libb2
+install: check_arch liblz4git source-b2 libb2

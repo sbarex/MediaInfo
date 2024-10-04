@@ -248,7 +248,11 @@ class BaseInfo: Codable {
                 img = i
             } else {
                 if #available(macOS 11.0, *) {
-                    img = NSImage(systemSymbolName: mode, accessibilityDescription: nil)
+                    var name = mode
+                    if mode.hasPrefix("!") {
+                        name = String(name[name.index(name.startIndex, offsetBy: 1)...])
+                    } 
+                    img = NSImage(systemSymbolName: name, accessibilityDescription: nil)
                 } else {
                     img = nil
                 }

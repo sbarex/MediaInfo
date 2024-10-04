@@ -90,7 +90,6 @@ class VideoTrackInfo: BaseInfo, DimensionalInfo, LanguageInfo, DurationInfo, Cod
         case yuvj420p
         case yuvj422p
         case yuvj444p
-        case xvmc
         case uyvy422
         case uyyvyy411
         case bgr8
@@ -204,6 +203,7 @@ class VideoTrackInfo: BaseInfo, DimensionalInfo, LanguageInfo, DurationInfo, Cod
         case ya16be
         case videotoolbox_vld
         case gbrp
+        case gbr24p
         case gbrp9le
         case gbrp9be
         case gbrp10le
@@ -220,6 +220,95 @@ class VideoTrackInfo: BaseInfo, DimensionalInfo, LanguageInfo, DurationInfo, Cod
         case vdpau
         case xyz12le
         case xyz12be
+        
+        case Y400A
+        case GRAY8A
+        case nv16
+        case nv20le
+        case nv20be
+        case QSV
+        case MMAL
+        case CUDA
+        
+        case BAYER_BGGR8
+        case BAYER_RGGB8
+        case BAYER_GBRG8
+        case BAYER_GRBG8
+        case BAYER_BGGR16LE
+        case BAYER_BGGR16BE
+        case BAYER_RGGB16LE
+        case BAYER_RGGB16BE
+        case BAYER_GBRG16LE
+        case BAYER_GBRG16BE
+        case BAYER_GRBG16LE
+        case BAYER_GRBG16BE
+    
+        case AYUV64LE
+        case AYUV64BE
+        
+        case P010LE
+        case P010BE
+        case GBRAP12BE
+        case GBRAP12LE
+        case GBRAP10BE
+        case GBRAP10LE
+        case MEDIACODEC
+        
+        case GRAYF32BE
+        case GRAYF32LE
+        case YUVA422P12BE
+        case YUVA422P12LE
+        case YUVA444P12BE
+        case YUVA444P12LE
+        case NV24
+        case NV42
+        case VULKAN
+        
+        case X2BGR10LE
+        case X2BGR10BE
+        case P210BE
+        case P210LE
+        case P410BE
+        case P410LE
+        case P216BE
+        case P216LE
+        case P416BE
+        case P416LE
+        case VUYA
+        case RGBAF16BE
+        case RGBAF16LE
+        case VUYX
+        case P012LE
+        case P012BE
+        case Y212BE
+        case Y212LE
+        case XV30BE
+        case XV30LE
+        case XV36BE
+        case XV36LE
+        case RGBF32BE
+        case RGBF32LE
+        case RGBAF32BE
+        case RGBAF32LE
+        case P212BE
+        case P212LE
+        case P412BE
+        case P412LE
+        case GBRAP14BE
+        case GBRAP14LE
+        case D3D12
+        case NB
+        
+        case GBRPF32BE
+        case GBRPF32LE
+        case GBRAPF32BE
+        case GBRAPF32LE
+        case DRM_PRIME
+        case OPENCL
+        
+        case P016LE
+        case P016BE
+        case D3D11
         
         var label: String {
             switch self {
@@ -244,7 +333,6 @@ class VideoTrackInfo: BaseInfo, DimensionalInfo, LanguageInfo, DurationInfo, Cod
             case .yuvj420p: return "yuvj420p"
             case .yuvj422p: return "yuvj422p"
             case .yuvj444p: return "yuvj444p"
-            case .xvmc: return "xvmc"
             case .uyvy422: return "uyvy422"
             case .uyyvyy411: return "uyyvyy411"
             case .bgr8: return "bgr8"
@@ -358,6 +446,7 @@ class VideoTrackInfo: BaseInfo, DimensionalInfo, LanguageInfo, DurationInfo, Cod
             case .ya16be: return "ya16be"
             case .videotoolbox_vld: return "videotoolbox_vld"
             case .gbrp: return "gbrp"
+            case .gbr24p: return "gbr24p"
             case .gbrp9le: return "gbrp9le"
             case .gbrp9be: return "gbrp9be"
             case .gbrp10le: return "gbrp10le"
@@ -374,6 +463,98 @@ class VideoTrackInfo: BaseInfo, DimensionalInfo, LanguageInfo, DurationInfo, Cod
             case .vdpau: return "vdpau"
             case .xyz12le: return "xyz12le"
             case .xyz12be: return "xyz12be"
+                
+                
+            case .Y400A: return "y400a"
+            case .GRAY8A: return "gray8a"
+            case .nv16: return "nv16"
+            case .nv20le: return "nv20le"
+            case .nv20be: return "nv20be"
+                
+            case .QSV: return "QSV"
+            case .MMAL: return "MMAL"
+            case .CUDA: return "CUDA"
+                
+                
+            case .BAYER_BGGR8: return "BAYER_BGGR8"
+            case .BAYER_RGGB8: return "BAYER_RGGB8"
+            case .BAYER_GBRG8: return "BAYER_GBRG8"
+            case .BAYER_GRBG8: return "BAYER_GRBG8"
+            case .BAYER_BGGR16LE: return "BAYER_BGGR16LE"
+            case .BAYER_BGGR16BE: return "BAYER_BGGR16BE"
+            case .BAYER_RGGB16LE: return "BAYER_RGGB16LE"
+            case .BAYER_RGGB16BE: return "BAYER_RGGB16BE"
+            case .BAYER_GBRG16LE: return "BAYER_GBRG16LE"
+            case .BAYER_GBRG16BE: return "BAYER_GBRG16BE"
+            case .BAYER_GRBG16LE: return "BAYER_GRBG16LE"
+            case .BAYER_GRBG16BE: return "BAYER_GRBG16BE"
+                
+            case .AYUV64LE: return "AYUV64LE"
+            case .AYUV64BE: return "AYUV64BE"
+                
+            case .P010LE: return "P010LE"
+            case .P010BE: return "P010BE"
+            case .GBRAP12BE: return "GBRAP12BE"
+            case .GBRAP12LE: return "GBRAP12LE"
+            case .GBRAP10BE: return "GBRAP10BE"
+            case .GBRAP10LE: return "GBRAP10LE"
+            case .MEDIACODEC: return "MEDIACODEC"
+                
+            case .GRAYF32BE: return "GRAYF32BE"
+            case .GRAYF32LE: return "GRAYF32LE"
+            case .YUVA422P12BE: return "YUVA422P12BE"
+            case .YUVA422P12LE: return "YUVA422P12LE"
+            case .YUVA444P12BE: return "YUVA444P12BE"
+            case .YUVA444P12LE: return "YUVA444P12LE"
+            case .NV24: return "NV24"
+            case .NV42: return "NV42"
+            case .VULKAN: return "VULKAN"
+                
+            case .X2BGR10LE: return "X2BGR10LE"
+            case .X2BGR10BE: return "X2BGR10BE"
+            case .P210BE: return "P210BE"
+            case .P210LE: return "P210LE"
+            case .P410BE: return "P410BE"
+            case .P410LE: return "P410LE"
+            case .P216BE: return "P216BE"
+            case .P216LE: return "P216LE"
+            case .P416BE: return "P416BE"
+            case .P416LE: return "P416LE"
+            case .VUYA: return "VUYA"
+            case .RGBAF16BE: return "RGBAF16BE"
+            case .RGBAF16LE: return "RGBAF16LE"
+            case .VUYX: return "VUYX"
+            case .P012LE: return "P012LE"
+            case .P012BE: return "P012BE"
+            case .Y212BE: return "Y212BE"
+            case .Y212LE: return "Y212LE"
+            case .XV30BE: return "XV30BE"
+            case .XV30LE: return "XV30LE"
+            case .XV36BE: return "XV36BE"
+            case .XV36LE: return "XV36LE"
+            case .RGBF32BE: return "RGBF32BE"
+            case .RGBF32LE: return "RGBF32LE"
+            case .RGBAF32BE: return "RGBAF32BE"
+            case .RGBAF32LE: return "RGBAF32LE"
+            case .P212BE: return "P212BE"
+            case .P212LE: return "P212LE"
+            case .P412BE: return "P412BE"
+            case .P412LE: return "P412LE"
+            case .GBRAP14BE: return "GBRAP14BE"
+            case .GBRAP14LE: return "GBRAP14LE"
+            case .D3D12: return "D3D12"
+            case .NB: return "NB"
+                
+            case .GBRPF32BE: return "GBRPF32BE"
+            case .GBRPF32LE: return "GBRPF32LE"
+            case .GBRAPF32BE: return "GBRAPF32BE"
+            case .GBRAPF32LE: return "GBRAPF32LE"
+            case .DRM_PRIME: return "DRM_PRIME"
+            case .OPENCL: return "OPENCL"
+                
+            case .P016LE: return "P016LE"
+            case .P016BE: return "P016BE"
+            case .D3D11: return "D3D11"
             }
         }
     }

@@ -306,6 +306,8 @@
 "ABC" = "ABC";
 "Exclamation mark" = "Punto esclamativo";
 
+"Other image…" = "Altra immagine…";
+"Enter the symbol identifier to use as the menu item image:" = "Inserisci l'identificativo del simbolo da usare come immagine della voce di menu:";
 // MARK: - AppDelegate
 
 "Updater Error" = "Errore di aggiornamento";
@@ -328,6 +330,10 @@
 
 "Finder extension not enabled!" = "Estensione del Finder non abilitata!";
 "Open System Settings" = "Apri le Preferenze di Sistema";
+"Note on macOS Sequoia…" = "Note per macOS Sequoia";
+"Open System Settings" = "Apri le Impostazioni di sistema";
+"Show more info…" = "Mostra informazioni aggiuntive…";
+"On macOS Sequoia 15.0 the System interface to handle the Finder Extension is missing!" = "Su macOS Sequoia 15.0 non è disponibile l'interfaccia di sistema con cui gestire le estensioni del Finder!";
 
 "No folders selected to be monitored" = "Nessuna cartella monitorata";
 "Are you sure you want to continue?" = "Sicuro di voler continuare?";

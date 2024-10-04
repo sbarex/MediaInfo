@@ -8,7 +8,7 @@
 
 import AppKit
 
-extension NSMenuItem: Encodable {
+extension NSMenuItem: @retroactive Encodable {
     enum CodingKeys: String, CodingKey {
         case title
         case tag

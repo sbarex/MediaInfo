@@ -79,4 +79,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuItemValidation {
         }
         return true
     }
+    
+    
+    @IBAction func buyMeACoffee(_ sender: Any?) {
+        NSWorkspace.shared.open(URL(string: "https://www.buymeacoffee.com/sbarex")!)
+    }
 }

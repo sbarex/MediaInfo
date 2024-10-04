@@ -1,5 +1,7 @@
 .DEFAULT_GOAL:=all
 
+JPG_VERSION = 3.0.90
+
 # Output all commands.
 ifeq ($(VERBOSE),1) 
 	SHELL=sh -xv
@@ -70,13 +72,14 @@ ifeq ($(filter $(NATIVE_ARCH),$(VALID_ARCHS)),)
 		$(error "Current arch ${NATIVE_ARCH} is not supported! Valid archs are: ${VALID_ARCHS}")
 endif
 ifeq ($(ONLY_ACTIVE_ARCH),NO)
-		@echo "${bold}Building libjpeg-turbo universal binary${normal}"
+		@echo "${bold}Building libjpeg-turbo ${JPG_VERSION} universal binary${normal}"
 else
-		@echo "${bold}Building libjpeg-turbo for $(NATIVE_ARCH) architecture${normal}"
+		@echo "${bold}Building libjpeg-turbo ${JPG_VERSION} for $(NATIVE_ARCH) architecture${normal}"
 endif
-	@echo "CURRENT_DIR: ${CURRENT_DIR}"
-	@echo "SOURCE_ROOT: ${SOURCE_ROOT}"
-	@echo "BUILD_DIR: ${BUILD_DIR}"
+	@echo "CURRENT_DIR: ${bold}${CURRENT_DIR}${normal}"
+	@echo "SOURCE_ROOT: ${bold}${SOURCE_ROOT}${normal}"
+	@echo "BUILD_DIR:   ${bold}${BUILD_DIR}${normal}"
+	@echo "LIB VERSION: ${bold}${JPG_VERSION}${normal}"
 
 clean:
 	@echo "${bold}Cleaning libjpeg-turbo${normal}"
@@ -84,14 +87,22 @@ clean:
 	@rm -rf "${BUILD_DIR}/libjpeg-turbo/" 2> /dev/null
 	@echo ""
 
+git : ${SOURCE_ROOT}/libjpeg-turbo/CMakeLists.txt
+# @echo "check tag…"
+ifneq ($(shell git -C "${SOURCE_ROOT}/libjpeg-turbo" describe --tags | xargs), $(JPG_VERSION))
+	@echo "${bold}Checkout git to tag ${JPG_VERSION}${normal}"
+	git -C "${SOURCE_ROOT}/libjpeg-turbo" checkout "${JPG_VERSION}" --force
+else
+	@echo "GIT TAG:     ${bold}${JPG_VERSION}${normal}"
+endif
+
 libjpeg: $(makefiles) ${BUILD_DIR}/libjpeg-turbo/lib/libjpeg.a
 
 # Check if the source files are presents.
-source-libjpeg : ${SOURCE_ROOT}/libjpeg-turbo/CMakeLists.txt
 ${SOURCE_ROOT}/libjpeg-turbo/CMakeLists.txt :
 	@echo ""
 	@echo "${bold}Submodule update…${normal}"
-	cd "${SOURCE_ROOT}/.." && git submodule update --init
+	git -C "${SOURCE_ROOT}/.." submodule update --init
 
 # Set Target-specific variables for arm64
 ${BUILD_DIR}/libjpeg-turbo/arm64/lib/libjpeg.a : ARCH := arm64
@@ -113,7 +124,7 @@ ${BUILD_DIR}/libjpeg-turbo/x86_64/Makefile : ARCH := x86_64
 # Library configuration for a CPU architecture.
 $(makefiles) &:
 	@echo ""
-	@echo "${bold}libjpeg-turbo configuration for ${ARCH} platform…${normal}"
+	@echo "${bold}libjpeg-turbo ${JPG_VERSION} configuration for ${ARCH} platform…${normal}"
 	@mkdir -p "${BUILD_DIR}/libjpeg-turbo/${ARCH}"
 	
 	@echo "set(CMAKE_SYSTEM_NAME Darwin)" > "${BUILD_DIR}/libjpeg-turbo/${ARCH}/toolchain.cmake"
@@ -127,33 +138,35 @@ $(makefiles) &:
 	${MAKE} -C "${BUILD_DIR}/libjpeg-turbo/${ARCH}" -j${N_CPU} clean
 
 # Build the library for a CPU architecture.
-$(libjpeg_files) : 
+$(libjpeg_files) :
 	@echo ""
-	@echo "${bold}Compiling libjpeg-turbo for ${ARCH} platform…${normal}"
+	@echo "${bold}Compiling libjpeg-turbo ${JPG_VERSION} for ${ARCH} platform…${normal}"
 	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${BUILD_DIR}/libjpeg-turbo/${ARCH}" -j${N_CPU}
 
 	@echo ""
-	@echo "${bold}Installing libjpeg-turbo for ${ARCH} platform on ${BUILD_DIR}/libjpeg-turbo/${ARCH} …${normal}"
+	@echo "${bold}Installing libjpeg-turbo ${JPG_VERSION} for ${ARCH} platform on ${BUILD_DIR}/libjpeg-turbo/${ARCH} …${normal}"
 	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${BUILD_DIR}/libjpeg-turbo/${ARCH}" -j${N_CPU} install
 
 # Build the library.
-${BUILD_DIR}/libjpeg-turbo/lib/libjpeg.a : source-libjpeg ${libjpeg_files}
+${BUILD_DIR}/libjpeg-turbo/lib/libjpeg.a : ${libjpeg_files}
 	@mkdir -p "${BUILD_DIR}/libjpeg-turbo/lib/"
 	@echo ""
+	@rm -f "${BUILD_DIR}/libjpeg-turbo/lib/libjpeg.a" > /dev/null
+	@rm -f "${BUILD_DIR}/libjpeg-turbo/lib/libturbojpeg.a" > /dev/null
 ifeq ($(ONLY_ACTIVE_ARCH),NO)
-		@echo "${bold}Creating libjpeg-turbo universal library…${normal}"
+		@echo "${bold}Creating libjpeg-turbo ${JPG_VERSION} universal library…${normal}"
 		lipo -create -output "${BUILD_DIR}/libjpeg-turbo/lib/libjpeg.a" "${BUILD_DIR}/libjpeg-turbo/x86_64/lib/libjpeg.a" "${BUILD_DIR}/libjpeg-turbo/arm64/lib/libjpeg.a"
 		lipo -create -output "${BUILD_DIR}/libjpeg-turbo/lib/libturbojpeg.a" "${BUILD_DIR}/libjpeg-turbo/x86_64/lib/libturbojpeg.a" "${BUILD_DIR}/libjpeg-turbo/arm64/lib/libturbojpeg.a"
 else
-		@echo "${bold}Creating libjpeg library for ${NATIVE_ARCH} platform…${normal}"
-		@rm -f "${BUILD_DIR}/libjpeg-turbo/lib/libjpeg.a" > /dev/null
+		@echo "${bold}Creating libjpeg library ${JPG_VERSION} for ${NATIVE_ARCH} platform…${normal}"
+		
 		ln "${BUILD_DIR}/libjpeg-turbo/${NATIVE_ARCH}/lib/libjpeg.a" "${BUILD_DIR}/libjpeg-turbo/lib/libjpeg.a"
+		ln "${BUILD_DIR}/libjpeg-turbo/${NATIVE_ARCH}/lib/libturbojpeg.a" "${BUILD_DIR}/libjpeg-turbo/lib/libturbojpeg.a"
 endif
 	@rm -rf "${BUILD_DIR}/libjpeg-turbo/include" > /dev/null
 	ln -s "${BUILD_DIR}/libjpeg-turbo/${NATIVE_ARCH}/include" "${BUILD_DIR}/libjpeg-turbo/include"
 	@echo ""
 	
 
-all: check_arch source-libjpeg libjpeg
-install: check_arch source-libjpeg libjpeg
-
+all: check_arch git libjpeg
+install: check_arch git libjpeg

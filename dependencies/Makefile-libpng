@@ -1,5 +1,7 @@
 .DEFAULT_GOAL:=all
 
+PNG_VERSION = v1.6.44
+
 # Output all commands.
 ifeq ($(VERBOSE),1) 
 	SHELL=sh -xv
@@ -70,13 +72,14 @@ ifeq ($(filter $(NATIVE_ARCH),$(VALID_ARCHS)),)
 		$(error "Current arch ${NATIVE_ARCH} is not supported! Valid archs are: ${VALID_ARCHS}")
 endif
 ifeq ($(ONLY_ACTIVE_ARCH),NO)
-		@echo "${bold}Building libpng universal binary${normal}"
+		@echo "${bold}Building libpng ${PNG_VERSION} universal binary${normal}"
 else
-		@echo "${bold}Building libpng for $(NATIVE_ARCH) architecture${normal}"
+		@echo "${bold}Building libpng ${PNG_VERSION} or $(NATIVE_ARCH) architecture${normal}"
 endif
-	@echo "CURRENT_DIR: ${CURRENT_DIR}"
-	@echo "SOURCE_ROOT: ${SOURCE_ROOT}"
-	@echo "BUILD_DIR: ${BUILD_DIR}"
+	@echo "CURRENT_DIR: ${bold}${CURRENT_DIR}${normal}"
+	@echo "SOURCE_ROOT: ${bold}${SOURCE_ROOT}${normal}"
+	@echo "BUILD_DIR:   ${bold}${BUILD_DIR}${normal}"
+	@echo "LIB VERSION: ${bold}${PNG_VERSION}${normal}"
 
 clean:
 	@echo "${bold}Cleaning libpng…${normal}"
@@ -84,10 +87,21 @@ clean:
 	@rm -rf "${BUILD_DIR}/libpng/" 2> /dev/null
 	@echo ""
 
-libpng: $(makefiles) ${BUILD_DIR}/libpng/lib/libpng.a
+
+git : ${SOURCE_ROOT}/libpng/configure.ac
+# @echo "check tag…"
+ifneq ($(shell git -C "${SOURCE_ROOT}/libpng" describe --tags | xargs), $(PNG_VERSION))
+	@echo "${bold}Checkout git to tag ${PNG_VERSION}${normal}"
+	git -C "${SOURCE_ROOT}/libpng" checkout "${PNG_VERSION}" --force
+else
+	@echo "GIT TAG:     ${bold}${PNG_VERSION}${normal}"
+endif
+
+libpng: git ${BUILD_DIR}/libpng/lib/libpng.a
 
 # Check if the source files are presents.
-source-libpng : autogen ${SOURCE_ROOT}/libpng/configure.ac ${SOURCE_ROOT}/libpng/configure
+source-libpng : autogen git ${SOURCE_ROOT}/libpng/configure
+
 ${SOURCE_ROOT}/libpng/configure.ac :
 	@echo "${bold}Submodule update…${normal}"
 	cd "${SOURCE_ROOT}" && git submodule update --init
@@ -122,7 +136,7 @@ ${BUILD_DIR}/libpng/x86_64/Makefile : ARCH := x86_64
 # Library configuration for a CPU architecture.
 $(makefiles) &:
 	@echo ""
-	@echo "${bold}libpng configuration for ${ARCH} platform…${normal}"
+	@echo "${bold}libpng ${PNG_VERSION} configuration for ${ARCH} platform…${normal}"
 	@mkdir -p "${BUILD_DIR}/libpng/${ARCH}"
 	@cd "${BUILD_DIR}/libpng/${ARCH}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" ${SOURCE_ROOT}/libpng/configure --host=${HOST} --prefix="${BUILD_DIR}/libpng/${ARCH}" --enable-shared=no --enable-static=yes
 	${MAKE} -C "${BUILD_DIR}/libpng/${ARCH}" -j${N_CPU} clean
@@ -130,26 +144,26 @@ $(makefiles) &:
 # Build the library for a CPU architecture.
 $(libpng_files) : 
 	@echo ""
-	@echo "${bold}Compiling libpng for ${ARCH} platform…${normal}"
+	@echo "${bold}Compiling libpng ${PNG_VERSION} for ${ARCH} platform…${normal}"
 	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${BUILD_DIR}/libpng/${ARCH}" -j${N_CPU}
 
 	@echo ""
-	@echo "${bold}Installing libpng for ${ARCH} platform on ${BUILD_DIR}/libpng/${ARCH} …${normal}"
+	@echo "${bold}Installing libpng ${PNG_VERSION} for ${ARCH} platform on ${BUILD_DIR}/libpng/${ARCH} …${normal}"
 	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${BUILD_DIR}/libpng/${ARCH}" -j${N_CPU} install
 
 # Build the library.
-${BUILD_DIR}/libpng/lib/libpng.a : source-libpng ${libpng_files}
+${BUILD_DIR}/libpng/lib/libpng.a : ${makefiles} ${libpng_files}
 	@mkdir -p "${BUILD_DIR}/libpng/lib/"
 	@echo ""
+	@rm -f "${BUILD_DIR}/libpng/lib/libpng.a" > /dev/null
+	@rm -f "${BUILD_DIR}/libpng/lib/libpng16.a" > /dev/null
 ifeq ($(ONLY_ACTIVE_ARCH),NO)
-		@echo "${bold}Creating libpng universal library…${normal}"
+		@echo "${bold}Creating libpng ${PNG_VERSION} universal library…${normal}"
 		lipo -create -output "${BUILD_DIR}/libpng/lib/libpng.a" "${BUILD_DIR}/libpng/x86_64/lib/libpng.a" "${BUILD_DIR}/libpng/arm64/lib/libpng.a"
 		lipo -create -output "${BUILD_DIR}/libpng/lib/libpng16.a" "${BUILD_DIR}/libpng/x86_64/lib/libpng16.a" "${BUILD_DIR}/libpng/arm64/lib/libpng16.a"
 else
-		@echo "${bold}Creating libpng library for ${NATIVE_ARCH} platform…${normal}"
-		@rm -f "${BUILD_DIR}/libpng/lib/libpng.a" > /dev/null
+		@echo "${bold}Creating libpng ${PNG_VERSION} library for ${NATIVE_ARCH} platform…${normal}"
 		ln "${BUILD_DIR}/libpng/${NATIVE_ARCH}/lib/libpng.a" "${BUILD_DIR}/libpng/lib/libpng.a"
-		@rm -f "${BUILD_DIR}/libpng/lib/libpng16.a" > /dev/null
 		ln "${BUILD_DIR}/libpng/${NATIVE_ARCH}/lib/libpng16.a" "${BUILD_DIR}/libpng/lib/libpng16.a"
 endif
 	@rm -rf "${BUILD_DIR}/libpng/include" > /dev/null
@@ -162,6 +176,5 @@ endif
 	@echo ""
 	
 
-all: check_arch source-libpng libpng
-install: check_arch source-libpng libpng
-
+all: check_arch git source-libpng libpng
+install: check_arch git source-libpng libpng

@@ -1,5 +1,7 @@
 .DEFAULT_GOAL:=all
 
+LZ4_VERSION=v1.10.0
+
 # Output all commands.
 ifeq ($(VERBOSE),1) 
 	SHELL=sh -xv
@@ -67,9 +69,10 @@ ifeq ($(ONLY_ACTIVE_ARCH),NO)
 else
 		@echo "${bold}Building liblz4 for $(NATIVE_ARCH) architecture${normal}"
 endif
-	@echo "CURRENT_DIR: ${CURRENT_DIR}"
-	@echo "SOURCE_ROOT: ${SOURCE_ROOT}"
-	@echo "BUILD_DIR: ${BUILD_DIR}"
+	@echo "CURRENT_DIR: ${bold}${CURRENT_DIR}${normal}"
+	@echo "SOURCE_ROOT: ${bold}${SOURCE_ROOT}${normal}"
+	@echo "BUILD_DIR:   {bold}${BUILD_DIR}${normal}"
+	@echo "LIB VERSION: ${bold}${LZ4_VERSION}${normal}"
 
 clean:
 	@echo "${bold}Cleaning liblz4…${normal}"
@@ -78,15 +81,21 @@ clean:
 	@rm -rf "${BUILD_DIR}/liblz4/" 2> /dev/null
 	@echo ""
 
-liblz4: ${BUILD_DIR}/liblz4/liblz4.a
+# main library
+liblz4: git ${BUILD_DIR}/liblz4/liblz4.a
 
-${BUILD_DIR}/liblz4/liblz4.a : source-lz4
+# Checkout the repository tag.
+git : ${SOURCE_ROOT}/lz4/Makefile
+ifneq ($(shell git -C "${SOURCE_ROOT}/lz4" describe --tags | xargs), ${LZ4_VERSION})
+	@echo "${bold}Checkout git to tag ${LZ4_VERSION}${normal}"
+	@git -C "${SOURCE_ROOT}/lz4" checkout "${LZ4_VERSION}" --force
+else
+	@echo "GIT TAG:     ${bold}${LZ4_VERSION}${normal}"
+endif
 
-
-source-lz4: ${SOURCE_ROOT}/lz4/Makefile
 ${SOURCE_ROOT}/lz4/Makefile :
 	@echo "${bold}Submodule update…${normal}"
-	cd "${SOURCE_ROOT}" && git submodule update --init
+	git -C "${SOURCE_ROOT}" submodule update --init lz4
 
 # Set Target-specific variables for arm64
 ${BUILD_DIR}/liblz4/arm64/lib/liblz4.a : LZ4_INSTALL_DIR = ${BUILD_DIR}/liblz4/arm64
@@ -100,9 +109,9 @@ ${BUILD_DIR}/liblz4/x86_64/lib/liblz4.a : CFLAGS := ${CFLAGS} ${CFLAGS_x86_64}
 ${BUILD_DIR}/liblz4/x86_64/lib/liblz4.a : LDFLAGS := ${LDFLAGS} ${LDFLAGS_x86_64}
 ${BUILD_DIR}/liblz4/x86_64/lib/liblz4.a : ARCH := x86_64
 
-${liblz4_files} : 
+${liblz4_files} :
 	@echo ""
-	@echo "${bold}Building liblz4 for ${ARCH} platform into ${LZ4_INSTALL_DIR} ($@)…${normal}"
+	@echo "${bold}Building liblz4 ${LZ4_VERSION} for ${ARCH} platform into ${LZ4_INSTALL_DIR} ($@)…${normal}"
 	
 	@mkdir -p "${LZ4_INSTALL_DIR}"
 	
@@ -110,17 +119,17 @@ ${liblz4_files} :
 	CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" PREFIX="${LZ4_INSTALL_DIR}" ${MAKE} -C "${SOURCE_ROOT}/lz4"
 
 	@echo ""
-	@echo "${bold}Installing liblz4 for ${ARCH} platform on ${LZ4_INSTALL_DIR} …${normal}"
+	@echo "${bold}Installing liblz4 ${LZ4_VERSION} for ${ARCH} platform on ${LZ4_INSTALL_DIR} …${normal}"
 	CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" PREFIX="${LZ4_INSTALL_DIR}" ${MAKE} -C "${SOURCE_ROOT}/lz4" install
 
 ${BUILD_DIR}/liblz4/liblz4.a : ${liblz4_files}
 	@mkdir -p "${BUILD_DIR}/liblz4"
 	@echo ""
 ifeq ($(ONLY_ACTIVE_ARCH),NO)
-		@echo "${bold}Creating liblz4 universal library…${normal}"
+		@echo "${bold}Creating liblz4 ${LZ4_VERSION} universal library…${normal}"
 		lipo -create -output "${BUILD_DIR}/liblz4/liblz4.a" "${BUILD_DIR}/liblz4/x86_64/lib/liblz4.a" "${BUILD_DIR}/liblz4/arm64/lib/liblz4.a"
 else
-		@echo "${bold}Creating liblz4 library for ${NATIVE_ARCH} platform…${normal}"
+		@echo "${bold}Creating liblz4 ${LZ4_VERSION} library for ${NATIVE_ARCH} platform…${normal}"
 		@rm -f "${BUILD_DIR}/liblz4/liblz4.a" > /dev/null
 		ln "${BUILD_DIR}/liblz4/${NATIVE_ARCH}/lib/liblz4.a" "${BUILD_DIR}/liblz4/liblz4.a"
 endif
@@ -129,6 +138,5 @@ endif
 	@echo ""
 	
 
-all: check_arch source-lz4 liblz4
-install: check_arch source-lz4 liblz4
-
+all: check_arch git liblz4
+install: check_arch git liblz4

@@ -255,7 +255,7 @@ class MenuTableView: NSView {
     
     @IBAction func handleDisclosureButton(_ sender: Any) {
         self.isTriggerHidden = !self.isTriggerHidden
-        hideTriggers(animated: true)
+        hideTriggers(animated: false)
     }
     
     @IBAction func handleTriggerEnable(_ sender: NSButton) {

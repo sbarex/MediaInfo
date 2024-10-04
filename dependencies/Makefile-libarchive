@@ -1,5 +1,7 @@
 .DEFAULT_GOAL:=all
 
+ARCHIVE_VERSION = v3.7.6
+
 # Output all commands.
 ifeq ($(VERBOSE),1) 
 	SHELL=sh -xv
@@ -70,13 +72,14 @@ ifeq ($(filter $(NATIVE_ARCH),$(VALID_ARCHS)),)
 		$(error "Current arch ${NATIVE_ARCH} is not supported! Valid archs are: ${VALID_ARCHS}")
 endif
 ifeq ($(ONLY_ACTIVE_ARCH),NO)
-		@echo "${bold}Building libarchive universal binary${normal}"
+		@echo "${bold}Building libarchive ${ARCHIVE_VERSION} universal binary${normal}"
 else
-		@echo "${bold}Building libarchive for $(NATIVE_ARCH) architecture${normal}"
+		@echo "${bold}Building libarchive ${ARCHIVE_VERSION} for $(NATIVE_ARCH) architecture${normal}"
 endif
-	@echo "CURRENT_DIR: ${CURRENT_DIR}"
-	@echo "SOURCE_ROOT: ${SOURCE_ROOT}"
-	@echo "BUILD_DIR: ${BUILD_DIR}"
+	@echo "CURRENT_DIR: ${bold}${CURRENT_DIR}${normal}"
+	@echo "SOURCE_ROOT: ${bold}${SOURCE_ROOT}${normal}"
+	@echo "BUILD_DIR:   ${bold}${BUILD_DIR}${normal}"
+	@echo "LIB VERSION: ${bold}${ARCHIVE_VERSION}${normal}"
 
 # Check if the lib lz4 exists.
 liblz4 : ${BUILD_DIR}/liblz4/liblz4.a
@@ -87,7 +90,7 @@ ${BUILD_DIR}/liblz4/liblz4.a :
 #	$(error "liblz4 not found on $@ !")
 
 # Check if the lib bb2 exists.
-libb2 : $(makefiles) ${BUILD_DIR}/libb2/libb2.a
+libb2 : ${BUILD_DIR}/libb2/libb2.a
 ${BUILD_DIR}/libb2/libb2.a : 
 	@echo ""
 	@echo "${bold}Creating libb2…${normal}"
@@ -116,21 +119,31 @@ clean:
 	@rm -rf "${BUILD_DIR}/libarchive/" 2> /dev/null
 	@echo ""
 
-libarchive: ${BUILD_DIR}/libarchive/libarchive.a
+git : ${SOURCE_ROOT}/libarchive/configure.ac
+# @echo "check tag…"
+ifneq ($(shell git -C "${SOURCE_ROOT}/libarchive" describe --tags | xargs), $(ARCHIVE_VERSION))
+	@echo "Checkout git to tag ${ARCHIVE_VERSION}"
+	git -C "${SOURCE_ROOT}/libarchive" checkout "${ARCHIVE_VERSION}" --force
+else
+	@echo "GIT TAG:     ${bold}${ARCHIVE_VERSION}${normal}"
+endif
+
+libarchive: git $(makefiles) ${BUILD_DIR}/libarchive/libarchive.a
 
 ${BUILD_DIR}/libarchive/libarchive.a : source-libarchive
 
 # Check if the source files are presents.
-source-libarchive : autogen ${SOURCE_ROOT}/libarchive/configure.ac ${SOURCE_ROOT}/libarchive/configure
+source-libarchive : autogen git
+
 ${SOURCE_ROOT}/libarchive/configure.ac :
 	@echo "${bold}Submodule update…${normal}"
-	cd "${SOURCE_ROOT}" && git submodule update --init
+	git -C "${SOURCE_ROOT}" submodule update --init && git -C
 
 # Autogen
-${SOURCE_ROOT}/libarchive/configure : 
+${SOURCE_ROOT}/libarchive/configure :
 	@echo ""
 	@echo "${bold}Autogen configuration files…${normal}"
-	cd "${SOURCE_ROOT}/libarchive" && PATH="/usr/local/bin:${PATH}" sh ./autogen.sh
+	cd "${SOURCE_ROOT}/libarchive" && PATH="/usr/local/bin:${PATH}" sh ./build/autogen.sh
 
 autogen:
 ifeq (, $(shell PATH="/usr/local/bin:${PATH}" which autoreconf))
@@ -159,32 +172,32 @@ ${BUILD_DIR}/libarchive/x86_64/Makefile : HOST := x86_64-apple-darwin
 ${BUILD_DIR}/libarchive/x86_64/Makefile : ARCH := x86_64
 
 # Library configuration for a CPU architecture.
-$(makefiles) : 
+$(makefiles) :
 	@echo ""
-	@echo "${bold}libarchive configuration for ${ARCH} platform…${normal}"
+	@echo "${bold}libarchive ${ARCHIVE_VERSION} configuration for ${ARCH} platform…${normal}"
 	@mkdir -p "${LIBARCHIVE_INSTALL_DIR}"
 	@cd "${LIBARCHIVE_INSTALL_DIR}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" ${SOURCE_ROOT}/libarchive/configure --host=${HOST} --prefix="${LIBARCHIVE_INSTALL_DIR}" --enable-shared=no --enable-static=yes --disable-bsdtar
 
 # Build the library for a CPU architecture.
 $(libarchive_files) : 
 	@echo ""
-	@echo "${bold}Compiling libarchive for ${ARCH} platform…${normal}"
+	@echo "${bold}Compiling libarchive ${ARCHIVE_VERSION} for ${ARCH} platform…${normal}"
 	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${LIBARCHIVE_INSTALL_DIR}" -j${N_CPU}
 
 	@echo ""
-	@echo "${bold}Installing libarchive for ${ARCH} platform on ${LIBARCHIVE_INSTALL_DIR} …${normal}"
+	@echo "${bold}Installing libarchive ${ARCHIVE_VERSION} for ${ARCH} platform on ${LIBARCHIVE_INSTALL_DIR} …${normal}"
 	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${LIBARCHIVE_INSTALL_DIR}" -j${N_CPU} install
 
 # Build the library.
 ${BUILD_DIR}/libarchive/libarchive.a : ${libarchive_files}
 	@mkdir -p "${BUILD_DIR}/libarchive"
 	@echo ""
+	@rm -f "${BUILD_DIR}/libarchive/libarchive.a" > /dev/null
 ifeq ($(ONLY_ACTIVE_ARCH),NO)
-		@echo "${bold}Creating libarchive universal library…${normal}"
+		@echo "${bold}Creating libarchive ${ARCHIVE_VERSION} universal library…${normal}"
 		lipo -create -output "${BUILD_DIR}/libarchive/libarchive.a" "${BUILD_DIR}/libarchive/x86_64/lib/libarchive.a" "${BUILD_DIR}/libarchive/arm64/lib/libarchive.a"
 else
-		@echo "${bold}Creating libarchive library for ${NATIVE_ARCH} platform…${normal}"
-		@rm -f "${BUILD_DIR}/libarchive/libarchive.a" > /dev/null
+		@echo "${bold}Creating libarchive library ${ARCHIVE_VERSION} for ${NATIVE_ARCH} platform…${normal}"
 		ln "${BUILD_DIR}/libarchive/${NATIVE_ARCH}/lib/libarchive.a" "${BUILD_DIR}/libarchive/libarchive.a"
 endif
 	@rm -rf "${BUILD_DIR}/libarchive/include" > /dev/null
@@ -194,4 +207,3 @@ endif
 
 all: check_arch liblz4 libb2 libzstd liblzma source-libarchive libarchive
 install: check_arch liblz4 libb2 libzstd liblzma source-libarchive libarchive
-

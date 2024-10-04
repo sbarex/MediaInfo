@@ -21,8 +21,9 @@ class MenuItemEditor: NSViewController {
             return !name.isEmpty && !Self.noImageNames.contains(name)
         }
         lazy var image: NSImage? = {
+            let img: NSImage?
+            
             guard !Self.noImageNames.contains(name) else {
-                let img: NSImage?
                 if self.name == "" {
                     img = NSImage(named: "square.dashed")?.resized(to: NSSize(width: 16, height: 16))
                 } else if self.name == "no-space" {
@@ -36,11 +37,20 @@ class MenuItemEditor: NSViewController {
                 return img
             }
             
-            var name = self.name
-            if name == "bleed" || name == "artbox" || name == "pdf" {
-                name += "_v"
+            if name.starts(with: "!") {
+                if #available(macOS 11.0, *) {
+                    img = NSImage.imageFromSymbol(name)
+                } else {
+                    // Fallback on earlier versions
+                    img = nil
+                }
+            } else {
+                var name = self.name
+                if name == "bleed" || name == "artbox" || name == "pdf" {
+                    name += "_v"
+                }
+                img = NSImage(named: name)?.resized(to: NSSize(width: 16, height: 16))
             }
-            let img = NSImage(named: name)?.resized(to: NSSize(width: 16, height: 16))
             img?.isTemplate = !color
             return img
         }()
@@ -164,11 +174,13 @@ class MenuItemEditor: NSViewController {
         if let image = images.first(where: { $0.isValid(for: name) }) {
             return image
         }
+            
         if #available(macOS 11.0, *) {
-            if let _ = NSImage(systemSymbolName: name, accessibilityDescription: nil) {
+            if let _ = NSImage.imageFromSymbol(name) {
                 return Image(name: name, title: name)
             }
         }
+        
         return nil
     }
     
@@ -201,7 +213,20 @@ class MenuItemEditor: NSViewController {
     }
     internal var imageName: String = "" {
         didSet {
-            self.imagePopupButton?.selectItem(at: Self.images.firstIndex(where: { $0.isValid(for: self.imageName) }) ?? 0)
+            guard let imagePopupButton = self.imagePopupButton else {
+                return
+            }
+            if imageName.hasPrefix("!"), let image = NSImage.imageFromSymbol(imageName) {
+                imagePopupButton.selectItem(withTag: 1)
+                imagePopupButton.selectedItem?.image = image
+                imagePopupButton.selectedItem?.toolTip = String(imageName.dropFirst())
+            } else {
+                if let mnu = imagePopupButton.lastItem, mnu.toolTip != nil {
+                    mnu.toolTip = nil
+                    mnu.image = NSImage(systemSymbolName: "ellipsis", accessibilityDescription: nil)
+                }
+                self.imagePopupButton?.selectItem(at: Self.images.firstIndex(where: { $0.isValid(for: self.imageName) }) ?? 0)
+            }
         }
     }
     
@@ -222,15 +247,16 @@ class MenuItemEditor: NSViewController {
                 imagePopupButton.menu?.addItem(item)
             }
         }
-        /*
-        if #available(macOS 11.0, *) {
-            imagePopupButton.menu?.addItem(NSMenuItem.separator())
-            let mnu = NSMenuItem(title: "Other…", action: nil, keyEquivalent: "")
-            
-            mnu.image = NSImage(systemSymbolName: "ellipsis", accessibilityDescription: nil)
-            imagePopupButton.menu?.addItem(mnu)
+        imagePopupButton.menu?.addItem(NSMenuItem.separator())
+        let custom = NSMenuItem(title: NSLocalizedString("Other image…", comment: ""), action: nil, keyEquivalent: "")
+        custom.tag = 1
+        if #unavailable(macOS 11.0) {
+            custom.isEnabled = false
+        } else {
+            custom.image = NSImage(systemSymbolName: "ellipsis", accessibilityDescription: nil)
         }
-        */
+        imagePopupButton.menu?.addItem(custom)
+        
         let size = self.tableView(self.tableView, sizeToFitWidthOfColumn: 0)
         tableView.tableColumns[0].width = size
         
@@ -238,7 +264,37 @@ class MenuItemEditor: NSViewController {
         
         tokenField.objectValue = tokens
         
-        self.imagePopupButton?.selectItem(at: Self.images.firstIndex(where: { $0.isValid(for: self.imageName) }) ?? 0)
+        self.imageName = self.imageName + ""
+    }
+    
+    @IBAction func handleImageButton(_ sender: NSPopUpButton) {
+        guard sender.selectedItem?.tag == 1, #available(macOS 11.0, *) else {
+            return
+        }
+        
+        let msg = NSAlert()
+        msg.addButton(withTitle: "OK")
+        msg.addButton(withTitle: "Cancel").keyEquivalent = "\u{1b}"
+        msg.alertStyle = .informational
+        msg.messageText = ""
+        msg.informativeText = NSLocalizedString("Enter the symbol identifier to use as the menu item image:", comment: "")
+        
+        let txt = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
+        // txt.stringValue = defaultValue
+
+        msg.accessoryView = txt
+        
+        msg.beginSheetModal(for: self.view.window!) { response in
+            guard response == .alertFirstButtonReturn, let image = NSImage(systemSymbolName: txt.stringValue, accessibilityDescription: nil) else {
+                sender.selectedItem?.image = NSImage(systemSymbolName: "ellipsis", accessibilityDescription: nil)
+                sender.selectedItem?.toolTip = nil
+                
+                sender.selectItem(at: 0)
+                return
+            }
+            sender.selectedItem?.image = image
+            sender.selectedItem?.toolTip = txt.stringValue
+        }
     }
     
     @IBAction func handleCancel(_ sender: Any) {
@@ -257,7 +313,13 @@ class MenuItemEditor: NSViewController {
             alert.runModal()
             return 
         }
-        doneAction(Self.images[imagePopupButton.indexOfSelectedItem].name, tokens)
+        let image: Image?
+        if imagePopupButton.selectedTag() == 1 {
+            image = Self.getImage(named: "!" + (imagePopupButton.selectedItem!.toolTip ?? ""))
+        } else {
+            image = Self.images[imagePopupButton.indexOfSelectedItem]
+        }
+        doneAction(image?.name ?? "", tokens)
         self.dismiss(self)
     }
     
