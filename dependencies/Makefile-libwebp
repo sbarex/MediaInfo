@@ -112,6 +112,8 @@ source-libwebp : autogen git ${SOURCE_ROOT}/libwebp/configure
 git : ${SOURCE_ROOT}/libwebp/configure.ac
 # @echo "check tag…"
 ifneq ($(shell git -C "${SOURCE_ROOT}/libwebp" describe --tags | xargs), $(WEBP_VERSION))
+	git -C "${SOURCE_ROOT}/libwebp" checkout master
+	git -C "${SOURCE_ROOT}/libwebp" pull
 	@echo "Checkout git to tag ${WEBP_VERSION}"
 	git -C "${SOURCE_ROOT}/libwebp" checkout "${WEBP_VERSION}" --force
 else
@@ -126,10 +128,10 @@ ${SOURCE_ROOT}/libwebp/configure.ac :
 ${SOURCE_ROOT}/libwebp/configure :
 	@echo ""
 	@echo "${bold}Autogen configuration files…${normal}"
-	cd "${SOURCE_ROOT}/libwebp" && PATH="/usr/local/bin:${PATH}" sh ./autogen.sh
+	cd "${SOURCE_ROOT}/libwebp" && PATH="/opt/homebrew/bin:/usr/local/bin:${PATH}" sh ./autogen.sh
 
 autogen:
-ifeq (, $(shell PATH="/usr/local/bin:${PATH}" which autoreconf))
+ifeq (, $(shell PATH="/opt/homebrew/bin:/usr/local/bin:${PATH}" which autoreconf))
 		$(error ${bold}No autoreconf in PATH${normal} ($(PATH)), ${bold}try install autogen tools with homebrew${normal})
 endif
 
@@ -158,17 +160,17 @@ $(makefiles) :
 	@echo ""
 	@echo "${bold}libwebp ${WEBP_VERSION} configuration for ${ARCH} platform…${normal}"
 	@mkdir -p "${LIBWEBP_INSTALL_DIR}"
-	@cd "${LIBWEBP_INSTALL_DIR}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" LIBPNG_CONFIG=${BUILD_DIR}/libpng/libpng-config ${SOURCE_ROOT}/libwebp/configure --host=${HOST} --prefix="${LIBWEBP_INSTALL_DIR}" --enable-shared=yes --enable-static=yes --with-pngincludedir=${BUILD_DIR}/libpng/include --with-pnglibdir=${BUILD_DIR}/libpng/lib
+	@cd "${LIBWEBP_INSTALL_DIR}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" LIBPNG_CONFIG=${BUILD_DIR}/libpng/libpng-config PATH="/opt/homebrew/bin:/usr/local/bin:${PATH}"  ${SOURCE_ROOT}/libwebp/configure --host=${HOST} --prefix="${LIBWEBP_INSTALL_DIR}" --enable-shared=yes --enable-static=yes --with-pngincludedir=${BUILD_DIR}/libpng/include --with-pnglibdir=${BUILD_DIR}/libpng/lib
 
 # Build the library for a CPU architecture.
 $(libwebp_files) : 
 	@echo ""
 	@echo "${bold}Compiling libwebp ${WEBP_VERSION} for ${ARCH} platform…${normal}"
-	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${LIBWEBP_INSTALL_DIR}" -j${N_CPU}
+	PATH="/opt/homebrew/bin:/usr/local/bin:${PATH}" ${MAKE} -C "${LIBWEBP_INSTALL_DIR}" -j${N_CPU}
 
 	@echo ""
 	@echo "${bold}Installing libwebp ${WEBP_VERSION} for ${ARCH} platform on ${LIBWEBP_INSTALL_DIR} …${normal}"
-	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${LIBWEBP_INSTALL_DIR}" -j${N_CPU} install
+	PATH="/opt/homebrew/bin:/usr/local/bin:${PATH}" ${MAKE} -C "${LIBWEBP_INSTALL_DIR}" -j${N_CPU} install
 
 # Build the library.
 ${BUILD_DIR}/libwebp/libwebp.a : $(makefiles) ${libwebp_files}

@@ -87,6 +87,8 @@ liblz4: git ${BUILD_DIR}/liblz4/liblz4.a
 # Checkout the repository tag.
 git : ${SOURCE_ROOT}/lz4/Makefile
 ifneq ($(shell git -C "${SOURCE_ROOT}/lz4" describe --tags | xargs), ${LZ4_VERSION})
+	git -C "${SOURCE_ROOT}/lz4" checkout master
+	git -C "${SOURCE_ROOT}/lz4" pull
 	@echo "${bold}Checkout git to tag ${LZ4_VERSION}${normal}"
 	@git -C "${SOURCE_ROOT}/lz4" checkout "${LZ4_VERSION}" --force
 else

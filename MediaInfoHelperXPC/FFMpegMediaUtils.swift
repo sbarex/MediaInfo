@@ -373,10 +373,13 @@ func av_dict_get(data: UnsafeMutablePointer<AVDictionary>!, key: String, previou
 }
 
 func getFFMpegChapters(context pFormatCtx: UnsafeMutablePointer<AVFormatContext>!) -> [Chapter] {
+    guard let pFormatCtx_pointee = pFormatCtx?.pointee else {
+        return []
+    }
     var chapters: [Chapter] = []
-    let n_chapters = Int(pFormatCtx.pointee.nb_chapters)
+    let n_chapters = Int(pFormatCtx_pointee.nb_chapters)
     for i in 0 ..< n_chapters {
-        guard let ch = pFormatCtx.pointee.chapters[i]?.pointee else {
+        guard let ch = pFormatCtx_pointee.chapters[i]?.pointee else {
             continue
         }
         
@@ -396,6 +399,9 @@ func getFFMpegChapters(context pFormatCtx: UnsafeMutablePointer<AVFormatContext>
 }
 
 func getFFMpegLang(data: UnsafeMutablePointer<AVDictionary>!) -> String? {
+    guard let data = data else {
+        return nil
+    }
     let lang: String?
     if let t = av_dict_get(data, "language", nil, 0), let ll = ff_convert_lang_to(t.pointee.value, AV_LANG_ISO639_1) {
         let l = String(cString: ll)
@@ -436,7 +442,7 @@ func getFFMpegVideoInfo(forFile file: URL) -> VideoInfo? {
     os_log("Fetch info for video %{private}@ with FFMpeg…", log: OSLog.infoExtraction, type: .debug, file.path)
     
     var pFormatCtx: UnsafeMutablePointer<AVFormatContext>! = initFFMpeg(forFile: file)
-    guard pFormatCtx != nil else {
+    guard let pFormatCtx_pointee = pFormatCtx?.pointee else {
         os_log("Unable to open the video %{private}@ with FFMpeg!", log: OSLog.infoExtraction, type: .error, file.path)
         return nil
     }
@@ -454,23 +460,23 @@ func getFFMpegVideoInfo(forFile file: URL) -> VideoInfo? {
     }
     
     let name: String? // A comma separated list of short names for the format.
-    if let s = pFormatCtx.pointee.iformat.pointee.name {
+    if let s = pFormatCtx_pointee.iformat?.pointee.name {
         name = String(cString: s)
     } else {
         name = nil
     }
     
     let long_name: String? // Descriptive name for the format, meant to be more human-readable than name.
-    if let s = pFormatCtx.pointee.iformat.pointee.long_name {
+    if let s = pFormatCtx.pointee.iformat?.pointee.long_name {
         long_name = String(cString: s)
     } else {
         long_name = nil
     }
     
-    let title: String? = av_dict_get(data: pFormatCtx.pointee.metadata, key: "title", previous: nil, flags: AV_DICT_IGNORE_SUFFIX)
-    let encoder: String? = av_dict_get(data: pFormatCtx.pointee.metadata, key: "encoder", previous: nil, flags: AV_DICT_IGNORE_SUFFIX)
+    let title: String? = av_dict_get(data: pFormatCtx_pointee.metadata, key: "title", previous: nil, flags: AV_DICT_IGNORE_SUFFIX)
+    let encoder: String? = av_dict_get(data: pFormatCtx_pointee.metadata, key: "encoder", previous: nil, flags: AV_DICT_IGNORE_SUFFIX)
     
-    let lang = getFFMpegLang(data: pFormatCtx.pointee.metadata)
+    let lang = getFFMpegLang(data: pFormatCtx_pointee.metadata)
     
     var t: UnsafeMutablePointer<AVDictionaryEntry>?
     repeat {
@@ -480,14 +486,14 @@ func getFFMpegVideoInfo(forFile file: URL) -> VideoInfo? {
          *   encoder: "libebml v1.4.1 + libmatroska v1.6.2"
          *   creation_time: "2021-03-05T18:17:38.000000Z"
          */
-        t = av_dict_get(pFormatCtx.pointee.metadata, "", t, AV_DICT_IGNORE_SUFFIX)
+        t = av_dict_get(pFormatCtx_pointee.metadata, "", t, AV_DICT_IGNORE_SUFFIX)
         if let tt = t?.pointee, let key = String(cString: tt.key), let value = String(cString: tt.value) {
             print("\(key): \(value)")
         }
     } while t != nil
     
-    let duration: Double? = getFFMpegTime(t:  pFormatCtx.pointee.duration)
-    let start_time: Double? = getFFMpegTime(t: pFormatCtx.pointee.start_time)
+    let duration: Double? = getFFMpegTime(t: pFormatCtx_pointee.duration)
+    let start_time: Double? = getFFMpegTime(t: pFormatCtx_pointee.start_time)
     
     let chapters = getFFMpegChapters(context: pFormatCtx)
     
@@ -517,7 +523,7 @@ func getFFMpegAudioInfo(forFile file: URL) -> AudioInfo? {
     os_log("Fetch info for audio %{private}@ with FFMpeg…", log: OSLog.infoExtraction, type: .debug, file.path)
     
     var pFormatCtx: UnsafeMutablePointer<AVFormatContext>! = initFFMpeg(forFile: file)
-    guard pFormatCtx != nil else {
+    guard let pFormatCtx_pointee = pFormatCtx?.pointee else {
         os_log("Unable to open the audio %{private}@ with FFMpeg!", log: OSLog.infoExtraction, type: .error, file.path)
         return nil
     }
@@ -535,26 +541,26 @@ func getFFMpegAudioInfo(forFile file: URL) -> AudioInfo? {
     }
     
     let name: String? // A comma separated list of short names for the format.
-    if let s = pFormatCtx.pointee.iformat.pointee.name {
+    if let s = pFormatCtx_pointee.iformat?.pointee.name {
         name = String(cString: s)
     } else {
         name = nil
     }
     
     let long_name: String? // Descriptive name for the format, meant to be more human-readable than name.
-    if let s = pFormatCtx.pointee.iformat.pointee.long_name {
+    if let s = pFormatCtx_pointee.iformat?.pointee.long_name {
         long_name = String(cString: s)
     } else {
         long_name = nil
     }
     
-    let title: String? = av_dict_get(data: pFormatCtx.pointee.metadata, key: "title", previous: nil, flags: AV_DICT_IGNORE_SUFFIX)
-    let encoder: String? = av_dict_get(data: pFormatCtx.pointee.metadata, key: "encoder", previous: nil, flags: AV_DICT_IGNORE_SUFFIX)
+    let title: String? = av_dict_get(data: pFormatCtx_pointee.metadata, key: "title", previous: nil, flags: AV_DICT_IGNORE_SUFFIX)
+    let encoder: String? = av_dict_get(data: pFormatCtx_pointee.metadata, key: "encoder", previous: nil, flags: AV_DICT_IGNORE_SUFFIX)
     
-    let lang = getFFMpegLang(data: pFormatCtx.pointee.metadata)
+    let lang = getFFMpegLang(data: pFormatCtx_pointee.metadata)
     
-    let duration: Double? = getFFMpegTime(t: pFormatCtx.pointee.duration)
-    let start_time: Double? = getFFMpegTime(t: pFormatCtx.pointee.start_time)
+    let duration: Double? = getFFMpegTime(t: pFormatCtx_pointee.duration)
+    let start_time: Double? = getFFMpegTime(t: pFormatCtx_pointee.start_time)
     
     let chapters = getFFMpegChapters(context: pFormatCtx)
     
@@ -593,16 +599,16 @@ func getFFMpegMediaStreams(forFile file: URL) -> [BaseInfo] {
 
 func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutablePointer<AVFormatContext>!) -> [BaseInfo] {
     
-    guard pFormatCtx != nil else {
+    guard let pFormatCtx_pointee = pFormatCtx?.pointee else {
         return []
     }
     
-    let mainDuration: Int64 = getFFMpegTime(t: pFormatCtx.pointee.duration)
+    let mainDuration: Int64 = getFFMpegTime(t: pFormatCtx_pointee.duration)
     
     var streams: [BaseInfo] = []
 
-    for i in 0 ..< Int(pFormatCtx.pointee.nb_streams) {
-        guard let st = pFormatCtx.pointee.streams[i]?.pointee else {
+    for i in 0 ..< Int(pFormatCtx_pointee.nb_streams) {
+        guard let st = pFormatCtx_pointee.streams[i]?.pointee else {
             continue
         }
         let codec: UnsafePointer<AVCodec>?
@@ -675,7 +681,7 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
         if let t = av_dict_get(st.metadata, "BPS", nil, AV_DICT_IGNORE_SUFFIX), let n = Int64(String(cString: t.pointee.value)) {
             bit_rate = n
         } else {
-            bit_rate = pFormatCtx.pointee.bit_rate
+            bit_rate = pFormatCtx_pointee.bit_rate
         }
         */
         
@@ -728,19 +734,21 @@ func getFFMpegMediaStreams(forFile file: URL, with pFormatCtx: inout UnsafeMutab
             var frames = st.nb_frames
             if frames == 0 {
                 var found = false
-                for i in 0 ..< Int(st.metadata.pointee.count) {
-                    let tag = st.metadata.pointee.elems.advanced(by: i).pointee
-                    switch String(cString: tag.key)?.uppercased()  {
-                    case "NUMBER_OF_FRAMES":
-                        if let v = Int64(String(cString: tag.value)) {
-                            frames = v
+                if let metadata = st.metadata {
+                    for i in 0 ..< Int(metadata.pointee.count) {
+                        let tag = st.metadata.pointee.elems.advanced(by: i).pointee
+                        switch String(cString: tag.key)?.uppercased()  {
+                        case "NUMBER_OF_FRAMES":
+                            if let v = Int64(String(cString: tag.value)) {
+                                frames = v
+                            }
+                            found = true
+                        default:
+                            break
                         }
-                        found = true
-                    default:
-                        break
-                    }
-                    if found {
-                        break
+                        if found {
+                            break
+                        }
                     }
                 }
                 if !found && fps != 0 {

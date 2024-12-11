@@ -99,6 +99,8 @@ clean:
 git : ${SOURCE_ROOT}/zstd/Makefile
 # @echo "check tag…"
 ifneq ($(shell git -C "${SOURCE_ROOT}/libb2" describe --tags | xargs), ${B2_VERSION})
+	git -C "${SOURCE_ROOT}/libb2" checkout master
+	git -C "${SOURCE_ROOT}/libb2" pull
 	@echo "${bold}Checkout git to tag ${B2_VERSION}${normal}"
 	git -C "${SOURCE_ROOT}/libb2" checkout "${B2_VERSION}" --force
 else
@@ -118,10 +120,10 @@ ${SOURCE_ROOT}/libb2/configure.ac :
 ${SOURCE_ROOT}/libb2/configure : 
 	@echo ""
 	@echo "${bold}Autogen configuration files…${normal}"
-	cd "${SOURCE_ROOT}/libb2" && PATH="/usr/local/bin:${PATH}" sh ./autogen.sh
+	cd "${SOURCE_ROOT}/libb2" && PATH="/opt/homebrew/bin:usr/local/bin:${PATH}" sh ./autogen.sh
 
 autogen:
-ifeq (, $(shell PATH="/usr/local/bin:${PATH}" which autoreconf))
+ifeq (, $(shell PATH="/opt/homebrew/bin:/usr/local/bin:${PATH}" which autoreconf))
 		$(error ${bold}No autoreconf in PATH${normal} ($(PATH)), ${bold}try install autogen tools with homebrew${normal})
 endif
 
@@ -150,18 +152,18 @@ $(makefiles) :
 	@echo ""
 	@echo "${bold}libb2 ${B2_VERSION} configuration for ${ARCH} platform…${normal}"
 	@mkdir -p "${B2_INSTALL_DIR}"
-	@cd "${B2_INSTALL_DIR}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" ${SOURCE_ROOT}/libb2/configure --host=${HOST} --prefix="${B2_INSTALL_DIR}" --enable-shared=no --enable-static=yes
+	@cd "${B2_INSTALL_DIR}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/cc -target ${ARCH}-apple-macos" PATH="/opt/homebrew/bin:/usr/local/bin:${PATH}" ${SOURCE_ROOT}/libb2/configure --host=${HOST} --prefix="${B2_INSTALL_DIR}" --enable-shared=no --enable-static=yes
 	${MAKE} -C "${B2_INSTALL_DIR}" -j${N_CPU} clean
 
 # Build the library for a CPU architecture.
 $(libb2_files) : $(makefiles)
 	@echo ""
 	@echo "${bold}Compiling libb2 ${B2_VERSION} for ${ARCH} platform…${normal}"
-	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${B2_INSTALL_DIR}" -j${N_CPU}
+	PATH="/opt/homebrew/bin:/usr/local/bin:${PATH}" ${MAKE} -C "${B2_INSTALL_DIR}" -j${N_CPU}
 
 	@echo ""
 	@echo "${bold}Installing libb2 ${B2_VERSION} for ${ARCH} platform on ${B2_INSTALL_DIR} …${normal}"
-	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${B2_INSTALL_DIR}" -j${N_CPU} install
+	PATH="/opt/homebrew/bin:/usr/local/bin:${PATH}" ${MAKE} -C "${B2_INSTALL_DIR}" -j${N_CPU} install
 
 # Build the library.
 ${BUILD_DIR}/libb2/libb2.a : ${libb2_files}

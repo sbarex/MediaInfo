@@ -99,6 +99,8 @@ libzstd: git ${BUILD_DIR}/libzstd/libzstd.a
 git : ${SOURCE_ROOT}/zstd/Makefile
 # @echo "check tag…"
 ifneq ($(shell git -C "${SOURCE_ROOT}/zstd" describe --tags | xargs), ${ZSTD_VERSION})
+	git -C "${SOURCE_ROOT}/zstd" checkout master
+	git -C "${SOURCE_ROOT}/zstd" pull
 	@echo "${bold}Checkout git to tag ${ZSTD_VERSION}${normal}"
 	git -C "${SOURCE_ROOT}/zstd" checkout "${ZSTD_VERSION}" --force
 else

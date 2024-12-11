@@ -90,6 +90,8 @@ clean:
 git : ${SOURCE_ROOT}/libjpeg-turbo/CMakeLists.txt
 # @echo "check tag…"
 ifneq ($(shell git -C "${SOURCE_ROOT}/libjpeg-turbo" describe --tags | xargs), $(JPG_VERSION))
+	git -C "${SOURCE_ROOT}/libjpeg-turbo" checkout master
+	git -C "${SOURCE_ROOT}/libjpeg-turbo" pull
 	@echo "${bold}Checkout git to tag ${JPG_VERSION}${normal}"
 	git -C "${SOURCE_ROOT}/libjpeg-turbo" checkout "${JPG_VERSION}" --force
 else
@@ -134,18 +136,18 @@ $(makefiles) &:
 	@echo "set(CMAKE_OSX_DEPLOYMENT_TARGET $(MIN_OS))" >> "${BUILD_DIR}/libjpeg-turbo/${ARCH}/toolchain.cmake"
 	@echo "set(CMAKE_OSX_SYSROOT $(SDK_PATH))" >> "${BUILD_DIR}/libjpeg-turbo/${ARCH}/toolchain.cmake"
 
-	@cd "${BUILD_DIR}/libjpeg-turbo/${ARCH}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/clang -target ${ARCH}-apple-macos" cmake -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake --install-prefix "${BUILD_DIR}/libjpeg-turbo/${ARCH}" ${SOURCE_ROOT}/libjpeg-turbo
+	@cd "${BUILD_DIR}/libjpeg-turbo/${ARCH}" && CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="/usr/bin/clang -target ${ARCH}-apple-macos" PATH="/opt/homebrew/bin:usr/local/bin:${PATH}" cmake -G"Unix Makefiles" -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake --install-prefix "${BUILD_DIR}/libjpeg-turbo/${ARCH}" ${SOURCE_ROOT}/libjpeg-turbo
 	${MAKE} -C "${BUILD_DIR}/libjpeg-turbo/${ARCH}" -j${N_CPU} clean
 
 # Build the library for a CPU architecture.
 $(libjpeg_files) :
 	@echo ""
 	@echo "${bold}Compiling libjpeg-turbo ${JPG_VERSION} for ${ARCH} platform…${normal}"
-	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${BUILD_DIR}/libjpeg-turbo/${ARCH}" -j${N_CPU}
+	PATH="/opt/homebrew/bin:usr/local/bin:${PATH}" ${MAKE} -C "${BUILD_DIR}/libjpeg-turbo/${ARCH}" -j${N_CPU}
 
 	@echo ""
 	@echo "${bold}Installing libjpeg-turbo ${JPG_VERSION} for ${ARCH} platform on ${BUILD_DIR}/libjpeg-turbo/${ARCH} …${normal}"
-	PATH="/usr/local/bin:${PATH}" ${MAKE} -C "${BUILD_DIR}/libjpeg-turbo/${ARCH}" -j${N_CPU} install
+	PATH="/opt/homebrew/bin:/usr/local/bin:${PATH}" ${MAKE} -C "${BUILD_DIR}/libjpeg-turbo/${ARCH}" -j${N_CPU} install
 
 # Build the library.
 ${BUILD_DIR}/libjpeg-turbo/lib/libjpeg.a : ${libjpeg_files}

@@ -2,6 +2,18 @@ Changelog
 =======
 
 
+### 1.7.4 (24)
+New features:
+- Dependencies updated:
+    - libarchive to 3.7.7
+    - ffmpeg to 7.1
+    - xz to 5.6.3
+
+Bugfix:
+- Updated the makefiles to support homebrew on Arm architecture.
+- Better error prevention with some video types and the FFMpeg engine.
+
+
 ### 1.7.3 (23)
 New features:
 - Information about macOS Sequoia.
