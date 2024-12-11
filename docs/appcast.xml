@@ -4,8 +4,43 @@
         <title>MediaInfo</title> 
 
         <item>
+            <title>1.7.4</title>
+            <pubDate>mer, 11 dic 2024 10:48:00 +0100</pubDate>
+            <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.7.4/MediaInfoEx.zip" 
+                sparkle:version="24" sparkle:shortVersionString="1.7.4" type="application/octet-stream" 
+                sparkle:edSignature="NAbcPqn9rxSknNeh7dsc+/2fnhbGrXT/2JC3oEzd/ENKE+606NNTSnzb3cq+6f2CyRxoS/iRN9SS+nzevVSPBQ==" length="21057081" 
+            />
+            <description><![CDATA[
+                <h2>Release 1.7.4 (24)</h2>
+                <p>New features:</p>
+                <ul>
+                    <li>Information about macOS Sequoia.</li>
+                    <li>Ability to use any symbol as menu item image (use Apple SF Symbols app to see all available symbols).</li>
+                    <li>Dependencies updated:</li>
+                    <ul>
+                        <li>lib archive to 3.7.7</li>
+                        <li>ffmpeg to 7.1</li>
+                        <li>lib xz to 5.6.3</li>
+                    </ul>
+                </ul>
+
+                <p>Bugfix:</p>
+                <ul>
+                    <li>Updated the makefiles to support homebrew on Arm architecture.</li>
+                    <li>Better error prevention with some video types and the FFMpeg engine.</li>
+                </ul>
+
+                <p>If you like this app, <a href="https://www.buymeacoffee.com/sbarex">buy me a coffee!</a></p>
+                
+                <p><a href="https://github.com/sbarex/MediaInfo/blob/master/CHANGELOG.md">See the complete changelog.</a></p>
+            ]]>
+            </description>
+        </item>
+        
+        <item>
             <title>1.7.3</title>
-            <pubDate>ven, 4 ott 2024 14:523:00 +0100</pubDate>
+            <pubDate>ven, 4 ott 2024 14:52:00 +0100</pubDate>
             <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
             <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.7.3/MediaInfoEx.zip" 
                 sparkle:version="23" sparkle:shortVersionString="1.7.3" type="application/octet-stream" 
@@ -19,7 +54,7 @@
                     <li>Ability to use any symbol as menu item image (use Apple SF Symbols app to see all available symbols).</li>
                     <li>Dependencies updated:</li>
                     <ul>
-                        <li>lib archive to 3.7.6/li>
+                        <li>lib archive to 3.7.6</li>
                         <li>ffmpeg to 7.0.2</li>
                         <li>lib webp to 1.4.0</li>
                         <li>lib png to 1.6.44</li>
