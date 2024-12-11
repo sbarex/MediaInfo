@@ -2,6 +2,44 @@
 <rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
     <channel>
         <title>MediaInfo</title> 
+
+        <item>
+            <title>1.7.3</title>
+            <pubDate>ven, 4 ott 2024 14:523:00 +0100</pubDate>
+            <sparkle:minimumSystemVersion>10.15</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/sbarex/MediaInfo/releases/download/1.7.3/MediaInfoEx.zip" 
+                sparkle:version="23" sparkle:shortVersionString="1.7.3" type="application/octet-stream" 
+                sparkle:edSignature="+Fa1MaxD5hf0U86Tycyh6MTnqhZR7Vw79TfgwUIe3yIqOTiuR9+ujIDB6eqhAtNEnb2yYk/PF8uoc3TR7wzlAA==" length="21191275" 
+            />
+            <description><![CDATA[
+                <h2>Release 1.7.3 (23)</h2>
+                <p>New features:</p>
+                <ul>
+                    <li>Information about macOS Sequoia.</li>
+                    <li>Ability to use any symbol as menu item image (use Apple SF Symbols app to see all available symbols).</li>
+                    <li>Dependencies updated:</li>
+                    <ul>
+                        <li>lib archive to 3.7.6/li>
+                        <li>ffmpeg to 7.0.2</li>
+                        <li>lib webp to 1.4.0</li>
+                        <li>lib png to 1.6.44</li>
+                        <li>lib turbo jpeg to 3.0.90</li>
+                        <li>lib zlz4 to 1.10.0</li>
+                        <li>lib xz to 5.6.2</li>
+                        <li>lib zstd to 1.5.6</li>
+                    </ul>
+                </ul>
+
+                <p>Bugfix:</p>
+                <ul>
+                    <li>relinked libraries to work on macOS Sequoia (<b>not tested in previous macOS!</b>)</li>
+                </ul>
+
+                <p><a href="https://github.com/sbarex/MediaInfo/blob/master/CHANGELOG.md">See the complete changelog.</a></p>
+            ]]>
+            </description>
+        </item>
+        
         <item>
             <title>1.7.2</title>
             <pubDate>lun, 7 ago 2023 22:53:00 +0100</pubDate>
